@@ -13,7 +13,7 @@ import { logger } from '../../common/utils/logger.js';
  * @param {Server<DefaultEventsMap>} io - Socket.io object
  * @returns {void} - Void
  */
-export default function SocketController(socket: Socket, io: Server): void {
+export default function SocketController(socket: Socket, _io: Server): void {
     logger.info('Client', `connected: ${socket.id}`);
 
     socket.on('disconnect', () => {

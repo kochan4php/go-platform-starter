@@ -9,7 +9,7 @@ import type { IAuthGuard } from './i-auth.guard.js';
 export class JwtAuthGuard implements IAuthGuard {
     public async verify(req: IRequest, _: Response, next: NextFunction): Promise<void> {
         const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
+        const token = authHeader?.split(' ')[1];
 
         if (!token) {
             throw new UnauthorizedError('Authorization token is missing');

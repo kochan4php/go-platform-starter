@@ -18,6 +18,14 @@ export default defineConfig({
             include: ['src/**/*.ts'],
             exclude: ['src/database/scripts/**', 'src/database/migrations/**'],
             reporter: ['text', 'lcov'],
+            // Floors sit slightly below current numbers: they gate regressions,
+            // not the existing suite.
+            thresholds: {
+                statements: 75,
+                branches: 60,
+                functions: 80,
+                lines: 75,
+            },
         },
     },
 });

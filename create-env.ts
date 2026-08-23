@@ -3,8 +3,8 @@
  * @author {Deo Sbrn}
  */
 
-import { existsSync, mkdirSync, readFileSync } from 'fs';
-import { writeFile } from 'fs/promises';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 
 const envExample = readFileSync('./env/.env.example', 'utf8');
 const environments = ['local', 'test', 'development', 'staging', 'production', 'production.local'];

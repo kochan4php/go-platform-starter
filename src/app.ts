@@ -3,16 +3,16 @@
  * @author {Deo Sbrn}
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { apiReference } from '@scalar/express-api-reference';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Application } from 'express';
 import { rateLimit } from 'express-rate-limit';
-import fs from 'fs';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import path from 'path';
 import { container, injectable } from 'tsyringe';
 import type { BaseRoute } from './common/base.route.js';
 import { errorHandler } from './common/middlewares/error.middleware.js';

@@ -4,7 +4,7 @@ import { ValidationError } from '../errors/AppError.js';
 
 export class ValidateMiddleware {
     public static handle(schema: ZodObject<any>) {
-        return async (req: Request, res: Response, next: NextFunction) => {
+        return async (req: Request, _res: Response, next: NextFunction) => {
             try {
                 const parsed = await schema.parseAsync({
                     body: req.body,

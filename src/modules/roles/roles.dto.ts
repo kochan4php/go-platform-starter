@@ -1,4 +1,3 @@
-import type { Request, Response } from 'express';
 import { z } from 'zod';
 
 export const createRoleSchema = z.object({

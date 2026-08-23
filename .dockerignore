@@ -1,9 +1,12 @@
 node_modules
+dist
+coverage
 build
+__tests__
 .env.example
 dockerfiles
-.prettierignore
-.prettierrc
+docker
 *.md
 .husky
-docker
+Jenkinsfile
+k8s
