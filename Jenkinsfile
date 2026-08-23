@@ -24,13 +24,19 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pnpm install'
+                sh 'pnpm install --frozen-lockfile'
             }
         }
 
         stage('Lint') {
             steps {
                 sh 'pnpm run lint'
+            }
+        }
+
+        stage('Typecheck') {
+            steps {
+                sh 'pnpm run typecheck'
             }
         }
 
@@ -48,6 +54,7 @@ pipeline {
 
         stage('Test') {
             steps {
+                // e2e tests use testcontainers and require a Docker socket
                 sh 'pnpm run test'
             }
         }
@@ -81,14 +88,13 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 withKubeConfig([credentialsId: K8S_CREDENTIALS_ID]) {
-                    sh "sed -i 's|image: express_ts_starter:latest|image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_ID}|g' k8s/deployment.yaml"
-                    // Deploy to a staging namespace (assuming k8s manifests use namespace: staging or we apply it)
+                    // Manifests are applied as-is; the image tag is injected via
+                    // `kubectl set image` instead of mutating files in the workspace.
                     sh 'kubectl apply -f k8s/configmap.yaml -n staging'
-                    sh 'kubectl apply -f k8s/secret.yaml -n staging'
                     sh 'kubectl apply -f k8s/deployment.yaml -n staging'
                     sh 'kubectl apply -f k8s/service.yaml -n staging'
                     sh 'kubectl apply -f k8s/hpa.yaml -n staging'
-                    
+                    sh "kubectl set image deployment/express-ts-starter express-ts-starter=${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_ID} -n staging"
                     sh 'kubectl rollout status deployment/express-ts-starter -n staging'
                 }
             }
@@ -96,22 +102,24 @@ pipeline {
 
         stage('DAST Scan') {
             steps {
-                // OWASP ZAP Baseline Scan against the staging environment using OpenAPI spec
-                // Assume the service is exposed at http://express-ts-starter.staging.svc.cluster.local:3000
-                sh 'docker run -t owasp/zap2docker-stable zap-api-scan.py -t http://express-ts-starter.staging.svc.cluster.local:3000/docs/openapi.yaml -f openapi -l FAIL'
+                // OWASP ZAP API scan against the spec served by the app itself
+                sh '''docker run --rm \
+                  -v "${WORKSPACE}:/zap/wrk:rw" \
+                  zaproxy/zap-stable zap-api-scan.py \
+                  -t http://express-ts-starter.staging.svc.cluster.local:3000/docs/openapi.json \
+                  -f openapi -l FAIL'''
             }
         }
 
         stage('Deploy to Production') {
             steps {
                 withKubeConfig([credentialsId: K8S_CREDENTIALS_ID]) {
-                    // Deploy to production after passing DAST
+                    input message: 'Promote to production?', ok: 'Deploy'
                     sh 'kubectl apply -f k8s/configmap.yaml -n production'
-                    sh 'kubectl apply -f k8s/secret.yaml -n production'
                     sh 'kubectl apply -f k8s/deployment.yaml -n production'
                     sh 'kubectl apply -f k8s/service.yaml -n production'
                     sh 'kubectl apply -f k8s/hpa.yaml -n production'
-                    
+                    sh "kubectl set image deployment/express-ts-starter express-ts-starter=${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_ID} -n production"
                     sh 'kubectl rollout status deployment/express-ts-starter -n production'
                 }
             }

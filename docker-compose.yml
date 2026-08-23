@@ -1,4 +1,4 @@
-version: '3.8'
+name: express-ts-starter
 
 services:
     server-app:
@@ -12,24 +12,20 @@ services:
             - 8000:8000
         healthcheck:
             test:
-                [
-                    'CMD',
-                    'curl',
-                    '-f',
-                    'http://localhost:8000/api/health-check'
-                ]
+                - CMD
+                - node
+                - -e
+                - fetch('http://localhost:'+(process.env.PORT||8000)+'/api/v1/health').then(r=>{if(!r.ok)throw 0}).catch(()=>process.exit(1))
             interval: 30s
-            timeout: 30s
+            timeout: 10s
             retries: 5
-            start_period: 5s
+            start_period: 15s
+        # All secrets live in the env file — never inline them here.
         env_file: ./env/.env.production.local
         environment:
             PORT: 8000
+            NODE_ENV: production
             DATABASE_URL: postgresql://dev:dev@postgres:5432/expressts
-            ACCESS_TOKEN_SECRET: das9807asd908a90d8sa09d323
-            REFRESH_TOKEN_SECRET: c9sddc8s90cuscuj90ew8r09w3
-            SESSION_TOKEN_SECRET: das90d8sad7sa8d7as89d7asdsad
-            # TRUSTED_DOMAINS: http://localhost:4000
         networks:
             - express-ts-starter-network
         depends_on:

@@ -1,21 +1,17 @@
-FROM node:lts-alpine as base
+# syntax=docker/dockerfile:1
 
-# Install dependencies only
-FROM base as deps
-RUN apk add --no-cache libc6-compat
-RUN npm i -g pnpm
-WORKDIR /usr/src/app
-COPY ../../package.json .
-COPY ../../pnpm-lock.yaml .
-COPY ../../prisma ./prisma
-RUN pnpm i --frozen-lockfile
+FROM node:lts-alpine AS base
+RUN corepack enable
 
-# Development image
-FROM deps as dev
+FROM base AS deps
+RUN apk add --no-cache libc6-compat python3 make g++
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS dev
 ENV NODE_ENV=development
-WORKDIR /usr/src/app
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY ../../. .
-EXPOSE 8000
-ENTRYPOINT [ "npm", "run" ]
-CMD [ "dev" ]
+WORKDIR /app
+COPY . .
+EXPOSE 3000
+CMD ["pnpm", "run", "start:local:dev"]

@@ -19,12 +19,14 @@ spec:
       labels:
         app: express-ts-starter
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
       containers:
         - name: express-ts-starter
+          # Image tag is injected by CI via `kubectl set image` — keep this placeholder stable.
           image: express_ts_starter:latest
           imagePullPolicy: IfNotPresent
           securityContext:
@@ -48,7 +50,7 @@ spec:
               memory: "512Mi"
           livenessProbe:
             httpGet:
-              path: /api/health-check
+              path: /api/v1/health
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10
@@ -56,7 +58,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health-check/db
+              path: /api/v1/health/db
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10

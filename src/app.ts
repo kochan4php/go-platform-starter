@@ -80,6 +80,14 @@ export class App {
                 })
                 .catch((err) => console.error('Failed to bundle openapi:', err));
 
+            // Raw bundled spec (consumed by DAST scanners and codegen tools)
+            this.app.get('/docs/openapi.json', (_, res) => {
+                if (!bundledSpec) {
+                    return res.status(503).json({ success: false, message: 'API documentation is still loading' });
+                }
+                return res.json(bundledSpec);
+            });
+
             this.app.use('/docs', (req, res, next) => {
                 if (!bundledSpec) {
                     return res.status(503).send('API Documentation is still loading...');
