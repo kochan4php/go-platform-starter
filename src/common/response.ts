@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 
 export class ResponseHelper {
     public static resSuccess(res: Response, status: number, message: string, data?: object | any): Response {

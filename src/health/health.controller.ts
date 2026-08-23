@@ -1,10 +1,9 @@
-import { Request, Response } from 'express';
-import { resFailed, resSuccess } from '../common/response';
-import { Logger } from '../common/utils/logger';
-import { prisma } from '../database/connection';
-
+import type { Request, Response } from 'express';
 import { injectable } from 'tsyringe';
-import { Public } from '../common/authorization/decorators';
+import { Public } from '../common/authorization/decorators.js';
+import { resFailed, resSuccess } from '../common/response.js';
+import { Logger } from '../common/utils/logger.js';
+import { prisma } from '../database/connection.js';
 
 @injectable()
 export class HealthController {

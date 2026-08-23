@@ -1,6 +1,6 @@
-import { JwtPayload, SignOptions } from 'jsonwebtoken';
-import { REFRESH_TOKEN_SECRET } from '../../../../config/env';
-import { JwtHelper } from '../jwt';
+import type { JwtPayload, SignOptions } from 'jsonwebtoken';
+import { REFRESH_TOKEN_SECRET } from '../../../../config/env.js';
+import { JwtHelper } from '../jwt.js';
 
 export class RefreshTokenHelper {
     public static generateRefreshToken(payload: object | string = {}, expired: SignOptions['expiresIn'] = '10h'): string {

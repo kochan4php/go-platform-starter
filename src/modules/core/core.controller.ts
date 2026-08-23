@@ -1,8 +1,7 @@
-import { Request, Response } from 'express';
-import { resSuccess } from '../../common/response';
-
+import type { Request, Response } from 'express';
 import { injectable } from 'tsyringe';
-import { Public } from '../../common/authorization/decorators';
+import { Public } from '../../common/authorization/decorators.js';
+import { resSuccess } from '../../common/response.js';
 
 @injectable()
 export class CoreController {

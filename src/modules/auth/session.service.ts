@@ -1,5 +1,5 @@
-import { injectable, inject } from 'tsyringe';
-import { ISessionRepository } from './session.repository';
+import { inject, injectable } from 'tsyringe';
+import type { ISessionRepository } from './session.repository.js';
 
 @injectable()
 export class SessionService {

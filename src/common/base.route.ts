@@ -1,9 +1,9 @@
-import { Router, RequestHandler } from 'express';
+import { type RequestHandler, Router } from 'express';
 import { container } from 'tsyringe';
-import { PermissionGuard } from './authorization/permission.guard';
-import { PermissionRegistry } from './authorization/permission.registry';
-import { PUBLIC_METADATA_KEY, PERMISSION_METADATA_KEY } from './authorization/decorators';
-import { asyncHandler } from './utils/asyncHandler';
+import { PERMISSION_METADATA_KEY, PUBLIC_METADATA_KEY } from './authorization/decorators.js';
+import { PermissionGuard } from './authorization/permission.guard.js';
+import { PermissionRegistry } from './authorization/permission.registry.js';
+import { asyncHandler } from './utils/asyncHandler.js';
 
 export abstract class BaseRoute {
     public router: Router;
@@ -16,12 +16,20 @@ export abstract class BaseRoute {
 
     protected abstract initializeRoutes(): void;
 
-    private registerRoute(method: 'get' | 'post' | 'put' | 'patch' | 'delete', path: string, middlewares: RequestHandler[], target: any, propertyKey: string) {
+    private registerRoute(
+        method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+        path: string,
+        middlewares: RequestHandler[],
+        target: any,
+        propertyKey: string,
+    ) {
         const isPublic = Reflect.getMetadata(PUBLIC_METADATA_KEY, target, propertyKey);
         const permission = Reflect.getMetadata(PERMISSION_METADATA_KEY, target, propertyKey);
 
         if (!isPublic && !permission) {
-            throw new Error(`Route ${method.toUpperCase()} ${this.path}${path} is missing an authorization decorator on ${target.constructor.name}.${propertyKey}`);
+            throw new Error(
+                `Route ${method.toUpperCase()} ${this.path}${path} is missing an authorization decorator on ${target.constructor.name}.${propertyKey}`,
+            );
         }
 
         const handlers: RequestHandler[] = [];

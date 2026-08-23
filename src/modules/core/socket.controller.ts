@@ -4,8 +4,8 @@
  * @author {Deo Sbrn}
  */
 
-import { Server, Socket } from 'socket.io';
-import { logger } from '../../common/utils/logger';
+import type { Server, Socket } from 'socket.io';
+import { logger } from '../../common/utils/logger.js';
 
 /**
  * @description Handle socket connection

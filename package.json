@@ -1,15 +1,17 @@
 {
     "name": "express-ts-starter",
-    "version": "1.0.0-lts",
+    "version": "2.0.0",
     "description": "Express.ts Server starter template",
-    "main": "server.js",
+    "type": "module",
+    "engines": {
+        "node": ">=22"
+    },
+    "packageManager": "pnpm@11.22.0",
     "scripts": {
         "test": "cross-env NODE_ENV=test vitest run",
+        "typecheck": "tsc -p . --noEmit",
         "update-deps": "pnpm update --latest",
-        "setup-app": "npm install && npm run create-env",
-        "setup-app:pnpm": "pnpm install && pnpm create-env",
-        "setup-app:win": "npm install; npm run create-env",
-        "setup-app:win:pnpm": "pnpm install && pnpm create-env",
+        "setup-app": "pnpm install && pnpm create-env",
         "start:local:dev": "cross-env NODE_ENV=local tsx --watch -r dotenv/config src/server.ts",
         "start:dev": "cross-env NODE_ENV=development tsx --watch -r dotenv/config src/server.ts",
         "start:stage": "cross-env NODE_ENV=staging node --max-old-space-size=512 dist/server.js",
@@ -21,13 +23,12 @@
         "docker:volume:rm": "docker volume rm postgres-data",
         "docker:up": "pnpm docker:down && docker compose up -d",
         "docker:down": "docker compose down",
-        "build": "rm -rf ./dist && tsc -p .",
+        "build": "node -e \"fs.rmSync('./dist',{recursive:true,force:true})\" && tsc -p .",
         "sast": "pnpm dlx semgrep --config auto --error src/",
-        "lint": "eslint src/**/*.ts",
-        "lint:fix": "eslint src/**/*.ts --fix",
-        "prettier:check": "prettier . --check",
-        "prettier:fix": "prettier . --write",
-        "create-env": "ts-node create-env.ts"
+        "lint": "biome check .",
+        "lint:fix": "biome check --write .",
+        "create-env": "tsx create-env.ts",
+        "prepare": "husky"
     },
     "keywords": [
         "express",
@@ -39,14 +40,19 @@
         "expressjs",
         "express.js",
         "postgresql",
-        "prisma",
+        "sequelize",
         "socket.io"
     ],
     "author": "Deo Subarno",
     "license": "Apache-2.0",
+    "lint-staged": {
+        "**/*.{js,jsx,ts,tsx,json,jsonc}": [
+            "biome check --write --no-errors-on-unmatched"
+        ]
+    },
     "devDependencies": {
+        "@biomejs/biome": "^2.5.10",
         "@types/bcrypt": "^6.0.0",
-        "@types/cli-color": "^2.0.6",
         "@types/cookie-parser": "^1.4.10",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
@@ -56,16 +62,11 @@
         "@types/npmlog": "^7.0.0",
         "@types/pg": "^8.20.0",
         "@types/supertest": "^7.2.1",
-        "@typescript-eslint/eslint-plugin": "^8.65.0",
-        "@typescript-eslint/parser": "^8.65.0",
-        "cli-color": "^2.0.4",
-        "eslint": "^10.8.0",
-        "eslint-plugin-security": "^4.0.1",
+        "cross-env": "^10.1.0",
+        "husky": "^9.1.7",
         "lint-staged": "^17.3.0",
-        "prettier": "^3.9.6",
         "prisma": "^7.9.1",
         "supertest": "^7.2.2",
-        "ts-morph": "^28.0.0",
         "tsx": "^4.23.1",
         "typescript": "^7.0.2",
         "vitest": "^4.1.10"
@@ -78,7 +79,6 @@
         "bcrypt": "^6.0.0",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
-        "cross-env": "^10.1.0",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
         "express-rate-limit": "^8.6.1",
@@ -91,15 +91,5 @@
         "socket.io": "^4.8.3",
         "tsyringe": "^4.10.0",
         "zod": "^4.4.3"
-    },
-    "lint-staged": {
-        "**/*.{js,jsx,ts,tsx,css,md,html}": [
-            "pnpm prettier:fix"
-        ],
-        "**/*.{js,jsx,ts,tsx}": [
-            "pnpm lint:fix",
-            "pnpm prettier:fix"
-        ]
-    },
-    "prisma": {}
+    }
 }

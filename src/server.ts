@@ -5,19 +5,18 @@
  */
 
 import 'reflect-metadata';
-import { Server, Socket } from 'socket.io';
-import socketController from './modules/core/socket.controller';
-import { socketConfig } from './config/app';
-import { PORT } from './config/env';
-import { logger } from './common/utils/logger';
-import { HealthChecker } from './health/health.checker';
-import database, { prisma } from './database/connection';
-import { App } from './app';
-import { container } from './container';
-import { injectable, inject } from 'tsyringe';
-import { registerAbilities } from './common/authorization/abilities';
-
-import { PermissionRegistry } from './common/authorization/permission.registry';
+import { Server, type Socket } from 'socket.io';
+import { inject, injectable } from 'tsyringe';
+import { App } from './app.js';
+import { registerAbilities } from './common/authorization/abilities.js';
+import { PermissionRegistry } from './common/authorization/permission.registry.js';
+import { logger } from './common/utils/logger.js';
+import { socketConfig } from './config/app.js';
+import { PORT } from './config/env.js';
+import { container } from './container.js';
+import database, { prisma } from './database/connection.js';
+import { HealthChecker } from './health/health.checker.js';
+import socketController from './modules/core/socket.controller.js';
 
 @injectable()
 export class Bootstrap {
@@ -62,7 +61,7 @@ export class Bootstrap {
         const shutdown = async (signal: string) => {
             logger.info('Server', `Received ${signal}. Shutting down gracefully...`);
             HealthChecker.stop();
-            
+
             server.close(async () => {
                 logger.info('Server', 'Closed HTTP server');
                 try {

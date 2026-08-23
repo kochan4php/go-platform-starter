@@ -1,21 +1,20 @@
-import { Request, Response } from 'express';
-import { AccessTokenHelper } from '../../common/utils/jwt/helpers/access-token.helper';
-import { RefreshTokenHelper } from '../../common/utils/jwt/helpers/refresh-token.helper';
-import { SessionTokenHelper } from '../../common/utils/jwt/helpers/session-token.helper';
-import { resFailed, resSuccess } from '../../common/response/index';
-import { HashHelper } from '../../common/utils/hash.helper';
-import { SessionService } from './session.service';
-import { UserService } from '../users/users.service';
-import { logger } from '../../common/utils/logger';
-
-import { injectable, inject } from 'tsyringe';
-import { Public } from '../../common/authorization/decorators';
+import type { Request, Response } from 'express';
+import { inject, injectable } from 'tsyringe';
+import { Public } from '../../common/authorization/decorators.js';
+import { resFailed, resSuccess } from '../../common/response.js';
+import { HashHelper } from '../../common/utils/hash.helper.js';
+import { AccessTokenHelper } from '../../common/utils/jwt/helpers/access-token.helper.js';
+import { RefreshTokenHelper } from '../../common/utils/jwt/helpers/refresh-token.helper.js';
+import { SessionTokenHelper } from '../../common/utils/jwt/helpers/session-token.helper.js';
+import { logger } from '../../common/utils/logger.js';
+import { UserService } from '../users/users.service.js';
+import { SessionService } from './session.service.js';
 
 @injectable()
 export class AuthController {
     constructor(
         @inject(UserService) private readonly userService: UserService,
-        @inject(SessionService) private readonly sessionService: SessionService
+        @inject(SessionService) private readonly sessionService: SessionService,
     ) {}
 
     @Public()

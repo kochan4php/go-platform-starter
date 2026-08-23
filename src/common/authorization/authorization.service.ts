@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { prisma } from '../../database/connection';
+import { prisma } from '../../database/connection.js';
 
 @injectable()
 export class AuthorizationService {
@@ -11,12 +11,12 @@ export class AuthorizationService {
                     include: {
                         rolePermissions: {
                             include: {
-                                permission: true
-                            }
-                        }
-                    }
-                }
-            }
+                                permission: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
 
         const permissions = new Set<string>();

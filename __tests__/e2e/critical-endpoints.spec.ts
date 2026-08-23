@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import { App } from '../../src/app';
-import { AccessTokenHelper } from '../../src/common/utils/jwt/helpers/access-token.helper';
-import { AuthorizationService } from '../../src/common/authorization/authorization.service';
 import { container } from 'tsyringe';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { App } from '../../src/app.js';
+import { AuthorizationService } from '../../src/common/authorization/authorization.service.js';
+import { AccessTokenHelper } from '../../src/common/utils/jwt/helpers/access-token.helper.js';
 
-import { UserService } from '../../src/modules/users/users.service';
+import { UserService } from '../../src/modules/users/users.service.js';
 
 describe('Critical Endpoints Authorization', () => {
     let appInstance: any;
@@ -29,7 +29,7 @@ describe('Critical Endpoints Authorization', () => {
             getPermissions: vi.fn().mockImplementation((id: string) => {
                 if (id === 'admin-user') return Promise.resolve(['user:read:any', 'user:create:any', 'user:update:any', 'user:delete:any']);
                 return Promise.resolve(['user:read:own', 'user:update:own', 'user:delete:own']);
-            })
+            }),
         };
         container.registerInstance(AuthorizationService, mockAuthService as any);
 
@@ -61,7 +61,8 @@ describe('Critical Endpoints Authorization', () => {
 
             it('should return 403 if valid token provided but insufficient permissions', async () => {
                 mockAuth({ id: 'other-user' });
-                const res = await (request(appInstance) as any)[endpoint.method](endpoint.path)
+                const res = await (request(appInstance) as any)
+                    [endpoint.method](endpoint.path)
                     .set('Authorization', 'Bearer valid_token')
                     .send(endpoint.body || {});
                 expect(res.status).toBe(403);
@@ -69,7 +70,8 @@ describe('Critical Endpoints Authorization', () => {
 
             it('should return 20x (success) if authorized', async () => {
                 mockAuth({ id: 'admin-user' });
-                const res = await (request(appInstance) as any)[endpoint.method](endpoint.path)
+                const res = await (request(appInstance) as any)
+                    [endpoint.method](endpoint.path)
                     .set('Authorization', 'Bearer valid_token')
                     .send(endpoint.body || {});
                 expect([200, 201]).toContain(res.status);

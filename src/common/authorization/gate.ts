@@ -1,11 +1,11 @@
 import { injectable } from 'tsyringe';
-import { ForbiddenError } from '../errors/AppError';
+import { ForbiddenError } from '../errors/AppError.js';
 
 export interface AuthUser {
     id: string;
     email?: string;
     permissions?: string[];
-};
+}
 
 type GateCallback = (user: AuthUser, ...args: any[]) => boolean;
 

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JwtAuthGuard } from '../../src/common/authorization/guards/jwt-auth.guard';
-import { AccessTokenHelper } from '../../src/common/utils/jwt/helpers/access-token.helper';
-import { UnauthorizedError } from '../../src/common/errors/AppError';
 import { container } from 'tsyringe';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { JwtAuthGuard } from '../../src/common/authorization/guards/jwt-auth.guard.js';
+import { UnauthorizedError } from '../../src/common/errors/AppError.js';
+import { AccessTokenHelper } from '../../src/common/utils/jwt/helpers/access-token.helper.js';
 
 describe('JwtAuthGuard', () => {
     let guard: JwtAuthGuard;

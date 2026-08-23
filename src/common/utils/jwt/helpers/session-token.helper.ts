@@ -1,6 +1,6 @@
-import { JwtPayload, SignOptions } from 'jsonwebtoken';
-import { SESSION_TOKEN_SECRET } from '../../../../config/env';
-import { JwtHelper } from '../jwt';
+import type { JwtPayload, SignOptions } from 'jsonwebtoken';
+import { SESSION_TOKEN_SECRET } from '../../../../config/env.js';
+import { JwtHelper } from '../jwt.js';
 
 export class SessionTokenHelper {
     public static generateSessionToken(payload: object | string = {}, expired: SignOptions['expiresIn']): string {

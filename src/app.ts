@@ -3,26 +3,26 @@
  * @author {Deo Sbrn}
  */
 
+import SwaggerParser from '@apidevtools/swagger-parser';
+import { apiReference } from '@scalar/express-api-reference';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express, { Application } from 'express';
+import express, { type Application } from 'express';
 import { rateLimit } from 'express-rate-limit';
-import morgan from 'morgan';
 import fs from 'fs';
-import path from 'path';
 import helmet from 'helmet';
-import { apiReference } from '@scalar/express-api-reference';
-import SwaggerParser from '@apidevtools/swagger-parser';
-import { resFailed } from './common/response';
-import { errorHandler } from './common/middlewares/error.middleware';
-import { corsConfig, limitterConfig } from './config/app';
-import { BaseRoute } from './common/base.route';
-import { UserRoute } from './modules/users/users.route';
-import { AuthRoute } from './modules/auth/auth.route';
-import { HealthRoute } from './health/health.route';
-import { CoreRoute } from './modules/core/core.route';
-import { RoleRoute } from './modules/roles/roles.route';
-import { injectable, container } from 'tsyringe';
+import morgan from 'morgan';
+import path from 'path';
+import { container, injectable } from 'tsyringe';
+import type { BaseRoute } from './common/base.route.js';
+import { errorHandler } from './common/middlewares/error.middleware.js';
+import { resFailed } from './common/response.js';
+import { corsConfig, limitterConfig } from './config/app.js';
+import { HealthRoute } from './health/health.route.js';
+import { AuthRoute } from './modules/auth/auth.route.js';
+import { CoreRoute } from './modules/core/core.route.js';
+import { RoleRoute } from './modules/roles/roles.route.js';
+import { UserRoute } from './modules/users/users.route.js';
 
 @injectable()
 export class App {
@@ -41,17 +41,25 @@ export class App {
     }
 
     private initializeMiddlewares(): void {
-        this.app.use(helmet({
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-                    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://fonts.scalar.com"],
-                    fontSrc: ["'self'", "data:", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "https://fonts.scalar.com"],
-                    imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net"],
+        this.app.use(
+            helmet({
+                contentSecurityPolicy: {
+                    directives: {
+                        defaultSrc: ["'self'"],
+                        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+                        styleSrc: [
+                            "'self'",
+                            "'unsafe-inline'",
+                            'https://fonts.googleapis.com',
+                            'https://cdn.jsdelivr.net',
+                            'https://fonts.scalar.com',
+                        ],
+                        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net', 'https://fonts.scalar.com'],
+                        imgSrc: ["'self'", 'data:', 'https://cdn.jsdelivr.net'],
+                    },
                 },
-            },
-        }));
+            }),
+        );
         this.app.disable('x-powered-by');
         this.app.use(cors(corsConfig()));
         this.app.use(rateLimit(limitterConfig()));

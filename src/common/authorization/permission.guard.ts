@@ -1,16 +1,16 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { injectable, inject } from 'tsyringe';
-import { IAuthGuard } from './guards/i-auth.guard';
-import { AuthorizationService } from './authorization.service';
-import { Gate } from './gate';
-import { ForbiddenError } from '../errors/AppError';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { inject, injectable } from 'tsyringe';
+import { ForbiddenError } from '../errors/AppError.js';
+import { AuthorizationService } from './authorization.service.js';
+import { Gate } from './gate.js';
+import type { IAuthGuard } from './guards/i-auth.guard.js';
 
 @injectable()
 export class PermissionGuard {
     constructor(
         @inject('IAuthGuard') private readonly authGuard: IAuthGuard,
         @inject(AuthorizationService) private readonly authService: AuthorizationService,
-        @inject(Gate) private readonly gate: Gate
+        @inject(Gate) private readonly gate: Gate,
     ) {}
 
     public createMiddleware(permission: string): RequestHandler {
@@ -18,7 +18,7 @@ export class PermissionGuard {
             try {
                 // Verify identity (this will throw if missing/invalid)
                 await this.authGuard.verify(req, res, () => {});
-                
+
                 const user = (req as any).user;
                 if (!user) {
                     throw new Error('User not attached by AuthGuard');

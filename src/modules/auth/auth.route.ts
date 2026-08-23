@@ -1,13 +1,12 @@
-import { AuthController } from './auth.controller';
-import { container } from '../../container';
-import { asyncHandler } from '../../common/utils/asyncHandler';
-import { validate } from '../../common/middlewares/validate.middleware';
-import { loginSchema, registerSchema } from './auth.dto';
 import { rateLimit } from 'express-rate-limit';
-import { authLimitterConfig } from '../../config/app';
-import { BaseRoute } from '../../common/base.route';
-
 import { injectable } from 'tsyringe';
+import { BaseRoute } from '../../common/base.route.js';
+import { validate } from '../../common/middlewares/validate.middleware.js';
+import { asyncHandler } from '../../common/utils/asyncHandler.js';
+import { authLimitterConfig } from '../../config/app.js';
+import { container } from '../../container.js';
+import { AuthController } from './auth.controller.js';
+import { loginSchema, registerSchema } from './auth.dto.js';
 
 @injectable()
 export class AuthRoute extends BaseRoute {

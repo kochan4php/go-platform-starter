@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodObject, ZodError, ZodIssue } from 'zod';
-import { ValidationError } from '../errors/AppError';
+import type { NextFunction, Request, Response } from 'express';
+import { ZodError, type ZodIssue, type ZodObject } from 'zod';
+import { ValidationError } from '../errors/AppError.js';
 
 export class ValidateMiddleware {
     public static handle(schema: ZodObject<any>) {

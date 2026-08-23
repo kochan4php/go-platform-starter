@@ -1,15 +1,15 @@
-import { prisma } from '../database/connection';
-import { logger } from '../common/utils/logger';
+import { logger } from '../common/utils/logger.js';
+import { prisma } from '../database/connection.js';
 
 export class HealthChecker {
     private static intervalId: NodeJS.Timeout | null = null;
 
     public static start(intervalMs: number = 30000): void {
-        if (this.intervalId) {
+        if (HealthChecker.intervalId) {
             return;
         }
 
-        this.intervalId = setInterval(async () => {
+        HealthChecker.intervalId = setInterval(async () => {
             try {
                 await prisma.$queryRaw`SELECT 1`;
             } catch (error: any) {
@@ -22,9 +22,9 @@ export class HealthChecker {
     }
 
     public static stop(): void {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
+        if (HealthChecker.intervalId) {
+            clearInterval(HealthChecker.intervalId);
+            HealthChecker.intervalId = null;
             logger.info('HealthChecker', 'Stopped DB health checker');
         }
     }

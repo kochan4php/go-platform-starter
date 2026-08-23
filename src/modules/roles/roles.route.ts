@@ -1,7 +1,7 @@
-import { BaseRoute } from '../../common/base.route';
-import { RoleController } from './roles.controller';
-import { container } from '../../container';
 import { injectable } from 'tsyringe';
+import { BaseRoute } from '../../common/base.route.js';
+import { container } from '../../container.js';
+import { RoleController } from './roles.controller.js';
 
 @injectable()
 export class RoleRoute extends BaseRoute {

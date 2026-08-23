@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { Gate } from './gate';
+import { Gate } from './gate.js';
 
 export function registerAbilities(): void {
     const gate = container.resolve(Gate);

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { AppError } from '../errors/AppError';
-import { logger } from '../utils/logger';
+import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import { AppError } from '../errors/AppError.js';
+import { logger } from '../utils/logger.js';
 
 export class ErrorHandlerMiddleware {
     public handle: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction): void => {

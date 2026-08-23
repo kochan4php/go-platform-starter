@@ -1,8 +1,8 @@
-import { NextFunction, Response } from 'express';
-import IRequest from '../types/i-request';
-import { AccessTokenHelper } from '../utils/jwt/helpers/access-token.helper';
-import { resFailed } from '../response';
-import { Logger } from '../utils/logger';
+import type { NextFunction, Response } from 'express';
+import { resFailed } from '../response.js';
+import type IRequest from '../types/i-request.js';
+import { AccessTokenHelper } from '../utils/jwt/helpers/access-token.helper.js';
+import { Logger } from '../utils/logger.js';
 
 export class AuthMiddleware {
     public async handle(req: IRequest, res: Response, next: NextFunction): Promise<void | Response> {

@@ -1,9 +1,8 @@
-import { CoreController } from './core.controller';
-import { container } from '../../container';
-import { asyncHandler } from '../../common/utils/asyncHandler';
-import { BaseRoute } from '../../common/base.route';
-
 import { injectable } from 'tsyringe';
+import { BaseRoute } from '../../common/base.route.js';
+import { asyncHandler } from '../../common/utils/asyncHandler.js';
+import { container } from '../../container.js';
+import { CoreController } from './core.controller.js';
 
 @injectable()
 export class CoreRoute extends BaseRoute {

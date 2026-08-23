@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
-import { logger } from '../../common/utils/logger';
-import { HashHelper } from '../../common/utils/hash.helper';
-import { resFailed, resSuccess } from '../../common/response';
-import { UserService } from './users.service';
-import { injectable, inject } from 'tsyringe';
-import { RequirePermission } from '../../common/authorization/decorators';
+import type { Request, Response } from 'express';
+import { inject, injectable } from 'tsyringe';
+import { RequirePermission } from '../../common/authorization/decorators.js';
+import { resFailed, resSuccess } from '../../common/response.js';
+import { HashHelper } from '../../common/utils/hash.helper.js';
+import { logger } from '../../common/utils/logger.js';
+import { UserService } from './users.service.js';
 
 @injectable()
 export class UserController {

@@ -1,11 +1,10 @@
-import { UserController } from './users.controller';
-import { container } from '../../container';
-import { asyncHandler } from '../../common/utils/asyncHandler';
-import { validate } from '../../common/middlewares/validate.middleware';
-import { createUserSchema, updateUserSchema, getUsersSchema } from './users.dto';
-import { BaseRoute } from '../../common/base.route';
-
 import { injectable } from 'tsyringe';
+import { BaseRoute } from '../../common/base.route.js';
+import { validate } from '../../common/middlewares/validate.middleware.js';
+import { asyncHandler } from '../../common/utils/asyncHandler.js';
+import { container } from '../../container.js';
+import { UserController } from './users.controller.js';
+import { createUserSchema, getUsersSchema, updateUserSchema } from './users.dto.js';
 
 @injectable()
 export class UserRoute extends BaseRoute {

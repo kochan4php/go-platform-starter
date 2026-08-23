@@ -1,9 +1,8 @@
-import { HealthController } from './health.controller';
-import { container } from '../container';
-import { asyncHandler } from '../common/utils/asyncHandler';
-import { BaseRoute } from '../common/base.route';
-
 import { injectable } from 'tsyringe';
+import { BaseRoute } from '../common/base.route.js';
+import { asyncHandler } from '../common/utils/asyncHandler.js';
+import { container } from '../container.js';
+import { HealthController } from './health.controller.js';
 
 @injectable()
 export class HealthRoute extends BaseRoute {

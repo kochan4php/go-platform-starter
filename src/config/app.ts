@@ -3,10 +3,10 @@
  * @author {Deo Sbrn}
  */
 
-import { CorsOptions } from 'cors';
-import { Options } from 'express-rate-limit';
-import { ServerOptions } from 'socket.io';
-import { TRUSTED_DOMAINS } from '../config/env';
+import type { CorsOptions } from 'cors';
+import type { Options } from 'express-rate-limit';
+import type { ServerOptions } from 'socket.io';
+import { TRUSTED_DOMAINS } from '../config/env.js';
 
 export const socketConfig = (): Partial<ServerOptions> => ({
     cors: {

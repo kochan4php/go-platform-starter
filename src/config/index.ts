@@ -1,3 +1,3 @@
-export * from './app';
-export * from '../config/env';
-export * from '../database/connection';
+export * from '../config/env.js';
+export * from '../database/connection.js';
+export * from './app.js';

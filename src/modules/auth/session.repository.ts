@@ -1,8 +1,7 @@
-import { BaseRepository, IBaseRepository } from '../../common/base.repository';
-import { prisma } from '../../database/connection';
-import { Session } from '@prisma/client';
-
+import type { Session } from '@prisma/client';
 import { injectable } from 'tsyringe';
+import { BaseRepository, type IBaseRepository } from '../../common/base.repository.js';
+import { prisma } from '../../database/connection.js';
 
 export interface ISessionRepository extends IBaseRepository<Session> {
     // Add specific methods here if needed

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 export class AsyncHandler {
     public static handle<T = any>(fn: (req: Request, res: Response, next: NextFunction) => Promise<T>) {

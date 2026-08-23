@@ -1,14 +1,16 @@
-import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from './users.repository';
+import { inject, injectable } from 'tsyringe';
+import type { IUserRepository } from './users.repository.js';
 
 @injectable()
 export class UserService {
-    constructor(
-        @inject('IUserRepository') private readonly userRepository: IUserRepository,
-    ) {}
+    constructor(@inject('IUserRepository') private readonly userRepository: IUserRepository) {}
 
     public async getAllUsers(filter: any = {}, limit: number = 10, offset: number = 0): Promise<any[]> {
-        return await this.userRepository.findAll(filter, { select: { id: true, name: true, phoneNumber: true, email: true, avatar: true, bio: true }, take: limit, skip: offset });
+        return await this.userRepository.findAll(filter, {
+            select: { id: true, name: true, phoneNumber: true, email: true, avatar: true, bio: true },
+            take: limit,
+            skip: offset,
+        });
     }
 
     public async getOneUser(filter: any, select: any = {}, throwError: boolean = false): Promise<any | null> {

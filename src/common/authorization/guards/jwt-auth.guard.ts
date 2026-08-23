@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
+import { type NextFunction, Request, type Response } from 'express';
 import { injectable } from 'tsyringe';
-import { IAuthGuard } from './i-auth.guard';
-import { AccessTokenHelper } from '../../utils/jwt/helpers/access-token.helper';
-import { UnauthorizedError } from '../../errors/AppError';
-import IRequest from '../../types/i-request';
+import { UnauthorizedError } from '../../errors/AppError.js';
+import type IRequest from '../../types/i-request.js';
+import { AccessTokenHelper } from '../../utils/jwt/helpers/access-token.helper.js';
+import type { IAuthGuard } from './i-auth.guard.js';
 
 @injectable()
 export class JwtAuthGuard implements IAuthGuard {
@@ -18,7 +18,7 @@ export class JwtAuthGuard implements IAuthGuard {
         try {
             await AccessTokenHelper.verifyAccessToken(token);
             const decoded = AccessTokenHelper.getUserPayloadFromAccessToken(token) as any;
-            
+
             req.user = decoded;
             next();
         } catch (error: any) {

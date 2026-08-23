@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { injectable } from 'tsyringe';
-import { resFailed, resSuccess } from '../../common/response';
-import { logger } from '../../common/utils/logger';
-import { RequirePermission } from '../../common/authorization/decorators';
-import { prisma } from '../../database/connection';
+import { RequirePermission } from '../../common/authorization/decorators.js';
+import { resFailed, resSuccess } from '../../common/response.js';
+import { logger } from '../../common/utils/logger.js';
+import { prisma } from '../../database/connection.js';
 
 @injectable()
 export class RoleController {
@@ -20,10 +20,10 @@ export class RoleController {
                 include: {
                     rolePermissions: {
                         include: {
-                            permission: true
-                        }
-                    }
-                }
+                            permission: true,
+                        },
+                    },
+                },
             });
 
             if (!role) {

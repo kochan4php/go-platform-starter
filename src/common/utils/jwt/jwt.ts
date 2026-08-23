@@ -1,4 +1,4 @@
-import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
+import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 
 export class JwtHelper {
     public static generateToken(payload: object | string = {}, tokenSecret: string, expired: SignOptions['expiresIn']): string {

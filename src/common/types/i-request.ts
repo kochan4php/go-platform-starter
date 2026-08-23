@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import DecodedUser from './decoded-user';
+import type { Request } from 'express';
+import type DecodedUser from './decoded-user.js';
 
 /**
  * @description Interface for expand Request express object
