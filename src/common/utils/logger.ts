@@ -1,21 +1,22 @@
-import log from 'npmlog';
+import pino from 'pino';
+import { LOG_LEVEL, NODE_ENV } from '../../config/env.js';
 
-export class Logger {
-    public static info(prefix: string, message: string, ...args: any[]): void {
-        log.info(prefix, message, ...args);
-    }
+/**
+ * @description Single structured logger (pino). Pretty-printed outside production;
+ * JSON everywhere else. Request-scoped child loggers come from pino-http (`req.log`).
+ */
+export const logger = pino(
+    {
+        level: LOG_LEVEL,
+        base: { env: NODE_ENV },
+    },
+    NODE_ENV === 'production' || LOG_LEVEL === 'silent'
+        ? undefined
+        : pino.transport({
+              target: 'pino-pretty',
+              options: { colorize: true, translateTime: 'SYS:standard', singleLine: true },
+          }),
+);
 
-    public static error(prefix: string, message: string, ...args: any[]): void {
-        log.error(prefix, message, ...args);
-    }
-
-    public static warn(prefix: string, message: string, ...args: any[]): void {
-        log.warn(prefix, message, ...args);
-    }
-
-    public static get log() {
-        return log;
-    }
-}
-
-export const logger = Logger.log;
+/** Module-scoped child logger helper: `const log = moduleLogger('auth')`. */
+export const moduleLogger = (module: string) => logger.child({ module });

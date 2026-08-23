@@ -10,6 +10,7 @@ process.env.DATABASE_URL = databaseUrl;
 
 // Keep rate limiting out of the way of e2e flows
 process.env.AUTH_RATE_LIMIT_MAX = '10000';
+process.env.LOG_LEVEL = 'silent';
 process.env.RATE_LIMIT_MAX = '10000';
 
 // Single-fork guarantee (see vitest.config.mts)

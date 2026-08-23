@@ -3,27 +3,26 @@
  * @author {Deo Sbrn}
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import SwaggerParser from '@apidevtools/swagger-parser';
 import { apiReference } from '@scalar/express-api-reference';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Application } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
-import morgan from 'morgan';
+import { pinoHttp } from 'pino-http';
 import { container, injectable } from 'tsyringe';
 import type { BaseRoute } from './common/base.route.js';
 import { errorHandler } from './common/middlewares/error.middleware.js';
 import { resFailed } from './common/response.js';
 import { corsConfig, globalLimiterConfig } from './config/app.js';
+import { httpLoggerOptions } from './config/http-logger.js';
 import { HealthRoute } from './health/health.route.js';
 import { AuthRoute } from './modules/auth/auth.route.js';
 import { CoreRoute } from './modules/core/core.route.js';
 import { PermissionRoute } from './modules/roles/permissions.route.js';
 import { RoleRoute } from './modules/roles/roles.route.js';
 import { UserRoute } from './modules/users/users.route.js';
+import { openApiRegistry } from './openapi/registry.js';
 
 @injectable()
 export class App {
@@ -32,8 +31,10 @@ export class App {
     constructor() {
         this.app = express();
         this.initializeMiddlewares();
-        this.initializeDocs();
+        // Routes first: their constructors register OpenAPI operations,
+        // and initializeDocs() builds the spec from those registrations.
         this.initializeRoutes();
+        this.initializeDocs();
         this.initializeErrorHandling();
     }
 
@@ -62,44 +63,25 @@ export class App {
             }),
         );
         this.app.disable('x-powered-by');
+        this.app.use(pinoHttp(httpLoggerOptions()));
         this.app.use(cors(corsConfig()));
         this.app.use(rateLimit(globalLimiterConfig()));
         this.app.use(cookieParser());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
-        this.app.use(morgan('dev'));
     }
 
     private initializeDocs(): void {
-        const openapiPath = path.resolve(process.cwd(), 'openapi/openapi.yaml');
-        if (fs.existsSync(openapiPath)) {
-            let bundledSpec: any = null;
-            SwaggerParser.bundle(openapiPath)
-                .then((spec) => {
-                    bundledSpec = spec;
-                })
-                .catch((err) => console.error('Failed to bundle openapi:', err));
+        // Spec is generated synchronously from the zod DTOs via the registry —
+        // no file bundling, no loading race, no drift between docs and validation.
+        const spec = openApiRegistry.build({
+            title: 'Express TS Starter API',
+            description:
+                'Express 5 + TypeScript + Sequelize + RBAC starter. Auth via JWT bearer tokens; refresh via httpOnly session cookie.',
+        });
 
-            // Raw bundled spec (consumed by DAST scanners and codegen tools)
-            this.app.get('/docs/openapi.json', (_, res) => {
-                if (!bundledSpec) {
-                    return res.status(503).json({ success: false, message: 'API documentation is still loading' });
-                }
-                return res.json(bundledSpec);
-            });
-
-            this.app.use('/docs', (req, res, next) => {
-                if (!bundledSpec) {
-                    return res.status(503).send('API Documentation is still loading...');
-                }
-                apiReference({
-                    theme: 'purple',
-                    spec: {
-                        content: bundledSpec,
-                    },
-                })(req as any, res as any, next);
-            });
-        }
+        this.app.get('/docs/openapi.json', (_, res) => res.json(spec));
+        this.app.use('/docs', apiReference({ theme: 'purple', spec: { content: spec as any } }));
     }
 
     private initializeRoutes(): void {
@@ -115,12 +97,11 @@ export class App {
         routes.forEach((route) => {
             this.app.use(route.path, route.router);
         });
-
-        // 404 Not Found
-        this.app.use((_, res) => resFailed(res, 404, 'Path not found. See /api/v1 for the API index and /docs for documentation'));
     }
 
     private initializeErrorHandling(): void {
+        // 404 Not Found — must be registered after every real route (incl. docs).
+        this.app.use((_, res) => resFailed(res, 404, 'Path not found. See /api/v1 for the API index and /docs for documentation'));
         this.app.use(errorHandler);
     }
 }

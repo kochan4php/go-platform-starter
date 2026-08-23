@@ -47,7 +47,7 @@ export class AuthController {
             const user = await this.userService.createUser({ name, phoneNumber, email, password });
             return resSuccess(res, 201, 'Register success', { user });
         } catch (error: any) {
-            logger.error('AuthController.register', error.message);
+            logger.error({ err: error }, 'AuthController.register failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -74,7 +74,7 @@ export class AuthController {
 
             return resSuccess(res, 200, 'Login success', { accessToken, refreshToken });
         } catch (error: any) {
-            logger.error('AuthController.login', error.message);
+            logger.error({ err: error }, 'AuthController.login failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -123,7 +123,7 @@ export class AuthController {
 
             return resSuccess(res, 200, 'Refresh token success', { accessToken, refreshToken });
         } catch (error: any) {
-            logger.error('AuthController.refreshToken', error.message);
+            logger.error({ err: error }, 'AuthController.refreshToken failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -161,7 +161,7 @@ export class AuthController {
 
             return resSuccess(res, 200, 'Logout success');
         } catch (error: any) {
-            logger.error('AuthController.logout', error.message);
+            logger.error({ err: error }, 'AuthController.logout failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }

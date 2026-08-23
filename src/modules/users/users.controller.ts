@@ -19,7 +19,7 @@ export class UserController {
 
             return resSuccess(res, 200, 'Success get all users', { users });
         } catch (error: any) {
-            logger.error('UserController.getAllUsers', error.message);
+            logger.error({ err: error }, 'UserController.getAllUsers failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
@@ -34,7 +34,7 @@ export class UserController {
 
             return resSuccess(res, 200, 'Success get user by id', { user });
         } catch (error: any) {
-            logger.error('UserController.getUserById', error.message);
+            logger.error({ err: error }, 'UserController.getUserById failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
@@ -53,7 +53,7 @@ export class UserController {
 
             return resSuccess(res, 201, 'Success create new user', { user });
         } catch (error: any) {
-            logger.error('UserController.createUser', error.message);
+            logger.error({ err: error }, 'UserController.createUser failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
@@ -71,7 +71,7 @@ export class UserController {
 
             return resSuccess(res, 200, 'Success update user by id', { user });
         } catch (error: any) {
-            logger.error('UserController.updateUserById', error.message);
+            logger.error({ err: error }, 'UserController.updateUserById failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
@@ -86,7 +86,7 @@ export class UserController {
 
             return resSuccess(res, 200, 'Success delete user by id');
         } catch (error: any) {
-            logger.error('UserController.deleteUserById', error.message);
+            logger.error({ err: error }, 'UserController.deleteUserById failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }

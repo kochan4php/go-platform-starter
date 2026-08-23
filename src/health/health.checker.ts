@@ -13,19 +13,19 @@ export class HealthChecker {
             try {
                 await sequelize.query('SELECT 1');
             } catch (error: any) {
-                logger.error('HealthChecker', `Database periodic health check failed: ${error.message}`);
+                logger.error({ err: error }, 'HealthChecker: periodic database check failed');
                 // Further logic like triggering an alert or graceful shutdown can be added here
             }
         }, intervalMs);
 
-        logger.info('HealthChecker', `Started DB health checker on ${intervalMs}ms interval`);
+        logger.info(`HealthChecker started on ${intervalMs}ms interval`);
     }
 
     public static stop(): void {
         if (HealthChecker.intervalId) {
             clearInterval(HealthChecker.intervalId);
             HealthChecker.intervalId = null;
-            logger.info('HealthChecker', 'Stopped DB health checker');
+            logger.info('HealthChecker stopped');
         }
     }
 }

@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { injectable } from 'tsyringe';
 import { Public } from '../common/rbac/decorators.js';
 import { resFailed, resSuccess } from '../common/response.js';
-import { Logger } from '../common/utils/logger.js';
+import { logger } from '../common/utils/logger.js';
 import { sequelize } from '../database/connection.js';
 
 @injectable()
@@ -23,7 +23,7 @@ export class HealthController {
             await sequelize.query('SELECT 1');
             return resSuccess(res, 200, 'Database is healthy', { dbHealthy: true, timestamp: Date.now() });
         } catch (error: any) {
-            Logger.error('DatabaseHealthCheck', `Health check failed: ${error.message}`);
+            logger.error({ err: error }, 'DatabaseHealthCheck failed');
             return resFailed(res, 503, 'Database is unhealthy', { dbHealthy: false, timestamp: Date.now() });
         }
     }

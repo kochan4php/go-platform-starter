@@ -14,9 +14,9 @@ import { logger } from '../../common/utils/logger.js';
  * @returns {void} - Void
  */
 export default function SocketController(socket: Socket, _io: Server): void {
-    logger.info('Client', `connected: ${socket.id}`);
+    logger.info({ socketId: socket.id }, 'client connected');
 
     socket.on('disconnect', () => {
-        logger.info('Client', `disconnected: ${socket.id}`);
+        logger.info({ socketId: socket.id }, 'client disconnected');
     });
 }

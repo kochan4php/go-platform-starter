@@ -17,7 +17,7 @@ export class RoleController {
             const roles = await this.roleService.getAllRoles();
             return resSuccess(res, 200, 'Success get all roles', { roles });
         } catch (error: any) {
-            logger.error('RoleController.getAllRoles', error.message);
+            logger.error({ err: error }, 'RoleController.getAllRoles failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -31,7 +31,7 @@ export class RoleController {
             }
             return resSuccess(res, 200, 'Success get role by id', { role });
         } catch (error: any) {
-            logger.error('RoleController.getRoleById', error.message);
+            logger.error({ err: error }, 'RoleController.getRoleById failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -44,7 +44,7 @@ export class RoleController {
             await this.syncPermissions(role.id, permissions);
             return resSuccess(res, 201, 'Success create new role', { role });
         } catch (error: any) {
-            logger.error('RoleController.createRole', error.message);
+            logger.error({ err: error }, 'RoleController.createRole failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
@@ -59,7 +59,7 @@ export class RoleController {
             }
             return resSuccess(res, 200, 'Success update role by id', { role });
         } catch (error: any) {
-            logger.error('RoleController.updateRoleById', error.message);
+            logger.error({ err: error }, 'RoleController.updateRoleById failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -78,7 +78,7 @@ export class RoleController {
             }
             return resSuccess(res, 200, 'Success replace role permissions');
         } catch (error: any) {
-            logger.error('RoleController.replaceRolePermissions', error.message);
+            logger.error({ err: error }, 'RoleController.replaceRolePermissions failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -92,7 +92,7 @@ export class RoleController {
             }
             return resSuccess(res, 200, 'Success delete role by id');
         } catch (error: any) {
-            logger.error('RoleController.deleteRoleById', error.message);
+            logger.error({ err: error }, 'RoleController.deleteRoleById failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }
@@ -112,7 +112,7 @@ export class RoleController {
             const permissions = mappings.map((mapping) => (mapping as any).permission);
             return resSuccess(res, 200, 'Success get role permissions', { permissions });
         } catch (error: any) {
-            logger.error('RoleController.getRolePermissions', error.message);
+            logger.error({ err: error }, 'RoleController.getRolePermissions failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }

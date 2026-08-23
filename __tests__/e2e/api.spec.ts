@@ -62,6 +62,14 @@ describe('core + health', () => {
         expect(res.body.success).toBe(true);
     });
 
+    it('echoes a provided x-request-id and mints one when absent', async () => {
+        const echoed = await supertest(app).get('/api/v1').set('x-request-id', 'trace-abc-123');
+        expect(echoed.headers['x-request-id']).toBe('trace-abc-123');
+
+        const minted = await supertest(app).get('/api/v1');
+        expect(minted.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/i);
+    });
+
     it('GET /api/v1/health and /db report healthy', async () => {
         expect((await supertest(app).get('/api/v1/health')).status).toBe(200);
         const dbRes = await supertest(app).get('/api/v1/health/db');

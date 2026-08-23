@@ -28,7 +28,7 @@ const DURATION = /^[1-9]\d*(s|m|h|d)$/;
 const envSchema = z.object({
     // App
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
     TRUSTED_DOMAINS: z
         .string()
         .optional()
@@ -112,6 +112,9 @@ if (!parsed.success) {
 }
 
 const ENV = parsed.data;
+
+// --- Runtime ---
+export { NODE_ENV };
 
 // --- App ---
 export const PORT = ENV.PORT;

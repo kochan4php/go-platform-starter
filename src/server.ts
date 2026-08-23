@@ -28,7 +28,7 @@ export class Bootstrap {
             // 3. Resolve App and start HTTP listener
             const app = container.resolve(App);
             const server = app.instance.listen(PORT, () => {
-                logger.info('Server', `started on port ${PORT}`);
+                logger.info(`server started on port ${PORT}`);
             });
 
             // 4. Start Socket.IO
@@ -38,24 +38,24 @@ export class Bootstrap {
             // 5. Handle graceful shutdown
             this.handleGracefulShutdown(server);
         } catch (error: any) {
-            logger.error('Bootstrap', `Failed to start server: ${error.message}`);
+            logger.error({ err: error }, 'bootstrap failed');
             process.exit(1);
         }
     }
 
     private handleGracefulShutdown(server: any): void {
         const shutdown = async (signal: string) => {
-            logger.info('Server', `Received ${signal}. Shutting down gracefully...`);
+            logger.info({ signal }, 'shutting down gracefully');
             HealthChecker.stop();
 
             server.close(async () => {
-                logger.info('Server', 'Closed HTTP server');
+                logger.info('http server closed');
                 try {
                     await closeDatabase();
-                    logger.info('Database', 'Closed database connection');
+                    logger.info('database connection closed');
                     process.exit(0);
                 } catch (error: any) {
-                    logger.error('Database', `Error during disconnection: ${error.message}`);
+                    logger.error({ err: error }, 'error during database disconnection');
                     process.exit(1);
                 }
             });

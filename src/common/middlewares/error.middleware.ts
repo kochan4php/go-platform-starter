@@ -24,7 +24,7 @@ export class ErrorHandlerMiddleware {
         }
 
         if (statusCode >= 500) {
-            logger.error('ErrorHandler', err?.stack || err);
+            logger.error({ err }, 'unhandled request error');
         }
 
         res.status(statusCode).json({

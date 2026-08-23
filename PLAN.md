@@ -1,6 +1,8 @@
 # PLAN — express-ts-starter v3.0.0 "production-grade"
 
-Status: **approved, not started** · Baseline: v2.0.0 overhaul complete (`e534b86..955dcfc`)
+Status: **in progress** · Baseline: v2.0.0 overhaul complete (`e534b86..955dcfc`)
+
+Progress: Phase 1 ✅ (`5c6d076`) · Phase 2 ✅ · Phase 3 ✅ · Phases 4–7 pending
 
 Scope confirmed by owner: **all six themes** — config/observability, self-generating docs,
 auth completion, CI modernization, real Socket.IO, list ergonomics.
