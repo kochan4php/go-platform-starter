@@ -1,28 +1,29 @@
 import { injectable } from 'tsyringe';
 import { BaseRoute } from '../../common/base.route.js';
 import { validate } from '../../common/middlewares/validate.middleware.js';
-import { asyncHandler } from '../../common/utils/asyncHandler.js';
 import { container } from '../../container.js';
+import { MeController } from './me.controller.js';
 import { UserController } from './users.controller.js';
-import { createUserSchema, getUsersSchema, updateUserSchema } from './users.dto.js';
+import { createUserSchema, getUsersSchema, updateUserSchema, userIdSchema } from './users.dto.js';
 
 @injectable()
 export class UserRoute extends BaseRoute {
     private userController: UserController;
-    private authGuard: any;
+    private meController: MeController;
 
     constructor() {
-        super('/api/admin/users');
+        super('/api/v1/users');
         this.userController = container.resolve(UserController);
-        this.authGuard = container.resolve('IAuthGuard');
+        this.meController = container.resolve(MeController);
         this.initializeRoutes();
     }
 
     protected initializeRoutes(): void {
+        this.get('/me', [], this.meController, 'getMe');
         this.get('/', [validate(getUsersSchema)], this.userController, 'getAllUsers');
-        this.get('/:id', [], this.userController, 'getUserById');
+        this.get('/:id', [validate(userIdSchema)], this.userController, 'getUserById');
         this.post('/', [validate(createUserSchema)], this.userController, 'createUser');
-        this.put('/:id', [validate(updateUserSchema)], this.userController, 'updateUserById');
-        this.delete('/:id', [], this.userController, 'deleteUserById');
+        this.put('/:id', [validate(updateUserSchema), validate(userIdSchema)], this.userController, 'updateUserById');
+        this.delete('/:id', [validate(userIdSchema)], this.userController, 'deleteUserById');
     }
 }

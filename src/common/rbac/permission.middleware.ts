@@ -17,6 +17,17 @@ export class PermissionMiddleware {
         private readonly permissionService: PermissionService,
     ) {}
 
+    public requireAuthentication(): RequestHandler {
+        return async (req: Request, _: Response, next: NextFunction) => {
+            try {
+                await this.authGuard.verify(req as IRequest, _, () => {});
+                next();
+            } catch (error) {
+                next(error);
+            }
+        };
+    }
+
     public requirePermission(permission: string): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
             try {

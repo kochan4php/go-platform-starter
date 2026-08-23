@@ -21,6 +21,7 @@ import { corsConfig, limitterConfig } from './config/app.js';
 import { HealthRoute } from './health/health.route.js';
 import { AuthRoute } from './modules/auth/auth.route.js';
 import { CoreRoute } from './modules/core/core.route.js';
+import { PermissionRoute } from './modules/roles/permissions.route.js';
 import { RoleRoute } from './modules/roles/roles.route.js';
 import { UserRoute } from './modules/users/users.route.js';
 
@@ -100,6 +101,7 @@ export class App {
             container.resolve(AuthRoute),
             container.resolve(UserRoute),
             container.resolve(RoleRoute),
+            container.resolve(PermissionRoute),
         ];
 
         routes.forEach((route) => {
@@ -107,7 +109,7 @@ export class App {
         });
 
         // 404 Not Found
-        this.app.use((_, res) => resFailed(res, 404, 'Path Not Found. Please go to /api'));
+        this.app.use((_, res) => resFailed(res, 404, 'Path not found. See /api/v1 for the API index and /docs for documentation'));
     }
 
     private initializeErrorHandling(): void {

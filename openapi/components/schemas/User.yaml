@@ -1,33 +1,29 @@
-type: object
-properties:
-  id:
-    type: string
-    format: uuid
-    example: "68c1869b-dac1-4822-b5fe-365618ed4914"
-  name:
-    type: string
-    example: "John Doe"
-  phoneNumber:
-    type: string
-    example: "1234567890"
-  email:
-    type: string
-    format: email
-    example: "john@example.com"
-  avatar:
-    type: string
-    nullable: true
-    example: null
-  bio:
-    type: string
-    nullable: true
-    example: null
+User:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    phoneNumber: { type: string }
+    email: { type: string, format: email }
+    avatar: { type: string, nullable: true }
+    bio: { type: string, nullable: true }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
 
-  createdAt:
-    type: string
-    format: date-time
-    example: "2026-08-01T16:04:44.334Z"
-  updatedAt:
-    type: string
-    format: date-time
-    example: "2026-08-01T16:04:44.334Z"
+CreateUserInput:
+  type: object
+  required: [name, phoneNumber, email, password]
+  properties:
+    name: { type: string }
+    phoneNumber: { type: string }
+    email: { type: string, format: email }
+    password: { type: string, format: password, minLength: 6 }
+
+UpdateUserInput:
+  type: object
+  properties:
+    name: { type: string }
+    phoneNumber: { type: string }
+    email: { type: string, format: email }
+    avatar: { type: string }
+    bio: { type: string }

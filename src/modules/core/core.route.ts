@@ -9,7 +9,7 @@ export class CoreRoute extends BaseRoute {
     private coreController: CoreController;
 
     constructor() {
-        super('/api');
+        super('/api/v1');
         this.coreController = container.resolve(CoreController);
         this.initializeRoutes();
     }

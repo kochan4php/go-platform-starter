@@ -1,33 +1,23 @@
 get:
-  summary: Refresh access token
-  tags:
-    - Auth
+  summary: Refresh tokens (rotates session)
+  description: Requires the httpOnly session cookie set at login.
+  tags: [Auth]
+  security: []
+  parameters:
+    - in: cookie
+      name: session-backend
+      required: true
+      schema: { type: string }
   responses:
     '200':
-      description: Token refreshed
+      description: New access + refresh tokens issued; session cookie rotated
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: true
-              message:
-                type: string
-                example: "Refresh the token success"
-              data:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refreshToken:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    '404':
-      description: Session not found
+            $ref: '../../components/schemas/Envelope.yaml#/TokensEnvelope'
+    '401':
+      description: Missing/invalid/expired session
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas/ErrorResponse.yaml'
+            $ref: '../../components/schemas/ErrorResponse.yaml#/ErrorResponse'

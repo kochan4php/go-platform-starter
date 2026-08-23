@@ -1,55 +1,29 @@
 post:
   summary: Register a new user
-  tags:
-    - Auth
+  tags: [Auth]
+  security: []
   requestBody:
     required: true
     content:
       application/json:
         schema:
           type: object
-          required:
-            - name
-            - email
-            - password
-            - phoneNumber
+          required: [name, phoneNumber, email, password]
           properties:
-            name:
-              type: string
-              example: "John Doe"
-            email:
-              type: string
-              format: email
-              example: "john@example.com"
-            password:
-              type: string
-              format: password
-              example: "secret123"
-            phoneNumber:
-              type: string
-              example: "1234567890"
+            name: { type: string, example: Jane Doe }
+            phoneNumber: { type: string, example: '081234567890' }
+            email: { type: string, format: email, example: jane@example.com }
+            password: { type: string, format: password, minLength: 6 }
   responses:
     '201':
-      description: User registered successfully
+      description: User created
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: true
-              message:
-                type: string
-                example: "Register success"
-              data:
-                type: object
-                properties:
-                  user:
-                    $ref: '../../components/schemas/User.yaml'
-    '400':
-      description: Bad request or validation error
+            $ref: '../../components/schemas/Envelope.yaml#/UserEnvelope'
+    '409':
+      description: Email already registered
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas/ErrorResponse.yaml'
+            $ref: '../../components/schemas/ErrorResponse.yaml#/ErrorResponse'

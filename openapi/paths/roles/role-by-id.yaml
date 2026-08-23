@@ -1,0 +1,57 @@
+get:
+  summary: Get role by id
+  tags: [Roles]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  responses:
+    '200':
+      description: Role found
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/RoleEnvelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }
+put:
+  summary: Update role by id
+  tags: [Roles]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            name: { type: string }
+            description: { type: string }
+  responses:
+    '200':
+      description: Role updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/RoleEnvelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }
+delete:
+  summary: Delete role by id
+  tags: [Roles]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  responses:
+    '200':
+      description: Role deleted (user assignments cascade)
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/Envelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }

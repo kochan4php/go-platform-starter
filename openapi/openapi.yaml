@@ -1,32 +1,52 @@
 openapi: 3.0.0
 info:
   title: Express TS Starter API
-  version: 1.0.0
-  description: API Documentation for Express TS Starter
+  version: 2.0.0
+  description: |
+    API documentation for Express TS Starter v2.
+
+    - Express 5 + TypeScript (ESM) + Sequelize (PostgreSQL)
+    - JWT access tokens (Authorization: Bearer) for authentication
+    - DB-driven RBAC permissions for authorization
+    - Refresh-token rotation via httpOnly session cookie
 servers:
   - url: http://localhost:3000
     description: Local server
+tags:
+  - name: Core
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Roles
 paths:
-  /api:
+  /api/v1:
     $ref: './paths/main.yaml'
-  /api/health-check:
-    $ref: './paths/health-check.yaml'
-  /api/health-check/db:
-    $ref: './paths/health-check-db.yaml'
-  /api/auth/register:
+  /api/v1/health:
+    $ref: './paths/health.yaml'
+  /api/v1/health/db:
+    $ref: './paths/health-db.yaml'
+  /api/v1/auth/register:
     $ref: './paths/auth/register.yaml'
-  /api/auth/login:
+  /api/v1/auth/login:
     $ref: './paths/auth/login.yaml'
-  /api/auth/logout:
-    $ref: './paths/auth/logout.yaml'
-  /api/auth/refresh-token:
+  /api/v1/auth/refresh-token:
     $ref: './paths/auth/refresh-token.yaml'
-  /api/admin/users:
-    $ref: './paths/admin/users.yaml'
-  /api/admin/users/{id}:
-    $ref: './paths/admin/user-by-id.yaml'
-  /api/roles/{id}/permissions:
-    $ref: './paths/roles/permissions.yaml'
+  /api/v1/auth/logout:
+    $ref: './paths/auth/logout.yaml'
+  /api/v1/users/me:
+    $ref: './paths/users/me.yaml'
+  /api/v1/users:
+    $ref: './paths/users/users.yaml'
+  /api/v1/users/{id}:
+    $ref: './paths/users/user-by-id.yaml'
+  /api/v1/roles:
+    $ref: './paths/roles/roles.yaml'
+  /api/v1/roles/{id}:
+    $ref: './paths/roles/role-by-id.yaml'
+  /api/v1/roles/{id}/permissions:
+    $ref: './paths/roles/role-permissions.yaml'
+  /api/v1/permissions:
+    $ref: './paths/roles/permissions-catalog.yaml'
 components:
   securitySchemes:
     bearerAuth:

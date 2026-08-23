@@ -9,7 +9,7 @@ export class HealthRoute extends BaseRoute {
     private healthController: HealthController;
 
     constructor() {
-        super('/api/health-check');
+        super('/api/v1/health');
         this.healthController = container.resolve(HealthController);
         this.initializeRoutes();
     }

@@ -1,24 +1,18 @@
 get:
-  summary: Main endpoint
-  tags:
-    - Main
+  summary: API index
+  tags: [Core]
+  security: []
   responses:
     '200':
-      description: Welcome message
+      description: Welcome payload
       content:
         application/json:
           schema:
             type: object
             properties:
-              success:
-                type: boolean
-                example: true
-              message:
-                type: string
-                example: "Hello from Node.js + Express.js + TypeScript Starter"
+              success: { type: boolean, example: true }
+              message: { type: string }
               data:
                 type: object
                 properties:
-                  docs:
-                    type: string
-                    example: "https://github.com/kochan4php/express-ts-starter"
+                  docs: { type: string, format: uri }

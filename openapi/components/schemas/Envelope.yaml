@@ -1,0 +1,77 @@
+Envelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data: {}
+
+UserEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        user:
+          $ref: './User.yaml#/User'
+
+UserListEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: './User.yaml#/User'
+
+RoleEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        role:
+          $ref: './Role.yaml#/Role'
+
+RoleListEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: './Role.yaml#/Role'
+
+PermissionListEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items: { type: string }
+
+TokensEnvelope:
+  type: object
+  properties:
+    success: { type: boolean, example: true }
+    message: { type: string }
+    data:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }

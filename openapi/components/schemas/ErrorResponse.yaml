@@ -1,8 +1,36 @@
-type: object
-properties:
-  success:
-    type: boolean
-    example: false
-  message:
-    type: string
-    example: "Error message details"
+ErrorResponse:
+  type: object
+  properties:
+    success: { type: boolean, example: false }
+    message: { type: string, example: 'Something went wrong' }
+    error: {}
+
+NotFound:
+  description: Resource not found
+  content:
+    application/json:
+      schema:
+        $ref: '#/ErrorResponse'
+      example:
+        success: false
+        message: 'Not found'
+
+Unauthorized:
+  description: Missing or invalid credentials
+  content:
+    application/json:
+      schema:
+        $ref: '#/ErrorResponse'
+      example:
+        success: false
+        message: 'Authorization token is missing'
+
+Forbidden:
+  description: Authenticated but lacking the required permission
+  content:
+    application/json:
+      schema:
+        $ref: '#/ErrorResponse'
+      example:
+        success: false
+        message: 'You do not have the required permission: user:read:any'

@@ -2,7 +2,6 @@ import { rateLimit } from 'express-rate-limit';
 import { injectable } from 'tsyringe';
 import { BaseRoute } from '../../common/base.route.js';
 import { validate } from '../../common/middlewares/validate.middleware.js';
-import { asyncHandler } from '../../common/utils/asyncHandler.js';
 import { authLimitterConfig } from '../../config/app.js';
 import { container } from '../../container.js';
 import { AuthController } from './auth.controller.js';
@@ -11,12 +10,10 @@ import { loginSchema, registerSchema } from './auth.dto.js';
 @injectable()
 export class AuthRoute extends BaseRoute {
     private authController: AuthController;
-    private authGuard: any;
 
     constructor() {
-        super('/api/auth');
+        super('/api/v1/auth');
         this.authController = container.resolve(AuthController);
-        this.authGuard = container.resolve('IAuthGuard');
         this.initializeRoutes();
     }
 

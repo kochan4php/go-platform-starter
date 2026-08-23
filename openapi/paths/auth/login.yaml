@@ -1,56 +1,28 @@
 post:
-  summary: Login user
-  tags:
-    - Auth
+  summary: Login
+  description: Accepts email or phone number as loginType. Returns JWT tokens and sets the httpOnly session cookie. Always responds with a uniform error to prevent user enumeration.
+  tags: [Auth]
+  security: []
   requestBody:
     required: true
     content:
       application/json:
         schema:
           type: object
-          required:
-            - loginType
-            - password
+          required: [loginType, password]
           properties:
-            loginType:
-              type: string
-              example: "john@example.com"
-            password:
-              type: string
-              format: password
-              example: "secret123"
+            loginType: { type: string, example: jane@example.com }
+            password: { type: string, format: password }
   responses:
     '200':
-      description: Login successful
+      description: Authenticated; sets httpOnly session cookie
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: true
-              message:
-                type: string
-                example: "Login success"
-              data:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refreshToken:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    '400':
-      description: Password incorrect
+            $ref: '../../components/schemas/Envelope.yaml#/TokensEnvelope'
+    '401':
+      description: Invalid credentials (uniform response)
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas/ErrorResponse.yaml'
-    '404':
-      description: User not found
-      content:
-        application/json:
-          schema:
-            $ref: '../../components/schemas/ErrorResponse.yaml'
+            $ref: '../../components/schemas/ErrorResponse.yaml#/ErrorResponse'

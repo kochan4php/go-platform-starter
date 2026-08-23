@@ -1,0 +1,54 @@
+get:
+  summary: Get user by id
+  tags: [Users]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  responses:
+    '200':
+      description: User found
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/UserEnvelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }
+put:
+  summary: Update user by id
+  tags: [Users]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/User.yaml#/UpdateUserInput'
+  responses:
+    '200':
+      description: User updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/UserEnvelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }
+delete:
+  summary: Delete user by id
+  tags: [Users]
+  security: [{ bearerAuth: [] }]
+  parameters:
+    - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  responses:
+    '200':
+      description: User deleted
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/Envelope.yaml#/Envelope'
+    '401': { $ref: '../../components/schemas/ErrorResponse.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/schemas/ErrorResponse.yaml#/Forbidden' }
+    '404': { $ref: '../../components/schemas/ErrorResponse.yaml#/NotFound' }

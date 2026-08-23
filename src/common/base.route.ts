@@ -1,6 +1,6 @@
 import { type RequestHandler, Router } from 'express';
 import { container } from 'tsyringe';
-import { PERMISSION_METADATA_KEY, PUBLIC_METADATA_KEY } from './rbac/decorators.js';
+import { AUTHENTICATED_METADATA_KEY, PERMISSION_METADATA_KEY, PUBLIC_METADATA_KEY } from './rbac/decorators.js';
 import { isValidPermission } from './rbac/permission.catalog.js';
 import { PermissionMiddleware } from './rbac/permission.middleware.js';
 import { asyncHandler } from './utils/asyncHandler.js';
@@ -29,9 +29,10 @@ export abstract class BaseRoute {
         propertyKey: string,
     ): void {
         const isPublic = Reflect.getMetadata(PUBLIC_METADATA_KEY, target, propertyKey);
+        const isAuthenticated = Reflect.getMetadata(AUTHENTICATED_METADATA_KEY, target, propertyKey);
         const permission = Reflect.getMetadata(PERMISSION_METADATA_KEY, target, propertyKey);
 
-        if (!isPublic && !permission) {
+        if (!isPublic && !isAuthenticated && !permission) {
             throw new Error(
                 `Route ${method.toUpperCase()} ${this.path}${path} is missing an authorization decorator on ${target.constructor.name}.${propertyKey}`,
             );
@@ -47,6 +48,9 @@ export abstract class BaseRoute {
             }
             const guard = container.resolve(PermissionMiddleware);
             handlers.push(guard.requirePermission(permission));
+        } else if (isAuthenticated) {
+            const guard = container.resolve(PermissionMiddleware);
+            handlers.push(guard.requireAuthentication());
         }
 
         handlers.push(...middlewares);

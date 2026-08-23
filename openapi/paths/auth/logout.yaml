@@ -1,26 +1,22 @@
 delete:
-  summary: Logout user
-  tags:
-    - Auth
-  security:
-    - bearerAuth: []
+  summary: Logout (revokes session)
+  tags: [Auth]
+  security: []
+  parameters:
+    - in: cookie
+      name: session-backend
+      required: true
+      schema: { type: string }
   responses:
     '200':
-      description: Logout successful
+      description: Session deleted, cookie cleared
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: true
-              message:
-                type: string
-                example: "Logout success"
+            $ref: '../../components/schemas/Envelope.yaml#/Envelope'
     '401':
-      description: Unauthorized
+      description: Missing/invalid session
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas/ErrorResponse.yaml'
+            $ref: '../../components/schemas/ErrorResponse.yaml#/ErrorResponse'

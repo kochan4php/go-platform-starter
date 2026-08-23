@@ -1,0 +1,15 @@
+Role:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string, example: admin }
+    description: { type: string, nullable: true }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+
+Permission:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string, example: 'user:read:any' }
+    description: { type: string, nullable: true }
