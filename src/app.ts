@@ -21,6 +21,7 @@ import { UserRoute } from './modules/users/users.route';
 import { AuthRoute } from './modules/auth/auth.route';
 import { HealthRoute } from './health/health.route';
 import { CoreRoute } from './modules/core/core.route';
+import { RoleRoute } from './modules/roles/roles.route';
 import { injectable, container } from 'tsyringe';
 
 @injectable()
@@ -90,6 +91,7 @@ export class App {
             container.resolve(HealthRoute),
             container.resolve(AuthRoute),
             container.resolve(UserRoute),
+            container.resolve(RoleRoute),
         ];
 
         routes.forEach((route) => {

@@ -100,5 +100,6 @@
             "pnpm lint:fix",
             "pnpm prettier:fix"
         ]
-    }
+    },
+    "prisma": {}
 }

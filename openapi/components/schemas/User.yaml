@@ -22,10 +22,7 @@ properties:
     type: string
     nullable: true
     example: null
-  role:
-    type: string
-    enum: [admin, user]
-    example: "user"
+
   createdAt:
     type: string
     format: date-time

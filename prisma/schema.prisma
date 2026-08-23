@@ -6,25 +6,69 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  admin
-  user
-}
-
 model User {
-  id          String    @id @default(uuid()) @map("_id")
+  id          String     @id @default(uuid()) @map("_id")
   name        String
-  phoneNumber String    @unique
-  email       String    @unique
+  phoneNumber String     @unique
+  email       String     @unique
   password    String
   avatar      String?
   bio         String?
-  role        Role      @default(user)
   sessions    Session[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  userRoles   UserRole[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@map("users")
+}
+
+model Role {
+  id             String           @id @default(uuid()) @map("_id")
+  name           String           @unique
+  description    String?
+  rolePermissions RolePermission[]
+  userRoles      UserRole[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @map("_id")
+  name            String           @unique
+  description     String?
+  rolePermissions RolePermission[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid()) @map("_id")
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
 }
 
 model Session {

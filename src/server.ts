@@ -15,12 +15,13 @@ import database, { prisma } from './database/connection';
 import { App } from './app';
 import { container } from './container';
 import { injectable, inject } from 'tsyringe';
-
 import { registerAbilities } from './common/authorization/abilities';
+
+import { PermissionRegistry } from './common/authorization/permission.registry';
 
 @injectable()
 export class Bootstrap {
-    constructor(@inject(App) private readonly app: App) {}
+    constructor() {}
 
     public async start(): Promise<void> {
         try {
@@ -30,11 +31,18 @@ export class Bootstrap {
             // 1. Establish database connection
             await database();
 
+            // 1.5 Load Permissions
+            const registry = container.resolve(PermissionRegistry);
+            await registry.loadPermissions();
+
             // 2. Start periodic health check
             HealthChecker.start();
 
+            // Resolve App after DB and permissions are ready
+            const app = container.resolve(App);
+
             // 3. Start HTTP listener
-            const server = this.app.instance.listen(PORT, () => {
+            const server = app.instance.listen(PORT, () => {
                 logger.info('Server', `started on port ${PORT}`);
             });
 

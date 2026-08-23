@@ -1,10 +1,10 @@
 import { injectable } from 'tsyringe';
 import { ForbiddenError } from '../errors/AppError';
 
-export type AuthUser = {
+export interface AuthUser {
     id: string;
-    role: string;
-    [key: string]: any;
+    email?: string;
+    permissions?: string[];
 };
 
 type GateCallback = (user: AuthUser, ...args: any[]) => boolean;
@@ -21,7 +21,7 @@ export class Gate {
         if (!user) return false;
         const callback = this.abilities.get(ability);
         if (!callback) {
-            return false;
+            return user.permissions?.includes(ability) ?? false;
         }
         return callback(user, ...args);
     }

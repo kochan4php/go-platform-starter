@@ -4,9 +4,11 @@ import { Logger } from '../common/utils/logger';
 import { prisma } from '../database/connection';
 
 import { injectable } from 'tsyringe';
+import { Public } from '../common/authorization/decorators';
 
 @injectable()
 export class HealthController {
+    @Public()
     public async healthCheck(_: Request, res: Response): Promise<Response> {
         const health = {
             status: 'UP',
@@ -16,6 +18,7 @@ export class HealthController {
         return resSuccess(res, 200, 'Health check success', health);
     }
 
+    @Public()
     public async dbHealthCheck(_: Request, res: Response): Promise<Response> {
         try {
             await prisma.$queryRaw`SELECT 1`;

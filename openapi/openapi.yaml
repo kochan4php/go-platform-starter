@@ -25,6 +25,8 @@ paths:
     $ref: './paths/admin/users.yaml'
   /api/admin/users/{id}:
     $ref: './paths/admin/user-by-id.yaml'
+  /api/roles/{id}/permissions:
+    $ref: './paths/roles/permissions.yaml'
 components:
   securitySchemes:
     bearerAuth:

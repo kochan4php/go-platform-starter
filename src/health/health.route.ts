@@ -16,7 +16,7 @@ export class HealthRoute extends BaseRoute {
     }
 
     protected initializeRoutes(): void {
-        this.router.get('/', asyncHandler(this.healthController.healthCheck.bind(this.healthController)));
-        this.router.get('/db', asyncHandler(this.healthController.dbHealthCheck.bind(this.healthController)));
+        this.get('/', [], this.healthController, 'healthCheck');
+        this.get('/db', [], this.healthController, 'dbHealthCheck');
     }
 }

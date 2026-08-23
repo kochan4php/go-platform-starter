@@ -9,6 +9,7 @@ import { UserService } from '../users/users.service';
 import { logger } from '../../common/utils/logger';
 
 import { injectable, inject } from 'tsyringe';
+import { Public } from '../../common/authorization/decorators';
 
 @injectable()
 export class AuthController {
@@ -17,6 +18,7 @@ export class AuthController {
         @inject(SessionService) private readonly sessionService: SessionService
     ) {}
 
+    @Public()
     public async register(req: Request, res: Response): Promise<Response> {
         try {
             const { name, phoneNumber, email, password } = req.body;
@@ -40,6 +42,7 @@ export class AuthController {
         }
     }
 
+    @Public()
     public async login(req: Request, res: Response): Promise<Response> {
         try {
             const { loginType, password } = req.body;
@@ -58,7 +61,7 @@ export class AuthController {
                 return resFailed(res, 400, message);
             }
 
-            const JWTPayload = { id: user.id, email: user.email, role: user.role };
+            const JWTPayload = { id: user.id, email: user.email };
             const accessToken = AccessTokenHelper.generateAccessToken(JWTPayload, '5h');
             const refreshToken = RefreshTokenHelper.generateRefreshToken(JWTPayload, '5d');
 
@@ -81,6 +84,7 @@ export class AuthController {
         }
     }
 
+    @Public()
     public async refreshToken(req: Request, res: Response): Promise<Response> {
         try {
             const tokenSessionId = req.cookies['session-backend'];
@@ -126,7 +130,7 @@ export class AuthController {
                 return resFailed(res, 404, message);
             }
 
-            const JWTPayload = { id: user.id, email: user.email, role: user.role };
+            const JWTPayload = { id: user.id, email: user.email };
             const accessToken = AccessTokenHelper.generateAccessToken(JWTPayload, '5h');
             const refreshToken = RefreshTokenHelper.generateRefreshToken(JWTPayload, '5d');
 
@@ -147,6 +151,7 @@ export class AuthController {
         }
     }
 
+    @Public()
     public async logout(req: Request, res: Response): Promise<Response> {
         try {
             const tokenSessionId = req.cookies['session-backend'];

@@ -12,19 +12,21 @@ import { injectable } from 'tsyringe';
 @injectable()
 export class AuthRoute extends BaseRoute {
     private authController: AuthController;
+    private authGuard: any;
 
     constructor() {
         super('/api/auth');
         this.authController = container.resolve(AuthController);
+        this.authGuard = container.resolve('IAuthGuard');
         this.initializeRoutes();
     }
 
     protected initializeRoutes(): void {
         const authLimiter = rateLimit(authLimitterConfig());
 
-        this.router.post('/login', authLimiter, validate(loginSchema), asyncHandler(this.authController.login.bind(this.authController)));
-        this.router.post('/register', authLimiter, validate(registerSchema), asyncHandler(this.authController.register.bind(this.authController)));
-        this.router.delete('/logout', asyncHandler(this.authController.logout.bind(this.authController)));
-        this.router.get('/refresh-token', asyncHandler(this.authController.refreshToken.bind(this.authController)));
+        this.post('/register', [authLimiter, validate(registerSchema)], this.authController, 'register');
+        this.post('/login', [authLimiter, validate(loginSchema)], this.authController, 'login');
+        this.get('/refresh-token', [], this.authController, 'refreshToken');
+        this.delete('/logout', [], this.authController, 'logout');
     }
 }

@@ -16,6 +16,6 @@ export class CoreRoute extends BaseRoute {
     }
 
     protected initializeRoutes(): void {
-        this.router.get('/', asyncHandler(this.coreController.index.bind(this.coreController)));
+        this.get('/', [], this.coreController, 'index');
     }
 }
