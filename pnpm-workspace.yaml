@@ -2,6 +2,9 @@ allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   bcrypt: true
+  cpu-features: true
   es5-ext: true
   esbuild: true
   prisma: true
+  protobufjs: true
+  ssh2: true

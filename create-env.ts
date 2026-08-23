@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
 
 const envExample = readFileSync('./env/.env.example', 'utf8');
-const environments = ['local', 'testing', 'development', 'staging', 'production', 'production.local'];
+const environments = ['local', 'test', 'development', 'staging', 'production', 'production.local'];
 
 if (!existsSync('./env')) mkdirSync('./env');
 

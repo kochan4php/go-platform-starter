@@ -1,5 +1,19 @@
 import { UUIDV4 } from 'sequelize';
-import { AllowNull, Column, CreatedAt, DataType, Default, Model, PrimaryKey, Table, Unique, UpdatedAt } from 'sequelize-typescript';
+import {
+    AllowNull,
+    Column,
+    CreatedAt,
+    DataType,
+    Default,
+    HasMany,
+    Model,
+    PrimaryKey,
+    Table,
+    Unique,
+    UpdatedAt,
+} from 'sequelize-typescript';
+import { Session } from './session.model.js';
+import { UserRole } from './user-role.model.js';
 
 @Table({ tableName: 'users', underscored: true })
 export class User extends Model {
@@ -37,4 +51,10 @@ export class User extends Model {
 
     @UpdatedAt
     declare updatedAt: Date;
+
+    @HasMany(() => Session)
+    declare sessions: Session[];
+
+    @HasMany(() => UserRole)
+    declare userRoles: UserRole[];
 }

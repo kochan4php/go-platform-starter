@@ -32,7 +32,8 @@ export class UserService {
         if (payload.password) {
             payload.password = await HashHelper.hash(payload.password);
         }
-        return await this.userRepository.create(payload);
+        const user = await this.userRepository.create(payload);
+        return this.stripPassword(user);
     }
 
     public async updateOneUserById(id: string, data: any): Promise<any | null> {

@@ -17,7 +17,7 @@ import { container, injectable } from 'tsyringe';
 import type { BaseRoute } from './common/base.route.js';
 import { errorHandler } from './common/middlewares/error.middleware.js';
 import { resFailed } from './common/response.js';
-import { corsConfig, limitterConfig } from './config/app.js';
+import { corsConfig, globalLimiterConfig } from './config/app.js';
 import { HealthRoute } from './health/health.route.js';
 import { AuthRoute } from './modules/auth/auth.route.js';
 import { CoreRoute } from './modules/core/core.route.js';
@@ -63,7 +63,7 @@ export class App {
         );
         this.app.disable('x-powered-by');
         this.app.use(cors(corsConfig()));
-        this.app.use(rateLimit(limitterConfig()));
+        this.app.use(rateLimit(globalLimiterConfig()));
         this.app.use(cookieParser());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));

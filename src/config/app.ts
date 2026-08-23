@@ -21,18 +21,22 @@ export const corsConfig = (): CorsOptions => ({
     credentials: true,
 });
 
-export const limitterConfig = (): Partial<Options> => ({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX) || 100;
+const AUTH_RATE_LIMIT_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 10;
+
+export const globalLimiterConfig = (): Partial<Options> => ({
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX,
     standardHeaders: 'draft-7',
     legacyHeaders: true,
     statusCode: 429,
     message: 'Too many requests, please try again later.',
 });
 
-export const authLimitterConfig = (): Partial<Options> => ({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // strict limit for login/register
+export const authLimiterConfig = (): Partial<Options> => ({
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: AUTH_RATE_LIMIT_MAX,
     standardHeaders: 'draft-7',
     legacyHeaders: true,
     statusCode: 429,

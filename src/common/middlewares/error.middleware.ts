@@ -19,7 +19,7 @@ export class ErrorHandlerMiddleware {
             error = err.message;
         } else if (err?.name === 'ZodError' || (err instanceof Error && err.name === 'ZodError')) {
             statusCode = 400;
-            message = err.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+            message = err.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
             error = message;
         }
 

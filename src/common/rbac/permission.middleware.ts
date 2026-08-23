@@ -4,7 +4,7 @@ import { ForbiddenError } from '../errors/AppError.js';
 import type DecodedUser from '../types/decoded-user.js';
 import type IRequest from '../types/i-request.js';
 import type { IAuthGuard } from './guards/i-auth.guard.js';
-import type { PermissionService } from './permission.service.js';
+import { PermissionService } from './permission.service.js';
 
 /**
  * @description Factory for the permission-enforcing middleware. Verifies identity via
@@ -14,7 +14,7 @@ import type { PermissionService } from './permission.service.js';
 export class PermissionMiddleware {
     constructor(
         @inject('IAuthGuard') private readonly authGuard: IAuthGuard,
-        private readonly permissionService: PermissionService,
+        @inject(PermissionService) private readonly permissionService: PermissionService,
     ) {}
 
     public requireAuthentication(): RequestHandler {

@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { JwtAuthGuard } from '../../src/common/authorization/guards/jwt-auth.guard.js';
 import { UnauthorizedError } from '../../src/common/errors/AppError.js';
+import { JwtAuthGuard } from '../../src/common/rbac/guards/jwt-auth.guard.js';
 import { AccessTokenHelper } from '../../src/common/utils/jwt/helpers/access-token.helper.js';
 
 describe('JwtAuthGuard', () => {
@@ -19,7 +19,7 @@ describe('JwtAuthGuard', () => {
         const next = vi.fn();
 
         await expect(guard.verify(req, res, next)).rejects.toThrow(UnauthorizedError);
-        await expect(guard.verify(req, res, next)).rejects.toThrow('Token missing or invalid');
+        await expect(guard.verify(req, res, next)).rejects.toThrow('Authorization token is missing');
     });
 
     it('should throw UnauthorizedError if token is invalid or expired', async () => {

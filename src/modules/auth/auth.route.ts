@@ -2,7 +2,7 @@ import { rateLimit } from 'express-rate-limit';
 import { injectable } from 'tsyringe';
 import { BaseRoute } from '../../common/base.route.js';
 import { validate } from '../../common/middlewares/validate.middleware.js';
-import { authLimitterConfig } from '../../config/app.js';
+import { authLimiterConfig } from '../../config/app.js';
 import { container } from '../../container.js';
 import { AuthController } from './auth.controller.js';
 import { loginSchema, registerSchema } from './auth.dto.js';
@@ -18,7 +18,7 @@ export class AuthRoute extends BaseRoute {
     }
 
     protected initializeRoutes(): void {
-        const authLimiter = rateLimit(authLimitterConfig());
+        const authLimiter = rateLimit(authLimiterConfig());
 
         this.post('/register', [authLimiter, validate(registerSchema)], this.authController, 'register');
         this.post('/login', [authLimiter, validate(loginSchema)], this.authController, 'login');

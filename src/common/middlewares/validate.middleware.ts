@@ -17,7 +17,7 @@ export class ValidateMiddleware {
                 return next();
             } catch (error) {
                 if (error instanceof ZodError) {
-                    const message = (error as any).errors.map((e: ZodIssue) => `${e.path.join('.')}: ${e.message}`).join(', ');
+                    const message = (error as any).issues.map((e: ZodIssue) => `${e.path.join('.')}: ${e.message}`).join(', ');
                     return next(new ValidationError(message));
                 }
                 return next(error);
