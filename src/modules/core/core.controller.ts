@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { injectable } from 'tsyringe';
-import { Public } from '../../common/authorization/decorators.js';
+import { Public } from '../../common/rbac/decorators.js';
 import { resSuccess } from '../../common/response.js';
 
 @injectable()

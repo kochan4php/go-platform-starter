@@ -1,12 +1,21 @@
 import type { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { inject, injectable } from 'tsyringe';
-import { Public } from '../../common/authorization/decorators.js';
+import { Public } from '../../common/rbac/decorators.js';
 import { resFailed, resSuccess } from '../../common/response.js';
 import { HashHelper } from '../../common/utils/hash.helper.js';
 import { AccessTokenHelper } from '../../common/utils/jwt/helpers/access-token.helper.js';
 import { RefreshTokenHelper } from '../../common/utils/jwt/helpers/refresh-token.helper.js';
 import { SessionTokenHelper } from '../../common/utils/jwt/helpers/session-token.helper.js';
 import { logger } from '../../common/utils/logger.js';
+import {
+    ACCESS_TOKEN_TTL,
+    REFRESH_TOKEN_TTL,
+    SESSION_COOKIE_NAME,
+    SESSION_COOKIE_SAMESITE,
+    SESSION_COOKIE_SECURE,
+    sessionCookieMaxAge,
+} from '../../config/auth.js';
 import { UserService } from '../users/users.service.js';
 import { SessionService } from './session.service.js';
 
@@ -17,27 +26,29 @@ export class AuthController {
         @inject(SessionService) private readonly sessionService: SessionService,
     ) {}
 
+    private setSessionCookie(res: Response, encryptedSessionId: string): void {
+        res.cookie(SESSION_COOKIE_NAME, encryptedSessionId, {
+            httpOnly: true,
+            secure: SESSION_COOKIE_SECURE,
+            sameSite: SESSION_COOKIE_SAMESITE,
+            maxAge: sessionCookieMaxAge(),
+        });
+    }
+
     @Public()
     public async register(req: Request, res: Response): Promise<Response> {
         try {
             const { name, phoneNumber, email, password } = req.body;
-            const user = await this.userService.getOneUser({ email });
-
-            if (user) {
-                const message = 'Email already registered';
-                return resFailed(res, 400, message);
+            const existing = await this.userService.getOneUser({ email });
+            if (existing) {
+                return resFailed(res, 409, 'Email already registered');
             }
 
-            const hashPassword = await HashHelper.hash(password);
-            const data = { name, phoneNumber, email, password: hashPassword };
-            const newUser = await this.userService.createUser(data);
-            const getNewUserWithoutPassword = await this.userService.getOneUser({ email: newUser.email });
-
-            const message = 'Register success';
-            return resSuccess(res, 201, message, { user: getNewUserWithoutPassword });
+            const user = await this.userService.createUser({ name, phoneNumber, email, password });
+            return resSuccess(res, 201, 'Register success', { user });
         } catch (error: any) {
             logger.error('AuthController.register', error.message);
-            return resFailed(res, 500, error.message);
+            return resFailed(res, 500, 'Internal Server Error');
         }
     }
 
@@ -45,159 +56,113 @@ export class AuthController {
     public async login(req: Request, res: Response): Promise<Response> {
         try {
             const { loginType, password } = req.body;
-            const filter = { OR: [{ email: loginType }, { phoneNumber: loginType }] };
-            const user = await this.userService.getOneUser(filter, {}, false);
+            const user = await this.userService.getOneUser({ [Op.or]: [{ email: loginType }, { phoneNumber: loginType }] });
 
-            if (!user) {
-                const message = 'User not found';
-                return resFailed(res, 404, message);
+            // Uniform response for both unknown identity and wrong password (prevents user enumeration)
+            if (!user || !(await HashHelper.compare(password, user.password))) {
+                return resFailed(res, 401, 'Invalid credentials');
             }
 
-            const isPasswordMatch = await HashHelper.compare(password, user.password);
+            const jwtPayload = { id: user.id, email: user.email };
+            const accessToken = AccessTokenHelper.generateAccessToken(jwtPayload, ACCESS_TOKEN_TTL);
+            const refreshToken = RefreshTokenHelper.generateRefreshToken(jwtPayload, REFRESH_TOKEN_TTL);
 
-            if (!isPasswordMatch) {
-                const message = 'Password is incorrect';
-                return resFailed(res, 400, message);
-            }
+            const expiresAt = new Date(Date.now() + sessionCookieMaxAge());
+            const session = await this.sessionService.createSession({ refreshToken, userId: user.id, expiresAt });
 
-            const JWTPayload = { id: user.id, email: user.email };
-            const accessToken = AccessTokenHelper.generateAccessToken(JWTPayload, '5h');
-            const refreshToken = RefreshTokenHelper.generateRefreshToken(JWTPayload, '5d');
+            this.setSessionCookie(res, SessionTokenHelper.generateSessionToken({ sessionId: session.id }, REFRESH_TOKEN_TTL));
 
-            const date = new Date();
-            const sessionObj = { refreshToken, userId: user.id, expiresAt: new Date(date.setDate(date.getDate() + 5)) };
-            const newSession = await this.sessionService.createSession(sessionObj);
-
-            const encryptSessionId = SessionTokenHelper.generateSessionToken({ sessionId: newSession.id }, '5d');
-
-            res.cookie('session-backend', encryptSessionId, {
-                httpOnly: true,
-                maxAge: 5 * 24 * 60 * 60 * 1000,
-            });
-
-            const message = 'Login success';
-            return resSuccess(res, 200, message, { accessToken, refreshToken });
+            return resSuccess(res, 200, 'Login success', { accessToken, refreshToken });
         } catch (error: any) {
             logger.error('AuthController.login', error.message);
-            return resFailed(res, 500, error.message);
+            return resFailed(res, 500, 'Internal Server Error');
         }
     }
 
     @Public()
     public async refreshToken(req: Request, res: Response): Promise<Response> {
         try {
-            const tokenSessionId = req.cookies['session-backend'];
-
+            const tokenSessionId = req.cookies[SESSION_COOKIE_NAME];
             if (!tokenSessionId) {
-                const message = 'Session not found';
-                return resFailed(res, 404, message);
-            }
-
-            const sessionId = SessionTokenHelper.getSessionId(tokenSessionId);
-
-            const existsSession = await this.sessionService.getOneSessionById(sessionId as string);
-
-            if (!existsSession) {
-                const message = 'Session not found';
-                return resFailed(res, 404, message);
+                return resFailed(res, 401, 'Session not found');
             }
 
             try {
                 await SessionTokenHelper.verifySessionToken(tokenSessionId);
-            } catch (error: any) {
-                res.clearCookie('session-backend');
-                this.sessionService.revokeSession(existsSession.id);
+            } catch {
+                res.clearCookie(SESSION_COOKIE_NAME);
+                return resFailed(res, 401, 'Session not valid, please login again');
+            }
 
-                const message = 'Session not valid, please login again';
-                return resFailed(res, 403, message);
+            const sessionId = SessionTokenHelper.getSessionId(tokenSessionId) as string;
+            const session = await this.sessionService.getOneSessionById(sessionId);
+            if (!session) {
+                res.clearCookie(SESSION_COOKIE_NAME);
+                return resFailed(res, 401, 'Session not found');
             }
 
             try {
-                await RefreshTokenHelper.verifyRefreshToken(existsSession.refreshToken as string);
-            } catch (error: any) {
-                res.clearCookie('session-backend');
-                this.sessionService.revokeSession(existsSession.id);
-
-                const message = 'Your session is expired';
-                return resFailed(res, 403, message);
+                await RefreshTokenHelper.verifyRefreshToken(session.refreshToken as string);
+            } catch {
+                await this.sessionService.revokeSession(session.id);
+                res.clearCookie(SESSION_COOKIE_NAME);
+                return resFailed(res, 401, 'Your session is expired, please login again');
             }
 
-            const user = await this.userService.getOneUser({ id: existsSession.userId });
-
+            const user = await this.userService.getOneUserById(session.userId);
             if (!user) {
-                const message = 'User not found';
-                return resFailed(res, 404, message);
+                return resFailed(res, 404, 'User not found');
             }
 
-            const JWTPayload = { id: user.id, email: user.email };
-            const accessToken = AccessTokenHelper.generateAccessToken(JWTPayload, '5h');
-            const refreshToken = RefreshTokenHelper.generateRefreshToken(JWTPayload, '5d');
+            const jwtPayload = { id: user.id, email: user.email };
+            const accessToken = AccessTokenHelper.generateAccessToken(jwtPayload, ACCESS_TOKEN_TTL);
+            const refreshToken = RefreshTokenHelper.generateRefreshToken(jwtPayload, REFRESH_TOKEN_TTL);
 
-            const newSession = await this.sessionService.updateOneSessionById(existsSession.id, { refreshToken });
-            const encryptSessionId = SessionTokenHelper.generateSessionToken({ sessionId: newSession?.id }, '5d');
+            await this.sessionService.updateOneSessionById(session.id, { refreshToken });
+            this.setSessionCookie(res, SessionTokenHelper.generateSessionToken({ sessionId: session.id }, REFRESH_TOKEN_TTL));
 
-            res.clearCookie('session-backend');
-            res.cookie('session-backend', encryptSessionId, {
-                httpOnly: true,
-                maxAge: 5 * 24 * 60 * 60 * 1000,
-            });
-
-            const message = 'Refresh the token success';
-            return resSuccess(res, 200, message, { accessToken, refreshToken });
+            return resSuccess(res, 200, 'Refresh token success', { accessToken, refreshToken });
         } catch (error: any) {
             logger.error('AuthController.refreshToken', error.message);
-            return resFailed(res, 500, error.message);
+            return resFailed(res, 500, 'Internal Server Error');
         }
     }
 
     @Public()
     public async logout(req: Request, res: Response): Promise<Response> {
         try {
-            const tokenSessionId = req.cookies['session-backend'];
-
+            const tokenSessionId = req.cookies[SESSION_COOKIE_NAME];
             if (!tokenSessionId) {
-                const message = 'Session not found';
-                return resFailed(res, 404, message);
+                return resFailed(res, 401, 'Session not found');
             }
 
             try {
                 await SessionTokenHelper.verifySessionToken(tokenSessionId);
-            } catch (error: any) {
-                const message = 'Session not valid';
-                return resFailed(res, 403, message);
+            } catch {
+                return resFailed(res, 401, 'Session not valid');
             }
 
-            const sessionId = SessionTokenHelper.getSessionId(tokenSessionId);
-            const existsSession = await this.sessionService.getOneSessionById(sessionId as string);
-
-            if (!existsSession) {
-                const message = 'Session not found';
-                return resFailed(res, 404, message);
+            const sessionId = SessionTokenHelper.getSessionId(tokenSessionId) as string;
+            const session = await this.sessionService.getOneSessionById(sessionId);
+            if (!session) {
+                res.clearCookie(SESSION_COOKIE_NAME);
+                return resFailed(res, 401, 'Session not found');
             }
 
             try {
-                await RefreshTokenHelper.verifyRefreshToken(existsSession.refreshToken as string);
-            } catch (error: any) {
-                const message = 'Refresh token not valid';
-                return resFailed(res, 403, message);
+                await RefreshTokenHelper.verifyRefreshToken(session.refreshToken as string);
+            } catch {
+                res.clearCookie(SESSION_COOKIE_NAME);
+                return resFailed(res, 401, 'Refresh token not valid');
             }
 
-            const user = await this.userService.getOneUser({ id: existsSession.userId });
+            await this.sessionService.deleteOneSessionById(session.id);
+            res.clearCookie(SESSION_COOKIE_NAME);
 
-            if (!user) {
-                const message = 'User not found';
-                return resFailed(res, 404, message);
-            }
-
-            await this.sessionService.deleteOneSessionById(existsSession.id);
-
-            res.clearCookie('session-backend');
-
-            const message = 'Logout success';
-            return resSuccess(res, 200, message);
+            return resSuccess(res, 200, 'Logout success');
         } catch (error: any) {
             logger.error('AuthController.logout', error.message);
-            return resFailed(res, 500, error.message);
+            return resFailed(res, 500, 'Internal Server Error');
         }
     }
 }

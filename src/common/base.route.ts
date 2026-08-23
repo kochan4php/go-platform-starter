@@ -1,10 +1,15 @@
 import { type RequestHandler, Router } from 'express';
 import { container } from 'tsyringe';
-import { PERMISSION_METADATA_KEY, PUBLIC_METADATA_KEY } from './authorization/decorators.js';
-import { PermissionGuard } from './authorization/permission.guard.js';
-import { PermissionRegistry } from './authorization/permission.registry.js';
+import { PERMISSION_METADATA_KEY, PUBLIC_METADATA_KEY } from './rbac/decorators.js';
+import { isValidPermission } from './rbac/permission.catalog.js';
+import { PermissionMiddleware } from './rbac/permission.middleware.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 
+/**
+ * @description Base class for feature routes. Every registered handler MUST declare
+ * either @Public() or @RequirePermission() — the boot-time check below throws otherwise,
+ * so a route can never silently ship without an access decision (fail-closed).
+ */
 export abstract class BaseRoute {
     public router: Router;
     public path: string;
@@ -22,7 +27,7 @@ export abstract class BaseRoute {
         middlewares: RequestHandler[],
         target: any,
         propertyKey: string,
-    ) {
+    ): void {
         const isPublic = Reflect.getMetadata(PUBLIC_METADATA_KEY, target, propertyKey);
         const permission = Reflect.getMetadata(PERMISSION_METADATA_KEY, target, propertyKey);
 
@@ -35,12 +40,13 @@ export abstract class BaseRoute {
         const handlers: RequestHandler[] = [];
 
         if (permission) {
-            const registry = container.resolve(PermissionRegistry);
-            if (!registry.isValid(permission)) {
-                throw new Error(`Route ${method.toUpperCase()} ${this.path}${path} references unknown permission '${permission}'`);
+            if (!isValidPermission(permission)) {
+                throw new Error(
+                    `Route ${method.toUpperCase()} ${this.path}${path} references unknown permission '${permission}' (not in permission catalog)`,
+                );
             }
-            const guard = container.resolve(PermissionGuard);
-            handlers.push(guard.createMiddleware(permission));
+            const guard = container.resolve(PermissionMiddleware);
+            handlers.push(guard.requirePermission(permission));
         }
 
         handlers.push(...middlewares);

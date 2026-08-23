@@ -1,4 +1,5 @@
 import { inject, injectable } from 'tsyringe';
+import { HashHelper } from '../../common/utils/hash.helper.js';
 import type { IUserRepository } from './users.repository.js';
 
 @injectable()
@@ -7,35 +8,46 @@ export class UserService {
 
     public async getAllUsers(filter: any = {}, limit: number = 10, offset: number = 0): Promise<any[]> {
         return await this.userRepository.findAll(filter, {
-            select: { id: true, name: true, phoneNumber: true, email: true, avatar: true, bio: true },
-            take: limit,
-            skip: offset,
+            attributes: { exclude: ['password'] },
+            limit,
+            offset,
         });
     }
 
-    public async getOneUser(filter: any, select: any = {}, throwError: boolean = false): Promise<any | null> {
-        const user = await this.userRepository.findOne(filter);
-        return user;
+    public async getOneUser(filter: any): Promise<any | null> {
+        return await this.userRepository.findOne(filter);
     }
 
     public async getOneUserById(id: string): Promise<any | null> {
         const user = await this.userRepository.findById(id);
-        if (user) {
-            const { password, ...userWithoutPassword } = user;
-            return userWithoutPassword;
-        }
-        return null;
+        if (!user) return null;
+        return this.stripPassword(user);
     }
 
+    /**
+     * @description Single hashing location: callers pass a RAW password and it is hashed here.
+     */
     public async createUser(data: any): Promise<any> {
-        return await this.userRepository.create(data);
+        const payload = { ...data };
+        if (payload.password) {
+            payload.password = await HashHelper.hash(payload.password);
+        }
+        return await this.userRepository.create(payload);
     }
 
-    public async updateOneUserById(id: string, data: any): Promise<any> {
-        return await this.userRepository.update(id, data);
+    public async updateOneUserById(id: string, data: any): Promise<any | null> {
+        const user = await this.userRepository.update(id, data);
+        if (!user) return null;
+        return this.stripPassword(user);
     }
 
-    public async deleteOneUserById(id: string): Promise<any> {
-        return await this.userRepository.delete(id);
+    public deleteOneUserById(id: string): Promise<number> {
+        return this.userRepository.delete(id);
+    }
+
+    private stripPassword(user: any): any {
+        const json = typeof user.toJSON === 'function' ? user.toJSON() : { ...user };
+        delete json.password;
+        return json;
     }
 }

@@ -1,40 +1,37 @@
-/**
- * @description This file contain database configuration using Prisma
- * @author {Deo Sbrn}
- */
+import { Sequelize } from 'sequelize-typescript';
+import { DATABASE_URL, DB_POOL_MAX } from '../config/env.js';
+import { Permission } from './models/permission.model.js';
+import { Role } from './models/role.model.js';
+import { RolePermission } from './models/role-permission.model.js';
+import { Session } from './models/session.model.js';
+import { User } from './models/user.model.js';
+import { UserRole } from './models/user-role.model.js';
 
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
-import { Pool } from 'pg';
-import { logger } from '../common/utils/logger.js';
-import { DATABASE_URL } from '../config/env.js';
-
-const pool = new Pool({
-    connectionString: DATABASE_URL,
-    max: process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX) : 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+export const sequelize = new Sequelize(DATABASE_URL, {
+    dialect: 'postgres',
+    logging: false,
+    pool: { max: DB_POOL_MAX },
+    models: [User, Role, Permission, RolePermission, UserRole, Session],
 });
-const adapter = new PrismaPg(pool);
-export const prisma = new PrismaClient({ adapter });
 
-export default async function database(retries = 30): Promise<void> {
-    while (retries > 0) {
+/**
+ * @description Verify the database connection with retries. Throws after exhausting
+ * retries so the process can exit and the orchestrator restart policy takes over.
+ */
+export async function connectDatabase(retries = 30, delayMs = 2000): Promise<void> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-            await prisma.$connect();
-            logger.info('Database', 'PostgreSQL Connected via Prisma');
+            await sequelize.authenticate();
             return;
         } catch (error: any) {
-            retries -= 1;
-            logger.error('Database', `Connection failed. Retries left: ${retries}. Error: ${error.message}`);
-            if (retries === 0) {
-                logger.error(
-                    'Database',
-                    'Could not connect to database after maximum retries. The server will continue running but database queries will fail.',
-                );
-                return;
-            }
-            await new Promise((res) => setTimeout(res, 2000));
+            const isLast = attempt === retries;
+            console.error(`[Database] Connection attempt ${attempt}/${retries} failed: ${error.message}`);
+            if (isLast) throw error;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
     }
+}
+
+export async function closeDatabase(): Promise<void> {
+    await sequelize.close();
 }

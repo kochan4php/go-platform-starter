@@ -5,6 +5,7 @@
 export default interface DecodedUser {
     id: string;
     email: string;
+    permissions?: string[];
     iat: number;
     exp: number;
 }

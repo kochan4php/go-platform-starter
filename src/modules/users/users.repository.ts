@@ -1,15 +1,12 @@
-import type { User } from '@prisma/client';
 import { injectable } from 'tsyringe';
 import { BaseRepository, type IBaseRepository } from '../../common/base.repository.js';
-import { prisma } from '../../database/connection.js';
+import { User } from '../../database/models/user.model.js';
 
-export interface IUserRepository extends IBaseRepository<User> {
-    // Add specific methods here if needed
-}
+export interface IUserRepository extends IBaseRepository<User> {}
 
 @injectable()
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
     constructor() {
-        super(prisma.user);
+        super(User);
     }
 }

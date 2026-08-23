@@ -6,41 +6,27 @@
 
 import 'reflect-metadata';
 import { Server, type Socket } from 'socket.io';
-import { inject, injectable } from 'tsyringe';
+import { container, injectable } from 'tsyringe';
 import { App } from './app.js';
-import { registerAbilities } from './common/authorization/abilities.js';
-import { PermissionRegistry } from './common/authorization/permission.registry.js';
 import { logger } from './common/utils/logger.js';
 import { socketConfig } from './config/app.js';
 import { PORT } from './config/env.js';
-import { container } from './container.js';
-import database, { prisma } from './database/connection.js';
+import { closeDatabase, connectDatabase } from './database/connection.js';
 import { HealthChecker } from './health/health.checker.js';
 import socketController from './modules/core/socket.controller.js';
 
 @injectable()
 export class Bootstrap {
-    constructor() {}
-
     public async start(): Promise<void> {
         try {
-            // Register authorization gates
-            registerAbilities();
-
-            // 1. Establish database connection
-            await database();
-
-            // 1.5 Load Permissions
-            const registry = container.resolve(PermissionRegistry);
-            await registry.loadPermissions();
+            // 1. Establish database connection (throws after retries are exhausted)
+            await connectDatabase();
 
             // 2. Start periodic health check
             HealthChecker.start();
 
-            // Resolve App after DB and permissions are ready
+            // 3. Resolve App and start HTTP listener
             const app = container.resolve(App);
-
-            // 3. Start HTTP listener
             const server = app.instance.listen(PORT, () => {
                 logger.info('Server', `started on port ${PORT}`);
             });
@@ -65,7 +51,7 @@ export class Bootstrap {
             server.close(async () => {
                 logger.info('Server', 'Closed HTTP server');
                 try {
-                    await prisma.$disconnect();
+                    await closeDatabase();
                     logger.info('Database', 'Closed database connection');
                     process.exit(0);
                 } catch (error: any) {

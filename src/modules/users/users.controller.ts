@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { inject, injectable } from 'tsyringe';
-import { RequirePermission } from '../../common/authorization/decorators.js';
+import { RequirePermission } from '../../common/rbac/decorators.js';
 import { resFailed, resSuccess } from '../../common/response.js';
-import { HashHelper } from '../../common/utils/hash.helper.js';
 import { logger } from '../../common/utils/logger.js';
 import { UserService } from './users.service.js';
 
@@ -13,39 +13,29 @@ export class UserController {
     @RequirePermission('user:read:any')
     public async getAllUsers(req: Request, res: Response): Promise<Response> {
         try {
-            const limit = typeof req.query.limit === 'number' ? req.query.limit : 10;
-            const offset = typeof req.query.offset === 'number' ? req.query.offset : 0;
-            const users = await this.userService.getAllUsers({}, Number(limit), Number(offset));
+            const limit = Number(req.query.limit) || 10;
+            const offset = Number(req.query.offset) || 0;
+            const users = await this.userService.getAllUsers({}, limit, offset);
 
-            if (!users.length) {
-                const message: string = 'Users empty';
-                return resFailed(res, 200, message);
-            }
-
-            const message: string = 'Success get all users';
-            return resSuccess(res, 200, message, { users });
+            return resSuccess(res, 200, 'Success get all users', { users });
         } catch (error: any) {
             logger.error('UserController.getAllUsers', error.message);
-            return resFailed(res, error.statusCode || 500, error.message);
+            return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
 
-    @RequirePermission('user:read:any') // Or own, depending on how Gate is implemented
+    @RequirePermission('user:read:any')
     public async getUserById(req: Request, res: Response): Promise<Response> {
         try {
-            const { id } = req.params;
-            const user = await this.userService.getOneUserById(id as string);
-
+            const user = await this.userService.getOneUserById(req.params.id as string);
             if (!user) {
-                const message: string = 'User not found';
-                return resFailed(res, 404, message);
+                return resFailed(res, 404, 'User not found');
             }
 
-            const message: string = 'Success get user by id';
-            return resSuccess(res, 200, message, { user });
+            return resSuccess(res, 200, 'Success get user by id', { user });
         } catch (error: any) {
             logger.error('UserController.getUserById', error.message);
-            return resFailed(res, error.statusCode || 500, error.message);
+            return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
 
@@ -53,22 +43,18 @@ export class UserController {
     public async createUser(req: Request, res: Response): Promise<Response> {
         try {
             const { name, phoneNumber, email, password } = req.body;
-            const existsUser = await this.userService.getOneUser({ OR: [{ phoneNumber }, { email }] });
-
-            if (existsUser) {
-                const message: string = 'Username or email already exists';
-                return resFailed(res, 400, message);
+            const existing = await this.userService.getOneUser({ [Op.or]: [{ phoneNumber }, { email }] });
+            if (existing) {
+                return resFailed(res, 409, 'Phone number or email already exists');
             }
 
-            const passwordHash = await HashHelper.hash(password);
-            const data = { name, phoneNumber, email, password: passwordHash };
-            const user = await this.userService.createUser(data);
+            // Hashing happens inside UserService.createUser — single hash location
+            const user = await this.userService.createUser({ name, phoneNumber, email, password });
 
-            const message: string = 'Success create new user';
-            return resSuccess(res, 201, message, { user });
+            return resSuccess(res, 201, 'Success create new user', { user });
         } catch (error: any) {
             logger.error('UserController.createUser', error.message);
-            return resFailed(res, error.statusCode || 500, error.message);
+            return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
 
@@ -76,47 +62,32 @@ export class UserController {
     public async updateUserById(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
-            const currentUser = (req as any).user;
-            // The service will throw ForbiddenError if not authorized, but we also check existence inside service.
-            // Since `getOneUserById` checks admin, we might need a separate method for existence check or pass currentUser.
-            const isExistsUser = await this.userService.getOneUserById(id as string);
+            const { name, phoneNumber, email, avatar, bio } = req.body;
+            const user = await this.userService.updateOneUserById(id as string, { name, phoneNumber, email, avatar, bio });
 
-            if (!isExistsUser) {
-                const message: string = 'User not found';
-                return resFailed(res, 404, message);
+            if (!user) {
+                return resFailed(res, 404, 'User not found');
             }
 
-            const { name, phoneNumber, email } = req.body;
-            const data = { name, phoneNumber, email };
-            const user = await this.userService.updateOneUserById(id as string, data);
-
-            const message: string = 'Success update user by id';
-            return resSuccess(res, 200, message, { user });
+            return resSuccess(res, 200, 'Success update user by id', { user });
         } catch (error: any) {
             logger.error('UserController.updateUserById', error.message);
-            return resFailed(res, error.statusCode || 500, error.message);
+            return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
 
     @RequirePermission('user:delete:any')
     public async deleteUserById(req: Request, res: Response): Promise<Response> {
         try {
-            const { id } = req.params;
-            const currentUser = (req as any).user;
-            const isExistsUser = await this.userService.getOneUserById(id as string);
-
-            if (!isExistsUser) {
-                const message: string = 'User not found';
-                return resFailed(res, 404, message);
+            const deleted = await this.userService.deleteOneUserById(req.params.id as string);
+            if (!deleted) {
+                return resFailed(res, 404, 'User not found');
             }
 
-            await this.userService.deleteOneUserById(id as string);
-
-            const message: string = 'Success delete user by id';
-            return resSuccess(res, 200, message);
+            return resSuccess(res, 200, 'Success delete user by id');
         } catch (error: any) {
             logger.error('UserController.deleteUserById', error.message);
-            return resFailed(res, error.statusCode || 500, error.message);
+            return resFailed(res, error.statusCode || 500, 'Internal Server Error');
         }
     }
 }

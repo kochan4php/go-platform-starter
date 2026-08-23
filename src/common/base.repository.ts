@@ -1,39 +1,40 @@
-export interface IBaseRepository<T> {
-    findAll(filter?: any, options?: any): Promise<T[]>;
+import type { Attributes, FindOptions, Model, ModelCtor, WhereOptions } from 'sequelize';
+
+export interface IBaseRepository<T extends Model> {
+    findAll(filter?: WhereOptions<Attributes<T>>, options?: FindOptions<Attributes<T>>): Promise<T[]>;
     findById(id: string): Promise<T | null>;
-    findOne(filter: any): Promise<T | null>;
+    findOne(filter: WhereOptions<Attributes<T>>): Promise<T | null>;
     create(data: any): Promise<T>;
-    update(id: string, data: any): Promise<T>;
-    delete(id: string): Promise<T>;
+    update(id: string, data: any): Promise<T | null>;
+    delete(id: string): Promise<number>;
 }
 
-export abstract class BaseRepository<T> implements IBaseRepository<T> {
-    constructor(protected readonly model: any) {}
+export abstract class BaseRepository<T extends Model> implements IBaseRepository<T> {
+    constructor(protected readonly model: ModelCtor<T>) {}
 
-    async findAll(filter: any = {}, options: any = {}): Promise<T[]> {
-        return await this.model.findMany({ where: filter, ...options });
+    public findAll(filter: WhereOptions<Attributes<T>> = {}, options: FindOptions<Attributes<T>> = {}): Promise<T[]> {
+        return this.model.findAll({ where: filter, ...options });
     }
 
-    async findById(id: string): Promise<T | null> {
-        return await this.model.findUnique({ where: { id } });
+    public findById(id: string): Promise<T | null> {
+        return this.model.findByPk(id);
     }
 
-    async findOne(filter: any): Promise<T | null> {
-        return await this.model.findFirst({ where: filter });
+    public findOne(filter: WhereOptions<Attributes<T>>): Promise<T | null> {
+        return this.model.findOne({ where: filter });
     }
 
-    async create(data: any): Promise<T> {
-        return await this.model.create({ data });
+    public create(data: any): Promise<T> {
+        return this.model.create(data);
     }
 
-    async update(id: string, data: any): Promise<T> {
-        return await this.model.update({
-            where: { id },
-            data,
-        });
+    public async update(id: string, data: any): Promise<T | null> {
+        const instance = await this.model.findByPk(id);
+        if (!instance) return null;
+        return instance.update(data);
     }
 
-    async delete(id: string): Promise<T> {
-        return await this.model.delete({ where: { id } });
+    public delete(id: string): Promise<number> {
+        return this.model.destroy({ where: { id } as any });
     }
 }
