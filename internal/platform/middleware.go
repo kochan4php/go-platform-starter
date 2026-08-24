@@ -24,16 +24,6 @@ func debugStack() []byte {
 	return debug.Stack()
 }
 
-// Chain composes middleware around a handler (first = outermost).
-func Chain(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
-	return func(final http.Handler) http.Handler {
-		for i := len(middlewares) - 1; i >= 0; i-- {
-			final = middlewares[i](final)
-		}
-		return final
-	}
-}
-
 // newUUID mints an RFC-4122-shaped v4 UUID without external dependencies.
 func newUUID() string {
 	var b [16]byte

@@ -1,7 +1,7 @@
-# PLAN v5 — express-ts-starter → Go microservices + microfrontend monorepo
+# PLAN v5 — go-platform-starter → Go microservices + microfrontend monorepo
 
 Status: **in progress** · Baseline: v3.0.0 complete (`c3561d1`), v4.1 superseded
-Progress: **Wave 0 ✅** · Waves 1–7 pending · Legacy TS suite green in `legacy/` (behavioral contract)
+Progress: **Wave 0 ✅ (revised: chi v5 + repo rename)** · Waves 1–7 pending · Legacy TS suite green in `legacy/` (behavioral contract)
 Target: **full-Go backend microservices** behind a Go gateway · React micro-frontend shell · pnpm+go.work monorepo · 100k+ user defaults · k8s per-service HPA
 
 ---
@@ -39,7 +39,7 @@ Target: **full-Go backend microservices** behind a Go gateway · React micro-fro
 ## 2. Target layout
 
 ```
-express-ts-starter/
+go-platform-starter/
 ├── services/
 │   ├── gateway/            # edge: JWT verify, permission registry, proxy, aggregate docs, rate limit
 │   ├── auth/               # register/login/refresh(rotation+reuse-detect)/reset/lockout/sessions/logout

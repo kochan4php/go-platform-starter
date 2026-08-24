@@ -1,5 +1,5 @@
 {
-    "name": "express-ts-starter-monorepo",
+    "name": "go-platform-starter",
     "version": "5.0.0-alpha.0",
     "private": true,
     "type": "module",

@@ -1,8 +1,9 @@
-module github.com/kochan4php/express-ts-starter
+module github.com/kochan4php/go-platform-starter
 
 go 1.27
 
 require (
+	github.com/go-chi/chi/v5 v5.3.2
 	github.com/stretchr/testify v1.12.1
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/redis v0.44.0

@@ -1,4 +1,4 @@
-# Express TS Starter
+# Go Platform Starter
 
 > **v5 rewrite in progress — Go microservices + microfrontend monorepo.**
 > See [PLAN.md](./PLAN.md) for the approved plan and progress.
@@ -7,7 +7,7 @@
 > Run it: `cd legacy && pnpm setup-app && pnpm docker:db:dev:up && pnpm db:init && pnpm start:local:dev`
 > Docs below describe the legacy app until service docs land.
 
-[![CI](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml)
+[![CI](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml)
 
 ## Monorepo quick reference (v5)
 
@@ -22,7 +22,7 @@
 
 ---
 
-[![CI](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml)
+[![CI](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml)
 
 Production-shaped REST + realtime starter: **Express 5 · TypeScript (ESM) · Sequelize (PostgreSQL) · tsyringe DI · Socket.IO · JWT auth with DB-driven RBAC**.
 
