@@ -9,7 +9,7 @@ Target: **full-Go backend microservices** behind a Go gateway · React micro-fro
 | Wave | Status | Evidence |
 | --- | --- | --- |
 | 0 | ✅ done 2026-08-24 | `d412fac` — platform package, template service, scaffold; gate green (fmt/vet/build/test incl real containers, boot smoke) |
-| 1 | ⏳ | |
+| 1 | ✅ done 2026-08-24 | auth service: spec-first (register/login/refresh-rotation+reuse-detect/forgot/reset/sessions/logout), bcrypt, Redis lockout mirrored to DB, uniform-401 + dummy-hash timing defense, single-use reset jti via GETDEL, streams publisher (`user.created`, mail jobs), bootstrap seeder w/ fixed sub, embedded golang-migrate (-migrate/-seed flags), strict/global redis_rate classes fail-open, k8s/compose/Jenkinsfile/Dockerfile ops set; 5/5 integration tests green vs real PG+Redis |
 | 2 | ⏳ | |
 | 3 | ⏳ | |
 | 4 | ⏳ | |

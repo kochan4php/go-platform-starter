@@ -26,6 +26,8 @@ packages/contracts                      ← the web app's typed client (openapi-
 3. Protect an operation with `x-required-permission: "<resource>:<action>:<scope>"`;
    leave it absent for public routes. The gateway's fail-closed registry validates that
    every annotated permission exists in the compile-time catalog at boot.
+   Routes needing a valid JWT *without* a specific permission annotate `x-auth: required`
+   instead — the gateway verifies the token and forwards identity, no permission check.
 4. CI fails on stale generated code (`make contracts SVC=<name> && git diff --exit-code`).
 
 ## Identity-header contract

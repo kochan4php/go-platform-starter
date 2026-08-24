@@ -1,0 +1,42 @@
+# Placeholder manifests for a new service copied from this template.
+# Replace every occurrence of `auth` with your service name.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: service
+          image: ghcr.io/kochan4php/auth:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: auth
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 10
