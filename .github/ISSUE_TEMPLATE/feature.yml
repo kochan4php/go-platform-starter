@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest an improvement to the starter template
+labels: ['enhancement']
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem
+          description: What can you not do today that you need to do?
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed solution
+          description: Include API shape, env vars, or migration sketch if relevant.
+      validations:
+          required: true
+    - type: checkboxes
+      id: scope
+      attributes:
+          label: Scope check
+          options:
+              - label: This fits a generic starter template (not app-specific logic)
+                required: true

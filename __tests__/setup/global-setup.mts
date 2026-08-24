@@ -1,6 +1,6 @@
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 
 const handoffFile = `${tmpdir()}/express-ts-starter-vitest-db.json`;
 

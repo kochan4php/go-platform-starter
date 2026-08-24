@@ -14,7 +14,7 @@ export interface ServerToClientEvents {
     message: (payload: { room: string; from: string; message: string; at: string }) => void;
 }
 
-export type InterServerEvents = {};
+export type InterServerEvents = Record<never, never>;
 
 export interface SocketData {
     user: DecodedUser;

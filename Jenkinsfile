@@ -1,3 +1,7 @@
+// NOTE: GitHub Actions (.github/workflows/ci.yml) is the primary CI for this template.
+// This Jenkinsfile remains for teams already running Jenkins/DevSecOps toolchains —
+// it is not exercised by the template's own test suite.
+
 pipeline {
     agent any
 
