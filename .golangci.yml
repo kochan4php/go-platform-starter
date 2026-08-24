@@ -1,0 +1,25 @@
+version: "2"
+
+linters:
+  enable:
+    - depguard
+    - gosec
+  settings:
+    depguard:
+      rules:
+        shared-code-must-not-import-services:
+          files:
+            - "**/internal/**"
+          deny:
+            - pkg: "github.com/kochan4php/go-platform-starter/services"
+              desc: shared code must never depend on a service; services depend on it
+        testutil-must-not-import-services:
+          files:
+            - "**/testutil/**"
+          deny:
+            - pkg: "github.com/kochan4php/go-platform-starter/services"
+              desc: the harness must never depend on a specific service
+
+formatters:
+  enable:
+    - gofumpt

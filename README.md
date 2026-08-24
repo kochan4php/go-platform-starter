@@ -39,12 +39,18 @@ docs/         ARCHITECTURE · SCALING · ONBOARDING · CONTRACTS · ADRs
 
 ## Quick start
 
-Not available yet — lands with Wave 0. Target shape:
+Wave 0 is in — one template service exists (`services/_template`):
 
 ```bash
-make dev SVC=auth          # run one service with watch mode
-docker compose -f infra/compose.base.yml up   # or: boot the entire mesh
+make env SVC=_template    # create its local .env from the example
+make run  SVC=_template   # boots on :8080
+curl localhost:8080/healthz localhost:8080/readyz localhost:8080/api/v1/ping
 ```
+
+Other targets: `make lint|fmt|build|test|cover` · `make dev` (air hot-reload when installed) ·
+`make contracts SVC=<name>` regenerates stubs from `services/<name>/openapi.yaml`.
+Container-backed tests boot real Postgres+Redis via testcontainers and skip automatically
+when Docker isn't running.
 
 See [PLAN.md](./PLAN.md) for waves, gates and current progress.
 

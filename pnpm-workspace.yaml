@@ -1,0 +1,5 @@
+# pnpm workspace for the web side only (microfrontend host + remotes + shared packages).
+# Go services are covered by the single root go.mod — no turborepo/nx on purpose.
+packages:
+  - "apps/*"
+  - "packages/*"

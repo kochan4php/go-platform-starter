@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: _template service API
+  description: |
+    Copy me when creating a new service, then rename the title.
+    Rules (see docs/CONTRACTS.md):
+      - every behavior lives here first; handlers are generated from this spec
+      - responses MUST use the shared envelope schemas below so shapes stay identical across services
+      - protect an operation by annotating it with `x-required-permission: "<resource>:<action>:<scope>"`
+        (leave absent for public routes; the gateway's fail-closed registry validates known permissions)
+  version: 0.1.0
+
+paths:
+  /ping:
+    get:
+      operationId: ping
+      summary: liveness-style demo endpoint proving spec → codegen → handler wiring
+      tags: [template]
+      responses:
+        "200":
+          description: pong envelope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvelopeOK"
+
+components:
+  schemas:
+    EnvelopeMeta:
+      type: object
+      required: [limit, offset, total]
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        total:
+          type: integer
+          format: int64
+
+    EnvelopeOK:
+      type: object
+      required: [success, message, data]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          description: endpoint-specific payload
+
+    EnvelopeFail:
+      type: object
+      required: [success, message, error]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        error:
+          type: string
