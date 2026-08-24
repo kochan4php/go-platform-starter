@@ -42,6 +42,18 @@ export class UserService {
         return this.stripPassword(user);
     }
 
+    /**
+     * @description Password changes go through here (reset flow, profile change) so the
+     * raw password is hashed at exactly one place, like createUser.
+     */
+    public async changeUserPassword(userId: string, rawPassword: string): Promise<boolean> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) return false;
+        user.password = await HashHelper.hash(rawPassword);
+        await user.save();
+        return true;
+    }
+
     public deleteOneUserById(id: string): Promise<number> {
         return this.userRepository.delete(id);
     }

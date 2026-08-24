@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { inject, injectable } from 'tsyringe';
+import type { IMailer } from '../../common/mailer/index.js';
 import { Public } from '../../common/rbac/decorators.js';
 import { resFailed, resSuccess } from '../../common/response.js';
 import { HashHelper } from '../../common/utils/hash.helper.js';
@@ -16,7 +17,9 @@ import {
     SESSION_COOKIE_SECURE,
     sessionCookieMaxAge,
 } from '../../config/auth.js';
+import { LOGIN_LOCK_MINUTES, LOGIN_MAX_ATTEMPTS } from '../../config/env.js';
 import { UserService } from '../users/users.service.js';
+import { PasswordResetService } from './password-reset.service.js';
 import { SessionService } from './session.service.js';
 
 @injectable()
@@ -24,6 +27,8 @@ export class AuthController {
     constructor(
         @inject(UserService) private readonly userService: UserService,
         @inject(SessionService) private readonly sessionService: SessionService,
+        @inject('IMailer') private readonly mailer: IMailer,
+        @inject(PasswordResetService) private readonly passwordResetService: PasswordResetService,
     ) {}
 
     private setSessionCookie(res: Response, encryptedSessionId: string): void {
@@ -33,6 +38,10 @@ export class AuthController {
             sameSite: SESSION_COOKIE_SAMESITE,
             maxAge: sessionCookieMaxAge(),
         });
+    }
+
+    private clearSessionCookie(res: Response): void {
+        res.clearCookie(SESSION_COOKIE_NAME);
     }
 
     @Public()
@@ -58,9 +67,29 @@ export class AuthController {
             const { loginType, password } = req.body;
             const user = await this.userService.getOneUser({ [Op.or]: [{ email: loginType }, { phoneNumber: loginType }] });
 
-            // Uniform response for both unknown identity and wrong password (prevents user enumeration)
-            if (!user || !(await HashHelper.compare(password, user.password))) {
-                return resFailed(res, 401, 'Invalid credentials');
+            // Uniform 401 for unknown identity, wrong password AND locked account
+            // (nothing is revealed to the caller in any of the three cases).
+            const invalid = () => resFailed(res, 401, 'Invalid credentials');
+            if (!user) return invalid();
+
+            if (user.lockedUntil && user.lockedUntil > new Date()) return invalid();
+
+            if (!(await HashHelper.compare(password, user.password))) {
+                const attempts = user.failedLoginAttempts + 1;
+                if (attempts >= LOGIN_MAX_ATTEMPTS) {
+                    user.failedLoginAttempts = 0;
+                    user.lockedUntil = new Date(Date.now() + LOGIN_LOCK_MINUTES * 60 * 1000);
+                } else {
+                    user.failedLoginAttempts = attempts;
+                }
+                await user.save();
+                return invalid();
+            }
+
+            if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+                user.failedLoginAttempts = 0;
+                user.lockedUntil = null;
+                await user.save();
             }
 
             const jwtPayload = { id: user.id, email: user.email };
@@ -75,6 +104,54 @@ export class AuthController {
             return resSuccess(res, 200, 'Login success', { accessToken, refreshToken });
         } catch (error: any) {
             logger.error({ err: error }, 'AuthController.login failed');
+            return resFailed(res, 500, 'Internal Server Error');
+        }
+    }
+
+    @Public()
+    public async forgotPassword(req: Request, res: Response): Promise<Response> {
+        try {
+            const { email } = req.body;
+            const user = await this.userService.getOneUser({ email });
+
+            if (user) {
+                const token = this.passwordResetService.createToken(user.id);
+                await this.mailer.send({
+                    to: email,
+                    subject: 'Reset your password',
+                    html: `<p>Hello ${user.name},</p><p>Your password reset token (valid 15 minutes):</p><p><code>${token}</code></p>`,
+                });
+            }
+
+            // Always the same answer — never reveal whether the account exists.
+            return resSuccess(res, 200, 'If that email exists, a reset link has been sent');
+        } catch (error: any) {
+            logger.error({ err: error }, 'AuthController.forgotPassword failed');
+            return resFailed(res, 500, 'Internal Server Error');
+        }
+    }
+
+    @Public()
+    public async resetPassword(req: Request, res: Response): Promise<Response> {
+        try {
+            const { token, password } = req.body;
+            const userId = await this.passwordResetService.consume(token);
+            if (!userId) {
+                return resFailed(res, 400, 'Invalid or expired reset token');
+            }
+
+            const updated = await this.userService.changeUserPassword(userId, password);
+            if (!updated) {
+                return resFailed(res, 400, 'Invalid or expired reset token');
+            }
+
+            // Any stolen refresh token dies here: wipe every session of the user.
+            await this.sessionService.revokeAllForUser(userId);
+            this.clearSessionCookie(res);
+
+            return resSuccess(res, 200, 'Password has been reset. Please login again.');
+        } catch (error: any) {
+            logger.error({ err: error }, 'AuthController.resetPassword failed');
             return resFailed(res, 500, 'Internal Server Error');
         }
     }

@@ -7,8 +7,10 @@ import { closeDatabase, connectDatabase } from '../../src/database/connection.js
 import { migrator } from '../../src/database/migrator.js';
 import { Permission } from '../../src/database/models/permission.model.js';
 import { Role } from '../../src/database/models/role.model.js';
+import { User } from '../../src/database/models/user.model.js';
 import { UserRole } from '../../src/database/models/user-role.model.js';
 import { seed } from '../../src/database/seeders/index.js';
+import { PasswordResetService } from '../../src/modules/auth/password-reset.service.js';
 
 let app: ReturnType<typeof import('express').express>;
 const EMAIL_SUFFIX = () => `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
@@ -140,6 +142,97 @@ describe('auth lifecycle', () => {
     it('refresh without cookie is 401', async () => {
         const res = await supertest(app).get('/api/v1/auth/refresh-token');
         expect(res.status).toBe(401);
+    });
+});
+
+describe('login lockout', () => {
+    it('locks the account after repeated failures — even for the correct password', async () => {
+        const { email } = await registerUser({});
+        const userId = await userIdForToken((await login(email)).accessToken);
+
+        // N-1 failures increment, Nth locks (LOGIN_MAX_ATTEMPTS defaults to 5)
+        for (let i = 0; i < 5; i++) {
+            const res = await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'wrong!' });
+            expect(res.status).toBe(401);
+            expect(res.body.message).toBe('Invalid credentials');
+        }
+
+        // Correct password is rejected while locked, with the same uniform message
+        const locked = await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'password123' });
+        expect(locked.status).toBe(401);
+        expect(locked.body.message).toBe('Invalid credentials');
+
+        const user = await User.findByPk(userId);
+        expect(user).toBeTruthy();
+        expect(user!.lockedUntil).toBeTruthy();
+        expect(user!.lockedUntil!.getTime()).toBeGreaterThan(Date.now());
+        expect(user!.failedLoginAttempts).toBe(0);
+    });
+
+    it('resets the failure counter on successful login', async () => {
+        const { email } = await registerUser({});
+        const userId = await userIdForToken((await login(email)).accessToken);
+
+        await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'wrong!' });
+        await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'wrong!' });
+        await login(email); // success resets
+
+        const user = await User.findByPk(userId);
+        expect(user?.failedLoginAttempts).toBe(0);
+        expect(user?.lockedUntil).toBeNull();
+    });
+
+    it('unknown identities stay uniform with wrong passwords', async () => {
+        const unknown = await supertest(app)
+            .post('/api/v1/auth/login')
+            .send({ loginType: `ghost-${Date.now()}@example.com`, password: 'whatever' });
+        expect(unknown.status).toBe(401);
+        expect(unknown.body.message).toBe('Invalid credentials');
+    });
+});
+
+describe('password reset flow', () => {
+    it('forgot-password never reveals whether the account exists', async () => {
+        const { email } = await registerUser({});
+        const known = await supertest(app).post('/api/v1/auth/forgot-password').send({ email });
+        const unknown = await supertest(app)
+            .post('/api/v1/auth/forgot-password')
+            .send({ email: `nope-${Date.now()}@example.com` });
+
+        expect(known.status).toBe(200);
+        expect(unknown.status).toBe(200);
+        expect(known.body.message).toBe(unknown.body.message);
+    });
+
+    it('reset rotates the password and kills every existing session', async () => {
+        const { email } = await registerUser({});
+        const httpAgent: Agent = supertest.agent(app);
+        const { accessToken } = await login(email);
+        const userId = await userIdForToken(accessToken);
+
+        // establish a refreshable session that must die after reset
+        await httpAgent.post('/api/v1/auth/login').send({ loginType: email, password: 'password123' });
+
+        await supertest(app).post('/api/v1/auth/forgot-password').send({ email });
+
+        const resetService = container.resolve(PasswordResetService);
+        const token = resetService.createToken(userId);
+
+        const bad = await supertest(app).post('/api/v1/auth/reset-password').send({ token: 'garbage-token-value', password: 'newpass456' });
+        expect(bad.status).toBe(400);
+
+        const ok = await supertest(app).post('/api/v1/auth/reset-password').send({ token, password: 'newpass456' });
+        expect(ok.status).toBe(200);
+
+        // old session cookie is dead
+        const staleRefresh = await httpAgent.get('/api/v1/auth/refresh-token');
+        expect([401, 403]).toContain(staleRefresh.status);
+
+        // old password rejected, new password accepted
+        const oldLogin = await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'password123' });
+        expect(oldLogin.status).toBe(401);
+        const newLogin = await supertest(app).post('/api/v1/auth/login').send({ loginType: email, password: 'newpass456' });
+        expect(newLogin.status).toBe(200);
     });
 });
 

@@ -30,6 +30,11 @@ export class SessionService {
     }
 
     public async revokeSession(id: string): Promise<any> {
-        return await this.sessionRepository.update(id, { refreshToken: null });
+        return await this.sessionRepository.revokeSession(id);
+    }
+
+    /** Hard-deletes every session of a user (password reset). */
+    public revokeAllForUser(userId: string): Promise<number> {
+        return this.sessionRepository.revokeAllForUser(userId);
     }
 }

@@ -6,7 +6,7 @@ import { authLimiterConfig } from '../../config/app.js';
 import { container } from '../../container.js';
 import { openApiRegistry } from '../../openapi/registry.js';
 import { AuthController } from './auth.controller.js';
-import { loginSchema, registerSchema } from './auth.dto.js';
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from './auth.dto.js';
 
 @injectable()
 export class AuthRoute extends BaseRoute {
@@ -42,6 +42,20 @@ export class AuthRoute extends BaseRoute {
             summary: 'Rotate tokens using the httpOnly session cookie',
         });
         openApiRegistry.register({
+            path: '/api/v1/auth/forgot-password',
+            method: 'post',
+            tag: 'Auth',
+            summary: 'Request a password reset email (uniform response)',
+            body: forgotPasswordSchema.shape.body,
+        });
+        openApiRegistry.register({
+            path: '/api/v1/auth/reset-password',
+            method: 'post',
+            tag: 'Auth',
+            summary: 'Reset the password with an emailed token; revokes all sessions',
+            body: resetPasswordSchema.shape.body,
+        });
+        openApiRegistry.register({
             path: '/api/v1/auth/logout',
             method: 'delete',
             tag: 'Auth',
@@ -51,6 +65,8 @@ export class AuthRoute extends BaseRoute {
         this.post('/register', [authLimiter, validate(registerSchema)], this.authController, 'register');
         this.post('/login', [authLimiter, validate(loginSchema)], this.authController, 'login');
         this.get('/refresh-token', [], this.authController, 'refreshToken');
+        this.post('/forgot-password', [authLimiter, validate(forgotPasswordSchema)], this.authController, 'forgotPassword');
+        this.post('/reset-password', [authLimiter, validate(resetPasswordSchema)], this.authController, 'resetPassword');
         this.delete('/logout', [], this.authController, 'logout');
     }
 }

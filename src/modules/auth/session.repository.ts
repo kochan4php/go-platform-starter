@@ -4,6 +4,7 @@ import { Session } from '../../database/models/session.model.js';
 
 export interface ISessionRepository extends IBaseRepository<Session> {
     revokeSession(id: string): Promise<Session | null>;
+    revokeAllForUser(userId: string): Promise<number>;
 }
 
 @injectable()
@@ -14,5 +15,10 @@ export class SessionRepository extends BaseRepository<Session> implements ISessi
 
     public revokeSession(id: string): Promise<Session | null> {
         return this.update(id, { refreshToken: null });
+    }
+
+    /** Hard-deletes every session of a user (used after password reset). */
+    public revokeAllForUser(userId: string): Promise<number> {
+        return Session.destroy({ where: { userId } });
     }
 }

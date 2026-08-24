@@ -2,7 +2,7 @@
 
 Status: **in progress** · Baseline: v2.0.0 overhaul complete (`e534b86..955dcfc`)
 
-Progress: Phase 1 ✅ (`5c6d076`) · Phase 2 ✅ · Phase 3 ✅ · Phases 4–7 pending
+Progress: Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 4 ✅ · Phases 5–7 pending
 
 Scope confirmed by owner: **all six themes** — config/observability, self-generating docs,
 auth completion, CI modernization, real Socket.IO, list ergonomics.

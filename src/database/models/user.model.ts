@@ -40,6 +40,13 @@ export class User extends Model {
     @Column(DataType.STRING)
     declare password: string;
 
+    @AllowNull(false)
+    @Column({ type: DataType.INTEGER, defaultValue: 0 })
+    declare failedLoginAttempts: number;
+
+    @Column(DataType.DATE)
+    declare lockedUntil: Date | null;
+
     @Column(DataType.TEXT)
     declare avatar: string | null;
 
