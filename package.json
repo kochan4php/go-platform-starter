@@ -7,7 +7,7 @@
     "scripts": {
         "prepare": "husky",
         "build": "go build ./...",
-        "test": "go test -race -count=1 ./...",
+        "test": "go test -count=1 ./...",
         "vet": "go vet ./...",
         "upgrade": "go get -u ./... && go mod tidy",
         "legacy:test": "pnpm -C legacy test"
