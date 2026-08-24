@@ -1,8 +1,20 @@
 # PLAN v6 — go-platform-starter → Go microservices + microfrontend monorepo (fresh build)
 
-Status: **planning complete — implementation not started** · Supersedes PLAN v5 and all pre-wipe docs/ADRs
+Status: **in progress** · Supersedes PLAN v5 and all pre-wipe docs/ADRs
 Baseline: repo wiped clean by owner decision (2026-08-24); only this plan, the README and LICENSE remain. All prior code recoverable in git history.
 Target: **full-Go backend microservices** behind a Go gateway · React micro-frontend shell · pnpm + single-module Go monorepo · **every deployable ships Dockerfile + Jenkinsfile + compose + k8s HPA** · defaults sized for ~100k users.
+
+## Progress
+
+| Wave | Status | Evidence |
+| --- | --- | --- |
+| 0 | ✅ done 2026-08-24 | `d412fac` — platform package, template service, scaffold; gate green (fmt/vet/build/test incl real containers, boot smoke) |
+| 1 | ⏳ | |
+| 2 | ⏳ | |
+| 3 | ⏳ | |
+| 4 | ⏳ | |
+| 5 | ⏳ | |
+| 6–7 | pending | |
 
 ---
 
