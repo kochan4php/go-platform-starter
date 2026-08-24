@@ -1,0 +1,25 @@
+# Runs golang-migrate before every rollout (PLAN item 8). The deployment's
+# readyz verifies the applied version instead of migrating on boot, so
+# scale-out events never race migrations.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rbac-migrate
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: rbac-migrate
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/kochan4php/rbac:latest-migrate
+          envFrom:
+            - secretRef:
+                name: rbac
+          env:
+            - name: MIGRATIONS_DIR
+              value: /migrations

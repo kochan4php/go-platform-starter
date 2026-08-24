@@ -82,31 +82,31 @@ type ResetPasswordJSONRequestBody = ResetInput
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// ForgotPassword always-200 password reset request (anti-enumeration)
-	// (POST /forgot)
+	// (POST /auth/forgot)
 	ForgotPassword(w http.ResponseWriter, r *http.Request)
 	// Login uniform-401 login with lockout; mints access token + sets refresh cookie
-	// (POST /login)
+	// (POST /auth/login)
 	Login(w http.ResponseWriter, r *http.Request)
 	// Logout revoke the session carried by the refresh cookie and clear it
-	// (POST /logout)
+	// (POST /auth/logout)
 	Logout(w http.ResponseWriter, r *http.Request)
 	// Refresh rotate the refresh cookie (reuse kills the family) and mint a new access token
-	// (POST /refresh)
+	// (POST /auth/refresh)
 	Refresh(w http.ResponseWriter, r *http.Request)
 	// Register create credentials; emits user.created onto users.events
-	// (POST /register)
+	// (POST /auth/register)
 	Register(w http.ResponseWriter, r *http.Request)
 	// ResetPassword consume a single-use reset token, set new password, wipe all sessions
-	// (POST /reset)
+	// (POST /auth/reset)
 	ResetPassword(w http.ResponseWriter, r *http.Request)
 	// RevokeAllSessions revoke every other session of the authenticated user
-	// (DELETE /sessions)
+	// (DELETE /auth/sessions)
 	RevokeAllSessions(w http.ResponseWriter, r *http.Request)
 	// ListSessions active sessions of the authenticated user
-	// (GET /sessions)
+	// (GET /auth/sessions)
 	ListSessions(w http.ResponseWriter, r *http.Request)
 	// RevokeSession revoke one session of the authenticated user
-	// (DELETE /sessions/{id})
+	// (DELETE /auth/sessions/{id})
 	RevokeSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 }
 
@@ -115,55 +115,55 @@ type ServerInterface interface {
 type Unimplemented struct{}
 
 // ForgotPassword always-200 password reset request (anti-enumeration)
-// (POST /forgot)
+// (POST /auth/forgot)
 func (_ Unimplemented) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Login uniform-401 login with lockout; mints access token + sets refresh cookie
-// (POST /login)
+// (POST /auth/login)
 func (_ Unimplemented) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Logout revoke the session carried by the refresh cookie and clear it
-// (POST /logout)
+// (POST /auth/logout)
 func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Refresh rotate the refresh cookie (reuse kills the family) and mint a new access token
-// (POST /refresh)
+// (POST /auth/refresh)
 func (_ Unimplemented) Refresh(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Register create credentials; emits user.created onto users.events
-// (POST /register)
+// (POST /auth/register)
 func (_ Unimplemented) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // ResetPassword consume a single-use reset token, set new password, wipe all sessions
-// (POST /reset)
+// (POST /auth/reset)
 func (_ Unimplemented) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // RevokeAllSessions revoke every other session of the authenticated user
-// (DELETE /sessions)
+// (DELETE /auth/sessions)
 func (_ Unimplemented) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // ListSessions active sessions of the authenticated user
-// (GET /sessions)
+// (GET /auth/sessions)
 func (_ Unimplemented) ListSessions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // RevokeSession revoke one session of the authenticated user
-// (DELETE /sessions/{id})
+// (DELETE /auth/sessions/{id})
 func (_ Unimplemented) RevokeSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -429,31 +429,31 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/register", wrapper.Register)
+		r.Post(options.BaseURL+"/auth/register", wrapper.Register)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/login", wrapper.Login)
+		r.Post(options.BaseURL+"/auth/login", wrapper.Login)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/refresh", wrapper.Refresh)
+		r.Post(options.BaseURL+"/auth/refresh", wrapper.Refresh)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/logout", wrapper.Logout)
+		r.Post(options.BaseURL+"/auth/logout", wrapper.Logout)
 	})
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/sessions", wrapper.RevokeAllSessions)
+		r.Delete(options.BaseURL+"/auth/sessions", wrapper.RevokeAllSessions)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/sessions", wrapper.ListSessions)
+		r.Get(options.BaseURL+"/auth/sessions", wrapper.ListSessions)
 	})
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/sessions/{id}", wrapper.RevokeSession)
+		r.Delete(options.BaseURL+"/auth/sessions/{id}", wrapper.RevokeSession)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/forgot", wrapper.ForgotPassword)
+		r.Post(options.BaseURL+"/auth/forgot", wrapper.ForgotPassword)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/reset", wrapper.ResetPassword)
+		r.Post(options.BaseURL+"/auth/reset", wrapper.ResetPassword)
 	})
 
 	return r

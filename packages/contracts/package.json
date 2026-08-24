@@ -1,0 +1,14 @@
+{
+  "name": "@starter/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated API client — DO NOT hand-edit. Regenerated from the aggregate spec.",
+  "scripts": {
+    "compose": "go run ../../cmd/composespec -root ../.. -out openapi.json",
+    "generate": "pnpm compose && openapi-typescript openapi.json -o src/client.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.9.1"
+  }
+}

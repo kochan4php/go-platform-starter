@@ -1,0 +1,167 @@
+openapi: 3.0.3
+info:
+  title: users service API
+  version: 0.1.0
+  description: |
+    Profile CRUD keyed by `sub` (data-split contract: credentials live in auth).
+    "Create" provisions a profile for an existing subject; lifecycle events from
+    auth materialize/delete rows automatically. Mounted under /api/v1/users.
+
+paths:
+  /users/me:
+    get:
+      operationId: me
+      summary: the caller's profile, served purely from identity headers
+      x-auth: required
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Profile" }
+        "401": { description: no identity, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /users:
+    post:
+      operationId: createUserProfile
+      summary: provision a profile row for an existing sub
+      x-required-permission: "user:create:any"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Profile" }
+        "409": { description: profile already exists, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+    get:
+      operationId: listUsers
+      summary: paginated profiles (?limit&offset)
+      x-required-permission: "user:read:any"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: offset, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: "#/components/schemas/Profile" }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      x-required-permission: "user:read:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Profile" }
+        "404": { description: unknown, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+    patch:
+      operationId: updateUser
+      x-required-permission: "user:update:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "200":
+          description: updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Profile" }
+        "404": { description: unknown, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+    delete:
+      operationId: deleteUser
+      summary: hard-delete the profile row and emit user.deleted
+      x-required-permission: "user:delete:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: unknown, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+components:
+  schemas:
+    EnvelopeMeta:
+      type: object
+      required: [limit, offset, total]
+      properties:
+        limit: { type: integer }
+        offset: { type: integer }
+        total: { type: integer, format: int64 }
+
+    EnvelopeOK:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
+
+    EnvelopeFail:
+      type: object
+      required: [success, message, error]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        error: { type: string }
+
+    Profile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        avatarUrl: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProfileInput:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, format: uuid, description: existing subject id }
+        displayName: { type: string, maxLength: 120 }
+        avatarUrl: { type: string, maxLength: 400 }

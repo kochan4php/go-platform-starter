@@ -7,7 +7,7 @@ info:
     Mounted by the gateway under /api/v1/auth.
 
 paths:
-  /register:
+  /auth/register:
     post:
       operationId: register
       summary: create credentials; emits user.created onto users.events
@@ -39,7 +39,7 @@ paths:
               schema: { $ref: "#/components/schemas/EnvelopeFail" }
       x-rate-limit-class: strict
 
-  /login:
+  /auth/login:
     post:
       operationId: login
       summary: uniform-401 login with lockout; mints access token + sets refresh cookie
@@ -79,7 +79,7 @@ paths:
               schema: { $ref: "#/components/schemas/EnvelopeFail" }
       x-rate-limit-class: strict
 
-  /refresh:
+  /auth/refresh:
     post:
       operationId: refresh
       summary: rotate the refresh cookie (reuse kills the family) and mint a new access token
@@ -100,14 +100,14 @@ paths:
         "401": { description: missing/invalid/replayed refresh token, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
       x-rate-limit-class: strict
 
-  /logout:
+  /auth/logout:
     post:
       operationId: logout
       summary: revoke the session carried by the refresh cookie and clear it
       responses:
         "200": { description: logged out, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
 
-  /sessions:
+  /auth/sessions:
     get:
       operationId: listSessions
       summary: active sessions of the authenticated user
@@ -138,7 +138,7 @@ paths:
       responses:
         "200": { description: ok, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
 
-  /sessions/{id}:
+  /auth/sessions/{id}:
     delete:
       operationId: revokeSession
       summary: revoke one session of the authenticated user
@@ -153,7 +153,7 @@ paths:
         "200": { description: revoked, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: unknown session, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
-  /forgot:
+  /auth/forgot:
     post:
       operationId: forgotPassword
       summary: always-200 password reset request (anti-enumeration)
@@ -167,7 +167,7 @@ paths:
         "200": { description: uniform response, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
       x-rate-limit-class: strict
 
-  /reset:
+  /auth/reset:
     post:
       operationId: resetPassword
       summary: consume a single-use reset token, set new password, wipe all sessions

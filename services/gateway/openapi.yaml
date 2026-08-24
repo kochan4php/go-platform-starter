@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: gateway API
+  version: 0.1.0
+  description: |
+    Edge service: JWT verification, permission registry, proxying, CORS,
+    rate limiting and the aggregate /docs (Scalar). Business routes live in
+    the upstream specs; this document only describes the gateway's own surface.
+paths:
+  /docs:
+    get:
+      operationId: scalarDocs
+      summary: Scalar UI over the aggregate spec
+      responses:
+        "200": { description: html }
+  /docs/openapi.json:
+    get:
+      operationId: aggregateSpec
+      summary: aggregate OpenAPI document composed from every upstream at boot
+      responses:
+        "200":
+          description: json
+          content:
+            application/json:
+              schema: { type: object }

@@ -10,6 +10,8 @@ type Config struct {
 	DatabaseURL       string `env:"DATABASE_URL,required"`
 	RedisAddr         string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
+	RBACInternalURL   string `env:"RBAC_INTERNAL_URL"`
+	InternalSecret    string `env:"INTERNAL_SECRET"`
 	AccessTTLMinutes  int    `env:"ACCESS_TTL_MINUTES" envDefault:"30"`
 	RefreshTTLDays    int    `env:"REFRESH_TTL_DAYS" envDefault:"7"`
 	BcryptCost        int    `env:"BCRYPT_COST" envDefault:"10"`

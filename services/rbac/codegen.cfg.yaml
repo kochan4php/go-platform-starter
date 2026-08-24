@@ -1,0 +1,5 @@
+package: gen
+generate:
+  chi-server: true
+  models: true
+output: services/rbac/gen/gen.go

@@ -46,12 +46,13 @@ func ErrConflictEmail(email string) *platform.AppError {
 }
 
 type Service struct {
-	db  *gorm.DB
-	rdb *redis.Client
-	log *slog.Logger
-	cfg Config
-	pub Publisher
-	now func() time.Time
+	db     *gorm.DB
+	rdb    *redis.Client
+	log    *slog.Logger
+	cfg    Config
+	pub    Publisher
+	now    func() time.Time
+	claims *ClaimsClient
 }
 
 func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, cfg Config, pub Publisher) *Service {
@@ -61,6 +62,8 @@ func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, cfg Config, pu
 		cfg: cfg, pub: pub, now: time.Now,
 	}
 }
+
+func (s *Service) UseClaimsClient(c *ClaimsClient) { s.claims = c }
 
 func (s *Service) secret() []byte { return []byte(s.cfg.AccessTokenSecret) }
 
@@ -158,11 +161,7 @@ func (s *Service) failKey(email string) string { return "login:fail:" + lower(em
 
 func (s *Service) startSession(ctx context.Context, u *User, ua, ip string) (*AuthResult, error) {
 	family := uuid.NewString()
-	res, err := s.newSessionInFamily(ctx, u, family, ua, ip)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return s.newSessionInFamily(ctx, u, family, ua, ip)
 }
 
 // newSessionInFamily creates a session row + access token for the user and
@@ -180,7 +179,11 @@ func (s *Service) newSessionInFamily(ctx context.Context, u *User, family, ua, i
 	if err := s.db.WithContext(ctx).Create(&sess).Error; err != nil {
 		return nil, err
 	}
-	access, err := MintAccess(s.secret(), u.ID, u.Email, 0, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
+	perms, ver := []string{}, int64(0)
+	if s.claims != nil {
+		perms, ver = s.claims.Resolve(ctx, u.ID)
+	}
+	access, err := MintAccess(s.secret(), u.ID, u.Email, ver, perms, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
 	if err != nil {
 		return nil, err
 	}

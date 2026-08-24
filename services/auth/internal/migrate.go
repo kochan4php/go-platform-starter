@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -22,7 +23,7 @@ func MigrateUp(databaseURL string) error {
 	if err != nil {
 		return fmt.Errorf("migration source: %w", err)
 	}
-	m, err := migrate.NewWithSourceInstance("iofs", src, "postgres://"+trimScheme(databaseURL))
+	m, err := migrate.NewWithSourceInstance("iofs", src, migrationURL(databaseURL))
 	if err != nil {
 		return fmt.Errorf("migrate init: %w", err)
 	}
@@ -42,4 +43,15 @@ func trimScheme(databaseURL string) string {
 		}
 	}
 	return databaseURL
+}
+
+// migrationURL points golang-migrate at this service's own history table so
+// co-located services on one cluster never clobber each other's versions.
+func migrationURL(databaseURL string) string {
+	u := "postgres://" + trimScheme(databaseURL)
+	sep := "?"
+	if strings.Contains(u, "?") {
+		sep = "&"
+	}
+	return u + sep + "x-migrations-table=auth_migrations"
 }

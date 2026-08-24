@@ -11,9 +11,13 @@ import (
 // NewRouter returns a chi router pre-wired with the standard middleware stack
 // (correlation, logging, metrics, recovery) and the standard probes mounted:
 // GET /healthz, GET /readyz (backed by the given checkers), GET /metrics.
-// Services mount their business routes on the returned router.
-func NewRouter(log *slog.Logger, ready map[string]Checker) chi.Router {
+// Extra middleware run before the standard stack; services mount their
+// business routes on the returned router.
+func NewRouter(log *slog.Logger, ready map[string]Checker, extra ...func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
+	for _, mw := range extra {
+		r.Use(mw)
+	}
 	r.Use(Observe)
 	r.Use(CorrelationID)
 	r.Use(RequestLogger)

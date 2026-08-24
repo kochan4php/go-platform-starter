@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -63,6 +62,14 @@ func main() {
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
 	pub := internal.RedisPublisher{RDB: rdb}
 	svc := internal.NewService(db, rdb, log, *cfg, pub)
+	if cfg.RBACInternalURL != "" && cfg.InternalSecret != "" {
+		svc.UseClaimsClient(internal.NewClaimsClient(
+			cfg.RBACInternalURL, cfg.InternalSecret, 5*time.Minute, log,
+		))
+	} else {
+		log.Warn("claims client disabled — tokens will carry no perms",
+			"rbac_url_set", cfg.RBACInternalURL != "", "secret_set", cfg.InternalSecret != "")
+	}
 
 	switch {
 	case *migrateOnly:
@@ -79,7 +86,10 @@ func main() {
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"postgres": func(ctx context.Context) error { return pingDB(db) },
 		"redis":    func(ctx context.Context) error { return rdb.Ping(ctx).Err() },
-	})
+	},
+		internal.RateLimit(rdb, log, cfg.RateGlobalPerMinute, cfg.RateStrictPerMinute, strictPaths),
+		internal.RequireBearer([]byte(cfg.AccessTokenSecret)),
+	)
 
 	router.Get("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
 		raw, _ := specFS.ReadFile("openapi.yaml")
@@ -87,11 +97,9 @@ func main() {
 		_, _ = w.Write(raw)
 	})
 
-	router.Route("/api/v1", func(api chi.Router) {
-		api.Use(internal.RateLimit(rdb, log, cfg.RateGlobalPerMinute, cfg.RateStrictPerMinute, strictPaths))
-		api.Use(internal.RequireBearer([]byte(cfg.AccessTokenSecret)))
-		handlers := internal.NewHandlers(svc, *cfg, log)
-		gen.HandlerFromMux(handlers, api)
+	gen.HandlerWithOptions(internal.NewHandlers(svc, *cfg, log), gen.ChiServerOptions{
+		BaseURL:    "/api/v1",
+		BaseRouter: router,
 	})
 
 	log.Info("auth service listening", "port", cfg.Port)

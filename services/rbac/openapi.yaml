@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: rbac service API
+  version: 0.1.0
+  description: |
+    Roles/permissions management + claim resolution. Mounted under /api/v1/rbac.
+    Role/permission edits bump `ver` for affected users (drives forced refresh).
+
+paths:
+  /rbac/permissions:
+    get:
+      operationId: listPermissions
+      summary: the compile-time catalog persisted in the db
+      x-required-permission: "permission:read:any"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { type: string }
+
+  /rbac/roles:
+    post:
+      operationId: createRole
+      x-required-permission: "role:create:any"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RoleInput" }
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Role" }
+        "409": { description: duplicate role name, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+    get:
+      operationId: listRoles
+      x-required-permission: "role:read:any"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: "#/components/schemas/Role" }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+
+  /rbac/roles/{id}:
+    patch:
+      operationId: updateRole
+      summary: rename/describe and/or sync the permission set; bumps affected users' ver
+      x-required-permission: "role:update:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/RoleInput"
+                - type: object
+                  properties:
+                    permissions:
+                      type: array
+                      description: full replacement set; unknown permission -> 400
+                      items: { type: string }
+      responses:
+        "200":
+          description: updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Role" }
+        "400": { description: unknown permission in set, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+        "404": { description: unknown role, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+    delete:
+      operationId: deleteRole
+      x-required-permission: "role:delete:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: unknown role, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /rbac/internal/claims/{sub}:
+    get:
+      operationId: resolveClaims
+      summary: internal API — perms[] + ver for a subject; requires the shared internal secret
+      x-internal: true
+      security: []
+      parameters: [{ name: sub, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          perms: { type: array, items: { type: string } }
+                          ver: { type: integer, format: int64 }
+        "403": { description: missing/wrong internal secret, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+components:
+  schemas:
+    EnvelopeMeta:
+      type: object
+      required: [limit, offset, total]
+      properties:
+        limit: { type: integer }
+        offset: { type: integer }
+        total: { type: integer, format: int64 }
+
+    EnvelopeOK:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
+
+    EnvelopeFail:
+      type: object
+      required: [success, message, error]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        error: { type: string }
+
+    RoleInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 60 }
+        description: { type: string, maxLength: 300 }
+
+    Role:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        permissions:
+          type: array
+          items: { type: string }

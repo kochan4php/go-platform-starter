@@ -23,11 +23,12 @@ func randomToken(n int) (string, error) {
 }
 
 type Claims struct {
-	Purpose string `json:"purpose"`
-	Sub     string `json:"sub,omitempty"`
-	Email   string `json:"email,omitempty"`
-	JTI     string `json:"jti,omitempty"`
-	Ver     int64  `json:"ver,omitempty"`
+	Purpose string   `json:"purpose"`
+	Sub     string   `json:"sub,omitempty"`
+	Email   string   `json:"email,omitempty"`
+	JTI     string   `json:"jti,omitempty"`
+	Ver     int64    `json:"ver,omitempty"`
+	Perms   []string `json:"perms,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -36,13 +37,14 @@ func mint(secret []byte, claims Claims) (string, error) {
 	return t.SignedString(secret)
 }
 
-func MintAccess(secret []byte, sub, email string, ver int64, ttl time.Duration) (string, error) {
+func MintAccess(secret []byte, sub, email string, ver int64, perms []string, ttl time.Duration) (string, error) {
 	now := time.Now()
 	return mint(secret, Claims{
 		Purpose: PurposeAccess,
 		Sub:     sub,
 		Email:   email,
 		Ver:     ver,
+		Perms:   perms,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),

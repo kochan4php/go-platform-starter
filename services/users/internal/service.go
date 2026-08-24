@@ -1,0 +1,102 @@
+package internal
+
+import (
+	"context"
+	"log/slog"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+
+	"github.com/kochan4php/go-platform-starter/internal/platform"
+)
+
+type Service struct {
+	db  *gorm.DB
+	log *slog.Logger
+	pub platform.StreamPublisher
+}
+
+func NewService(db *gorm.DB, log *slog.Logger, pub platform.StreamPublisher) *Service {
+	return &Service{db: db, log: log.With("component", "service"), pub: pub}
+}
+
+func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
+	if _, err := uuid.Parse(in.ID); err != nil {
+		return nil, platform.ErrBadRequest("id must be a uuid")
+	}
+	var count int64
+	s.db.WithContext(ctx).Model(&Profile{}).Where("id = ?", in.ID).Count(&count)
+	if count > 0 {
+		return nil, platform.ErrConflict("profile %s already exists", in.ID)
+	}
+	if err := s.db.WithContext(ctx).Create(&in).Error; err != nil {
+		return nil, err
+	}
+	s.audit(ctx, "create", "profile", in.ID)
+	return &in, nil
+}
+
+func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
+	var p Profile
+	if err := s.db.WithContext(ctx).First(&p, "id = ?", id).Error; err != nil {
+		if gorm.ErrRecordNotFound == err {
+			return nil, platform.ErrNotFound("profile %s not found", id)
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (s *Service) List(ctx context.Context, limit, offset int) ([]Profile, int64, error) {
+	var (
+		items []Profile
+		total int64
+	)
+	db := s.db.WithContext(ctx).Model(&Profile{})
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := db.Order("created_at DESC").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+func (s *Service) Update(ctx context.Context, id string, displayName, avatarUrl *string) (*Profile, error) {
+	p, err := s.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if displayName != nil {
+		p.DisplayName = *displayName
+	}
+	if avatarUrl != nil {
+		p.AvatarUrl = *avatarUrl
+	}
+	if err := s.db.WithContext(ctx).Save(p).Error; err != nil {
+		return nil, err
+	}
+	s.audit(ctx, "update", "profile", p.ID)
+	return p, nil
+}
+
+func (s *Service) Delete(ctx context.Context, sub string) error {
+	res := s.db.WithContext(ctx).Exec(`DELETE FROM users.profiles WHERE id = ?`, sub)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return platform.ErrNotFound("profile %s not found", sub)
+	}
+	if err := s.pub.Publish(ctx, StreamUsers, EventDeleted, map[string]string{"sub": sub}); err != nil {
+		s.log.Error("publish user.deleted failed", "err", err)
+	}
+	s.audit(ctx, "delete", "profile", sub)
+	return nil
+}
+
+func (s *Service) audit(ctx context.Context, action, entity, entityID string) {
+	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{
+		ActorSub: "system", Action: action, Entity: entity, EntityID: entityID,
+	})
+}
