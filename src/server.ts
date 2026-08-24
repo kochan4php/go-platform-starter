@@ -5,7 +5,7 @@
  */
 
 import 'reflect-metadata';
-import { Server, type Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { container, injectable } from 'tsyringe';
 import { App } from './app.js';
 import { logger } from './common/utils/logger.js';
@@ -13,7 +13,8 @@ import { socketConfig } from './config/app.js';
 import { PORT } from './config/env.js';
 import { closeDatabase, connectDatabase } from './database/connection.js';
 import { HealthChecker } from './health/health.checker.js';
-import socketController from './modules/core/socket.controller.js';
+import { registerRealtime } from './modules/realtime/realtime.handler.js';
+import type { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './modules/realtime/realtime.types.js';
 
 @injectable()
 export class Bootstrap {
@@ -31,9 +32,9 @@ export class Bootstrap {
                 logger.info(`server started on port ${PORT}`);
             });
 
-            // 4. Start Socket.IO
-            const io = new Server(server, socketConfig());
-            io.on('connection', (socket: Socket) => socketController(socket, io));
+            // 4. Start Socket.IO with typed events + handshake auth
+            const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, socketConfig());
+            registerRealtime(io);
 
             // 5. Handle graceful shutdown
             this.handleGracefulShutdown(server);

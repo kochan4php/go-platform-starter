@@ -4,12 +4,10 @@ import { container } from 'tsyringe';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { App } from '../../src/app.js';
 import { closeDatabase, connectDatabase } from '../../src/database/connection.js';
-import { migrator } from '../../src/database/migrator.js';
 import { Permission } from '../../src/database/models/permission.model.js';
 import { Role } from '../../src/database/models/role.model.js';
 import { User } from '../../src/database/models/user.model.js';
 import { UserRole } from '../../src/database/models/user-role.model.js';
-import { seed } from '../../src/database/seeders/index.js';
 import { PasswordResetService } from '../../src/modules/auth/password-reset.service.js';
 
 let app: ReturnType<typeof import('express').express>;
@@ -48,8 +46,7 @@ async function userIdForToken(accessToken: string): Promise<string> {
 
 beforeAll(async () => {
     await connectDatabase(3, 1000);
-    await migrator.up();
-    await seed();
+    // migrations + seed already applied once in global-setup
     app = container.resolve(App).instance;
 });
 
