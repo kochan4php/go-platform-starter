@@ -1,0 +1,40 @@
+openapi: 3.0.3
+info:
+  title: realtime service API
+  version: 0.1.0
+  description: |
+    WebSocket rooms + presence. The WS endpoint itself is documented in
+    docs/ARCHITECTURE (binary upgrade, not REST); this spec covers its HTTP
+    surface only.
+
+paths:
+  /info:
+    get:
+      operationId: realtimeInfo
+      summary: ws url + protocol version for the web client
+      x-auth: required
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          wsUrl: { type: string }
+                          protocol: { type: string }
+
+components:
+  schemas:
+    EnvelopeOK:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
