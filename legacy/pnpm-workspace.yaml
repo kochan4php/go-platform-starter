@@ -1,7 +1,0 @@
-allowBuilds:
-  bcrypt: true
-  cpu-features: true
-  es5-ext: true
-  esbuild: true
-  protobufjs: true
-  ssh2: true

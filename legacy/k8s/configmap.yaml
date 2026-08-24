@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: express-ts-config
-data:
-  NODE_ENV: "production"
-  PORT: "3000"
-  TRUSTED_DOMAINS: "http://localhost:3000"
