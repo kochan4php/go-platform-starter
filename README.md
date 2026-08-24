@@ -1,5 +1,27 @@
 # Express TS Starter
 
+> **v5 rewrite in progress — Go microservices + microfrontend monorepo.**
+> See [PLAN.md](./PLAN.md) for the approved plan and progress.
+> The complete, working TypeScript API now lives in [`legacy/`](./legacy) and remains the
+> **behavioral acceptance contract** for every Go service (its 59-test suite gates CI).
+> Run it: `cd legacy && pnpm setup-app && pnpm docker:db:dev:up && pnpm db:init && pnpm start:local:dev`
+> Docs below describe the legacy app until service docs land.
+
+[![CI](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml)
+
+## Monorepo quick reference (v5)
+
+| What | Where | Command |
+| --- | --- | --- |
+| Plan / waves / parity ledger | `PLAN.md` | — |
+| Go shared platform | `internal/platform` | `go test ./internal/...` |
+| Services (Go) | `services/<name>` | `make run SVC=auth` |
+| Upgrade ALL Go deps to latest | `go.mod` | `make upgrade` |
+| Frozen TS contract suite | `legacy/` | `make legacy.test` |
+| Service spec → code pipeline | `docs/CONTRACTS.md` | `make contracts SVC=auth` |
+
+---
+
 [![CI](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/express-ts-starter/actions/workflows/ci.yml)
 
 Production-shaped REST + realtime starter: **Express 5 · TypeScript (ESM) · Sequelize (PostgreSQL) · tsyringe DI · Socket.IO · JWT auth with DB-driven RBAC**.

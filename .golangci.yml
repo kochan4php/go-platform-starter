@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - gofumpt
+    - gosec
+    - misspell
+    - unconvert
+    - unparam
+    - wastedassign
+
+formatters:
+  enable:
+    - gofumpt
+
+# Service-boundary rule (enforced fully once multiple services exist):
+# code under services/<name>/internal must never import another service's
+# packages. depguard rules will be added per-service as they land;
+# cross-service sharing goes through internal/platform only.

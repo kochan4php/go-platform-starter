@@ -1,0 +1,45 @@
+openapi: 3.1.0
+info:
+  title: <Service> API
+  version: 5.0.0-alpha
+  description: >
+    Template for per-service specs. Copy into services/<name>/openapi.yaml.
+    Response bodies MUST reference the envelope schemas below so golden
+    fixtures stay comparable across services.
+servers:
+  - url: /
+paths:
+  /api/v1/example:
+    get:
+      tags: [Example]
+      summary: Replace me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Enveloped response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Envelope:
+      type: object
+      required: [success, message]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
+    ErrorEnvelope:
+      type: object
+      required: [success, message]
+      properties:
+        success: { type: boolean, enum: [false] }
+        message: { type: string }
+        error: {}

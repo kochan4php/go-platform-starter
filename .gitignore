@@ -1,11 +1,27 @@
+# --- Go ---
+*.exe
+*.test
+*.out
+bin/
+vendor/
+
+# --- Node / legacy TS app (legacy/) ---
 node_modules
 dist
 coverage
-env/.env.local
-env/.env.production*
-env/.env.staging
-env/.env.development
-env/.env.test
+
+# legacy env files
+legacy/env/.env.local
+legacy/env/.env.production*
+legacy/env/.env.staging
+legacy/env/.env.development
+legacy/env/.env.test
+
 package-lock.json
 yarn.lock
+
+# generated env files for services (real values never committed)
+infra/env/*.env
+*.local.env
+
 .gemini/*

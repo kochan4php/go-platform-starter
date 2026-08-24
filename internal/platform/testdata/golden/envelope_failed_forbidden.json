@@ -1,0 +1,5 @@
+{
+    "success": false,
+    "message": "You do not have the required permission: user:read:any",
+    "error": "You do not have the required permission: user:read:any"
+}
