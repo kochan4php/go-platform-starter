@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import { paginationQuerySchema } from '../../common/dto/pagination.js';
+
+export const getRolesSchema = z.object({
+    query: paginationQuerySchema.optional(),
+});
 
 export const createRoleSchema = z.object({
     body: z.object({

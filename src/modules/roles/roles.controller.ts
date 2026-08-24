@@ -12,10 +12,14 @@ export class RoleController {
     constructor(@inject(RoleService) private readonly roleService: RoleService) {}
 
     @RequirePermission('role:read:any')
-    public async getAllRoles(_: Request, res: Response): Promise<Response> {
+    public async getAllRoles(req: Request, res: Response): Promise<Response> {
         try {
-            const roles = await this.roleService.getAllRoles();
-            return resSuccess(res, 200, 'Success get all roles', { roles });
+            const { limit, offset } = (req.query as any) ?? {};
+            const { roles, total } = await this.roleService.getAllRoles(limit, offset);
+            return resSuccess(res, 200, 'Success get all roles', {
+                items: roles,
+                meta: { limit: Number(limit) || 10, offset: Number(offset) || 0, total },
+            });
         } catch (error: any) {
             logger.error({ err: error }, 'RoleController.getAllRoles failed');
             return resFailed(res, 500, 'Internal Server Error');

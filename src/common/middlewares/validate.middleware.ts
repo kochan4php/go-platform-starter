@@ -12,7 +12,11 @@ export class ValidateMiddleware {
                     params: req.params,
                 });
                 if (parsed.body !== undefined) req.body = parsed.body;
-                if (parsed.query !== undefined) Object.assign(req.query, parsed.query);
+                if (parsed.query !== undefined) {
+                    // Express 5 backs req.query with a getter — mutating a copy silently
+                    // loses the write. Define an own property so parsed/coerced values stick.
+                    Object.defineProperty(req, 'query', { value: parsed.query, writable: true, configurable: true });
+                }
                 if (parsed.params !== undefined) Object.assign(req.params, parsed.params);
                 return next();
             } catch (error) {

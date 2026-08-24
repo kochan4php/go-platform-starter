@@ -13,11 +13,13 @@ export class UserController {
     @RequirePermission('user:read:any')
     public async getAllUsers(req: Request, res: Response): Promise<Response> {
         try {
-            const limit = Number(req.query.limit) || 10;
-            const offset = Number(req.query.offset) || 0;
-            const users = await this.userService.getAllUsers({}, limit, offset);
+            const { limit, offset } = req.query as unknown as { limit: number; offset: number };
+            const { users, total } = await this.userService.getAllUsers({}, limit, offset);
 
-            return resSuccess(res, 200, 'Success get all users', { users });
+            return resSuccess(res, 200, 'Success get all users', {
+                items: users,
+                meta: { limit, offset, total },
+            });
         } catch (error: any) {
             logger.error({ err: error }, 'UserController.getAllUsers failed');
             return resFailed(res, error.statusCode || 500, 'Internal Server Error');

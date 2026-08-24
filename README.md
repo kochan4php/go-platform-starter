@@ -99,6 +99,27 @@ Every response uses one envelope:
 { "success": false, "message": "...", "error": "..." }
 ```
 
+List endpoints standardize on a page shape (`?limit=10&offset=0`, both coerced/validated by
+`src/common/dto/pagination.ts`):
+
+```json
+{ "success": true, "message": "...", "data": { "items": [ ], "meta": { "limit": 10, "offset": 0, "total": 42 } } }
+```
+
+Back it with `BaseRepository.paginate()` (counted `findAndCountAll`) — see users/roles services.
+
+## Soft deletes — pattern and trap
+
+Sequelize supports soft deletes via `paranoid: true` on `@Table` + a `deletedAt` column.
+**Trap:** a plain `UNIQUE` constraint on `email` will collide with soft-deleted rows. If you
+enable paranoia, move uniqueness to a **partial index** so only live rows count:
+
+```sql
+CREATE UNIQUE INDEX users_email_unique ON users (email) WHERE deleted_at IS NULL;
+```
+
+This template deliberately ships hard deletes; enable paranoid per model if you need the audit trail.
+
 ## RBAC in practice
 
 Permissions are `<resource>:<action>:<scope>` strings defined once in

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { paginationQuerySchema } from '../../common/dto/pagination.js';
 
 const userBodySchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -22,12 +23,7 @@ export const updateUserSchema = z.object({
 });
 
 export const getUsersSchema = z.object({
-    query: z
-        .object({
-            limit: z.coerce.number().min(1).max(100).default(10),
-            offset: z.coerce.number().min(0).default(0),
-        })
-        .optional(),
+    query: paginationQuerySchema.optional(),
 });
 
 export const userIdSchema = z.object({

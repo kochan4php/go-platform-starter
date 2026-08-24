@@ -4,7 +4,7 @@ import { validate } from '../../common/middlewares/validate.middleware.js';
 import { container } from '../../container.js';
 import { openApiRegistry } from '../../openapi/registry.js';
 import { RoleController } from './roles.controller.js';
-import { createRoleSchema, replacePermissionsSchema, roleIdSchema, updateRoleSchema } from './roles.dto.js';
+import { createRoleSchema, getRolesSchema, replacePermissionsSchema, roleIdSchema, updateRoleSchema } from './roles.dto.js';
 
 @injectable()
 export class RoleRoute extends BaseRoute {
@@ -23,6 +23,7 @@ export class RoleRoute extends BaseRoute {
             tag: 'Roles',
             summary: 'List roles (paginated)',
             security: 'bearer',
+            query: getRolesSchema.shape.query,
         });
         openApiRegistry.register({
             path: '/api/v1/roles/{id}',
@@ -75,7 +76,7 @@ export class RoleRoute extends BaseRoute {
             params: roleIdSchema.shape.params,
         });
 
-        this.get('/', [], this.roleController, 'getAllRoles');
+        this.get('/', [validate(getRolesSchema)], this.roleController, 'getAllRoles');
         this.get('/:id', [validate(roleIdSchema)], this.roleController, 'getRoleById');
         this.get('/:id/permissions', [validate(roleIdSchema)], this.roleController, 'getRolePermissions');
         this.post('/', [validate(createRoleSchema)], this.roleController, 'createRole');

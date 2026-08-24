@@ -6,12 +6,13 @@ import type { IUserRepository } from './users.repository.js';
 export class UserService {
     constructor(@inject('IUserRepository') private readonly userRepository: IUserRepository) {}
 
-    public async getAllUsers(filter: any = {}, limit: number = 10, offset: number = 0): Promise<any[]> {
-        return await this.userRepository.findAll(filter, {
-            attributes: { exclude: ['password'] },
+    public async getAllUsers(filter: any = {}, limit: number = 10, offset: number = 0): Promise<{ users: any[]; total: number }> {
+        const { rows, total } = await this.userRepository.paginate(filter, {
             limit,
             offset,
+            attributes: { exclude: ['password'] },
         });
+        return { users: rows, total };
     }
 
     public async getOneUser(filter: any): Promise<any | null> {

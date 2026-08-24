@@ -276,8 +276,11 @@ describe('RBAC enforcement on /users admin surface', () => {
 
         const ok = await supertest(app).get('/api/v1/users?limit=5&offset=0').set('Authorization', `Bearer ${adminToken}`);
         expect(ok.status).toBe(200);
-        expect(Array.isArray(ok.body.data.users)).toBe(true);
-        for (const user of ok.body.data.users) {
+        expect(Array.isArray(ok.body.data.items)).toBe(true);
+        expect(ok.body.data.meta).toMatchObject({ limit: 5, offset: 0 });
+        expect(typeof ok.body.data.meta.total).toBe('number');
+        expect(ok.body.data.items.length).toBeLessThanOrEqual(5);
+        for (const user of ok.body.data.items) {
             expect(user.password).toBeUndefined();
         }
     });
@@ -338,6 +341,16 @@ describe('roles module', () => {
         const res = await supertest(app).get('/api/v1/permissions').set('Authorization', `Bearer ${adminToken}`);
         expect(res.status).toBe(200);
         expect(res.body.data.permissions).toContain('user:read:any');
+    });
+
+    it('role lists are paginated with meta totals', async () => {
+        const res = await supertest(app).get('/api/v1/roles?limit=1&offset=0').set('Authorization', `Bearer ${adminToken}`);
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.data.items)).toBe(true);
+        expect(res.body.data.items.length).toBeLessThanOrEqual(1);
+        expect(res.body.data.meta).toMatchObject({ limit: 1, offset: 0 });
+        // seeded roles: admin + user at minimum
+        expect(res.body.data.meta.total).toBeGreaterThanOrEqual(2);
     });
 
     it('create -> sync permissions -> read -> replace -> delete', async () => {

@@ -7,7 +7,13 @@ export interface IBaseRepository<T extends Model> {
     create(data: any): Promise<T>;
     update(id: string, data: any): Promise<T | null>;
     delete(id: string): Promise<number>;
+    paginate(filter?: WhereOptions<Attributes<T>>, options?: PaginateOptions<T>): Promise<{ rows: T[]; total: number }>;
 }
+
+export type PaginateOptions<T extends Model> = {
+    limit?: number;
+    offset?: number;
+} & Omit<FindOptions<Attributes<T>>, 'limit' | 'offset'>;
 
 export abstract class BaseRepository<T extends Model> implements IBaseRepository<T> {
     constructor(protected readonly model: ModelCtor<T>) {}
@@ -36,5 +42,20 @@ export abstract class BaseRepository<T extends Model> implements IBaseRepository
 
     public delete(id: string): Promise<number> {
         return this.model.destroy({ where: { id } as any });
+    }
+
+    /** Counted page fetch — the single source of every list endpoint's `{items, meta}` envelope. */
+    public async paginate(
+        filter: WhereOptions<Attributes<T>> = {},
+        options: PaginateOptions<T> = {},
+    ): Promise<{ rows: T[]; total: number }> {
+        const { limit = 10, offset = 0, ...findOptions } = options;
+        const { rows, count } = await this.model.findAndCountAll({
+            where: filter,
+            limit,
+            offset,
+            ...findOptions,
+        });
+        return { rows, total: count };
     }
 }

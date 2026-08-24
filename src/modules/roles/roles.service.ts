@@ -5,8 +5,9 @@ import type { IRoleRepository } from './roles.repository.js';
 export class RoleService {
     constructor(@inject('IRoleRepository') private readonly roleRepository: IRoleRepository) {}
 
-    public async getAllRoles(limit: number = 50, offset: number = 0): Promise<any[]> {
-        return await this.roleRepository.findAll({}, { limit, offset });
+    public async getAllRoles(limit: number = 10, offset: number = 0): Promise<{ roles: any[]; total: number }> {
+        const { rows, total } = await this.roleRepository.paginate({}, { limit, offset });
+        return { roles: rows, total };
     }
 
     public async getOneRoleById(id: string): Promise<any | null> {
