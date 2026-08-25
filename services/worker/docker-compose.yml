@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: services/worker/Dockerfile
+    environment:
+      PORT: "8080"
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://app:app@postgres:5432/app?sslmode=disable
+      REDIS_ADDR: redis:6379
+      MAILER_DRIVER: console
+    ports: ["8084:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  pgdata:

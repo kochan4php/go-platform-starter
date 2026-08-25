@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info:
+  title: worker service API
+  version: 0.1.0
+  description: |
+    Redis Streams consumer (mail jobs, audit flush) + scheduled housekeeping.
+    HTTP surface exists only for probes and metrics — no business REST API.
+paths: {}

@@ -1,0 +1,23 @@
+# Runs golang-migrate before every rollout (PLAN item 8). Creates schema
+# `audit`; the worker deployment's readyz verifies connectivity instead of
+# migrating on boot, so scale-out never races migrations.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: worker-migrate
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: worker-migrate
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/kochan4php/worker:latest-migrate
+          command: ["/service", "-migrate"]
+          envFrom:
+            - secretRef:
+                name: worker

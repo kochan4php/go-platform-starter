@@ -27,7 +27,9 @@ def call(Map cfg = [:]) {
             }
             stage('Contracts are fresh') {
                 steps {
-                    sh 'make contracts SVC=' + component
+                    // Only spec-codegen services have a codegen config; probe-only
+                    // services (gateway, realtime, worker) skip this stage.
+                    sh 'test -f services/' + component + '/codegen.cfg.yaml && make contracts SVC=' + component + ' || echo "no codegen config — skipping"'
                     sh 'git diff --exit-code'
                 }
             }

@@ -91,6 +91,20 @@ func main() {
 		internal.RequireBearer([]byte(cfg.AccessTokenSecret)),
 	)
 
+	bgCtx, stopBg := context.WithCancel(context.Background())
+	sweepDone := platform.NewScheduler(rdb, log, time.Hour, "auth-session-sweep",
+		func(ctx context.Context) {
+			n, err := internal.SweepSessions(ctx, db)
+			if err != nil {
+				log.Error("session sweep failed", "err", err)
+				return
+			}
+			if n > 0 {
+				log.Info("sessions swept", "count", n)
+			}
+		}).Start(bgCtx)
+	defer stopBg()
+
 	router.Get("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
 		raw, _ := specFS.ReadFile("openapi.yaml")
 		w.Header().Set("Content-Type", "application/yaml")
@@ -103,7 +117,11 @@ func main() {
 	})
 
 	log.Info("auth service listening", "port", cfg.Port)
-	if err := platform.GracefulRun(":"+cfg.Port, router, func() { _ = sqlClose(db) }); err != nil {
+	if err := platform.GracefulRun(":"+cfg.Port, router, func() {
+		stopBg()
+		<-sweepDone
+		_ = sqlClose(db)
+	}); err != nil {
 		log.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}

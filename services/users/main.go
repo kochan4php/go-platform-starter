@@ -53,11 +53,23 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	svc := internal.NewService(db, log, internal.RedisPublisher{RDB: rdb})
+	svc := internal.NewService(db, rdb, log, internal.RedisPublisher{RDB: rdb})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go internal.ConsumeUserEvents(ctx, rdb, db, log)
+
+	purgeDone := platform.NewScheduler(rdb, log, time.Hour, "users-profile-purge",
+		func(ctx context.Context) {
+			n, err := internal.PurgeDeletedProfiles(ctx, rdb, db)
+			if err != nil {
+				log.Error("profile purge failed", "err", err)
+				return
+			}
+			if n > 0 {
+				log.Info("profiles purged", "count", n)
+			}
+		}).Start(ctx)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"postgres": func(ctx context.Context) error { return pingDB(db) },
@@ -76,7 +88,11 @@ func main() {
 	})
 
 	log.Info("users service listening", "port", cfg.Port)
-	if err := platform.GracefulRun(":"+cfg.Port, router, func() { _ = closeDB(db) }); err != nil {
+	if err := platform.GracefulRun(":"+cfg.Port, router, func() {
+		cancel()
+		<-purgeDone
+		_ = closeDB(db)
+	}); err != nil {
 		log.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}

@@ -1,0 +1,12 @@
+# Wave 3 item 47: websocket pods drain gracefully on voluntary disruptions
+# (SIGTERM drain closes sockets with a go-away frame); this budget caps how
+# many can be down at once during node maintenance.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: realtime
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: realtime

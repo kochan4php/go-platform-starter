@@ -63,3 +63,41 @@ Lifecycle rides Redis Streams:
 Consumer groups start at stream beginning (`0`) so events emitted before a consumer's
 first deploy backfill. Payload schemas for these events are versioned in this file when
 the first real producer lands.
+
+## Stream payload contracts
+
+All events ride the envelope `{event: string, payload: string}` where `payload` is the
+JSON encoding described below (see `internal/platform.Publish`).
+
+### `users.events`
+
+| Event | Producer | Payload |
+| --- | --- | --- |
+| `user.created` | auth (register, bootstrap seeder) | `{sub, email}` |
+| `user.deleted` | users (admin delete) | `{sub}` |
+
+### `mail.jobs` (consumed by worker)
+
+| Event | Producer | Payload |
+| --- | --- | --- |
+| `email.send` | auth | `{to, subject, html}` |
+
+Delivery is **at-least-once**; the worker marks a message done only after a successful
+SMTP send, so redeliveries never double-send. After 5 failed attempts a job moves to
+`<stream>:dlq` with its original id preserved for inspection.
+
+### `audit.events` (consumed by worker — sole writer of schema `audit`)
+
+| Event | Producers | Payload |
+| --- | --- | --- |
+| `audit.entry` | any api service | `{actorSub, action, entity, entityId?, meta?}` |
+
+Flushes are idempotent per Redis message id (`msg_id` unique index + `ON CONFLICT DO
+NOTHING`), so at-least-once redelivery cannot duplicate rows.
+
+### `purge:profiles` (Redis list)
+
+Belt-and-braces beside `user.deleted`: every admin delete also pushes the `sub` onto
+this durable list; the users service's scheduled sweep drains it and deletes any
+profile rows the stream path missed.
+

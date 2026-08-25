@@ -1,0 +1,12 @@
+# Probe/metrics surface only — the worker has no business REST API. The
+# Service exists so Prometheus can scrape /metrics and probes stay routable.
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+spec:
+  selector:
+    app: worker
+  ports:
+    - port: 80
+      targetPort: 8080

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -12,12 +13,13 @@ import (
 
 type Service struct {
 	db  *gorm.DB
+	rdb *redis.Client
 	log *slog.Logger
 	pub platform.StreamPublisher
 }
 
-func NewService(db *gorm.DB, log *slog.Logger, pub platform.StreamPublisher) *Service {
-	return &Service{db: db, log: log.With("component", "service"), pub: pub}
+func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, pub platform.StreamPublisher) *Service {
+	return &Service{db: db, rdb: rdb, log: log.With("component", "service"), pub: pub}
 }
 
 func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
@@ -90,6 +92,9 @@ func (s *Service) Delete(ctx context.Context, sub string) error {
 	}
 	if err := s.pub.Publish(ctx, StreamUsers, EventDeleted, map[string]string{"sub": sub}); err != nil {
 		s.log.Error("publish user.deleted failed", "err", err)
+	}
+	if err := QueueProfilePurge(ctx, s.rdb, sub); err != nil {
+		s.log.Error("queue profile purge failed", "err", err)
 	}
 	s.audit(ctx, "delete", "profile", sub)
 	return nil

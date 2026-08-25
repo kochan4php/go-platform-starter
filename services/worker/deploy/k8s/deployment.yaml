@@ -1,0 +1,44 @@
+# Worker runs replicas=1 by default: the platform scheduler's redis-lock
+# makes housekeeping single-runner, and stream consumers scale safely via
+# consumer groups (each pod gets distinct deliveries). Scale via the HPA —
+# XREADGROUP fan-out is coordination-free.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: service
+          image: ghcr.io/kochan4php/worker:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: worker
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 10
