@@ -14,7 +14,9 @@ COPY services ./services
 ARG REMOTE_BASE=/
 ENV REMOTE_BASE=${REMOTE_BASE}
 
-RUN pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-admin-users build
+# Cache the pnpm store across builds: manifest changes no longer re-download
+# the whole dependency tree over slow links.
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-admin-users build
 
 FROM nginx:alpine
 COPY apps/web-admin-users/nginx.conf /etc/nginx/conf.d/default.conf

@@ -1,12 +1,16 @@
-# Production stack. One public entry (edge nginx, ports 80/443), everything
-# else internal-only. Requires an env file:
+# Production stack (used by uat / demo / prod targets). One public entry
+# (edge nginx, ports 80/443), everything else internal-only. Requires an env
+# file:
 #
 #   docker compose --env-file .env.production -f compose.prod.yml up -d
 #
-# scripts/deploy.sh automates all of the above (build -> migrate -> seed ->
-# up -> health gates).
+# Migrations and seeds run via `compose run --rm <svc> -migrate|-seed`
+# (deploy.sh does this before the rollout) — no long-lived job services.
+#
+# scripts/deploy.sh automates build -> migrate -> seed -> up -> health gates;
+# STACK_ENV from the env file isolates container projects and state per env.
 
-name: go-platform-prod
+name: go-platform-${STACK_ENV:-prod}
 
 x-service-defaults: &svc
   restart: unless-stopped
@@ -19,7 +23,7 @@ x-go-env: &go-env
   REDIS_ADDR: redis:6379
   ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?set ACCESS_TOKEN_SECRET}
   INTERNAL_SECRET: ${INTERNAL_SECRET:?set INTERNAL_SECRET}
-  LOG_LEVEL: info
+  LOG_LEVEL: ${LOG_LEVEL:-info}
 
 services:
   postgres:
@@ -55,6 +59,9 @@ services:
       PORT: "8080"
       APP_PUBLIC_URL: https://${DOMAIN:?set DOMAIN}
       RBAC_INTERNAL_URL: http://rbac:8080
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+      SEED_HINT: "run via deploy script when SEED_ADMIN=true"
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -112,6 +119,7 @@ services:
       <<: *go-env
       PORT: "8000"
       TRUSTED_DOMAINS: ${TRUSTED_DOMAINS:?set TRUSTED_DOMAINS}
+      RATE_GLOBAL_PER_MINUTE: ${RATE_GLOBAL_PER_MINUTE:-300}
       UPSTREAMS: '{"auth":"http://auth:8080","users":"http://users:8080","rbac":"http://rbac:8080","worker":"http://worker:8080","realtime":"http://realtime:8080"}'
       REALTIME_UPSTREAM: http://realtime:8080
     depends_on:
@@ -168,71 +176,6 @@ services:
       - web-auth
       - web-admin-users
       - web-admin-roles
-
-  # ---- one-shot jobs (`--profile tools`) --------------------------------------
-  # Services also verify/apply their own migrations on boot; these explicit
-  # jobs keep the k8s-style execution model (migrate before rollout).
-  auth-migrate:
-    build: { context: .., dockerfile: services/auth/Dockerfile }
-    command: ["-migrate"]
-    environment:
-      <<: *go-env
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  users-migrate:
-    build: { context: .., dockerfile: services/users/Dockerfile }
-    command: ["-migrate"]
-    environment:
-      <<: *go-env
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  rbac-migrate:
-    build: { context: .., dockerfile: services/rbac/Dockerfile }
-    command: ["-migrate"]
-    environment:
-      <<: *go-env
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  worker-migrate:
-    build: { context: .., dockerfile: services/worker/Dockerfile }
-    command: ["-migrate"]
-    environment:
-      <<: *go-env
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  rbac-seed:
-    build: { context: .., dockerfile: services/rbac/Dockerfile }
-    command: ["-seed"]
-    environment:
-      <<: *go-env
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  auth-seed:
-    build: { context: .., dockerfile: services/auth/Dockerfile }
-    command: ["-seed"]
-    environment:
-      <<: *go-env
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
-      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
-    restart: "no"
-    profiles: [tools]
-    depends_on:
-      postgres: { condition: service_healthy }
 
 volumes:
   pgdata:

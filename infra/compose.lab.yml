@@ -1,0 +1,51 @@
+# LAB overlay — stack on top of compose.base.yml for development/debugging.
+#
+#   docker compose -f infra/compose.base.yml -f infra/compose.lab.yml up -d
+#   ...or just: scripts/deploy-lab.sh
+#
+# Differences from the plain base mesh:
+#   - LOG_LEVEL=debug on every Go service
+#   - edge rate limit raised so load experiments do not trip it
+#   - worker mailer forced to console output
+#   - the shell nginx proxies /api to the gateway so bundles built before the
+#     runtime-config era keep working (config.js handles newer ones)
+#
+# All service ports stay published (see base file) so developers can hit any
+# component directly, attach profilers, or tail one service in isolation.
+
+services:
+  auth:
+    environment:
+      LOG_LEVEL: debug
+      RATE_GLOBAL_PER_MINUTE: 600
+      # Relaxed for experimentation: brute-force hardening matters less than
+      # not locking developers out while they poke the API.
+      LOGIN_MAX_ATTEMPTS: "100"
+
+  users:
+    environment:
+      LOG_LEVEL: debug
+
+  rbac:
+    environment:
+      LOG_LEVEL: debug
+
+  worker:
+    environment:
+      LOG_LEVEL: debug
+      MAILER_DRIVER: console
+
+  realtime:
+    environment:
+      LOG_LEVEL: debug
+
+  gateway:
+    environment:
+      LOG_LEVEL: debug
+      RATE_GLOBAL_PER_MINUTE: 1200
+
+  web:
+    volumes:
+      # Same-origin /api proxy so every bundle reaches the gateway without
+      # rebuilds (runtime config.js takes over once images include it).
+      - ./lab/web.nginx.conf:/etc/nginx/conf.d/default.conf:ro

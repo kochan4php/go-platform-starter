@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"embed"
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -168,13 +167,12 @@ func seedAdmin(ctx context.Context, svc *internal.Service, log *slog.Logger) err
 		fmt.Println("email:", email)
 		fmt.Println("===========================================================")
 	}
-	if _, err := svc.RegisterWithSub(ctx, platform.BootstrapSub, email, password); err != nil {
-		var appErr *platform.AppError
-		if errors.As(err, &appErr) && appErr.Status == http.StatusConflict {
-			log.Info("bootstrap admin already exists — seeding is idempotent", "email", email)
-			return nil
-		}
+	explicit := os.Getenv("ADMIN_BOOTSTRAP_PASSWORD") != ""
+	if err := svc.EnsureBootstrapAdmin(ctx, platform.BootstrapSub, email, password); err != nil {
 		return err
+	}
+	if !explicit {
+		log.Info("bootstrap admin ensured; password unchanged because none was provided", "email", email)
 	}
 	log.Info("bootstrap admin ready", "sub", platform.BootstrapSub, "email", email)
 	return nil

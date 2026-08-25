@@ -56,21 +56,31 @@ export interface CreateClientOptions {
 }
 
 /**
- * Gateway origin resolution order (PLAN item 59):
+ * Gateway origin resolution order:
  *   1. VITE_GATEWAY_URL build-time override,
- *   2. same-origin (production edge serves shell + API on one domain),
- *   3. http://localhost:8000 bare dev fallback.
+ *   2. window.__STARTER_GATEWAY_URL__ runtime override (rendered by the
+ *      host's /config.js so one image serves every environment),
+ *   3. same-origin (production edge serves shell + API on one domain),
+ *   4. http://localhost:8000 bare dev fallback.
  * NEVER bake an absolute localhost URL into a production bundle — the
  * browser would call the visitor's own machine.
  */
+declare global {
+  interface Window {
+    __STARTER_GATEWAY_URL__?: string;
+  }
+}
+
 export const GATEWAY_URL = (() => {
   const fromEnv =
     typeof import.meta !== "undefined"
       ? (import.meta.env?.VITE_GATEWAY_URL as string | undefined)
       : undefined;
   if (fromEnv) return fromEnv.replace(/\/$/, "");
-  if (typeof window !== "undefined" && /^https?:$/.test(window.location?.protocol ?? "")) {
-    return window.location.origin;
+  if (typeof window !== "undefined") {
+    const runtime = window.__STARTER_GATEWAY_URL__;
+    if (runtime) return runtime.replace(/\/$/, "");
+    if (/^https?:$/.test(window.location?.protocol ?? "")) return window.location.origin;
   }
   return "http://localhost:8000";
 })();

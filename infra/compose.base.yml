@@ -1,8 +1,10 @@
-# Full local mesh (PLAN item 86): one command boots everything.
-#   docker compose -f infra/compose.base.yml up --build
+# LAB environment (docker compose): the full mesh for local development and
+# debugging — every service port is published, seeds are included.
+#
+#   docker compose -f infra/compose.base.yml -f infra/compose.lab.yml up --build
 # Seeded admin: admin@example.local / admin-bootstrap-pw
 # Shell: http://localhost:5173 · API docs: http://localhost:8000/docs
-name: go-platform
+name: go-platform-lab
 
 services:
   postgres:
@@ -11,7 +13,9 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: app
-    ports: ["5432:5432"]
+    # Host side is configurable so the lab never fights other local projects
+    # for the default Postgres/Redis ports.
+    ports: ["${LAB_PG_PORT:-55432}:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app"]
@@ -21,7 +25,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
+    ports: ["${LAB_REDIS_PORT:-56380}:6379"]
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -35,8 +39,11 @@ services:
     environment:
       PORT: "8081"
       APP_PUBLIC_URL: http://localhost:5173
-      RBAC_INTERNAL_URL: http://rbac:8080
-    ports: ["8081:8080"]
+      RBAC_INTERNAL_URL: http://rbac:8083
+      # Interpolated from the caller so deploy-lab / CI can pin credentials.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}
+    ports: ["8081:8081"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -46,7 +53,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8082"
-    ports: ["8082:8080"]
+    ports: ["8082:8082"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -56,7 +63,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8083"
-    ports: ["8083:8080"]
+    ports: ["8083:8083"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -67,7 +74,7 @@ services:
     environment:
       PORT: "8084"
       MAILER_DRIVER: console
-    ports: ["8084:8080"]
+    ports: ["8084:8084"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -77,30 +84,9 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8085"
-    ports: ["8085:8080"]
+    ports: ["8085:8085"]
     depends_on:
       redis: { condition: service_healthy }
-
-  # One-shot seeders (PLAN item 8 execution model, compose/dev flavor):
-  # bootstrap admin credentials + role catalog. `docker compose up` runs them
-  # once; re-run with `docker compose run --rm auth-seed`.
-  auth-seed:
-    build: { context: .., dockerfile: services/auth/Dockerfile }
-    command: ["/service", "-seed"]
-    env_file: [./go.env]
-    environment:
-      ADMIN_BOOTSTRAP_PASSWORD: admin-bootstrap-pw
-    restart: "no"
-    depends_on:
-      postgres: { condition: service_healthy }
-
-  rbac-seed:
-    build: { context: .., dockerfile: services/rbac/Dockerfile }
-    command: ["/service", "-seed"]
-    env_file: [./go.env]
-    restart: "no"
-    depends_on:
-      postgres: { condition: service_healthy }
 
   gateway:
     build: { context: .., dockerfile: services/gateway/Dockerfile }
@@ -108,8 +94,9 @@ services:
     environment:
       PORT: "8000"
       TRUSTED_DOMAINS: http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176
-      UPSTREAMS: '{"auth":"http://auth:8080","users":"http://users:8080","rbac":"http://rbac:8080","worker":"http://worker:8080"}'
-    ports: ["8000:8000"]
+      UPSTREAMS: '{"auth":"http://auth:8081","users":"http://users:8082","rbac":"http://rbac:8083","worker":"http://worker:8084"}'
+    # Host side shifts automatically when another project owns 8000.
+    ports: ["${LAB_GATEWAY_PORT:-8010}:8000"]
     depends_on:
       - auth
       - users

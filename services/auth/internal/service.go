@@ -81,6 +81,48 @@ func (s *Service) Register(ctx context.Context, email, password string) (*User, 
 	return s.RegisterWithSub(ctx, uuid.NewString(), email, password)
 }
 
+// EnsureBootstrapAdmin creates the bootstrap account when missing; when it
+// already exists it resets the password to the declared one and revokes its
+// sessions, so environment configuration stays authoritative (lab/uat/demo
+// reproducibility). Used by the `-seed` command.
+func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password string) error {
+	_, err := s.RegisterWithSub(ctx, sub, email, password)
+	if err == nil {
+		return nil
+	}
+	var appErr *platform.AppError
+	if !errors.As(err, &appErr) || appErr.Status != http.StatusConflict {
+		return err
+	}
+
+	hash, herr := bcrypt.GenerateFromPassword([]byte(password), s.cfg.BcryptCost)
+	if herr != nil {
+		return herr
+	}
+	var id string
+	if err := s.db.WithContext(ctx).Raw(
+		`SELECT id FROM auth.users WHERE lower(email) = ?`, lower(email),
+	).Scan(&id).Error; err != nil {
+		return err
+	}
+	if id == "" {
+		return platform.ErrNotFound("bootstrap admin %s vanished", email)
+	}
+	if err := s.db.WithContext(ctx).Exec(
+		`UPDATE auth.users SET password_hash = ? WHERE id = ?`, string(hash), id,
+	).Error; err != nil {
+		return err
+	}
+	// Credentials changed: every existing session is void.
+	if err := s.db.WithContext(ctx).Exec(
+		`DELETE FROM auth.sessions WHERE user_id = ?`, id,
+	).Error; err != nil {
+		return err
+	}
+	s.log.Info("bootstrap admin password reset from environment", "email", email)
+	return nil
+}
+
 func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password string) (*User, error) {
 	email = lower(email)
 	_, lookupErr := findUserByEmail(s.db.WithContext(ctx), email)

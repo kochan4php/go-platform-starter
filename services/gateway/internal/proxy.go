@@ -22,7 +22,14 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 	for name, base := range upstreams {
 		var raw []byte
 		var lastErr error
-		for attempt := 1; attempt <= 5; attempt++ {
+		// Siblings may start after the gateway (docker compose race); waiting
+		// is correct here — failing closed on an unreachable spec means the
+		// gateway could never serve, so retry until the spec arrives.
+		for attempt := 1; ; attempt++ {
+			if attempt > 30 {
+				lastErr = fmt.Errorf("gave up after 30 attempts")
+				break
+			}
 			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, base+"/openapi.json", nil)
 			res, err := hc.Do(req)
 			if err != nil {
