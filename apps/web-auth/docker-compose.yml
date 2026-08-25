@@ -1,0 +1,6 @@
+services:
+  web-auth:
+    build:
+      context: ../..
+      dockerfile: apps/web-auth/Dockerfile
+    ports: ["5174:80"]

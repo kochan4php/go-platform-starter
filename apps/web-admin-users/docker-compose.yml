@@ -1,0 +1,6 @@
+services:
+  web-admin-users:
+    build:
+      context: ../..
+      dockerfile: apps/web-admin-users/Dockerfile
+    ports: ["5175:80"]

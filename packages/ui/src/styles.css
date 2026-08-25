@@ -1,0 +1,40 @@
+/* @starter/ui — design tokens (Tailwind v4, CSS-first) + base primitives.
+   Every app imports this once in its entry stylesheet. */
+@import "tailwindcss";
+
+@theme {
+	--color-surface: #ffffff;
+	--color-canvas: #f6f7f9;
+	--color-ink: #16181d;
+	--color-muted: #5c6470;
+	--color-line: #e3e6ea;
+	--color-brand: #2f6bff;
+	--color-brand-strong: #1e51d6;
+	--color-danger: #d3382e;
+
+	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		"Helvetica Neue", sans-serif;
+
+	--radius-card: 10px;
+}
+
+body {
+	background: var(--color-canvas);
+	color: var(--color-ink);
+	font-family: var(--font-sans);
+}
+
+@layer components {
+	.ui-input {
+		@apply w-full rounded-md border border-[var(--color-line)] bg-white px-3 py-2 text-sm
+      outline-none focus:border-[var(--color-brand)] focus:ring-2 focus:ring-blue-100;
+	}
+
+	.ui-label {
+		@apply mb-1 block text-sm font-medium text-[var(--color-muted)];
+	}
+
+	.ui-card {
+		@apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 shadow-sm;
+	}
+}

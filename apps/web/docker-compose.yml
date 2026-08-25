@@ -1,0 +1,10 @@
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    ports: ["5173:80"]
+    environment:
+      REMOTE_AUTH_URL: http://localhost:5174/assets/remoteEntry.js
+      REMOTE_ADMIN_USERS_URL: http://localhost:5175/assets/remoteEntry.js
+      REMOTE_ADMIN_ROLES_URL: http://localhost:5176/assets/remoteEntry.js

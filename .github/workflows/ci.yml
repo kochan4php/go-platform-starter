@@ -39,3 +39,77 @@ jobs:
         run: |
           make contracts SVC=_template
           git diff --exit-code
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (Biome)
+        run: pnpm lint
+
+      - name: Test (Vitest + RTL)
+        run: pnpm test
+
+      - name: Contracts are fresh
+        run: |
+          pnpm contracts
+          git diff --exit-code
+
+      - name: Build all apps
+        run: pnpm build
+
+      - name: Bundle-size budget (host)
+        run: pnpm check:budget
+
+  playwright:
+    # Full-journey smoke against the real mesh (PLAN item 67).
+    runs-on: ubuntu-latest
+    needs: [go, web]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install web deps + browser
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Boot the mesh and run the smoke journey
+        env:
+          E2E_ADMIN_EMAIL: admin@example.local
+          E2E_ADMIN_PASSWORD: e2e-admin-password-1
+        run: |
+          chmod +x scripts/e2e-mesh.sh
+          scripts/e2e-mesh.sh ci
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: test-results/

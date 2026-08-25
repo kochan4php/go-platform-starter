@@ -1,18 +1,22 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":semanticCommits", ":semanticCommitScope(deps)"],
-  "labels": ["dependencies"],
-  "rangeStrategy": "bump",
-  "packageRules": [
-    {
-      "description": "batch Go dependency upgrades into one PR",
-      "matchManagers": ["gomod"],
-      "groupName": "go deps"
-    },
-    {
-      "description": "batch web dependency upgrades into one PR",
-      "matchManagers": ["npm"],
-      "groupName": "web deps"
-    }
-  ]
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		"config:recommended",
+		":semanticCommits",
+		":semanticCommitScope(deps)"
+	],
+	"labels": ["dependencies"],
+	"rangeStrategy": "bump",
+	"packageRules": [
+		{
+			"description": "batch Go dependency upgrades into one PR",
+			"matchManagers": ["gomod"],
+			"groupName": "go deps"
+		},
+		{
+			"description": "batch web dependency upgrades into one PR",
+			"matchManagers": ["npm"],
+			"groupName": "web deps"
+		}
+	]
 }

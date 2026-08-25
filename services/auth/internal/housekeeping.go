@@ -16,9 +16,10 @@ const revokedGrace = 7 * 24 * time.Hour
 // platform scheduler (PLAN item 52 — schema-touching housekeeping stays in
 // the owning service; zero cross-schema writes).
 func SweepSessions(ctx context.Context, db *gorm.DB) (int64, error) {
+	cutoff := time.Now().Add(-revokedGrace)
 	res := db.WithContext(ctx).Exec(
 		`DELETE FROM auth.sessions
 		 WHERE expires_at < now()
-		    OR (revoked_at IS NOT NULL AND revoked_at < now() - ?)`, revokedGrace)
+		    OR (revoked_at IS NOT NULL AND revoked_at < ?)`, cutoff)
 	return res.RowsAffected, res.Error
 }

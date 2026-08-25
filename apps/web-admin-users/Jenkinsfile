@@ -1,0 +1,3 @@
+@Library('go-platform')
+
+goPlatformWeb(component: 'web-admin-users')

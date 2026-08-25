@@ -1,1266 +1,1239 @@
 {
-  "components": {
-    "schemas": {
-      "EnvelopeFail": {
-        "properties": {
-          "error": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "success",
-          "message",
-          "error"
-        ],
-        "type": "object"
-      },
-      "EnvelopeMeta": {
-        "properties": {
-          "limit": {
-            "type": "integer"
-          },
-          "offset": {
-            "type": "integer"
-          },
-          "total": {
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "limit",
-          "offset",
-          "total"
-        ],
-        "type": "object"
-      },
-      "EnvelopeOK": {
-        "properties": {
-          "data": {
-            "description": "endpoint-specific payload"
-          },
-          "message": {
-            "type": "string"
-          },
-          "success": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "success",
-          "message",
-          "data"
-        ],
-        "type": "object"
-      },
-      "ForgotInput": {
-        "properties": {
-          "email": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "email"
-        ],
-        "type": "object"
-      },
-      "LoginInput": {
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ],
-        "type": "object"
-      },
-      "Profile": {
-        "properties": {
-          "avatarUrl": {
-            "type": "string"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "ProfileInput": {
-        "properties": {
-          "avatarUrl": {
-            "maxLength": 400,
-            "type": "string"
-          },
-          "displayName": {
-            "maxLength": 120,
-            "type": "string"
-          },
-          "id": {
-            "description": "existing subject id",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "type": "object"
-      },
-      "RegisterInput": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string"
-          },
-          "password": {
-            "maxLength": 72,
-            "minLength": 8,
-            "type": "string"
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ],
-        "type": "object"
-      },
-      "ResetInput": {
-        "properties": {
-          "newPassword": {
-            "maxLength": 72,
-            "minLength": 8,
-            "type": "string"
-          },
-          "token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "token",
-          "newPassword"
-        ],
-        "type": "object"
-      },
-      "Role": {
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "permissions": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "type": "object"
-      },
-      "RoleInput": {
-        "properties": {
-          "description": {
-            "maxLength": 300,
-            "type": "string"
-          },
-          "name": {
-            "maxLength": 60,
-            "minLength": 2,
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "type": "object"
-      },
-      "Session": {
-        "properties": {
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "current": {
-            "type": "boolean"
-          },
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "ip": {
-            "type": "string"
-          },
-          "userAgent": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      }
-    }
-  },
-  "info": {
-    "description": "Generated by cmd/composespec — DO NOT EDIT. Source of truth: services/*/openapi.yaml",
-    "title": "platform aggregate API",
-    "version": "0.1.0"
-  },
-  "openapi": "3.0.3",
-  "paths": {
-    "/api/v1/auth/forgot": {
-      "post": {
-        "operationId": "forgotPassword",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "uniform response"
-          }
-        },
-        "summary": "always-200 password reset request (anti-enumeration)",
-        "x-rate-limit-class": "strict"
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "operationId": "login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "accessToken": {
-                              "type": "string"
-                            },
-                            "user": {
-                              "properties": {
-                                "email": {
-                                  "type": "string"
-                                },
-                                "id": {
-                                  "type": "string"
-                                }
-                              },
-                              "type": "object"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "logged in",
-            "headers": {
-              "Set-Cookie": {
-                "description": "refresh_token httpOnly cookie",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown/wrong/locked are indistinguishable (incl. timing)"
-          }
-        },
-        "summary": "uniform-401 login with lockout; mints access token + sets refresh cookie",
-        "x-rate-limit-class": "strict"
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "operationId": "logout",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "logged out"
-          }
-        },
-        "summary": "revoke the session carried by the refresh cookie and clear it"
-      }
-    },
-    "/api/v1/auth/refresh": {
-      "post": {
-        "operationId": "refresh",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "accessToken": {
-                              "type": "string"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "rotated"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "missing/invalid/replayed refresh token"
-          }
-        },
-        "summary": "rotate the refresh cookie (reuse kills the family) and mint a new access token",
-        "x-rate-limit-class": "strict"
-      }
-    },
-    "/api/v1/auth/register": {
-      "post": {
-        "operationId": "register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "email": {
-                              "type": "string"
-                            },
-                            "id": {
-                              "format": "uuid",
-                              "type": "string"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "created"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "email already registered (documented enumeration trade — see PLAN risks)"
-          }
-        },
-        "summary": "create credentials; emits user.created onto users.events",
-        "x-rate-limit-class": "strict"
-      }
-    },
-    "/api/v1/auth/reset": {
-      "post": {
-        "operationId": "resetPassword",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "password updated"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "invalid/expired/consumed token or weak password"
-          }
-        },
-        "summary": "consume a single-use reset token, set new password, wipe all sessions",
-        "x-rate-limit-class": "strict"
-      }
-    },
-    "/api/v1/auth/sessions": {
-      "delete": {
-        "operationId": "revokeAllSessions",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "ok"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "revoke every other session of the authenticated user",
-        "x-auth": "required"
-      },
-      "get": {
-        "operationId": "listSessions",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "items": {
-                              "items": {
-                                "$ref": "#/components/schemas/Session"
-                              },
-                              "type": "array"
-                            },
-                            "meta": {
-                              "$ref": "#/components/schemas/EnvelopeMeta"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "active sessions of the authenticated user",
-        "x-auth": "required"
-      }
-    },
-    "/api/v1/auth/sessions/{id}": {
-      "delete": {
-        "operationId": "revokeSession",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "revoked"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown session"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "revoke one session of the authenticated user",
-        "x-auth": "required"
-      }
-    },
-    "/api/v1/docs": {
-      "get": {
-        "operationId": "scalarDocs",
-        "responses": {
-          "200": {
-            "description": "html"
-          }
-        },
-        "summary": "Scalar UI over the aggregate spec"
-      }
-    },
-    "/api/v1/docs/openapi.json": {
-      "get": {
-        "operationId": "aggregateSpec",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": "json"
-          }
-        },
-        "summary": "aggregate OpenAPI document composed from every upstream at boot"
-      }
-    },
-    "/api/v1/rbac/internal/claims/{sub}": {
-      "get": {
-        "operationId": "resolveClaims",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "sub",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "perms": {
-                              "items": {
-                                "type": "string"
-                              },
-                              "type": "array"
-                            },
-                            "ver": {
-                              "format": "int64",
-                              "type": "integer"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "missing/wrong internal secret"
-          }
-        },
-        "security": [],
-        "summary": "internal API — perms[] + ver for a subject; requires the shared internal secret",
-        "x-internal": true
-      }
-    },
-    "/api/v1/rbac/permissions": {
-      "get": {
-        "operationId": "listPermissions",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "items": {
-                              "items": {
-                                "type": "string"
-                              },
-                              "type": "array"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          }
-        },
-        "summary": "the compile-time catalog persisted in the db",
-        "x-required-permission": "permission:read:any"
-      }
-    },
-    "/api/v1/rbac/roles": {
-      "get": {
-        "operationId": "listRoles",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "items": {
-                              "items": {
-                                "$ref": "#/components/schemas/Role"
-                              },
-                              "type": "array"
-                            },
-                            "meta": {
-                              "$ref": "#/components/schemas/EnvelopeMeta"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          }
-        },
-        "x-required-permission": "role:read:any"
-      },
-      "post": {
-        "operationId": "createRole",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoleInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Role"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "created"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "duplicate role name"
-          }
-        },
-        "x-required-permission": "role:create:any"
-      }
-    },
-    "/api/v1/rbac/roles/{id}": {
-      "delete": {
-        "operationId": "deleteRole",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "deleted"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown role"
-          }
-        },
-        "x-required-permission": "role:delete:any"
-      },
-      "patch": {
-        "operationId": "updateRole",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/RoleInput"
-                  },
-                  {
-                    "properties": {
-                      "permissions": {
-                        "description": "full replacement set; unknown permission -\u003e 400",
-                        "items": {
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    },
-                    "type": "object"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Role"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "updated"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown permission in set"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown role"
-          }
-        },
-        "summary": "rename/describe and/or sync the permission set; bumps affected users' ver",
-        "x-required-permission": "role:update:any"
-      }
-    },
-    "/api/v1/users": {
-      "get": {
-        "operationId": "listUsers",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "properties": {
-                            "items": {
-                              "items": {
-                                "$ref": "#/components/schemas/Profile"
-                              },
-                              "type": "array"
-                            },
-                            "meta": {
-                              "$ref": "#/components/schemas/EnvelopeMeta"
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          }
-        },
-        "summary": "paginated profiles (?limit\u0026offset)",
-        "x-required-permission": "user:read:any"
-      },
-      "post": {
-        "operationId": "createUserProfile",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProfileInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Profile"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "created"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "profile already exists"
-          }
-        },
-        "summary": "provision a profile row for an existing sub",
-        "x-required-permission": "user:create:any"
-      }
-    },
-    "/api/v1/users/me": {
-      "get": {
-        "operationId": "me",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Profile"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "no identity"
-          }
-        },
-        "summary": "the caller's profile, served purely from identity headers",
-        "x-auth": "required"
-      }
-    },
-    "/api/v1/users/{id}": {
-      "delete": {
-        "operationId": "deleteUser",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeOK"
-                }
-              }
-            },
-            "description": "deleted"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown"
-          }
-        },
-        "summary": "hard-delete the profile row and emit user.deleted",
-        "x-required-permission": "user:delete:any"
-      },
-      "get": {
-        "operationId": "getUser",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Profile"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "ok"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown"
-          }
-        },
-        "x-required-permission": "user:read:any"
-      },
-      "patch": {
-        "operationId": "updateUser",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProfileInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeOK"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/Profile"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "updated"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnvelopeFail"
-                }
-              }
-            },
-            "description": "unknown"
-          }
-        },
-        "x-required-permission": "user:update:any"
-      }
-    }
-  },
-  "servers": [
-    {
-      "url": "/"
-    }
-  ]
+	"components": {
+		"schemas": {
+			"EnvelopeFail": {
+				"properties": {
+					"error": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"success": {
+						"type": "boolean"
+					}
+				},
+				"required": ["success", "message", "error"],
+				"type": "object"
+			},
+			"EnvelopeMeta": {
+				"properties": {
+					"limit": {
+						"type": "integer"
+					},
+					"offset": {
+						"type": "integer"
+					},
+					"total": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"required": ["limit", "offset", "total"],
+				"type": "object"
+			},
+			"EnvelopeOK": {
+				"properties": {
+					"data": {
+						"description": "endpoint-specific payload"
+					},
+					"message": {
+						"type": "string"
+					},
+					"success": {
+						"type": "boolean"
+					}
+				},
+				"required": ["success", "message", "data"],
+				"type": "object"
+			},
+			"ForgotInput": {
+				"properties": {
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": ["email"],
+				"type": "object"
+			},
+			"LoginInput": {
+				"properties": {
+					"email": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"required": ["email", "password"],
+				"type": "object"
+			},
+			"Profile": {
+				"properties": {
+					"avatarUrl": {
+						"type": "string"
+					},
+					"createdAt": {
+						"format": "date-time",
+						"type": "string"
+					},
+					"displayName": {
+						"type": "string"
+					},
+					"id": {
+						"format": "uuid",
+						"type": "string"
+					},
+					"updatedAt": {
+						"format": "date-time",
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ProfileInput": {
+				"properties": {
+					"avatarUrl": {
+						"maxLength": 400,
+						"type": "string"
+					},
+					"displayName": {
+						"maxLength": 120,
+						"type": "string"
+					},
+					"id": {
+						"description": "existing subject id",
+						"format": "uuid",
+						"type": "string"
+					}
+				},
+				"required": ["id"],
+				"type": "object"
+			},
+			"RegisterInput": {
+				"properties": {
+					"email": {
+						"format": "email",
+						"type": "string"
+					},
+					"password": {
+						"maxLength": 72,
+						"minLength": 8,
+						"type": "string"
+					}
+				},
+				"required": ["email", "password"],
+				"type": "object"
+			},
+			"ResetInput": {
+				"properties": {
+					"newPassword": {
+						"maxLength": 72,
+						"minLength": 8,
+						"type": "string"
+					},
+					"token": {
+						"type": "string"
+					}
+				},
+				"required": ["token", "newPassword"],
+				"type": "object"
+			},
+			"Role": {
+				"properties": {
+					"description": {
+						"type": "string"
+					},
+					"id": {
+						"format": "uuid",
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"permissions": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"RoleInput": {
+				"properties": {
+					"description": {
+						"maxLength": 300,
+						"type": "string"
+					},
+					"name": {
+						"maxLength": 60,
+						"minLength": 2,
+						"type": "string"
+					}
+				},
+				"required": ["name"],
+				"type": "object"
+			},
+			"Session": {
+				"properties": {
+					"createdAt": {
+						"format": "date-time",
+						"type": "string"
+					},
+					"current": {
+						"type": "boolean"
+					},
+					"id": {
+						"format": "uuid",
+						"type": "string"
+					},
+					"ip": {
+						"type": "string"
+					},
+					"userAgent": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			}
+		}
+	},
+	"info": {
+		"description": "Generated by cmd/composespec — DO NOT EDIT. Source of truth: services/*/openapi.yaml",
+		"title": "platform aggregate API",
+		"version": "0.1.0"
+	},
+	"openapi": "3.0.3",
+	"paths": {
+		"/api/v1/auth/forgot": {
+			"post": {
+				"operationId": "forgotPassword",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForgotInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "uniform response"
+					}
+				},
+				"summary": "always-200 password reset request (anti-enumeration)",
+				"x-rate-limit-class": "strict"
+			}
+		},
+		"/api/v1/auth/login": {
+			"post": {
+				"operationId": "login",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/LoginInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"accessToken": {
+															"type": "string"
+														},
+														"user": {
+															"properties": {
+																"email": {
+																	"type": "string"
+																},
+																"id": {
+																	"type": "string"
+																}
+															},
+															"type": "object"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "logged in",
+						"headers": {
+							"Set-Cookie": {
+								"description": "refresh_token httpOnly cookie",
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown/wrong/locked are indistinguishable (incl. timing)"
+					}
+				},
+				"summary": "uniform-401 login with lockout; mints access token + sets refresh cookie",
+				"x-rate-limit-class": "strict"
+			}
+		},
+		"/api/v1/auth/logout": {
+			"post": {
+				"operationId": "logout",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "logged out"
+					}
+				},
+				"summary": "revoke the session carried by the refresh cookie and clear it"
+			}
+		},
+		"/api/v1/auth/refresh": {
+			"post": {
+				"operationId": "refresh",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"accessToken": {
+															"type": "string"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "rotated"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "missing/invalid/replayed refresh token"
+					}
+				},
+				"summary": "rotate the refresh cookie (reuse kills the family) and mint a new access token",
+				"x-rate-limit-class": "strict"
+			}
+		},
+		"/api/v1/auth/register": {
+			"post": {
+				"operationId": "register",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"id": {
+															"format": "uuid",
+															"type": "string"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "created"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "email already registered (documented enumeration trade — see PLAN risks)"
+					}
+				},
+				"summary": "create credentials; emits user.created onto users.events",
+				"x-rate-limit-class": "strict"
+			}
+		},
+		"/api/v1/auth/reset": {
+			"post": {
+				"operationId": "resetPassword",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResetInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "password updated"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "invalid/expired/consumed token or weak password"
+					}
+				},
+				"summary": "consume a single-use reset token, set new password, wipe all sessions",
+				"x-rate-limit-class": "strict"
+			}
+		},
+		"/api/v1/auth/sessions": {
+			"delete": {
+				"operationId": "revokeAllSessions",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "ok"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"summary": "revoke every other session of the authenticated user",
+				"x-auth": "required"
+			},
+			"get": {
+				"operationId": "listSessions",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"items": {
+															"items": {
+																"$ref": "#/components/schemas/Session"
+															},
+															"type": "array"
+														},
+														"meta": {
+															"$ref": "#/components/schemas/EnvelopeMeta"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"summary": "active sessions of the authenticated user",
+				"x-auth": "required"
+			}
+		},
+		"/api/v1/auth/sessions/{id}": {
+			"delete": {
+				"operationId": "revokeSession",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "revoked"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown session"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"summary": "revoke one session of the authenticated user",
+				"x-auth": "required"
+			}
+		},
+		"/api/v1/docs": {
+			"get": {
+				"operationId": "scalarDocs",
+				"responses": {
+					"200": {
+						"description": "html"
+					}
+				},
+				"summary": "Scalar UI over the aggregate spec"
+			}
+		},
+		"/api/v1/docs/openapi.json": {
+			"get": {
+				"operationId": "aggregateSpec",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								}
+							}
+						},
+						"description": "json"
+					}
+				},
+				"summary": "aggregate OpenAPI document composed from every upstream at boot"
+			}
+		},
+		"/api/v1/rbac/internal/claims/{sub}": {
+			"get": {
+				"operationId": "resolveClaims",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "sub",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"perms": {
+															"items": {
+																"type": "string"
+															},
+															"type": "array"
+														},
+														"ver": {
+															"format": "int64",
+															"type": "integer"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "missing/wrong internal secret"
+					}
+				},
+				"security": [],
+				"summary": "internal API — perms[] + ver for a subject; requires the shared internal secret",
+				"x-internal": true
+			}
+		},
+		"/api/v1/rbac/permissions": {
+			"get": {
+				"operationId": "listPermissions",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"items": {
+															"items": {
+																"type": "string"
+															},
+															"type": "array"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					}
+				},
+				"summary": "the compile-time catalog persisted in the db",
+				"x-required-permission": "permission:read:any"
+			}
+		},
+		"/api/v1/rbac/roles": {
+			"get": {
+				"operationId": "listRoles",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"items": {
+															"items": {
+																"$ref": "#/components/schemas/Role"
+															},
+															"type": "array"
+														},
+														"meta": {
+															"$ref": "#/components/schemas/EnvelopeMeta"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					}
+				},
+				"x-required-permission": "role:read:any"
+			},
+			"post": {
+				"operationId": "createRole",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RoleInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Role"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "created"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "duplicate role name"
+					}
+				},
+				"x-required-permission": "role:create:any"
+			}
+		},
+		"/api/v1/rbac/roles/{id}": {
+			"delete": {
+				"operationId": "deleteRole",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "deleted"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown role"
+					}
+				},
+				"x-required-permission": "role:delete:any"
+			},
+			"patch": {
+				"operationId": "updateRole",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RoleInput"
+									},
+									{
+										"properties": {
+											"permissions": {
+												"description": "full replacement set; unknown permission -\u003e 400",
+												"items": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										},
+										"type": "object"
+									}
+								]
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Role"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "updated"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown permission in set"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown role"
+					}
+				},
+				"summary": "rename/describe and/or sync the permission set; bumps affected users' ver",
+				"x-required-permission": "role:update:any"
+			}
+		},
+		"/api/v1/users": {
+			"get": {
+				"operationId": "listUsers",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "limit",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"properties": {
+														"items": {
+															"items": {
+																"$ref": "#/components/schemas/Profile"
+															},
+															"type": "array"
+														},
+														"meta": {
+															"$ref": "#/components/schemas/EnvelopeMeta"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					}
+				},
+				"summary": "paginated profiles (?limit\u0026offset)",
+				"x-required-permission": "user:read:any"
+			},
+			"post": {
+				"operationId": "createUserProfile",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProfileInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Profile"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "created"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "profile already exists"
+					}
+				},
+				"summary": "provision a profile row for an existing sub",
+				"x-required-permission": "user:create:any"
+			}
+		},
+		"/api/v1/users/me": {
+			"get": {
+				"operationId": "me",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Profile"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "no identity"
+					}
+				},
+				"summary": "the caller's profile, served purely from identity headers",
+				"x-auth": "required"
+			}
+		},
+		"/api/v1/users/{id}": {
+			"delete": {
+				"operationId": "deleteUser",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeOK"
+								}
+							}
+						},
+						"description": "deleted"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown"
+					}
+				},
+				"summary": "hard-delete the profile row and emit user.deleted",
+				"x-required-permission": "user:delete:any"
+			},
+			"get": {
+				"operationId": "getUser",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Profile"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "ok"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown"
+					}
+				},
+				"x-required-permission": "user:read:any"
+			},
+			"patch": {
+				"operationId": "updateUser",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "uuid",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProfileInput"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/EnvelopeOK"
+										},
+										{
+											"properties": {
+												"data": {
+													"$ref": "#/components/schemas/Profile"
+												}
+											},
+											"type": "object"
+										}
+									]
+								}
+							}
+						},
+						"description": "updated"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnvelopeFail"
+								}
+							}
+						},
+						"description": "unknown"
+					}
+				},
+				"x-required-permission": "user:update:any"
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
 }
