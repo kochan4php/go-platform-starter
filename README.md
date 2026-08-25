@@ -1,59 +1,89 @@
-# Go Platform Starter
+# go-platform-starter
 
-> **v6 — Go microservices + microfrontend monorepo. Planning complete, implementation not started.**
-> The full wave-by-wave plan lives in [PLAN.md](./PLAN.md).
-> A previous TypeScript implementation existed and was removed by owner decision
-> (recoverable in git history); the new build is spec-first with no parity contract.
+Go microservices platform behind a Go gateway, with a React micro-frontend
+shell — single Go module, pnpm workspace, spec-first OpenAPI contracts.
+Defaults sized for ~100k users. Every deployable ships Dockerfile + thin
+Jenkinsfile + compose + k8s manifests with HPA.
 
-## What this is
+```
+gateway :8000 ── auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
+     │
+web :5173 ◁ federated ▷ web-auth :5174 · web-admin-users :5175 · web-admin-roles :5176
+```
 
-A production-shaped starter:
+## Quickstart (whole mesh)
 
-- **Backend** — Go microservices (`chi`, GORM, golang-migrate, slog, JWT + claims-based RBAC,
-  Redis Streams, WebSockets) behind a Go gateway that verifies JWTs once and enforces a
-  fail-closed route→permission registry
-- **Frontend** — React microfrontends (Vite + React 19 + Tailwind v4 + TanStack Query +
-  module federation): one host, independently deployable remotes
-- **Monorepo** — single root `go.mod` for all services; pnpm workspace for web; service
-  isolation enforced by the compiler via `services/<svc>/internal/`
-- **Ops** — every service *and* every microfrontend ships its own Dockerfile, Jenkinsfile,
-  docker-compose.yml and k8s manifests (Deployment/Service/**HPA**/secret template);
-  `infra/compose.base.yml` boots the whole mesh locally
+```bash
+docker compose -f infra/compose.base.yml up --build
+```
+
+Boots Postgres + Redis + all six services + the four web apps, migrates every
+schema, and seeds the role catalog plus a bootstrap admin.
+
+| URL | What |
+| --- | --- |
+| http://localhost:5173 | app shell (login → admin) |
+| http://localhost:8000/docs | aggregate API reference (Scalar) |
+| http://localhost:8000/healthz | edge health |
+
+Seeded admin: `admin@example.local` / `admin-bootstrap-pw`
+(the `auth-seed` one-shot prints a random password instead if you remove it).
+
+Observability on top:
+
+```bash
+docker compose -f infra/compose.observability.yml --profile obs up
+# Grafana http://localhost:3000 · Prometheus http://localhost:9090 · OTLP :4318
+```
+
+## Local development
+
+Two toolchains: Go ≥1.27 and Node ≥22 with pnpm 11 (`corepack enable`).
+The 30-minute clone-to-PR path lives in [docs/ONBOARDING.md](docs/ONBOARDING.md);
+short version:
+
+```bash
+go build ./... && go test ./...          # container tests skip without Docker
+pnpm install && pnpm contracts && pnpm lint && pnpm test && pnpm build
+
+make run SVC=auth                        # or: make dev SVC=<svc> (air hot-reload)
+make contracts SVC=users                 # regenerate stubs after editing openapi.yaml
+```
+
+Per-service compose files (`services/<svc>/docker-compose.yml`) give focused
+dev loops; `infra/compose.base.yml` is the whole mesh.
 
 ## Layout
 
-```
-services/     gateway · auth · users · rbac · realtime · worker   (+ _template)
-internal/     platform (shared Go) · testutil (testcontainers)
-apps/         web (MF host) · web-auth · web-admin-users · web-admin-roles (remotes)
-packages/     contracts (generated TS client) · ui (primitives/tokens)
-infra/        compose.base.yml · compose.observability.yml · jenkins/ · k8s/
-docs/         ARCHITECTURE · SCALING · ONBOARDING · CONTRACTS · ADRs
-```
+| Path | Contents |
+| --- | --- |
+| `services/*` | gateway, auth, users, rbac, realtime, worker (+ `_template`) — each self-contained with spec, migrations, ops files |
+| `internal/platform` | shared Go kit: env, logging, tracing, middleware, envelope, pagination, scheduler, mailer, permissions catalog |
+| `apps/web*` | federation host + remotes (Vite, React 19, Tailwind v4) |
+| `packages/contracts` | generated TS types from the composed OpenAPI + typed fetch wrapper |
+| `packages/ui` | design tokens + primitives |
+| `infra/` | base & observability compose, Prometheus/Grafana provisioning, Jenkins shared library |
+| `docs/` | ARCHITECTURE · SCALING · ONBOARDING · CONTRACTS · SECURITY · API_VERSIONING · QUERY_KEYS · TOKEN_POLICY · MIGRATIONS |
+| `bruno/` | API collection covering the full journey |
 
-## Requirements
+## Key invariants
 
-- Go ≥ 1.27
-- Node.js ≥ 22 + pnpm ≥ 10 (`corepack enable`)
-- Docker
+1. **Spec-first**: if it isn't in a service's `openapi.yaml`, it doesn't exist;
+   generated stubs are committed and CI fails when stale.
+2. **Schema-per-service** on one Postgres cluster; cross-service writes are
+   forbidden — lifecycle rides Redis Streams (`docs/CONTRACTS.md`).
+3. **JWT verified once at the edge**; downstream trusts identity headers bound
+   by the internal secret. Access token stays in memory,
+   refresh is an httpOnly cookie (`docs/TOKEN_POLICY.md`).
+4. **Fail-closed gateway registry**: unknown route = 404; unknown permission =
+   boot refusal.
+5. **Migrations are numbered SQL pairs**, embedded per service; AutoMigrate is
+   banned (`docs/MIGRATIONS.md`).
 
-## Quick start
+## CI
 
-Wave 0 is in — one template service exists (`services/_template`):
-
-```bash
-make env SVC=_template    # create its local .env from the example
-make run  SVC=_template   # boots on :8080
-curl localhost:8080/healthz localhost:8080/readyz localhost:8080/api/v1/ping
-```
-
-Other targets: `make lint|fmt|build|test|cover` · `make dev` (air hot-reload when installed) ·
-`make contracts SVC=<name>` regenerates stubs from `services/<name>/openapi.yaml`.
-Container-backed tests boot real Postgres+Redis via testcontainers and skip automatically
-when Docker isn't running.
-
-See [PLAN.md](./PLAN.md) for waves, gates and current progress.
-
-## License
-
-Apache-2.0
+PRs run: commitlint · golangci-lint (incl. gosec) · Go tests against real
+PG+Redis containers · Biome · Vitest · contract freshness · builds · bundle
+budget · import-boundary check · Playwright smoke through a live mesh ·
+Trivy + semgrep. Merges feed release automation (`.github/workflows/release.yml`);
+per-component image tags come from each thin Jenkinsfile via the shared library.

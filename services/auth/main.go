@@ -95,7 +95,7 @@ func main() {
 		"redis":    func(ctx context.Context) error { return rdb.Ping(ctx).Err() },
 	},
 		internal.RateLimit(rdb, log, cfg.RateGlobalPerMinute, cfg.RateStrictPerMinute, strictPaths),
-		internal.RequireBearer([]byte(cfg.AccessTokenSecret)),
+		internal.RequireSessionIdentity(cfg.InternalSecret),
 	)
 
 	bgCtx, stopBg := context.WithCancel(context.Background())

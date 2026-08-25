@@ -1,24 +1,25 @@
 {
-	"name": "go-platform-starter-web",
-	"private": true,
-	"type": "module",
-	"packageManager": "pnpm@11.22.0",
-	"engines": {
-		"node": ">=22"
-	},
-	"scripts": {
-		"specs:compose": "node scripts/compose-specs.mjs",
-		"contracts": "pnpm --filter @starter/contracts gen",
-		"lint": "biome check .",
-		"format": "biome check --write .",
-		"test": "pnpm -r --workspace-concurrency=1 test",
-		"build": "pnpm -r --workspace-concurrency=1 build",
-		"check:budget": "pnpm --filter web check:budget",
-		"e2e": "playwright test"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@playwright/test": "^1.49.0",
-		"js-yaml": "^4.1.0"
-	}
+  "name": "go-platform-starter-web",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "specs:compose": "node scripts/compose-specs.mjs",
+    "contracts": "pnpm --filter @starter/contracts gen",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "build": "pnpm -r --workspace-concurrency=1 build",
+    "check:budget": "pnpm --filter web check:budget",
+    "e2e": "playwright test",
+    "check:deps": "node scripts/check-deps.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.49.0",
+    "js-yaml": "^4.1.0"
+  }
 }

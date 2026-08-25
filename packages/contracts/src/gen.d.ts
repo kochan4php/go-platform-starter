@@ -311,6 +311,23 @@ export interface paths {
         patch: operations["updateUser"];
         trace?: never;
     };
+    "/api/v1/audit/viewer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** paginated audit trail, newest first */
+        get: operations["listAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ping": {
         parameters: {
             query?: never;
@@ -403,6 +420,17 @@ export interface components {
             id: string;
             displayName?: string;
             avatarUrl?: string;
+        };
+        AuditEntry: {
+            /** Format: int64 */
+            id?: number;
+            actorSub?: string;
+            action?: string;
+            entity?: string;
+            entityId?: string;
+            meta?: unknown;
+            /** Format: date-time */
+            createdAt?: string;
         };
     };
     responses: never;
@@ -1131,6 +1159,43 @@ export interface operations {
             };
             /** @description unknown */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    listAuditEntries: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["AuditEntry"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+            /** @description missing internal secret */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

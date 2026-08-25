@@ -37,12 +37,13 @@ Load-harness numbers land here as they are produced (Wave 3 item 46):
 
 ## Perf smoke baseline through the gateway (item 83)
 
-Measured locally (Windows dev box, dockerized PG+Redis, native Go binaries):
+Measured locally (Windows dev box, dockerized PG+Redis, native Go binaries,
+`scripts/perf-smoke`, 20 workers):
 
-| Endpoint | Concurrency | p50 | p95 | Notes |
-| --- | --- | --- | --- | --- |
-| `GET /healthz` via gateway | 20 | <1 ms | ~2 ms | pure edge path |
-| `POST /api/v1/auth/login` (bcrypt cost 10) via gateway | 20 | ~60 ms | ~110 ms | bcrypt dominates by design |
+| Endpoint | n | Throughput | p50 | p90 | p95 | p99 | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `GET /healthz` via gateway | 3000 | 9,249 rps | 1.3 ms | 4.5 ms | 5.3 ms | 7.4 ms | pure edge path |
+| `POST /api/v1/auth/login` (bcrypt 10) via gateway | 500 | 389 rps | 5.4 ms | 196 ms | 225 ms | 290 ms | bcrypt dominates by design; queueing shows up in the tail |
 
 Baseline tool: `scripts/perf-smoke/main.go` (no external deps). Re-run after
 any edge-path change and update this table.

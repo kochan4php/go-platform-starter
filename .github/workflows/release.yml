@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    # Conventional commits -> version bumps + CHANGELOG.md per wave of merges.
+    # Component image tags are produced by each thin Jenkinsfile
+    # (ghcr.io/kochan4php/<component>:<build> + :latest).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+          changelog-path: CHANGELOG.md
