@@ -1,29 +1,29 @@
 {
-  "name": "@starter/ui",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "description": "Shared UI primitives + Tailwind v4 design tokens.",
-  "main": "./src/index.tsx",
-  "types": "./src/index.tsx",
-  "exports": {
-    ".": "./src/index.tsx",
-    "./styles.css": "./src/styles.css"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "typescript": "^5.7.2",
-    "react": "^19.0.0",
-    "jsdom": "^25.0.1",
-    "vite": "^5.4.11",
-    "vitest": "^2.1.8",
-    "@vitejs/plugin-react": "^4.3.4",
-    "@testing-library/react": "^16.1.0"
-  },
-  "scripts": {
-    "test": "vitest run --passWithNoTests"
-  }
+	"name": "@starter/ui",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "Shared UI primitives + Tailwind v4 design tokens.",
+	"main": "./src/index.tsx",
+	"types": "./src/index.tsx",
+	"exports": {
+		".": "./src/index.tsx",
+		"./styles.css": "./src/styles.css"
+	},
+	"peerDependencies": {
+		"react": "^19.0.0"
+	},
+	"devDependencies": {
+		"@types/react": "^19.0.0",
+		"typescript": "^5.7.2",
+		"react": "^19.0.0",
+		"jsdom": "^25.0.1",
+		"vite": "^5.4.11",
+		"vitest": "^2.1.8",
+		"@vitejs/plugin-react": "^4.3.4",
+		"@testing-library/react": "^16.1.0"
+	},
+	"scripts": {
+		"test": "vitest run --passWithNoTests"
+	}
 }

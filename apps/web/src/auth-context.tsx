@@ -1,14 +1,6 @@
 import { decodeClaims, getAccessToken, setAccessToken } from "@starter/contracts";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  type ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export interface SessionUser {
   id: string;

@@ -5,10 +5,10 @@
 //   2. packages/*/src must not import from apps/*
 //   3. browser code (apps src) must not import node builtins
 // Federation is the only sanctioned cross-app boundary — never an import.
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, resolve, dirname, posix } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { builtinModules } from "node:module";
+import { dirname, join, posix, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const exts = [".ts", ".tsx", ".mjs", ".js"];
@@ -46,9 +46,7 @@ for (const ws of ["apps", "packages"]) {
           const inUnit = resolved.startsWith(posix.join(ws, unit, "src"));
           const otherApp = resolved.match(/^apps\/([^/]+)\//);
           if (!inUnit && otherApp && otherApp[1] !== unit) {
-            violations.push(
-              `${relative(root, file)}: imports across workspace boundary -> ${resolved}`,
-            );
+            violations.push(`${relative(root, file)}: imports across workspace boundary -> ${resolved}`);
           }
           if (ws === "packages" && resolved.startsWith("apps/")) {
             violations.push(`${relative(root, file)}: packages must not import apps -> ${resolved}`);
@@ -61,7 +59,7 @@ for (const ws of ["apps", "packages"]) {
 
 if (violations.length) {
   console.error("IMPORT BOUNDARY VIOLATIONS:");
-  for (const v of violations) console.error("  " + v);
+  for (const v of violations) console.error(`  ${v}`);
   process.exit(1);
 }
 console.log("import boundaries OK (apps/* + packages/* scanned)");

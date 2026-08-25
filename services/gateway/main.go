@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"strconv"
 	"strings"
@@ -81,6 +82,22 @@ func main() {
 		w.Header().Set("Content-Type", "application/yaml")
 		_, _ = w.Write(raw)
 	})
+
+	// WebSocket passthrough to the realtime service (PLAN item 41/47): the
+	// upgrade request cannot be a registry route, so it gets its own proxy.
+	if cfg.RealtimeUpstream != "" {
+		wsProxy := &httputil.ReverseProxy{
+			Rewrite: func(pr *httputil.ProxyRequest) {
+				pr.Out.URL.Scheme = "http"
+				pr.Out.URL.Host = strings.TrimPrefix(cfg.RealtimeUpstream, "http://")
+			},
+			ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
+				log.Error("ws upstream failed", "err", err)
+				platform.Fail(w, http.StatusServiceUnavailable, "upstream_unavailable", "realtime is not responding")
+			},
+		}
+		router.Get("/ws", wsProxy.ServeHTTP)
+	}
 
 	router.Group(func(api chi.Router) {
 		api.Use(edgeRateLimit(limiter, log, cfg.RatePerMinute))

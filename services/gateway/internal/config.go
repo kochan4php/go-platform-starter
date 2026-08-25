@@ -12,6 +12,9 @@ type Config struct {
 	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://localhost:8081\",\"users\":\"http://localhost:8082\",\"rbac\":\"http://localhost:8083\",\"worker\":\"http://localhost:8084\"}"`
 	RatePerMinute     int    `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"300"`
 	SlowRequestMs     int    `env:"SLOW_REQUEST_THRESHOLD_MS" envDefault:"500"`
+	// WebSocket upstream (realtime). When set, the gateway proxies /ws to it
+	// with upgrade passthrough; the realtime REST routes still ride UPSTREAMS.
+	RealtimeUpstream string `env:"REALTIME_UPSTREAM" envDefault:""`
 
 	upstreams Upstreams
 	routes    []Route

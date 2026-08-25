@@ -1,9 +1,9 @@
-import { expect, it } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider, type SessionUser } from "./auth-context";
+import { expect, it } from "vitest";
 import RequirePermission from "./RequirePermission";
+import { AuthProvider, type SessionUser } from "./auth-context";
 
 function mount(user: SessionUser | null, perm: string) {
   return render(
@@ -34,17 +34,11 @@ it("redirects anonymous visitors to /login", async () => {
 });
 
 it("blocks authenticated users without the permission", () => {
-  mount(
-    { id: "s1", email: "a@b.c", perms: [], ver: 1 },
-    "user:read:any",
-  );
+  mount({ id: "s1", email: "a@b.c", perms: [], ver: 1 }, "user:read:any");
   expect(screen.getByText(/do not have permission/i)).toBeTruthy();
 });
 
 it("renders children when the claim is present", () => {
-  mount(
-    { id: "s1", email: "a@b.c", perms: ["user:read:any"], ver: 1 },
-    "user:read:any",
-  );
+  mount({ id: "s1", email: "a@b.c", perms: ["user:read:any"], ver: 1 }, "user:read:any");
   expect(screen.getByText("protected-content")).toBeTruthy();
 });

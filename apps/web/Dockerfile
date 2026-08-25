@@ -7,6 +7,8 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY scripts ./scripts
 COPY packages ./packages
 COPY apps/web ./apps/web
+# aggregate spec composes from every service's openapi.yaml
+COPY services ./services
 
 RUN pnpm install --frozen-lockfile \
  && pnpm contracts \

@@ -11,6 +11,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Misc
 .DS_Store

@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider, useAuth } from "./auth-context";
 import RequirePermission from "./RequirePermission";
+import { AuthProvider, useAuth } from "./auth-context";
 
 const LoginPage = lazy(() => import("web_auth/LoginPage"));
 const RegisterPage = lazy(() => import("web_auth/RegisterPage"));

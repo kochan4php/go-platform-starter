@@ -1,6 +1,6 @@
-import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { afterEach, expect, it, vi } from "vitest";
 import type { SessionPayload } from "./LoginPage";
 import LoginPage from "./LoginPage";
 
@@ -23,8 +23,7 @@ it("logs in and hands the session (with decoded claims) to the host", async () =
     received = u;
   }
   loginMock.mockResolvedValue({
-    accessToken:
-      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzMSIsInBlcm1zIjpbInVzZXI6cmVhZDphbnkiXSwidmVyIjoxfQ.sig",
+    accessToken: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzMSIsInBlcm1zIjpbInVzZXI6cmVhZDphbnkiXSwidmVyIjoxfQ.sig",
     user: { id: "s1", email: "a@b.c" },
   });
 

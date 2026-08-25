@@ -1,0 +1,238 @@
+# Production stack. One public entry (edge nginx, ports 80/443), everything
+# else internal-only. Requires an env file:
+#
+#   docker compose --env-file .env.production -f compose.prod.yml up -d
+#
+# scripts/deploy.sh automates all of the above (build -> migrate -> seed ->
+# up -> health gates).
+
+name: go-platform-prod
+
+x-service-defaults: &svc
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-go-env: &go-env
+  DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/app?sslmode=disable
+  REDIS_ADDR: redis:6379
+  ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?set ACCESS_TOKEN_SECRET}
+  INTERNAL_SECRET: ${INTERNAL_SECRET:?set INTERNAL_SECRET}
+  LOG_LEVEL: info
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    <<: *svc
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    <<: *svc
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth:
+    build: { context: .., dockerfile: services/auth/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+      APP_PUBLIC_URL: https://${DOMAIN:?set DOMAIN}
+      RBAC_INTERNAL_URL: http://rbac:8080
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  users:
+    build: { context: .., dockerfile: services/users/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  rbac:
+    build: { context: .., dockerfile: services/rbac/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    build: { context: .., dockerfile: services/worker/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+      MAILER_DRIVER: ${MAILER_DRIVER:-console}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  realtime:
+    build: { context: .., dockerfile: services/realtime/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+      PUBLIC_WS_URL: ${PUBLIC_WS_URL:?set PUBLIC_WS_URL e.g. wss://domain/ws}
+    depends_on:
+      redis: { condition: service_healthy }
+
+  gateway:
+    build: { context: .., dockerfile: services/gateway/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8000"
+      TRUSTED_DOMAINS: ${TRUSTED_DOMAINS:?set TRUSTED_DOMAINS}
+      UPSTREAMS: '{"auth":"http://auth:8080","users":"http://users:8080","rbac":"http://rbac:8080","worker":"http://worker:8080","realtime":"http://realtime:8080"}'
+      REALTIME_UPSTREAM: http://realtime:8080
+    depends_on:
+      - auth
+      - users
+      - rbac
+      - worker
+      - realtime
+
+  # ---- web ------------------------------------------------------------------
+  web:
+    build: { context: .., dockerfile: apps/web/Dockerfile }
+    <<: *svc
+    environment:
+      REMOTE_AUTH_URL: /remote/auth/assets/remoteEntry.js
+      REMOTE_ADMIN_USERS_URL: /remote/admin-users/assets/remoteEntry.js
+      REMOTE_ADMIN_ROLES_URL: /remote/admin-roles/assets/remoteEntry.js
+
+  web-auth:
+    build:
+      context: ..
+      dockerfile: apps/web-auth/Dockerfile
+      args: { REMOTE_BASE: /remote/auth/ }
+    <<: *svc
+
+  web-admin-users:
+    build:
+      context: ..
+      dockerfile: apps/web-admin-users/Dockerfile
+      args: { REMOTE_BASE: /remote/admin-users/ }
+    <<: *svc
+
+  web-admin-roles:
+    build:
+      context: ..
+      dockerfile: apps/web-admin-roles/Dockerfile
+      args: { REMOTE_BASE: /remote/admin-roles/ }
+    <<: *svc
+
+  # ---- single public entry ---------------------------------------------------
+  edge:
+    image: nginx:alpine
+    <<: *svc
+    ports:
+      - "80:80"
+      # TLS: drop a rendered edge-ssl.conf into infra/nginx/conf.d (template in
+      # edge.tls.conf.template) and publish 443 below.
+      # - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - gateway
+      - web
+      - web-auth
+      - web-admin-users
+      - web-admin-roles
+
+  # ---- one-shot jobs (`--profile tools`) --------------------------------------
+  # Services also verify/apply their own migrations on boot; these explicit
+  # jobs keep the k8s-style execution model (migrate before rollout).
+  auth-migrate:
+    build: { context: .., dockerfile: services/auth/Dockerfile }
+    command: ["-migrate"]
+    environment:
+      <<: *go-env
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  users-migrate:
+    build: { context: .., dockerfile: services/users/Dockerfile }
+    command: ["-migrate"]
+    environment:
+      <<: *go-env
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  rbac-migrate:
+    build: { context: .., dockerfile: services/rbac/Dockerfile }
+    command: ["-migrate"]
+    environment:
+      <<: *go-env
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  worker-migrate:
+    build: { context: .., dockerfile: services/worker/Dockerfile }
+    command: ["-migrate"]
+    environment:
+      <<: *go-env
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  rbac-seed:
+    build: { context: .., dockerfile: services/rbac/Dockerfile }
+    command: ["-seed"]
+    environment:
+      <<: *go-env
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  auth-seed:
+    build: { context: .., dockerfile: services/auth/Dockerfile }
+    command: ["-seed"]
+    environment:
+      <<: *go-env
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+    restart: "no"
+    profiles: [tools]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+volumes:
+  pgdata:

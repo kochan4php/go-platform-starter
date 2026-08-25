@@ -7,6 +7,12 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY scripts ./scripts
 COPY packages ./packages
 COPY apps/web-auth ./apps/web-auth
+# aggregate spec composes from every service's openapi.yaml
+COPY services ./services
+
+# Production edge serves this remote under a subpath; bake it into the build.
+ARG REMOTE_BASE=/
+ENV REMOTE_BASE=${REMOTE_BASE}
 
 RUN pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-auth build
 

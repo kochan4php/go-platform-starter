@@ -1,0 +1,72 @@
+# TLS termination template (production HTTPS).
+#
+# Activate:
+#   1. Obtain certs (e.g. certbot certonly --standalone -d example.com, or
+#      your own CA) and place fullchain + key on the VPS.
+#   2. Copy this file to infra/nginx/conf.d/edge-ssl.conf, fix the two paths
+#      in ssl_certificate / ssl_certificate_key, set server_name.
+#   3. Publish 443 in infra/compose.prod.yml (the commented ports entry).
+#   4. Set PUBLIC_WS_URL=wss://example.com/ws in .env.production.
+#   5. docker compose --env-file .env.production -f compose.prod.yml up -d edge
+#
+# The HTTP server in default.conf keeps running for ACME challenges; swap it
+# to a permanent redirect once certificates are live.
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Mount host certs by adding to the edge service volumes in compose.prod.yml:
+    #   - /etc/letsencrypt:/etc/letsencrypt:ro
+
+    client_max_body_size 1m;
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location = /ws {
+        proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_read_timeout 3600s;
+    }
+
+    location ~ ^/(api|docs|healthz|readyz|metrics)(/|$) {
+        proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Request-ID $request_id;
+    }
+
+    location /remote/auth/ {
+        proxy_pass http://web-auth/;
+        proxy_set_header Host $host;
+    }
+    location /remote/admin-users/ {
+        proxy_pass http://web-admin-users/;
+        proxy_set_header Host $host;
+    }
+    location /remote/admin-roles/ {
+        proxy_pass http://web-admin-roles/;
+        proxy_set_header Host $host;
+    }
+
+    location / {
+        proxy_pass http://web/;
+        proxy_set_header Host $host;
+    }
+}

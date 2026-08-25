@@ -1,0 +1,20 @@
+# Keep build contexts small — every Dockerfile COPYs explicit paths, so this
+# only prevents the daemon from transferring megabytes of irrelevant files.
+.git
+.github
+node_modules
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+test-results
+playwright-report
+tmp
+bin
+docs
+bruno
+*.exe
+*.log
+.env
+.env.*
+infra/.env*

@@ -1,7 +1,7 @@
-import { afterEach, expect, it, vi, type Mock } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type Mock, afterEach, expect, it, vi } from "vitest";
 import UsersPage from "./UsersPage";
 
 const getMock = vi.fn();
