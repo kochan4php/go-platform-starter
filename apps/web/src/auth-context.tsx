@@ -1,4 +1,4 @@
-import { decodeClaims, getAccessToken, setAccessToken } from "@starter/contracts";
+import { GATEWAY_URL, decodeClaims, getAccessToken, setAccessToken } from "@starter/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
@@ -18,8 +18,6 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-const GATEWAY_URL = (import.meta.env.VITE_GATEWAY_URL as string | undefined) ?? "http://localhost:8000";
 
 export function AuthProvider({
   children,

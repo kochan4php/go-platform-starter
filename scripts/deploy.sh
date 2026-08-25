@@ -109,8 +109,17 @@ fi
 log "running migrations (before rollout)"
 compose up -d postgres redis
 until compose exec -T postgres pg_isready -U app >/dev/null 2>&1; do sleep 1; done
+
+# Kill any stale one-shot containers first (e.g. from an interrupted older
+# deploy): a still-running job container would never be reaped by --rm.
+for job in auth-migrate users-migrate rbac-migrate worker-migrate rbac-seed auth-seed; do
+  for cid in $(compose ps -aq "$job" 2>/dev/null); do
+    docker rm -f "$cid" >/dev/null 2>&1 || true
+  done
+done
+
 for job in auth-migrate users-migrate rbac-migrate worker-migrate; do
-  compose --profile tools run --rm "$job" >/dev/null
+  compose --profile tools run --rm -T "$job" >/dev/null
   echo "  ok: $job"
 done
 
@@ -120,11 +129,11 @@ compose up -d --remove-orphans
 
 # --- 7. seeds -------------------------------------------------------------------
 log "seeding (idempotent)"
-compose --profile tools run --rm rbac-seed >/dev/null
+compose --profile tools run --rm -T rbac-seed >/dev/null
 echo "  ok: rbac-seed (role catalog + admin role)"
 SEED_ADMIN="${SEED_ADMIN:-true}"
 if [ "$SEED_ADMIN" = "true" ]; then
-  compose --profile tools run --rm auth-seed | sed -n 's/.*BOOTSTRAP ADMIN PASSWORD.*/&/p;/admin@example/p;/^$/d' || true
+  compose --profile tools run --rm -T auth-seed | sed -n 's/.*BOOTSTRAP ADMIN PASSWORD.*/&/p;/admin@example/p;/^$/d' || true
   echo "  ok: auth-seed (bootstrap admin credentials printed above on first run only)"
 fi
 

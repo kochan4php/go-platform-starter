@@ -21,6 +21,9 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
+    # Per-request DNS resolution (see default.conf note)
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
     # Mount host certs by adding to the edge service volumes in compose.prod.yml:
     #   - /etc/letsencrypt:/etc/letsencrypt:ro
 
@@ -35,7 +38,8 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location = /ws {
-        proxy_pass http://gateway:8000;
+        set $up_ws http://gateway:8000;
+        proxy_pass $up_ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -44,7 +48,8 @@ server {
     }
 
     location ~ ^/(api|docs|healthz|readyz|metrics)(/|$) {
-        proxy_pass http://gateway:8000;
+        set $up_gw http://gateway:8000;
+        proxy_pass $up_gw;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -53,20 +58,27 @@ server {
     }
 
     location /remote/auth/ {
-        proxy_pass http://web-auth/;
+        set $up_auth http://web-auth;
+        rewrite ^/remote/auth/(.*)$ /$1 break;
+        proxy_pass $up_auth;
         proxy_set_header Host $host;
     }
     location /remote/admin-users/ {
-        proxy_pass http://web-admin-users/;
+        set $up_users http://web-admin-users;
+        rewrite ^/remote/admin-users/(.*)$ /$1 break;
+        proxy_pass $up_users;
         proxy_set_header Host $host;
     }
     location /remote/admin-roles/ {
-        proxy_pass http://web-admin-roles/;
+        set $up_roles http://web-admin-roles;
+        rewrite ^/remote/admin-roles/(.*)$ /$1 break;
+        proxy_pass $up_roles;
         proxy_set_header Host $host;
     }
 
     location / {
-        proxy_pass http://web/;
+        set $up_shell http://web;
+        proxy_pass $up_shell;
         proxy_set_header Host $host;
     }
 }
