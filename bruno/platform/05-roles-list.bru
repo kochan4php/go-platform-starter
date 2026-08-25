@@ -1,0 +1,13 @@
+meta {
+  name: list roles
+  type: http
+  sequence: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/rbac/roles
+}
+
+auth bearer {
+  token: {{accessToken}}
+}

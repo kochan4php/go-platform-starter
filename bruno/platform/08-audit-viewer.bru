@@ -1,0 +1,13 @@
+meta {
+  name: audit viewer (worker)
+  type: http
+  sequence: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/audit/viewer?limit=20&offset=0
+}
+
+auth bearer {
+  token: {{accessToken}}
+}

@@ -21,17 +21,18 @@ import (
 var specFS embed.FS
 
 type config struct {
-	Port         string `env:"PORT" envDefault:"8080"`
-	LogLevel     string `env:"LOG_LEVEL" envDefault:"info"`
-	DatabaseURL  string `env:"DATABASE_URL,required"`
-	RedisAddr    string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
-	MailerDriver string `env:"MAILER_DRIVER" envDefault:"console"`
-	SMTPHost     string `env:"SMTP_HOST"`
-	SMTPPort     int    `env:"SMTP_PORT" envDefault:"587"`
-	SMTPUser     string `env:"SMTP_USER"`
-	SMTPPass     string `env:"SMTP_PASS"`
-	MailFrom     string `env:"MAIL_FROM" envDefault:"noreply@example.local"`
-	MailFromName string `env:"MAIL_FROM_NAME" envDefault:"Platform"`
+	Port           string `env:"PORT" envDefault:"8080"`
+	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
+	DatabaseURL    string `env:"DATABASE_URL,required"`
+	RedisAddr      string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	InternalSecret string `env:"INTERNAL_SECRET,required"`
+	MailerDriver   string `env:"MAILER_DRIVER" envDefault:"console"`
+	SMTPHost       string `env:"SMTP_HOST"`
+	SMTPPort       int    `env:"SMTP_PORT" envDefault:"587"`
+	SMTPUser       string `env:"SMTP_USER"`
+	SMTPPass       string `env:"SMTP_PASS"`
+	MailFrom       string `env:"MAIL_FROM" envDefault:"noreply@example.local"`
+	MailFromName   string `env:"MAIL_FROM_NAME" envDefault:"Platform"`
 }
 
 func main() {
@@ -43,6 +44,13 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "worker")
+
+	shutdownTracer, err := platform.InitTracer(context.Background(), "worker", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
 
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
 		Logger: platform.NewGormLogger(log, 0),
@@ -85,6 +93,10 @@ func main() {
 		w.Header().Set("Content-Type", "application/yaml")
 		_, _ = w.Write(raw)
 	})
+
+	// Central audit view (PLAN item 74) — mounted under the gateway-facing
+	// /api/v1 prefix; the route registry guards it with audit:read:any.
+	router.Get("/api/v1/audit/viewer", internal.AuditViewer(db, cfg.InternalSecret))
 
 	log.Info("worker listening (consumer in background)", "port", cfg.Port)
 	if err := platform.GracefulRun(":"+cfg.Port, router, func() { _ = closeDB(db) }); err != nil {

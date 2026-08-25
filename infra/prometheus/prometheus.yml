@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: platform-services
+    static_configs:
+      - targets:
+          - gateway:8000
+          - auth:8081
+          - users:8082
+          - rbac:8083
+          - worker:8084
+          - realtime:8085
+        labels:
+          mesh: local

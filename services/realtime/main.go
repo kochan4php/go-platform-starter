@@ -38,6 +38,13 @@ func main() {
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "realtime")
 
+	shutdownTracer, err := platform.InitTracer(context.Background(), "realtime", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
+
 	rdb := newRedis(cfg.RedisAddr)
 
 	connections := prometheus.NewGauge(prometheus.GaugeOpts{

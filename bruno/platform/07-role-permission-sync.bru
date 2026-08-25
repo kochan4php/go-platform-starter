@@ -1,0 +1,22 @@
+meta {
+  name: update role permissions (ver bump)
+  type: http
+  sequence: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/rbac/roles/{{roleId}}
+  body: json
+}
+
+auth bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "admin",
+    "description": "bootstrap super-role",
+    "permissions": ["user:create:any", "user:read:any", "user:update:any", "user:delete:any", "role:create:any", "role:read:any", "role:update:any", "role:delete:any", "permission:read:any", "audit:read:any"]
+  }
+}

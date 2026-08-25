@@ -9,8 +9,9 @@ type Config struct {
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
 	InternalSecret    string `env:"INTERNAL_SECRET,required"`
 	TrustedDomains    string `env:"TRUSTED_DOMAINS" envDefault:"http://localhost:5173,http://localhost:5174"`
-	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://localhost:8081\",\"users\":\"http://localhost:8082\",\"rbac\":\"http://localhost:8083\"}"`
+	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://localhost:8081\",\"users\":\"http://localhost:8082\",\"rbac\":\"http://localhost:8083\",\"worker\":\"http://localhost:8084\"}"`
 	RatePerMinute     int    `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"300"`
+	SlowRequestMs     int    `env:"SLOW_REQUEST_THRESHOLD_MS" envDefault:"500"`
 
 	upstreams Upstreams
 	routes    []Route

@@ -1,0 +1,25 @@
+meta {
+  name: login (admin)
+  type: http
+  sequence: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/login
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "admin@example.local",
+    "password": "{{adminPassword}}"
+  }
+}
+
+vars:pre-response {
+  accessToken: res.body.data.accessToken
+}

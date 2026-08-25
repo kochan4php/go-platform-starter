@@ -1,0 +1,13 @@
+meta {
+  name: list users
+  type: http
+  sequence: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users?limit=10&offset=0
+}
+
+auth bearer {
+  token: {{accessToken}}
+}

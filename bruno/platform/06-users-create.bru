@@ -1,0 +1,21 @@
+meta {
+  name: create profile (admin)
+  type: http
+  sequence: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/users
+  body: json
+}
+
+auth bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "id": "11111111-2222-3333-4444-555555555555",
+    "displayName": "Wanda"
+  }
+}

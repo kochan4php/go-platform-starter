@@ -130,6 +130,9 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 			}
 			outReq.Header.Set("X-Internal-Secret", deps.InternalSecret)
 
+			// Continue the trace into the upstream service (PLAN item 70):
+			// the gateway's server span becomes the parent of theirs.
+			platform.InjectTraceHeaders(outReq.Context(), outReq.Header)
 			outReq.Header.Del("Authorization")
 			upstream.ServeHTTP(w, outReq)
 		})

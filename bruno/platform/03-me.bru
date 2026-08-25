@@ -1,0 +1,13 @@
+meta {
+  name: me
+  type: http
+  sequence: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/me
+}
+
+auth bearer {
+  token: {{accessToken}}
+}

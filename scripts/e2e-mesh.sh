@@ -15,7 +15,7 @@ export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
 export APP_PUBLIC_URL="http://localhost:5173"
 export RBAC_INTERNAL_URL="http://localhost:8083"
 export TRUSTED_DOMAINS="http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
-export UPSTREAMS='{"auth":"http://localhost:8081","users":"http://localhost:8082","rbac":"http://localhost:8083"}'
+export UPSTREAMS='{"auth":"http://localhost:8081","users":"http://localhost:8082","rbac":"http://localhost:8083","worker":"http://localhost:8084"}'
 export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-admin-password-1}"
 
 down() {
@@ -36,7 +36,7 @@ ci)
   until docker exec e2e-pg pg_isready -U app >/dev/null 2>&1; do sleep 1; done
 
   mkdir -p tmp/e2e
-  for svc in auth users rbac gateway; do
+  for svc in auth users rbac gateway worker; do
     go build -o "tmp/e2e/${svc}.exe" "./services/${svc}"
   done
   go run ./services/auth -migrate
@@ -48,9 +48,10 @@ ci)
   PORT=8081 tmp/e2e/auth.exe &
   PORT=8082 tmp/e2e/users.exe &
   PORT=8083 tmp/e2e/rbac.exe &
+  PORT=8084 tmp/e2e/worker.exe &
   PORT=8000 tmp/e2e/gateway.exe &
 
-  for port in 8081 8082 8083 8000; do
+  for port in 8081 8082 8083 8084 8000; do
     for i in $(seq 1 40); do
       curl -sf "http://localhost:${port}/healthz" >/dev/null && break
       sleep 0.5
@@ -81,7 +82,7 @@ up)
   until docker exec e2e-pg pg_isready -U app >/dev/null 2>&1; do sleep 1; done
 
   mkdir -p tmp/e2e
-  for svc in auth users rbac gateway; do
+  for svc in auth users rbac gateway worker; do
     go build -o "tmp/e2e/${svc}.exe" "./services/${svc}"
   done
   go run ./services/auth -migrate
@@ -93,8 +94,9 @@ up)
   PORT=8081 tmp/e2e/auth.exe &
   PORT=8082 tmp/e2e/users.exe &
   PORT=8083 tmp/e2e/rbac.exe &
+  PORT=8084 tmp/e2e/worker.exe &
   PORT=8000 tmp/e2e/gateway.exe &
-  for port in 8081 8082 8083 8000; do
+  for port in 8081 8082 8083 8084 8000; do
     until curl -sf "http://localhost:${port}/healthz" >/dev/null; do sleep 0.5; done
   done
 

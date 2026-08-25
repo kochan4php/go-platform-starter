@@ -18,9 +18,11 @@ func NewRouter(log *slog.Logger, ready map[string]Checker, extra ...func(http.Ha
 	for _, mw := range extra {
 		r.Use(mw)
 	}
+	r.Use(Trace)
 	r.Use(Observe)
 	r.Use(CorrelationID)
 	r.Use(RequestLogger)
+	r.Use(SecurityHeaders)
 	r.Use(Recoverer)
 
 	r.Get("/healthz", Healthz)

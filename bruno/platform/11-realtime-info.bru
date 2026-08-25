@@ -1,0 +1,13 @@
+meta {
+  name: realtime info (ws url)
+  type: http
+  sequence: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/realtime-info
+}
+
+auth bearer {
+  token: {{accessToken}}
+}

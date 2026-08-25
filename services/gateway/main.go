@@ -34,6 +34,18 @@ func main() {
 	cfg := platform.MustParseEnv[internal.Config]()
 	log := platform.NewLogger(cfg.LogLevel, "gateway")
 
+	shutdownTracer, err := platform.InitTracer(context.Background(), "gateway", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
+
+	// Slow-request log gate (PLAN item 73), env-tunable at the edge.
+	if cfg.SlowRequestMs > 0 {
+		platform.SetSlowRequestThreshold(time.Duration(cfg.SlowRequestMs) * time.Millisecond)
+	}
+
 	upstreams, err := internal.ParseUpstreams(cfg.UpstreamsJSON)
 	if err != nil {
 		log.Error("bad UPSTREAMS", "err", err)

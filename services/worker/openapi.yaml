@@ -1,8 +1,72 @@
 openapi: 3.0.3
 info:
   title: worker service API
-  version: 0.1.0
+  version: 0.2.0
   description: |
     Redis Streams consumer (mail jobs, audit flush) + scheduled housekeeping.
-    HTTP surface exists only for probes and metrics — no business REST API.
-paths: {}
+    HTTP surface exists for probes, metrics, and the central audit viewer —
+    no other business REST API.
+paths:
+  /audit/viewer:
+    get:
+      operationId: listAuditEntries
+      summary: paginated audit trail, newest first
+      x-required-permission: "audit:read:any"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: offset, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: "#/components/schemas/AuditEntry" }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+        "401": { description: missing internal secret, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+components:
+  schemas:
+    EnvelopeMeta:
+      type: object
+      required: [limit, offset, total]
+      properties:
+        limit: { type: integer }
+        offset: { type: integer }
+        total: { type: integer, format: int64 }
+
+    EnvelopeOK:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
+
+    EnvelopeFail:
+      type: object
+      required: [success, message, error]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        error: { type: string }
+
+    AuditEntry:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        actorSub: { type: string }
+        action: { type: string }
+        entity: { type: string }
+        entityId: { type: string }
+        meta: {}
+        createdAt: { type: string, format: date-time }

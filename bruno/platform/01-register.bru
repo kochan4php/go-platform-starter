@@ -1,0 +1,21 @@
+meta {
+  name: register
+  type: http
+  sequence: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/register
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "wanda@example.local",
+    "password": "wanda-password-1"
+  }
+}

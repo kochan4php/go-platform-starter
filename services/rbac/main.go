@@ -45,6 +45,13 @@ func main() {
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "rbac")
 
+	shutdownTracer, err := platform.InitTracer(context.Background(), "rbac", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
+
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
 		Logger: platform.NewGormLogger(log, 0),
 	})

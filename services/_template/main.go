@@ -30,6 +30,13 @@ func main() {
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "_template")
 
+	shutdownTracer, err := platform.InitTracer(context.Background(), "_template", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
+
 	router := platform.NewRouter(log, nil)
 	router.Route("/api/v1", func(r chi.Router) {
 		gen.HandlerFromMux(internal.NewHandlers(log), r)

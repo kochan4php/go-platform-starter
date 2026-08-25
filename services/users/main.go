@@ -36,6 +36,13 @@ func main() {
 	cfg := platform.MustParseEnv[internal.Config]()
 	log := platform.NewLogger(cfg.LogLevel, "users")
 
+	shutdownTracer, err := platform.InitTracer(context.Background(), "users", log)
+	if err != nil {
+		log.Error("tracer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = shutdownTracer(context.Background()) }()
+
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
 		Logger: platform.NewGormLogger(log, cfg.SlowQueryThreshold),
 	})
