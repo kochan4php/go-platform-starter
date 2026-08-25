@@ -1,5 +1,6 @@
 import { Alert, Button, Card, Field, Input } from "@starter/ui";
 import { type FormEvent, useState } from "react";
+import AuthFrame from "./AuthFrame";
 import { login } from "./api";
 
 export interface SessionPayload {
@@ -33,49 +34,77 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn(u: SessionPayload
   }
 
   return (
-    <Card title="Log in">
-      <form onSubmit={submit} className="space-y-3">
-        <Field label="Email">
-          <Input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </Field>
-        <Field label="Password">
-          <Input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </Field>
-        {error ? <Alert message={error} /> : null}
-        <Button type="submit" disabled={busy}>
-          Log in
-        </Button>
-      </form>
-      <p className="mt-4 text-sm text-[var(--color-muted)]">
-        No account?{" "}
-        <a href="/register" className="underline">
-          Register
-        </a>{" "}
-        ·{" "}
-        <a href="/forgot" className="underline">
-          Forgot password
-        </a>
+    <AuthFrame>
+      <p className="mb-6 font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-accent)]">
+        Welcome back
       </p>
-    </Card>
+      <h1 className="max-w-5xl text-[clamp(2.75rem,4.6vw,5rem)] font-extrabold leading-[1.02] tracking-tight">
+        Run the
+        <span className="mx-3 inline-block h-10 w-24 translate-y-1 overflow-hidden rounded-full align-middle">
+          <img
+            src="https://picsum.photos/seed/control-room/480/160"
+            alt=""
+            className="h-full w-full object-cover grayscale contrast-125"
+          />
+        </span>
+        whole platform
+        <br />
+        from one quiet room.
+      </h1>
+
+      <div className="mt-12 max-w-md">
+        <Card>
+          <form onSubmit={submit} className="space-y-4">
+            <Field label="Email">
+              <Input
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Field>
+            <Field label="Password">
+              <Input
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </Field>
+            {error ? <Alert message={error} /> : null}
+            <div className="flex items-center justify-between pt-1">
+              <Button type="submit" disabled={busy}>
+                Log in
+                <span aria-hidden>{busy ? "…" : "→"}</span>
+              </Button>
+              <a
+                href="/forgot"
+                className="text-sm text-[var(--color-muted)] underline-offset-4 hover:text-[var(--color-ink)] hover:underline"
+              >
+                Forgot password
+              </a>
+            </div>
+          </form>
+        </Card>
+        <p className="mt-5 text-sm text-[var(--color-muted)]">
+          No account?{" "}
+          <a href="/register" className="text-[var(--color-ink)] underline-offset-4 hover:underline">
+            Register
+          </a>
+        </p>
+      </div>
+    </AuthFrame>
   );
 }
 
 function claimsOf(jwt: string): { perms: string[]; ver: number } {
+  const parts = jwt.split(".");
+  if (parts.length < 2) return { perms: [], ver: 0 };
   try {
-    const parts = jwt.split(".");
-    if (parts.length < 2) return { perms: [], ver: 0 };
     const payload = JSON.parse(atob(parts[1])) as { perms?: string[]; ver?: number };
     return { perms: payload.perms ?? [], ver: payload.ver ?? 0 };
   } catch {

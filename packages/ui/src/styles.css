@@ -1,40 +1,115 @@
-/* @starter/ui — design tokens (Tailwind v4, CSS-first) + base primitives.
-   Every app imports this once in its entry stylesheet. */
+/* @starter/ui — design system tokens (Tailwind v4, CSS-first).
+   Identity: Cabinet Grotesk on near-black canvas, hairline borders,
+   one restrained accent. Every app imports this once. */
+
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap");
 @import "tailwindcss";
 
 @theme {
-	--color-surface: #ffffff;
-	--color-canvas: #f6f7f9;
-	--color-ink: #16181d;
-	--color-muted: #5c6470;
-	--color-line: #e3e6ea;
-	--color-brand: #2f6bff;
-	--color-brand-strong: #1e51d6;
-	--color-danger: #d3382e;
+	--color-canvas: #09090b;
+	--color-surface: #101013;
+	--color-elevated: #16161a;
+	--color-ink: #f5f4ef;
+	--color-muted: #a3a29b;
+	--color-line: rgba(245, 244, 239, 0.08);
+	--color-accent: #d8f34f;
+	--color-danger: #ff6b5e;
 
-	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-		"Helvetica Neue", sans-serif;
+	--font-sans: "Cabinet Grotesk", ui-sans-serif, system-ui, -apple-system,
+		"Segoe UI", sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-	--radius-card: 10px;
+	--radius-card: 18px;
+}
+
+html {
+	color-scheme: dark;
 }
 
 body {
 	background: var(--color-canvas);
 	color: var(--color-ink);
 	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	letter-spacing: -0.01em;
+}
+
+::selection {
+	background: var(--color-accent);
+	color: #09090b;
+}
+
+*::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+	background: rgba(245, 244, 239, 0.14);
+	border-radius: 999px;
+	border: 3px solid var(--color-canvas);
+}
+*::-webkit-scrollbar-track {
+	background: transparent;
 }
 
 @layer components {
 	.ui-input {
-		@apply w-full rounded-md border border-[var(--color-line)] bg-white px-3 py-2 text-sm
-      outline-none focus:border-[var(--color-brand)] focus:ring-2 focus:ring-blue-100;
+		@apply w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-elevated)] px-4 py-2.5 text-sm text-[var(--color-ink)]
+      outline-none transition-colors placeholder:text-[var(--color-muted)]/60
+      focus:border-[var(--color-accent)]/60 focus:bg-[var(--color-surface)];
 	}
 
 	.ui-label {
-		@apply mb-1 block text-sm font-medium text-[var(--color-muted)];
+		@apply mb-1.5 block text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)];
 	}
 
 	.ui-card {
-		@apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 shadow-sm;
+		@apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)];
+	}
+
+	/* Ambient stage: deep radial wash + faint grid, applied to page roots. */
+	.ui-stage {
+		position: relative;
+		isolation: isolate;
+		background: radial-gradient(
+				900px 500px at 78% -10%,
+				rgba(216, 243, 79, 0.07),
+				transparent 60%
+			),
+			radial-gradient(
+				1100px 600px at -15% 110%,
+				rgba(245, 244, 239, 0.05),
+				transparent 55%
+			), var(--color-canvas);
+	}
+	.ui-stage::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background-image: linear-gradient(var(--color-line) 1px, transparent 1px),
+			linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+		background-size: 72px 72px;
+		mask-image: radial-gradient(1000px 600px at 70% 0%, black, transparent 70%);
+		opacity: 0.35;
+	}
+}
+
+@keyframes ui-marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+.animate-ui-marquee {
+	animation: ui-marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-ui-marquee {
+		animation: none;
 	}
 }

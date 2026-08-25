@@ -53,7 +53,8 @@ it("lists roles with their permission counts", async () => {
   );
 
   await waitFor(() => {
-    expect(screen.getByText("admin")).toBeTruthy();
+    // the name renders twice by design: collapsed rail + unfolded panel
+    expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
     expect(screen.getByText("2 assigned")).toBeTruthy();
   });
 });

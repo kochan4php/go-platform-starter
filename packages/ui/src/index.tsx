@@ -1,12 +1,13 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "danger";
+type Variant = "primary" | "ghost" | "danger";
 
 const variantClass: Record<Variant, string> = {
-  primary: "bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-strong)] disabled:opacity-50",
-  secondary:
-    "border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:bg-neutral-50 disabled:opacity-50",
-  danger: "border border-red-200 bg-white text-[var(--color-danger)] hover:bg-red-50 disabled:opacity-50",
+  primary: "bg-[var(--color-ink)] text-[#09090b] hover:bg-[var(--color-accent)] disabled:opacity-40",
+  ghost:
+    "border border-[var(--color-line)] bg-transparent text-[var(--color-ink)] hover:border-[var(--color-ink)]/30 hover:bg-white/5 disabled:opacity-40",
+  danger:
+    "border border-[var(--color-danger)]/25 bg-transparent text-[var(--color-danger)] hover:border-[var(--color-danger)]/60 hover:bg-[var(--color-danger)]/10 disabled:opacity-40",
 };
 
 export function Button({
@@ -17,7 +18,7 @@ export function Button({
   return (
     <button
       {...rest}
-      className={`rounded-md px-3 py-2 text-sm font-medium transition ${variantClass[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold tracking-tight transition-all duration-300 ${variantClass[variant]} ${className}`}
     />
   );
 }
@@ -38,8 +39,8 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section className="ui-card">
-      {title ? <h1 className="mb-4 text-lg font-semibold">{title}</h1> : null}
+    <section className="ui-card p-6">
+      {title ? <h1 className="mb-5 text-lg font-bold tracking-tight">{title}</h1> : null}
       {children}
     </section>
   );
@@ -48,10 +49,10 @@ export function Card({ title, children }: { title?: string; children: ReactNode 
 export function Alert({ kind = "error", message }: { kind?: "error" | "info"; message: string }) {
   const cls =
     kind === "error"
-      ? "border-red-200 bg-red-50 text-[var(--color-danger)]"
-      : "border-blue-200 bg-blue-50 text-[var(--color-brand-strong)]";
+      ? "border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]"
+      : "border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]";
   return (
-    <p role="alert" className={`mb-3 rounded-md border px-3 py-2 text-sm ${cls}`}>
+    <p role="alert" className={`rounded-xl border px-4 py-2.5 text-sm ${cls}`}>
       {message}
     </p>
   );
@@ -61,17 +62,21 @@ export function Spinner() {
   return (
     <span
       aria-label="loading"
-      className="inline-block size-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[var(--color-brand)]"
+      className="inline-block size-4 animate-spin rounded-full border-2 border-white/15 border-t-[var(--color-accent)]"
     />
   );
 }
 
 export function Th({ children }: { children: ReactNode }) {
-  return <th className="px-3 py-2 text-left font-medium text-[var(--color-muted)]">{children}</th>;
+  return (
+    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
+      {children}
+    </th>
+  );
 }
 
 export function Td({ children }: { children?: ReactNode }) {
-  return <td className="border-t border-[var(--color-line)] px-3 py-2">{children}</td>;
+  return <td className="border-t border-[var(--color-line)] px-4 py-3.5 align-middle">{children}</td>;
 }
 
 export function Modal({
@@ -84,20 +89,77 @@ export function Modal({
   children: ReactNode;
 }) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: role=dialog + aria-label until native <dialog> fits
+    // biome-ignore lint/a11y/useSemanticElements: role=dialog + aria-label until native <dialog> fits the baseline
     <div
       role="dialog"
       aria-label={title}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
     >
-      <div className="w-full max-w-md rounded-[var(--radius-card)] bg-white p-6 shadow-lg">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-xl leading-none">
+      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-base font-bold tracking-tight">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-xl leading-none text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
+          >
             ×
           </button>
         </div>
         {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---- dashboard composites ---- */
+
+export function Badge({
+  children,
+  tone = "neutral",
+}: { children: ReactNode; tone?: "neutral" | "accent" | "danger" }) {
+  const tones = {
+    neutral: "border-[var(--color-line)] text-[var(--color-muted)]",
+    accent: "border-[var(--color-accent)]/40 text-[var(--color-accent)]",
+    danger: "border-[var(--color-danger)]/40 text-[var(--color-danger)]",
+  } as const;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-[11px] ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Avatar({ seed, alt = "" }: { seed: string; alt?: string }) {
+  return (
+    <img
+      src={`https://picsum.photos/seed/${encodeURIComponent(seed)}/80/80`}
+      alt={alt}
+      loading="lazy"
+      className="size-8 shrink-0 rounded-full object-cover grayscale contrast-110"
+    />
+  );
+}
+
+/** Big numeral for bento stats; value is data-driven, never invented. */
+export function Stat({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="flex h-full flex-col justify-between gap-6 p-6">
+      <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">{label}</p>
+      <div>
+        <p className="font-mono text-5xl font-medium tabular-nums tracking-tighter">{value}</p>
+        {hint ? <p className="mt-2 text-sm text-[var(--color-muted)]">{hint}</p> : null}
       </div>
     </div>
   );

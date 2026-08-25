@@ -11,6 +11,7 @@
 		"check:budget": "node ../../scripts/check-budget.mjs"
 	},
 	"dependencies": {
+		"@phosphor-icons/react": "^2.1.10",
 		"@starter/contracts": "workspace:*",
 		"@starter/ui": "workspace:*",
 		"@tanstack/react-query": "^5.62.0",

@@ -45,7 +45,8 @@ it("renders the paginated table and deletes a profile", async () => {
 
   mount();
   await waitFor(() => expect(screen.getByText("Users (1)")).toBeTruthy());
-  expect(screen.getByText("Ada")).toBeTruthy();
+  // the name renders twice by design: latest-arrival card + table row
+  expect(screen.getAllByText("Ada").length).toBeGreaterThan(0);
 
   await userEvent.click(screen.getByRole("button", { name: "Delete" }));
   await waitFor(() => expect(deleteMock).toHaveBeenCalledTimes(1));

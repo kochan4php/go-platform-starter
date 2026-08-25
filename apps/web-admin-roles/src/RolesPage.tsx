@@ -1,14 +1,17 @@
-import { Alert, Button, Card, Field, Input, Modal, Spinner, Td, Th } from "@starter/ui";
+import { PencilSimple, Trash } from "@phosphor-icons/react";
+import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner } from "@starter/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { type Role, api } from "./api-client";
 
 /**
- * Role editor + permission sync (PLAN item 64). Editing permissions PATCHes
- * the full replacement set; the server bumps affected users' `ver`, which
- * forces token refresh on their next call (claims-staleness defense).
+ * Role management (PLAN item 64) rendered as horizontal accordion slices:
+ * each role is a vertical sliver that unfolds on hover into its description,
+ * permission chips and actions. Editing permissions PATCHes the full
+ * replacement set; the server bumps affected users' `ver`, forcing token
+ * refresh on their next call.
  */
-export function RolesPage() {
+export default function RolesPage() {
   const [editing, setEditing] = useState<Role | null>(null);
   const [creating, setCreating] = useState(false);
   const queryClient = useQueryClient();
@@ -18,7 +21,7 @@ export function RolesPage() {
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/rbac/roles");
       if (error) throw new Error((error as { message?: string }).message ?? "failed to load roles");
-      return data?.data as { items: Role[] };
+      return (data?.data ?? { items: [] as Role[] }) as { items: Role[] };
     },
   });
 
@@ -33,39 +36,89 @@ export function RolesPage() {
   if (roles.isPending) return <Spinner />;
   if (roles.isError) return <Alert message={(roles.error as Error).message} />;
 
+  const items = roles.data.items;
+
   return (
-    <Card title="Roles">
-      <div className="mb-4">
-        <Button onClick={() => setCreating(true)}>New role</Button>
+    <div className="space-y-8">
+      <div className="flex items-end justify-between gap-6">
+        <h2 className="max-w-3xl text-[clamp(1.6rem,2.4vw,2.4rem)] font-extrabold leading-tight tracking-tight">
+          Access is a shape you draw — widen a slice to see what each role can touch.
+        </h2>
+        <Button onClick={() => setCreating(true)} className="shrink-0">
+          New role
+        </Button>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr>
-            <Th>Name</Th>
-            <Th>Permissions</Th>
-            <Th>Actions</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {roles.data.items.map((r) => (
-            <tr key={r.id}>
-              <Td>{r.name}</Td>
-              <Td>{r.permissions.length} assigned</Td>
-              <Td>
+      <div className="flex h-[440px] gap-px overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-line)]">
+        {items.map((role) => (
+          <section
+            key={role.id}
+            className="group relative min-w-0 flex-1 overflow-hidden bg-[var(--color-surface)] transition-all duration-700 ease-out hover:flex-[3.5]"
+          >
+            {/* collapsed rail */}
+            <div className="absolute inset-0 flex flex-col items-center justify-between py-6 transition-opacity duration-300 group-hover:opacity-0">
+              <span className="font-mono text-xs text-[var(--color-accent)]">
+                {String(role.permissions.length).padStart(2, "0")}
+              </span>
+              <span
+                className="text-sm font-bold tracking-wide text-[var(--color-muted)] group-hover:text-[var(--color-ink)]"
+                style={{ writingMode: "vertical-rl" }}
+              >
+                {role.name}
+              </span>
+              <span className="block size-1.5 rounded-full bg-[var(--color-line)]" />
+            </div>
+
+            {/* unfolded panel */}
+            <div className="absolute inset-0 flex flex-col justify-between p-8 opacity-0 transition-opacity delay-150 duration-500 group-hover:opacity-100">
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
+                  Role
+                </p>
+                <h3 className="mt-2 text-3xl font-extrabold tracking-tight">{role.name}</h3>
+                {role.description ? (
+                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-muted)]">
+                    {role.description}
+                  </p>
+                ) : null}
+              </div>
+
+              <div>
+                <p className="mb-3 text-sm font-semibold">{role.permissions.length} assigned</p>
+                <div className="mb-6 flex max-h-24 flex-wrap gap-1.5 overflow-hidden">
+                  {role.permissions.slice(0, 6).map((perm) => (
+                    <Badge key={perm} tone="accent">
+                      {perm}
+                    </Badge>
+                  ))}
+                  {role.permissions.length > 6 ? <Badge>+{role.permissions.length - 6}</Badge> : null}
+                </div>
+
                 <div className="flex gap-2">
-                  <Button variant="secondary" onClick={() => setEditing(r)}>
-                    Edit
+                  <Button variant="ghost" onClick={() => setEditing(role)}>
+                    <PencilSimple size={14} />
+                    Edit & sync
                   </Button>
-                  <Button variant="danger" onClick={() => remove.mutate(r.id)} disabled={remove.isPending}>
+                  <Button variant="danger" onClick={() => remove.mutate(role.id)} disabled={remove.isPending}>
+                    <Trash size={14} />
                     Delete
                   </Button>
                 </div>
-              </Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          </section>
+        ))}
+
+        {items.length === 0 ? (
+          <div className="flex w-full items-center justify-center p-10">
+            <Card>
+              <p className="text-sm text-[var(--color-muted)]">
+                No roles yet — create the first one to start drawing access.
+              </p>
+            </Card>
+          </div>
+        ) : null}
+      </div>
 
       {creating ? (
         <RoleModal
@@ -88,7 +141,7 @@ export function RolesPage() {
           }}
         />
       ) : null}
-    </Card>
+    </div>
   );
 }
 
@@ -115,7 +168,7 @@ function RoleModal({
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/rbac/permissions");
       if (error) throw new Error("failed to load permission catalog");
-      return (data?.data as { items: string[] }).items ?? [];
+      return (data?.data as { items?: string[] })?.items ?? [];
     },
   });
 
@@ -139,7 +192,7 @@ function RoleModal({
   });
 
   function toggle(perm: string) {
-    setPermissions((cur) => (cur.includes(perm) ? cur.filter((p) => p !== perm) : [...cur, perm]));
+    setPermissions((cur) => (cur.includes(perm) ? cur.filter((x) => x !== perm) : [...cur, perm]));
   }
 
   return (
@@ -149,7 +202,7 @@ function RoleModal({
           e.preventDefault();
           save.mutate();
         }}
-        className="space-y-3"
+        className="space-y-4"
       >
         <Field label="Name">
           <Input name="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} />
@@ -165,20 +218,28 @@ function RoleModal({
 
         <fieldset>
           <legend className="ui-label block">Permissions (synced ver bump applies on save)</legend>
-          <div className="max-h-48 space-y-1 overflow-auto rounded-md border border-[var(--color-line)] p-2 text-sm">
+          <div className="max-h-48 space-y-1.5 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-elevated)] p-3 text-sm">
             {catalog.isPending ? <Spinner /> : null}
             {(catalog.data ?? []).map((perm) => (
-              <label key={perm} className="flex items-center gap-2">
-                <input type="checkbox" checked={permissions.includes(perm)} onChange={() => toggle(perm)} />
-                <code>{perm}</code>
+              <label
+                key={perm}
+                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-white/5"
+              >
+                <input
+                  type="checkbox"
+                  checked={permissions.includes(perm)}
+                  onChange={() => toggle(perm)}
+                  className="size-3.5 accent-[var(--color-accent)]"
+                />
+                <code className="font-mono text-xs">{perm}</code>
               </label>
             ))}
           </div>
         </fieldset>
 
         {error ? <Alert message={error} /> : null}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={save.isPending}>
@@ -189,5 +250,3 @@ function RoleModal({
     </Modal>
   );
 }
-
-export default RolesPage;

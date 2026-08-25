@@ -10,9 +10,12 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@gsap/react": "^2.1.2",
+		"@phosphor-icons/react": "^2.1.10",
 		"@starter/contracts": "workspace:*",
 		"@starter/ui": "workspace:*",
 		"@tanstack/react-query": "^5.62.0",
+		"gsap": "^3.15.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0"
 	},
