@@ -55,6 +55,20 @@ export default defineConfig({
     : {}),
   build: {
     target: "es2022",
-    minify: "esbuild",
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        passes: 3,
+        booleans_as_integers: true,
+        drop_console: true,
+        keep_fargs: false,
+        unsafe: true,
+        pure_getters: true,
+        unsafe_arrows: true,
+        unsafe_methods: true,
+      },
+      format: { comments: false },
+      module: true,
+    },
   },
 });

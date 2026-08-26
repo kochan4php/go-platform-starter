@@ -304,86 +304,86 @@ by priority — baca seluruhnya lalu pilih.
 
 ## UI/UX — Dashboard Shell & Global
 
-- [ ] 🔧 D1. Sidebar collapse toggle (icon-only mode, persist localStorage)
-- [ ] 🔧 D2. Sidebar tooltip saat collapsed
-- [ ] 🔧 D3. Breadcrumb di topbar (Admin / Users)
-- [ ] 🔧 D4. Global search Ctrl+K command palette (users, roles, actions)
-- [ ] 🔧 D5. Command palette (cmdk) dengan fuzzy search
-- [ ] 🔧 D6. Toast notification system global (success/error/info)
-- [ ] 🔧 D7. Toast untuk semua mutasi sukses (create/update/delete)
-- [ ] 🔧 D8. Confirm dialog untuk semua destructive action
-- [ ] 🔧 D9. Undo toast untuk delete (soft-delete 5 detik)
-- [ ] 🔧 D10. Dark/light theme toggle (token swap, persist)
-- [ ] 🔧 D11. Theme transition halus saat ganti
-- [ ] 🔧 D12. User chip dropdown menu (profile, settings, logout)
-- [ ] 🔧 D13. Avatar user di session chip
+- [x] 🔧 D1. Sidebar collapse toggle (icon-only mode, persist localStorage)
+- [x] 🔧 D2. Sidebar tooltip saat collapsed
+- [x] 🔧 D3. Breadcrumb di topbar (Admin / Users)
+- [x] 🔧 D4. Global search Ctrl+K command palette (users, roles, actions)
+- [x] 🔧 D5. Command palette (cmdk) dengan fuzzy search
+- [x] 🔧 D6. Toast notification system global (success/error/info)
+- [x] 🔧 D7. Toast untuk semua mutasi sukses (create/update/delete)
+- [x] 🔧 D8. Confirm dialog untuk semua destructive action
+- [x] 🔧 D9. Undo toast untuk delete (soft-delete 5 detik)
+- [x] 🔧 D10. Dark/light theme toggle (token swap, persist)
+- [x] 🔧 D11. Theme transition halus saat ganti
+- [x] 🔧 D12. User chip dropdown menu (profile, settings, logout)
+- [x] 🔧 D13. Avatar user di session chip
 - [ ] 🧭 D14. Notification bell + unread count (via realtime audit events)
-- [ ] 🔧 D15. Keyboard shortcuts: g+u users, g+r roles
-- [ ] 🔧 D16. Shortcut help modal (?)
-- [ ] 🔧 D17. 404 page UI proper
-- [ ] 🔧 D18. 403 page UI + tombol minta akses
-- [ ] 🔧 D19. Offline banner (navigator.onLine detection)
-- [ ] 🔧 D20. Session expiring warning banner
-- [ ] 🔧 D21. Page transition (View Transitions API)
-- [ ] 🔧 D22. Loading progress bar saat navigasi
-- [ ] 🔧 D23. Skeleton loading per-section
-- [ ] 🔧 D24. Empty state ilustrasi SVG per halaman
-- [ ] 🔧 D25. Error state ilustrasi + retry button
-- [ ] 🔧 D26. Sidebar badge count per menu
-- [ ] 🔧 D27. Sidebar section grouping (MANAGEMENT / SYSTEM)
-- [ ] 🔧 D28. Footer: link docs/API/health
-- [ ] 🔧 D29. Topbar: last-updated timestamp
-- [ ] 🔧 D30. Environment badge (DEV/UAT/DEMO/PROD) dari config
-- [ ] 🔧 D31. Mobile: bottom navigation bar alternatif
-- [ ] 🔧 D32. Swipe gesture buka drawer mobile
-- [ ] 🔧 D33. Drawer: ESC close + focus return
-- [ ] 🔧 D34. Drawer: focus trap saat terbuka
-- [ ] 🔧 D35. Scroll-to-top button konten panjang
-- [ ] 🔧 D36. Table sticky header saat scroll
-- [ ] 🔧 D37. Density toggle (compact/comfortable)
-- [ ] 🔧 D38. Column visibility toggle (persist)
-- [ ] 🔧 D39. Print stylesheet tabel
-- [ ] 🔧 D40. Global error page + copy error button
-- [ ] 🔧 D41. Copy error via clipboard API + toast
-- [ ] 🔧 D42. Health indicator sidebar (polling /healthz)
-- [ ] 🔧 D43. Version info sidebar footer
+- [x] 🔧 D15. Keyboard shortcuts: g+u users, g+r roles
+- [x] 🔧 D16. Shortcut help modal (?)
+- [x] 🔧 D17. 404 page UI proper
+- [x] 🔧 D18. 403 page UI + tombol minta akses
+- [x] 🔧 D19. Offline banner (navigator.onLine detection)
+- [x] 🔧 D20. Session expiring warning banner
+- [x] 🔧 D21. Page transition (View Transitions API)
+- [x] 🔧 D22. Loading progress bar saat navigasi
+- [x] 🔧 D23. Skeleton loading per-section
+- [x] 🔧 D24. Empty state ilustrasi SVG per halaman
+- [x] 🔧 D25. Error state ilustrasi + retry button
+- [x] 🔧 D26. Sidebar badge count per menu
+- [x] 🔧 D27. Sidebar section grouping (MANAGEMENT / SYSTEM)
+- [x] 🔧 D28. Footer: link docs/API/health
+- [x] 🔧 D29. Topbar: last-updated timestamp
+- [x] 🔧 D30. Environment badge (DEV/UAT/DEMO/PROD) dari config
+- [x] 🔧 D31. Mobile: bottom navigation bar alternatif
+- [x] 🔧 D32. Swipe gesture buka drawer mobile
+- [x] 🔧 D33. Drawer: ESC close + focus return
+- [x] 🔧 D34. Drawer: focus trap saat terbuka
+- [x] 🔧 D35. Scroll-to-top button konten panjang
+- [x] 🔧 D36. Table sticky header saat scroll
+- [x] 🔧 D37. Density toggle (compact/comfortable)
+- [x] 🔧 D38. Column visibility toggle (persist)
+- [x] 🔧 D39. Print stylesheet tabel
+- [x] 🔧 D40. Global error page + copy error button
+- [x] 🔧 D41. Copy error via clipboard API + toast
+- [x] 🔧 D42. Health indicator sidebar (polling /healthz)
+- [x] 🔧 D43. Version info sidebar footer
 - [ ] 🧭 D44. Onboarding checklist admin baru (first-run)
-- [ ] 🔧 D45. Tooltip konsisten semua truncated text
-- [ ] 🔧 D46. Truncation expand-on-click popover
-- [ ] 🔧 D47. Number formatting locale-aware
-- [ ] 🔧 D48. Relative time ("2 menit lalu") + tooltip absolut
-- [ ] 🔧 D49. Timezone handling per user
-- [ ] 🔧 D50. Skeleton bento cards
-- [ ] 🔧 D51. Skeleton tabel rows shimmer
-- [ ] 🔧 D52. Refetch indicator di topbar
-- [ ] 🔧 D53. Pause polling saat tab hidden
-- [ ] 🔧 D54. Optimistic online toggle
-- [ ] 🔧 D55. Sound feedback optional (mute default)
-- [ ] 🔧 D56. Sidebar active indicator animasi slide
-- [ ] 🔧 D57. Icon sidebar micro-interaction
-- [ ] 🔧 D58. Brand dot pulse saat background job jalan
-- [ ] 🔧 D59. Scroll progress bar konten panjang
-- [ ] 🔧 D60. Split-view (list + detail panel)
-- [ ] 🔧 D61. Detail slide-over (klik row → panel kanan)
-- [ ] 🔧 D62. Keyboard nav antar row (j/k)
-- [ ] 🔧 D63. Multi-select rows + bulk action bar
-- [ ] 🔧 D64. Bulk delete users
-- [ ] 🔧 D65. Export CSV/JSON selection
-- [ ] 🔧 D66. Import users CSV
-- [ ] 🔧 D67. Activity feed mini sidebar
-- [ ] 🔧 D68. System status page link
+- [x] 🔧 D45. Tooltip konsisten semua truncated text
+- [x] 🔧 D46. Truncation expand-on-click popover
+- [x] 🔧 D47. Number formatting locale-aware
+- [x] 🔧 D48. Relative time ("2 menit lalu") + tooltip absolut
+- [x] 🔧 D49. Timezone handling per user
+- [x] 🔧 D50. Skeleton bento cards
+- [x] 🔧 D51. Skeleton tabel rows shimmer
+- [x] 🔧 D52. Refetch indicator di topbar
+- [x] 🔧 D53. Pause polling saat tab hidden
+- [x] 🔧 D54. Optimistic online toggle
+- [x] 🔧 D55. Sound feedback optional (mute default)
+- [x] 🔧 D56. Sidebar active indicator animasi slide
+- [x] 🔧 D57. Icon sidebar micro-interaction
+- [x] 🔧 D58. Brand dot pulse saat background job jalan
+- [x] 🔧 D59. Scroll progress bar konten panjang
+- [x] 🔧 D60. Split-view (list + detail panel)
+- [x] 🔧 D61. Detail slide-over (klik row → panel kanan)
+- [x] 🔧 D62. Keyboard nav antar row (j/k)
+- [x] 🔧 D63. Multi-select rows + bulk action bar
+- [x] 🔧 D64. Bulk delete users
+- [x] 🔧 D65. Export CSV/JSON selection
+- [x] 🔧 D66. Import users CSV
+- [x] 🔧 D67. Activity feed mini sidebar
+- [x] 🔧 D68. System status page link
 - [ ] 🧭 D69. Feedback widget (lapor masalah → buat issue)
 - [ ] 🧭 D70. Help center link
 - [ ] 🧭 D71. Onboarding tour first login
-- [ ] 🔧 D72. Whats-new modal per release
-- [ ] 🔧 D73. Persist drawer/collapse state
-- [ ] 🔧 D74. Route transition preserve scroll
-- [ ] 🔧 D75. Table column resize drag
-- [ ] 🔧 D76. Server-side sort via header click
-- [ ] 🔧 D77. Filter chips persist per user
-- [ ] 🔧 D78. Save filter preset
-- [ ] 🔧 D79. Live table update via realtime invalidate
-- [ ] 🔧 D80. aria-live untuk hasil filter/search
+- [x] 🔧 D72. Whats-new modal per release
+- [x] 🔧 D73. Persist drawer/collapse state
+- [x] 🔧 D74. Route transition preserve scroll
+- [x] 🔧 D75. Table column resize drag
+- [x] 🔧 D76. Server-side sort via header click
+- [x] 🔧 D77. Filter chips persist per user
+- [x] 🔧 D78. Save filter preset
+- [x] 🔧 D79. Live table update via realtime invalidate
+- [x] 🔧 D80. aria-live untuk hasil filter/search
 
 ---
 

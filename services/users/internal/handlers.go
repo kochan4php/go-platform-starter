@@ -86,7 +86,14 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.
 	if params.Offset != nil {
 		offset = *params.Offset
 	}
-	items, total, err := h.svc.List(r.Context(), limit, offset)
+	sort, order := "createdAt", "desc"
+	if params.Sort != nil {
+		sort = string(*params.Sort)
+	}
+	if params.Order != nil {
+		order = string(*params.Order)
+	}
+	items, total, err := h.svc.List(r.Context(), limit, offset, sort, order)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return

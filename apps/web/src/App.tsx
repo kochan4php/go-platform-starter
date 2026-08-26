@@ -1,9 +1,12 @@
-import { BrandMark, FooterStrip } from "@starter/ui";
+import { Button, Card, SkeletonBlock, SkeletonLine, usePreferences } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Component, type ReactNode, Suspense, lazy, useState } from "react";
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { RemoteErrorBoundary } from "./RemoteErrorBoundary";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
+import { ConfirmProvider, DrawerProvider, ToastProvider, useStored, useTheme, useToast } from "./lib/ui";
+import { DashboardShell } from "./shell/DashboardShell";
 
 const LoginPage = lazy(() => import("web_auth/LoginPage"));
 const RegisterPage = lazy(() => import("web_auth/RegisterPage"));
@@ -16,254 +19,14 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
 
-// Hand-drawn 16px stroke icons keep the host bundle free of icon libraries.
-function IconUsers({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className={`size-4 ${className}`}
-      aria-hidden
-      focusable="false"
-    >
-      <title>icon</title>
-      <circle cx="6" cy="5" r="2.5" />
-      <path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
-      <path d="M11 3a2.5 2.5 0 0 1 0 5M12 9.7c1.6.5 2.5 1.7 2.5 3.3" />
-    </svg>
-  );
-}
-
-function IconShield({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className={`size-4 ${className}`}
-      aria-hidden
-      focusable="false"
-    >
-      <title>icon</title>
-      <path d="M8 1.5 13.5 3.5v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4L8 1.5Z" />
-      <path d="m5.5 8 2 2 3-3.5" />
-    </svg>
-  );
-}
-
-function IconSignOut({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className={`size-4 ${className}`}
-      aria-hidden
-      focusable="false"
-    >
-      <title>icon</title>
-      <path d="M6 2H3v12h3M10.5 11 14 8l-3.5-3M14 8H6" />
-    </svg>
-  );
-}
-
-function IconMenu({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className={`size-[18px] ${className}`}
-      aria-hidden
-      focusable="false"
-    >
-      <title>menu</title>
-      <path d="M2 4h12M2 8h12M2 12h12" />
-    </svg>
-  );
-}
-
-function IconClose({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className={`size-[18px] ${className}`}
-      aria-hidden
-      focusable="false"
-    >
-      <title>close</title>
-      <path d="M3.5 3.5l9 9m0-9-9 9" />
-    </svg>
-  );
-}
-
-const NAV = [
-  { to: "/admin/users", label: "Users", icon: IconUsers },
-  { to: "/admin/roles", label: "Roles & Permissions", icon: IconShield },
-] as const;
-
-/** Catches render errors inside any federated remote so one broken screen
- *  never blanks the whole console. */
-class RemoteErrorBoundary extends Component<
-  { children: ReactNode; resetKey?: string },
-  { error: Error | null }
-> {
-  state = { error: null as Error | null };
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-  componentDidUpdate(prev: { resetKey?: string }) {
-    // Navigating to a different section clears the crash state automatically.
-    if (prev.resetKey !== this.props.resetKey && this.state.error) {
-      this.setState({ error: null });
-    }
-  }
-  render() {
-    if (this.state.error) {
-      return (
-        <div className="p-8">
-          <h2 className="text-lg font-bold">Something went wrong</h2>
-          <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
-            {this.state.error.message || "An unexpected error occurred while loading this section."}
-          </p>
-          <button
-            type="button"
-            onClick={() => this.setState({ error: null })}
-            className="mt-4 rounded-xl border border-[var(--color-line)] px-3 py-1.5 text-sm hover:bg-white/5"
-          >
-            Try again
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-function Sidebar({ open, onClose }: { open: boolean; onClose(): void }) {
-  const { pathname } = useLocation();
-  return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-40 flex h-full w-[264px] shrink-0 transform flex-col justify-between border-r border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-8 transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 ${
-        open ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
-      <div>
-        <BrandMark />
-        <nav className="mt-12 space-y-1">
-          {NAV.map(({ to, label, icon: Icon }) => {
-            const active = pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={onClose}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                  active
-                    ? "bg-white/5 font-semibold text-[var(--color-ink)]"
-                    : "text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-ink)]"
-                }`}
-              >
-                <Icon className={active ? "text-[var(--color-accent)]" : ""} />
-                {label}
-                {active ? (
-                  <span className="ml-auto block size-1.5 rounded-full bg-[var(--color-accent)]" />
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      <SessionChip onLogout={onClose} />
-    </aside>
-  );
-}
-
-function SessionChip({ onLogout }: { onLogout(): void }) {
-  const { user, logout } = useAuth();
-  if (!user) return null;
-  return (
-    <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
-      <p className="truncate text-sm font-semibold">{user.email}</p>
-      <p className="mt-0.5 font-mono text-[11px] uppercase tracking-widest text-[var(--color-muted)]">
-        claims v{user.ver} · {user.perms.length} perms
-      </p>
-      <button
-        type="button"
-        onClick={() => {
-          logout();
-          onLogout();
-        }}
-        className="mt-3 inline-flex items-center gap-2 text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
-      >
-        <IconSignOut className="size-3.5" />
-        Log out
-      </button>
-    </div>
-  );
-}
-
-function DashboardShell({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation();
-  const title = pathname.startsWith("/admin/roles") ? "Roles & permissions" : "Directory";
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    // Fixed-height app shell: only this inner region scrolls; the sidebar and
-    // chrome stay put no matter how long the page content is.
-    <div className="flex h-screen overflow-hidden">
-      {/* mobile scrim */}
-      {menuOpen ? (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
-        />
-      ) : null}
-
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* mobile bar */}
-        <div className="flex items-center gap-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-3 lg:hidden">
-          <button
-            type="button"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-lg p-2 text-[var(--color-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-ink)]"
-          >
-            {menuOpen ? <IconClose /> : <IconMenu />}
-          </button>
-          <BrandMark />
-        </div>
-
-        <header className="border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-5 md:px-8">
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">Admin</p>
-          <h1 className="text-lg font-bold tracking-tight">{title}</h1>
-        </header>
-
-        <main className="ui-stage flex-1 overflow-y-auto px-4 py-8 sm:px-6 md:px-8 md:py-10">{children}</main>
-
-        <footer className="border-t border-[var(--color-line)] px-4 py-5 sm:px-6 md:px-8">
-          <FooterStrip />
-        </footer>
-      </div>
-    </div>
-  );
+interface LoginResult {
+  accessToken: string;
+  user: { id: number | string; email: string; perms?: string[]; ver?: number };
 }
 
 function AdminRoutes() {
   return (
-    <Suspense fallback={<p className="text-sm text-[var(--color-muted)]">Loading…</p>}>
+    <Suspense fallback={<PageSkeleton />}>
       <Routes>
         <Route
           path="/admin/users"
@@ -281,32 +44,173 @@ function AdminRoutes() {
             </RequirePermission>
           }
         />
-        <Route path="*" element={<Navigate to="/admin/users" replace />} />
+        <Route path="/admin/403" element={<ForbiddenPage />} />
+        <Route path="/admin/settings" element={<SettingsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );
 }
 
-interface LoginResult {
-  accessToken: string;
-  user: { id: number | string; email: string; perms?: string[]; ver?: number };
-}
-
 function AuthRoutes(onLoggedIn: (u: LoginResult) => void) {
   return (
-    <Suspense fallback={<p className="px-8 py-10 text-sm text-[var(--color-muted)]">Loading…</p>}>
+    <Suspense fallback={<PageSkeleton />}>
       <Routes>
         <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot" element={<ForgotPage />} />
         <Route path="/reset" element={<ResetPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );
 }
 
-/** UI hint only — the gateway enforces truth server-side. */
+function PageSkeleton() {
+  return (
+    <div className="space-y-6 p-2">
+      <SkeletonLine w="w-1/3" />
+      <SkeletonBlock h="h-36" />
+      <SkeletonLine w="w-2/3" />
+      <SkeletonLine w="w-1/2" />
+      <SkeletonBlock h="h-64" />
+    </div>
+  );
+}
+
+function ForbiddenPage() {
+  const { user } = useAuth();
+  const toast = useToast();
+  const requestAccess = () => {
+    const text = `Access request from ${user?.email ?? "anonymous user"}`;
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast("success", "Access request copied for your administrator"))
+      .catch(() => toast("error", "Could not copy the access request"));
+  };
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+      <IconShield className="size-12 text-[var(--color-muted)]/40" />
+      <h2 className="text-xl font-bold tracking-tight">Access denied</h2>
+      <p className="max-w-sm text-sm text-[var(--color-muted)]">
+        {user
+          ? `Your account (${user.email}) does not have permission to view this page.`
+          : "You need to sign in to view this page."}
+      </p>
+      <div className="flex items-center gap-3">
+        {user ? <Button onClick={requestAccess}>Request access</Button> : null}
+        <Link
+          viewTransition
+          to={user ? "/admin/users" : "/login"}
+          className="text-sm text-[var(--color-accent)] underline underline-offset-4"
+        >
+          {user ? "Back to dashboard" : "Sign in"}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function NotFoundPage() {
+  const { user } = useAuth();
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+      <p className="font-mono text-5xl font-extrabold tracking-tighter text-[var(--color-line)]">404</p>
+      <h2 className="text-xl font-bold tracking-tight">Page not found</h2>
+      <p className="text-sm text-[var(--color-muted)]">The page you are looking for does not exist.</p>
+      <Link
+        viewTransition
+        to={user ? "/admin/users" : "/login"}
+        className="text-sm text-[var(--color-accent)] underline underline-offset-4"
+      >
+        {user ? "Back to dashboard" : "Back to login"}
+      </Link>
+    </div>
+  );
+}
+
+function SettingsPage() {
+  const { user } = useAuth();
+  const { timeZone, setTimeZone, soundEnabled, setSoundEnabled } = usePreferences();
+  const zones = Array.from(
+    new Set([
+      timeZone,
+      "UTC",
+      "Asia/Bangkok",
+      "Asia/Jakarta",
+      "Asia/Singapore",
+      "Europe/London",
+      "America/New_York",
+    ]),
+  );
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-accent)]">System</p>
+        <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Your console preferences</h2>
+      </div>
+      <Card title="Profile">
+        <p id="profile" className="text-sm font-semibold">
+          {user?.email}
+        </p>
+        <p className="mt-1 font-mono text-xs text-[var(--color-muted)]">
+          claims v{user?.ver ?? 0} · {user?.perms.length ?? 0} permissions
+        </p>
+      </Card>
+      <Card title="Display & feedback">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="block text-sm">
+            <span className="ui-label block">Timezone</span>
+            <select
+              value={timeZone}
+              onChange={(event) => setTimeZone(event.target.value)}
+              className="ui-input"
+            >
+              {zones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-[var(--color-line)] p-4 text-sm">
+            <span>
+              <strong className="block">Sound feedback</strong>
+              <span className="text-xs text-[var(--color-muted)]">
+                Muted by default; plays a quiet cue for toasts.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={soundEnabled}
+              onChange={(event) => setSoundEnabled(event.target.checked)}
+              className="size-4 accent-[var(--color-accent)]"
+            />
+          </label>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function IconShield({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden
+      focusable="false"
+    >
+      <title>shield</title>
+      <path d="M8 1.5 13.5 3.5v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4L8 1.5Z" />
+      <path d="m5.5 8 2 2 3-3.5" />
+    </svg>
+  );
+}
+
 function Gate() {
   const { user, login, booting } = useAuth();
   const navigate = useNavigate();
@@ -322,14 +226,15 @@ function Gate() {
     navigate("/admin/users", { replace: true });
   }
 
-  // Hold rendering until the silent refresh settles, so deep links like
-  // /admin/roles do not flash the auth branch and get redirected.
   if (booting && !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="animate-pulse font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
-          Restoring session…
-        </p>
+        <div className="flex items-center gap-3">
+          <span className="block size-2 animate-pulse rounded-full bg-[var(--color-accent)]" />
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
+            Restoring session…
+          </p>
+        </div>
       </div>
     );
   }
@@ -345,16 +250,42 @@ function Gate() {
   );
 }
 
+function GateWithLocation() {
+  return <Gate />;
+}
+
+function Root() {
+  // Initialize theme + density at the root so the first paint isn't unstyled.
+  useTheme();
+  const [density] = useStored<"compact" | "comfortable">("ui-density", "comfortable");
+  useEffect(() => {
+    document.documentElement.dataset.density = density;
+  }, [density]);
+  return <GateWithLocation />;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <main className="min-h-screen w-full max-w-full overflow-x-hidden">
-            <Gate />
-          </main>
-        </BrowserRouter>
-      </AuthProvider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <DrawerProvider>
+            <AuthProvider>
+              <BrowserRouter>
+                <a
+                  href="#main-content"
+                  className="fixed left-3 top-3 z-[300] -translate-y-20 rounded-lg bg-[var(--color-ink)] px-3 py-2 text-sm font-semibold text-[var(--color-canvas)] transition-transform focus:translate-y-0"
+                >
+                  Skip to content
+                </a>
+                <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+                  <Root />
+                </div>
+              </BrowserRouter>
+            </AuthProvider>
+          </DrawerProvider>
+        </ConfirmProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

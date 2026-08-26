@@ -9,7 +9,7 @@ const WORDS = ["Sessions", "Rotation", "Lockout", "Claims", "Rooms", "Presence",
  */
 export default function AuthFrame({ children }: { children: ReactNode }) {
   return (
-    <main className="ui-stage min-h-screen w-full max-w-full overflow-x-hidden">
+    <main id="main-content" className="ui-stage min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="relative mx-auto grid min-h-screen max-w-[1400px] grid-cols-12">
         <div className="col-span-12 flex flex-col justify-between px-5 py-8 sm:px-8 md:px-14 lg:col-span-7 lg:py-16">
           <header>

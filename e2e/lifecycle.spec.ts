@@ -27,7 +27,10 @@ test("full admin user lifecycle", async ({ page }) => {
   await expect(page.getByText(email).first()).toBeVisible({ timeout: 15000 });
 
   // 2. edit: full form (avatar preview, display name, email, password) — NO ID field
-  await page.getByRole("row", { name: new RegExp(email) }).getByRole("button", { name: "Edit" }).click();
+  await page
+    .getByRole("row", { name: new RegExp(email) })
+    .getByRole("button", { name: "Edit" })
+    .click();
   const edit = page.getByRole("dialog");
   await expect(edit).toBeVisible();
   await expect(edit.getByText("Avatar URL")).toBeVisible();
@@ -42,10 +45,14 @@ test("full admin user lifecycle", async ({ page }) => {
   await expect(edit).toBeHidden({ timeout: 15000 });
 
   // 3. old password must now be rejected by login
-  await page.request.post("http://localhost:8010/api/v1/auth/login", {
-    data: { email, password: "lifecycle-pass-1" },
-  }).then((r) => expect(r.status()).toBe(401));
-  await page.request.post("http://localhost:8010/api/v1/auth/login", {
-    data: { email, password: "renovated-pass-9" },
-  }).then((r) => expect(r.status()).toBe(200));
+  await page.request
+    .post("http://localhost:8010/api/v1/auth/login", {
+      data: { email, password: "lifecycle-pass-1" },
+    })
+    .then((r) => expect(r.status()).toBe(401));
+  await page.request
+    .post("http://localhost:8010/api/v1/auth/login", {
+      data: { email, password: "renovated-pass-9" },
+    })
+    .then((r) => expect(r.status()).toBe(200));
 });

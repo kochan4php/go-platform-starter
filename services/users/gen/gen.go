@@ -14,6 +14,48 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for ListUsersParamsSort.
+const (
+	CreatedAt   ListUsersParamsSort = "createdAt"
+	DisplayName ListUsersParamsSort = "displayName"
+	Email       ListUsersParamsSort = "email"
+	LastLoginAt ListUsersParamsSort = "lastLoginAt"
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsSort enum.
+func (e ListUsersParamsSort) Valid() bool {
+	switch e {
+	case CreatedAt:
+		return true
+	case DisplayName:
+		return true
+	case Email:
+		return true
+	case LastLoginAt:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListUsersParamsOrder.
+const (
+	Asc  ListUsersParamsOrder = "asc"
+	Desc ListUsersParamsOrder = "desc"
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsOrder enum.
+func (e ListUsersParamsOrder) Valid() bool {
+	switch e {
+	case Asc:
+		return true
+	case Desc:
+		return true
+	default:
+		return false
+	}
+}
+
 // EnvelopeFail defines model for EnvelopeFail.
 type EnvelopeFail struct {
 	Error   string `json:"error"`
@@ -62,9 +104,17 @@ type ProfileInput struct {
 
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
+	Sort   *ListUsersParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order  *ListUsersParamsOrder `form:"order,omitempty" json:"order,omitempty"`
 }
+
+// ListUsersParamsSort defines parameters for ListUsers.
+type ListUsersParamsSort string
+
+// ListUsersParamsOrder defines parameters for ListUsers.
+type ListUsersParamsOrder string
 
 // CreateUserProfileJSONRequestBody defines body for CreateUserProfile for application/json ContentType.
 type CreateUserProfileJSONRequestBody = ProfileInput
@@ -74,7 +124,7 @@ type UpdateUserJSONRequestBody = ProfileInput
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// ListUsers paginated profiles (?limit&offset)
+	// ListUsers paginated profiles with validated server-side sorting
 	// (GET /users)
 	ListUsers(w http.ResponseWriter, r *http.Request, params ListUsersParams)
 	// CreateUserProfile provision a profile row for an existing sub
@@ -98,7 +148,7 @@ type ServerInterface interface {
 
 type Unimplemented struct{}
 
-// ListUsers paginated profiles (?limit&offset)
+// ListUsers paginated profiles with validated server-side sorting
 // (GET /users)
 func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request, params ListUsersParams) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -172,6 +222,32 @@ func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "offset"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "order", r.URL.Query(), &params.Order, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "order"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "order", Err: err})
 		}
 		return
 	}

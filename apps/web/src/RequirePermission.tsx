@@ -8,9 +8,7 @@ export default function RequirePermission({ perm, children }: { perm: string; ch
   if (booting) return null; // session restore in flight — don't bounce yet
   if (!user) return <Navigate to="/login" replace />;
   if (!user.perms.includes(perm)) {
-    return (
-      <p className="p-8 text-sm text-[var(--color-muted)]">You do not have permission to view this page.</p>
-    );
+    return <Navigate to="/admin/403" replace state={{ requestedPermission: perm }} />;
   }
   return children;
 }

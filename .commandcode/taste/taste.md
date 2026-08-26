@@ -1,0 +1,12 @@
+- Communicates in Bahasa Indonesia / Indonesian. Responses should match. Confidence: 0.95
+- Prefers thorough project exploration before implementation — read entire project context first ("baca secara menyeluruh... tanpa terlewatkan satupun"), then act. Confidence: 0.9
+- Prefers tightly scoped work: one category, one type at a time. Do not expand scope without explicit instruction. Confidence: 0.9
+- Uses a BACKLOG.md file with categories and types (Engineering, etc.) and checkboxes as source of truth for tasks. After implementing, mark checkboxes as complete. Confidence: 0.9
+- Expects high quality / perfectionist standard ("kerjakan dengan sempurna tanpa cacat sedikit pun") — no half-done work or known defects left. Confidence: 0.85
+- Prefers explicit verification step at end of work (typecheck, build, tests) before declaring done. Confidence: 0.8
+- For large multi-item categories, expects the assistant to first survey what's already implemented vs. missing, then build a focused plan before editing. Confidence: 0.85
+- Wants truthful progress markers: don't check off BACKLOG items that weren't actually implemented. Defer out-of-scope items with clear notes about why (e.g., "depends on remote-side work", "browser support incomplete") rather than inflating completion. Confidence: 0.9
+- In federated module-federation monorepos (host + remote apps), prefers shared providers/hooks to live in the shared design-system package (`@starter/ui`) so every remote consumes the same ToastProvider/ConfirmProvider/DrawerProvider/hooks. Remotes import via the shared package, not duplicated copies.
+- Values bundle size discipline: a `budget.json` gate exists and must pass. When work pushes over budget, prefers trimming (lighter code, fewer deps) over raising the budget number. Confidence: 0.8
+- Wants identical test config (vitest, NODE_ENV, setupFiles) duplicated consistently across every app in the monorepo rather than letting each app diverge. When fixing a test env issue, apply the fix to all apps. Confidence: 0.8
+- Cares about React rules-of-hooks: do not call hooks inside `.map()` callbacks or conditionals. Prefers extracting child components so each hook has its own render. Will accept refactors that fix these. Confidence: 0.85

@@ -30,3 +30,7 @@ declare module "web_admin_roles/RolesPage" {
   const RolesPage: import("react").ComponentType;
   export default RolesPage;
 }
+
+interface Document {
+  startViewTransition?: (update: () => void | Promise<void>) => { finished: Promise<void> };
+}

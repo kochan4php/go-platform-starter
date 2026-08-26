@@ -6,5 +6,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    setupFiles: ["./src/test-setup.ts"],
+    // React 19 ships `act` via react-dom/test-utils; ensure the dev bundle is
+    // resolved by NOT setting NODE_ENV=production.
+    env: {
+      NODE_ENV: "test",
+    },
   },
 });

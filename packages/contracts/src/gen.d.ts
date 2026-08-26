@@ -318,7 +318,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** paginated profiles (?limit&offset) */
+    /** paginated profiles with validated server-side sorting */
     get: operations["listUsers"];
     put?: never;
     /** provision a profile row for an existing sub */
@@ -1164,6 +1164,8 @@ export interface operations {
       query?: {
         limit?: number;
         offset?: number;
+        sort?: "createdAt" | "displayName" | "email" | "lastLoginAt";
+        order?: "asc" | "desc";
       };
       header?: never;
       path?: never;

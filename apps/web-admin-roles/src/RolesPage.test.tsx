@@ -1,5 +1,6 @@
+import { ConfirmProvider, ToastProvider } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { type Mock, afterEach, expect, it, vi } from "vitest";
 import RolesPage from "./RolesPage";
 
@@ -48,7 +49,11 @@ it("lists roles with their permission counts", async () => {
 
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <RolesPage />
+      <ToastProvider>
+        <ConfirmProvider>
+          <RolesPage />
+        </ConfirmProvider>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 
@@ -57,4 +62,15 @@ it("lists roles with their permission counts", async () => {
     expect(screen.getAllByText("admin").length).toBeGreaterThan(0);
     expect(screen.getByText("2 assigned")).toBeTruthy();
   });
+
+  fireEvent.click(screen.getByRole("button", { name: "New role" }));
+  const createDialog = screen.getByRole("dialog", { name: "Create role" });
+  expect(createDialog.classList.contains("ui-modal-panel")).toBe(true);
+  expect(screen.getByText("Create resource")).toBeTruthy();
+  expect(screen.getByText("Role details")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+  fireEvent.click(screen.getByRole("button", { name: "Edit & sync" }));
+  expect(screen.getByRole("dialog", { name: "Edit role: admin" })).toBeTruthy();
+  expect(screen.getByText("Edit resource")).toBeTruthy();
 });

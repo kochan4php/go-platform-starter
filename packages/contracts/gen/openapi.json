@@ -1039,7 +1039,7 @@
       },
       "get": {
         "operationId": "listUsers",
-        "summary": "paginated profiles (?limit&offset)",
+        "summary": "paginated profiles with validated server-side sorting",
         "x-required-permission": "user:read:any",
         "parameters": [
           {
@@ -1054,6 +1054,32 @@
             "in": "query",
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "displayName",
+                "email",
+                "lastLoginAt"
+              ],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
             }
           }
         ],

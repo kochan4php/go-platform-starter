@@ -12,6 +12,7 @@ function mount(user: SessionUser | null, perm: string) {
         <MemoryRouter initialEntries={["/admin/users"]}>
           <Routes>
             <Route path="/login" element={<p>login-page</p>} />
+            <Route path="/admin/403" element={<p>access-denied-page</p>} />
             <Route
               path="/admin/users"
               element={
@@ -35,7 +36,7 @@ it("redirects anonymous visitors to /login", async () => {
 
 it("blocks authenticated users without the permission", () => {
   mount({ id: "s1", email: "a@b.c", perms: [], ver: 1 }, "user:read:any");
-  expect(screen.getByText(/do not have permission/i)).toBeTruthy();
+  expect(screen.getByText("access-denied-page")).toBeTruthy();
 });
 
 it("renders children when the claim is present", () => {

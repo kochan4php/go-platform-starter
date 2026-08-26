@@ -2,9 +2,9 @@ package internal
 
 import (
 	"context"
-	"strings"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -74,7 +74,7 @@ func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
 	return &p, nil
 }
 
-func (s *Service) List(ctx context.Context, limit, offset int) ([]Profile, int64, error) {
+func (s *Service) List(ctx context.Context, limit, offset int, sort, order string) ([]Profile, int64, error) {
 	var (
 		items []Profile
 		total int64
@@ -83,11 +83,29 @@ func (s *Service) List(ctx context.Context, limit, offset int) ([]Profile, int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := db.Order("created_at DESC").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+	if err := db.Order(userOrderClause(sort, order)).Limit(limit).Offset(offset).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	s.attachPresence(ctx, items)
 	return items, total, nil
+}
+
+func userOrderClause(sort, order string) string {
+	columns := map[string]string{
+		"createdAt":   "created_at",
+		"displayName": "display_name",
+		"email":       "email",
+		"lastLoginAt": "last_login_at",
+	}
+	column, ok := columns[sort]
+	if !ok {
+		column = "created_at"
+	}
+	direction := "DESC"
+	if strings.EqualFold(order, "asc") {
+		direction = "ASC"
+	}
+	return column + " " + direction + " NULLS LAST"
 }
 
 func (s *Service) Update(ctx context.Context, id string, email, displayName, avatarUrl *string) (*Profile, error) {
@@ -140,6 +158,5 @@ func (s *Service) audit(ctx context.Context, action, entity, entityID string) {
 		ActorSub: "system", Action: action, Entity: entity, EntityID: entityID,
 	})
 }
-
 
 func lower2(s string) string { return strings.ToLower(strings.TrimSpace(s)) }

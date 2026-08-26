@@ -1,3 +1,4 @@
+import { ConfirmProvider, DrawerProvider, PreferencesProvider, ToastProvider } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -11,7 +12,15 @@ if (!el) throw new Error("#root element missing");
 createRoot(el).render(
   <StrictMode>
     <QueryClientProvider client={qc}>
-      <UsersPage />
+      <ToastProvider>
+        <ConfirmProvider>
+          <DrawerProvider>
+            <PreferencesProvider userKey="standalone-dev">
+              <UsersPage />
+            </PreferencesProvider>
+          </DrawerProvider>
+        </ConfirmProvider>
+      </ToastProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

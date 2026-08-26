@@ -1,5 +1,20 @@
 import { PencilSimple, Trash } from "@phosphor-icons/react";
-import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner } from "@starter/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  Modal,
+  ModalActions,
+  ModalSection,
+  SkeletonBlock,
+  SkeletonLine,
+  Spinner,
+  useConfirm,
+  useToast,
+} from "@starter/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { type Role, api } from "./api-client";
@@ -17,6 +32,8 @@ export default function RolesPage() {
   // First role starts unfolded; clicking a rail pins it open without hover.
   const [openId, setOpenId] = useState<number | null>(null);
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const roles = useQuery({
     queryKey: ["roles"],
@@ -32,8 +49,36 @@ export default function RolesPage() {
       const { error } = await api.DELETE("/api/v1/rbac/roles/{id}", { params: { path: { id } } });
       if (error) throw new Error("delete failed");
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast("success", "Role deleted");
+    },
+    onError: (error) => toast("error", (error as Error).message),
   });
+
+  const requestDelete = async (role: Role) => {
+    const ok = await confirm(
+      `Delete ${role.name}?`,
+      "Users assigned to this role may lose access after their next token refresh.",
+      { danger: true, label: "Delete" },
+    );
+    if (!ok) return;
+    const previous = queryClient.getQueryData<Role[]>(["roles"]);
+    queryClient.setQueryData<Role[]>(["roles"], (current = []) =>
+      current.filter((item) => item.id !== role.id),
+    );
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (!cancelled)
+        remove.mutate(role.id, { onError: () => queryClient.setQueryData(["roles"], previous) });
+    }, 5_000);
+    toast.undo(`Role ${role.name} queued for deletion`, () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      queryClient.setQueryData(["roles"], previous);
+      toast("success", "Role deletion cancelled");
+    });
+  };
 
   // Keep the first slice unfolded so the page reads as content, not chrome.
   useEffect(() => {
@@ -42,8 +87,24 @@ export default function RolesPage() {
     }
   }, [roles.data, openId]);
 
-  if (roles.isPending) return <Spinner />;
-  if (roles.isError) return <Alert message={(roles.error as Error).message} />;
+  if (roles.isPending)
+    return (
+      <div className="space-y-6">
+        <SkeletonLine w="w-1/2" />
+        <div className="grid grid-cols-4 gap-px">
+          <SkeletonBlock h="h-[440px] col-span-2" />
+          <SkeletonBlock h="h-[440px]" />
+          <SkeletonBlock h="h-[440px]" />
+        </div>
+      </div>
+    );
+  if (roles.isError)
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+        <Alert message={(roles.error as Error).message} />
+        <Button onClick={() => roles.refetch()}>Retry</Button>
+      </div>
+    );
 
   const items = roles.data ?? [];
 
@@ -86,7 +147,7 @@ export default function RolesPage() {
                   >
                     {role.name}
                   </span>
-                  <span className="block size-1.5 rounded-full bg-white/10" />
+                  <span className="block size-1.5 rounded-full bg-[var(--color-line)]" />
                 </button>
               ) : (
                 <div className="absolute inset-0 flex flex-col justify-between p-8">
@@ -122,7 +183,7 @@ export default function RolesPage() {
                       </Button>
                       <Button
                         variant="danger"
-                        onClick={() => remove.mutate(role.id)}
+                        onClick={() => requestDelete(role)}
                         disabled={remove.isPending}
                       >
                         <Trash size={14} />
@@ -139,6 +200,16 @@ export default function RolesPage() {
         {items.length === 0 ? (
           <div className="flex w-full items-center justify-center p-10">
             <Card>
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                stroke="currentColor"
+                className="mx-auto mb-4 size-12 text-[var(--color-muted)]/50"
+                aria-hidden
+              >
+                <title>empty roles</title>
+                <path d="M14 18h36v30H14zM22 18v-5h20v5M22 28h20M22 36h14" />
+              </svg>
               <p className="text-sm text-[var(--color-muted)]">
                 No roles yet — create the first one to start drawing access.
               </p>
@@ -154,6 +225,7 @@ export default function RolesPage() {
           onSaved={() => {
             setCreating(false);
             queryClient.invalidateQueries({ queryKey: ["roles"] });
+            toast("success", "Role created");
           }}
         />
       ) : null}
@@ -165,6 +237,7 @@ export default function RolesPage() {
           onSaved={() => {
             setEditing(null);
             queryClient.invalidateQueries({ queryKey: ["roles"] });
+            toast("success", "Role updated");
           }}
         />
       ) : null}
@@ -188,6 +261,7 @@ function RoleModal({
   const [permissions, setPermissions] = useState<string[]>(role?.permissions ?? []);
   const [newPerm, setNewPerm] = useState("");
   const [error, setError] = useState("");
+  const toast = useToast();
 
   // The catalog comes from the rbac service — unknown permission names are
   // rejected server-side with 400.
@@ -205,7 +279,10 @@ function RoleModal({
       const { error: e } = await api.POST("/api/v1/rbac/permissions", { body: { name } });
       if (e) throw new Error((e as { message?: string }).message ?? "create failed");
     },
-    onSuccess: () => catalog.refetch(),
+    onSuccess: () => {
+      catalog.refetch();
+      toast("success", "Permission created");
+    },
   });
 
   const save = useMutation({
@@ -240,91 +317,124 @@ function RoleModal({
     setPermissions((cur) => (cur.includes(perm) ? cur.filter((x) => x !== perm) : [...cur, perm]));
   }
 
+  function createPermission() {
+    const normalized = newPerm.trim().toLowerCase();
+    if (!normalized || permissions.includes(normalized)) return;
+    createPermissionMutation.mutate(normalized, {
+      onSuccess: () => {
+        setPermissions((cur) => [...cur, normalized]);
+        setNewPerm("");
+      },
+      onError: (err) => {
+        const message = (err as Error).message;
+        setError(message === "conflict" ? "That name is already taken." : message);
+      },
+    });
+  }
+
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal
+      title={title}
+      eyebrow={role ? "Edit resource" : "Create resource"}
+      description={
+        role
+          ? "Update the role identity and synchronize its complete permission set."
+          : "Create a named access boundary, then choose exactly what it can reach."
+      }
+      size="lg"
+      onClose={onClose}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate();
         }}
-        className="space-y-4"
+        className="ui-modal-form"
       >
-        <Field label="Name">
-          <Input name="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} />
-        </Field>
-        <Field label="Description">
-          <Input
-            name="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={200}
-          />
-        </Field>
-
-        <fieldset>
-          <legend className="ui-label block">Permissions (saving syncs and bumps affected users ver)</legend>
-          <form
-            className="mb-2 flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const name = newPerm.trim().toLowerCase();
-              if (!name || permissions.includes(name)) return;
-              createPermissionMutation.mutate(name, {
-                onSuccess: () => {
-                  setPermissions((cur) => [...cur, name]);
-                  setNewPerm("");
-                  catalog.refetch();
-                },
-                onError: (err) => {
-                  const msg = (err as Error).message;
-                  setError(msg === "conflict" ? "That name is already taken." : msg);
-                },
-              });
-            }}
-          >
-            <Input
-              value={newPerm}
-              onChange={(e) => setNewPerm(e.target.value)}
-              placeholder="resource:action:scope"
-              aria-label="New permission name"
-              className="flex-1 font-mono text-xs"
-            />
-            <Button
-              type="submit"
-              variant="ghost"
-              disabled={!newPerm.trim() || createPermissionMutation.isPending}
-            >
-              Add
-            </Button>
-          </form>
-          <div className="max-h-48 space-y-1.5 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-elevated)] p-3 text-sm">
-            {catalog.isPending ? <Spinner /> : null}
-            {(catalog.data ?? []).map((perm) => (
-              <label
-                key={perm}
-                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-white/5"
-              >
-                <input
-                  type="checkbox"
-                  checked={permissions.includes(perm)}
-                  onChange={() => toggle(perm)}
-                  className="size-3.5 accent-[var(--color-accent)]"
-                />
-                <code className="font-mono text-xs">{perm}</code>
-              </label>
-            ))}
+        <ModalSection
+          title="Role details"
+          description="Use a short, stable name; descriptions can explain scope."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Name">
+              <Input
+                autoFocus
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="support-operator"
+                required
+                maxLength={80}
+              />
+            </Field>
+            <Field label="Description">
+              <Input
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What this role is responsible for"
+                maxLength={200}
+              />
+            </Field>
           </div>
-        </fieldset>
+        </ModalSection>
+
+        <ModalSection
+          title="Permissions"
+          description="Saving replaces the full set and refreshes access versions for affected users."
+        >
+          <fieldset>
+            <legend className="sr-only">Assigned permissions</legend>
+            <div className="mb-3 flex gap-2">
+              <Input
+                value={newPerm}
+                onChange={(e) => setNewPerm(e.target.value)}
+                placeholder="resource:action:scope"
+                aria-label="New permission name"
+                className="flex-1 font-mono text-xs"
+              />
+              <Button
+                type="button"
+                onClick={createPermission}
+                variant="ghost"
+                disabled={!newPerm.trim() || createPermissionMutation.isPending}
+              >
+                {createPermissionMutation.isPending ? "Adding…" : "Add"}
+              </Button>
+            </div>
+            <div className="max-h-56 space-y-1 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-2">
+              {catalog.isPending ? (
+                <div className="flex items-center gap-2 px-2 py-3 text-xs text-[var(--color-muted)]">
+                  <Spinner /> Loading permissions…
+                </div>
+              ) : null}
+              {(catalog.data ?? []).map((perm) => (
+                <label key={perm} className="ui-choice">
+                  <input
+                    type="checkbox"
+                    checked={permissions.includes(perm)}
+                    onChange={() => toggle(perm)}
+                    className="size-3.5 accent-[var(--color-accent)]"
+                  />
+                  <code className="font-mono text-xs">{perm}</code>
+                </label>
+              ))}
+              {catalog.data?.length === 0 ? (
+                <p className="px-2 py-3 text-xs text-[var(--color-muted)]">No permissions available yet.</p>
+              ) : null}
+            </div>
+          </fieldset>
+        </ModalSection>
 
         {error ? <Alert message={error} /> : null}
-        <div className="flex justify-end gap-2 pt-1">
+        <ModalActions>
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={save.isPending}>
-            Save
+          <Button type="submit" disabled={save.isPending || !name.trim()}>
+            {save.isPending ? "Saving…" : role ? "Save changes" : "Create role"}
           </Button>
-        </div>
+        </ModalActions>
       </form>
     </Modal>
   );
