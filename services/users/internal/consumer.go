@@ -79,15 +79,17 @@ func handleEvent(ctx context.Context, db *gorm.DB, log *slog.Logger, eventRaw, p
 
 	switch event {
 	case EventCreated:
+		// auth already created the identity row before publishing; this is a
+		// safety net for events that raced a fresh database.
 		if err := db.WithContext(ctx).Exec(
-			`INSERT INTO users.profiles (id) VALUES (?) ON CONFLICT (id) DO NOTHING`, payload.Sub,
+			`INSERT INTO users.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`, payload.Sub,
 		).Error; err != nil {
 			log.Error("materialize profile failed", "sub", payload.Sub, "err", err)
 		} else {
 			log.Info("profile materialized", "sub", payload.Sub)
 		}
 	case EventDeleted:
-		if err := db.WithContext(ctx).Exec(`DELETE FROM users.profiles WHERE id = ?`, payload.Sub).Error; err != nil {
+		if err := db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, payload.Sub).Error; err != nil {
 			log.Error("profile purge failed", "sub", payload.Sub, "err", err)
 		} else {
 			log.Info("profile purged", "sub", payload.Sub)

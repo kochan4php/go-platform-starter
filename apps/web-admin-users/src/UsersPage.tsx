@@ -11,6 +11,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export interface Profile {
   id: number;
+  email: string;
   displayName: string;
   avatarUrl: string;
 }
@@ -164,8 +165,8 @@ export default function UsersPage() {
             <div className="flex items-center gap-3">
               <Avatar seed={newest.id} alt="" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{newest.displayName || "Unnamed profile"}</p>
-                <p className="truncate font-mono text-[11px] text-[var(--color-muted)]">{newest.id}</p>
+                <p className="truncate text-sm font-semibold">{newest.displayName || newest.email}</p>
+                <p className="truncate font-mono text-[11px] text-[var(--color-muted)]">{newest.email}</p>
               </div>
             </div>
           ) : (
@@ -218,6 +219,7 @@ export default function UsersPage() {
             <thead>
               <tr>
                 <Th>User</Th>
+                <Th>Email</Th>
                 <Th>ID</Th>
                 <Th>Actions</Th>
               </tr>

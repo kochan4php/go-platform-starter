@@ -34,3 +34,18 @@ Never rename-and-drop in one step: add new → dual-write → migrate rows → d
 golang-migrate's Postgres driver takes an advisory lock while running, so even a
 boot-time race cannot corrupt state — the Job model exists to keep rollouts fast and
 scale-outs free of migration latency.
+
+
+## Integer identity + consolidated baseline (current)
+
+All primary keys are `BIGINT` identity columns (no UUIDs). The identity row
+(credentials + profile fields) lives in **users.users** and is owned by the
+users service; the auth schema keeps only `auth.sessions`, referencing the
+subject by numeric id without a cross-service foreign key (so per-service
+migrate jobs never depend on each other's ordering).
+
+Each service ships ONE consolidated baseline migration (`000001_init`) that
+creates the final schema shape. Pre-release environments self-heal by wiping
+their volume (`docker compose down -v`) or by replaying seeds — there are no
+production datasets to migrate. Add `000002+` numbered pairs only AFTER the
+first production deploy, following the expand/contract rule below.

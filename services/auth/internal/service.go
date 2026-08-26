@@ -102,7 +102,7 @@ func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password
 	}
 	var id string
 	if err := s.db.WithContext(ctx).Raw(
-		`SELECT id FROM auth.users WHERE lower(email) = ?`, lower(email),
+		`SELECT id FROM users.users WHERE lower(email) = ?`, lower(email),
 	).Scan(&id).Error; err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password
 		return platform.ErrNotFound("bootstrap admin %s vanished", email)
 	}
 	if err := s.db.WithContext(ctx).Exec(
-		`UPDATE auth.users SET password_hash = ? WHERE id = ?`, string(hash), id,
+		`UPDATE users.users SET password_hash = ? WHERE id = ?`, string(hash), id,
 	).Error; err != nil {
 		return err
 	}
@@ -146,20 +146,20 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 	u := &User{Email: lower(email), PasswordHash: string(hash)}
 	if id64 > 0 {
 		if err := s.db.WithContext(ctx).Raw(
-			`INSERT INTO auth.users (id, email, password_hash) VALUES (?, ?, ?) RETURNING *`,
+			`INSERT INTO users.users (id, email, password_hash) VALUES (?, ?, ?) RETURNING *`,
 			id64, u.Email, u.PasswordHash,
 		).Scan(u).Error; err != nil {
 			return nil, err
 		}
 		// Keep the identity sequence ahead of the explicit bootstrap id.
 		if err := s.db.WithContext(ctx).Exec(
-			`SELECT setval(pg_get_serial_sequence('auth.users', 'id'), GREATEST((SELECT MAX(id) FROM auth.users), 1))`,
+			`SELECT setval(pg_get_serial_sequence('users.users', 'id'), GREATEST((SELECT MAX(id) FROM users.users), 1))`,
 		).Error; err != nil {
 			return nil, err
 		}
 	} else {
 		if err := s.db.WithContext(ctx).Raw(
-			`INSERT INTO auth.users (email, password_hash) VALUES (?, ?) RETURNING *`,
+			`INSERT INTO users.users (email, password_hash) VALUES (?, ?) RETURNING *`,
 			u.Email, u.PasswordHash,
 		).Scan(u).Error; err != nil {
 			return nil, err

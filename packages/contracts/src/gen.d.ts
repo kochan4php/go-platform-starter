@@ -406,6 +406,7 @@ export interface components {
     Profile: {
       /** Format: int64 */
       id?: number;
+      email?: string;
       displayName?: string;
       avatarUrl?: string;
       /** Format: date-time */

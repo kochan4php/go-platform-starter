@@ -33,7 +33,7 @@ func PurgeDeletedProfiles(ctx context.Context, rdb *redis.Client, db *gorm.DB) (
 		if err != nil {
 			return purged, err
 		}
-		res := db.WithContext(ctx).Exec(`DELETE FROM users.profiles WHERE id = ?`, sub)
+		res := db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, sub)
 		if res.Error != nil {
 			return purged, res.Error
 		}

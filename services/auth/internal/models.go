@@ -13,11 +13,13 @@ type User struct {
 	Status              string     `gorm:"not null;default:active"       json:"status"`
 	FailedLoginAttempts int        `gorm:"not null;default:0"            json:"-"`
 	LockedUntil         *time.Time `                                      json:"-"`
+	DisplayName         string     `gorm:"not null;default:"           json:"displayName"`
+	AvatarUrl           string     `gorm:"not null;default:"           json:"avatarUrl"`
 	CreatedAt           time.Time  `                                      json:"createdAt"`
 	UpdatedAt           time.Time  `                                      json:"updatedAt"`
 }
 
-func (User) TableName() string { return "auth.users" }
+func (User) TableName() string { return "users.users" }
 
 type Session struct {
 	ID               int64     `gorm:"primaryKey"`

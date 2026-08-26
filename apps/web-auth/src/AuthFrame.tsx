@@ -41,7 +41,7 @@ export default function AuthFrame({ children }: { children: ReactNode }) {
         </div>
 
         <aside aria-hidden className="relative hidden lg:col-span-5 lg:block">
-          <div className="absolute inset-y-0 right-0 my-auto h-[78%] w-[86%] overflow-hidden rounded-l-[28px] border border-[var(--color-line)]">
+          <div className="absolute inset-y-0 right-4 my-auto h-[78%] w-[86%] overflow-hidden rounded-[28px] border border-[var(--color-line)] shadow-2xl shadow-black/40">
             <img
               src="https://picsum.photos/seed/noir-terminal/1200/1600"
               alt=""

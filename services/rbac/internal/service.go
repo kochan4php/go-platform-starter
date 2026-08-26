@@ -126,6 +126,11 @@ func (s *Service) ListPermissions(ctx context.Context) ([]string, error) {
 }
 
 func (s *Service) CreateRole(ctx context.Context, name, description string) (*Role, error) {
+	var exists int64
+	s.db.WithContext(ctx).Model(&Role{}).Where("name = ?", name).Count(&exists)
+	if exists > 0 {
+		return nil, platform.ErrConflict("role %s already exists", name)
+	}
 	r := Role{Name: name, Description: description}
 	if err := s.db.WithContext(ctx).Create(&r).Error; err != nil {
 		return nil, err
@@ -172,6 +177,11 @@ func (s *Service) permsForRole(ctx context.Context, roleID int64) []string {
 // UpdateRole renames/describes and — when permSet is non-nil — syncs the full
 // permission set, bumping ver for every user holding the role.
 func (s *Service) UpdateRole(ctx context.Context, id int64, name, description string, permSet *[]string) (*Role, error) {
+	var nameTaken int64
+	s.db.WithContext(ctx).Model(&Role{}).Where("name = ? AND id <> ?", name, id).Count(&nameTaken)
+	if nameTaken > 0 {
+		return nil, platform.ErrConflict("role %s already exists", name)
+	}
 	var r Role
 	if err := s.db.WithContext(ctx).First(&r, "id = ?", id).Error; err != nil {
 		return nil, platform.ErrNotFound("role %d not found", id)

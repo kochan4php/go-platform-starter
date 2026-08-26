@@ -83,7 +83,7 @@ func (s *Service) Update(ctx context.Context, id string, displayName, avatarUrl 
 }
 
 func (s *Service) Delete(ctx context.Context, sub string) error {
-	res := s.db.WithContext(ctx).Exec(`DELETE FROM users.profiles WHERE id = ?`, sub)
+	res := s.db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, sub)
 	if res.Error != nil {
 		return res.Error
 	}

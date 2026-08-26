@@ -39,6 +39,7 @@ type Profile struct {
 	AvatarUrl   *string    `json:"avatarUrl,omitempty"`
 	CreatedAt   *time.Time `json:"createdAt,omitempty"`
 	DisplayName *string    `json:"displayName,omitempty"`
+	Email       *string    `json:"email,omitempty"`
 	Id          *int64     `json:"id,omitempty"`
 	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
 }

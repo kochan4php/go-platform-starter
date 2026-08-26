@@ -29,7 +29,6 @@ var strictPaths = map[string]bool{
 	"/forgot": true, "/reset": true,
 }
 
-type ctxKeyAuth struct{}
 
 func main() {
 	migrateOnly := flag.Bool("migrate", false, "run migrations then exit")

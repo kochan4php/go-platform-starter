@@ -153,6 +153,7 @@ components:
       type: object
       properties:
         id: { type: integer, format: int64 }
+        email: { type: string }
         displayName: { type: string }
         avatarUrl: { type: string }
         createdAt: { type: string, format: date-time }

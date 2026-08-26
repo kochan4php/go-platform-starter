@@ -1398,6 +1398,9 @@
             "type": "integer",
             "format": "int64"
           },
+          "email": {
+            "type": "string"
+          },
           "displayName": {
             "type": "string"
           },

@@ -224,7 +224,16 @@ function RoleModal({
       if (e) throw new Error((e as { message?: string }).message ?? "create failed");
     },
     onSuccess: onSaved,
-    onError: (err) => setError((err as Error).message),
+    onError: (err) => {
+      const msg = (err as Error).message;
+      setError(
+        msg === "conflict"
+          ? "That name is already taken — pick another."
+          : msg === "bad_request"
+            ? "Unknown permission in the set."
+            : msg,
+      );
+    },
   });
 
   function toggle(perm: string) {
@@ -266,7 +275,10 @@ function RoleModal({
                   setNewPerm("");
                   catalog.refetch();
                 },
-                onError: (err) => setError((err as Error).message),
+                onError: (err) => {
+                  const msg = (err as Error).message;
+                  setError(msg === "conflict" ? "That name is already taken." : msg);
+                },
               });
             }}
           >
