@@ -43,7 +43,15 @@ export default defineConfig({
     }),
   ],
   ...(process.env.NODE_ENV === "development"
-    ? { resolve: { alias: devAliases }, plugins: [react(), tailwindcss()] }
+    ? {
+        resolve: {
+          alias: devAliases,
+          // Aliased remote sources must resolve these to the SAME copies as
+          // the host, or React/Query contexts split and hooks silently die.
+          dedupe: ["react", "react-dom", "@tanstack/react-query"],
+        },
+        plugins: [react(), tailwindcss()],
+      }
     : {}),
   build: {
     target: "es2022",
