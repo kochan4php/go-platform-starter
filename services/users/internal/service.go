@@ -2,9 +2,9 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
@@ -23,18 +23,18 @@ func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, pub platform.S
 }
 
 func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
-	if _, err := uuid.Parse(in.ID); err != nil {
-		return nil, platform.ErrBadRequest("id must be a uuid")
+	if in.ID <= 0 {
+		return nil, platform.ErrBadRequest("id must be a positive integer")
 	}
 	var count int64
 	s.db.WithContext(ctx).Model(&Profile{}).Where("id = ?", in.ID).Count(&count)
 	if count > 0 {
-		return nil, platform.ErrConflict("profile %s already exists", in.ID)
+		return nil, platform.ErrConflict("profile %d already exists", in.ID)
 	}
 	if err := s.db.WithContext(ctx).Create(&in).Error; err != nil {
 		return nil, err
 	}
-	s.audit(ctx, "create", "profile", in.ID)
+	s.audit(ctx, "create", "profile", fmt.Sprintf("%d", in.ID))
 	return &in, nil
 }
 
@@ -78,7 +78,7 @@ func (s *Service) Update(ctx context.Context, id string, displayName, avatarUrl 
 	if err := s.db.WithContext(ctx).Save(p).Error; err != nil {
 		return nil, err
 	}
-	s.audit(ctx, "update", "profile", p.ID)
+	s.audit(ctx, "update", "profile", fmt.Sprintf("%d", p.ID))
 	return p, nil
 }
 

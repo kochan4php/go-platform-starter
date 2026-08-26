@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // EnvelopeFail defines model for EnvelopeFail.
@@ -35,10 +34,10 @@ type EnvelopeOK struct {
 
 // Role defines model for Role.
 type Role struct {
-	Description *string             `json:"description,omitempty"`
-	Id          *openapi_types.UUID `json:"id,omitempty"`
-	Name        *string             `json:"name,omitempty"`
-	Permissions *[]string           `json:"permissions,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Id          *int64    `json:"id,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	Permissions *[]string `json:"permissions,omitempty"`
 }
 
 // RoleInput defines model for RoleInput.
@@ -66,7 +65,7 @@ type UpdateRoleJSONRequestBody UpdateRoleJSONBody
 type ServerInterface interface {
 	// ResolveClaims internal API — perms[] + ver for a subject; requires the shared internal secret
 	// (GET /rbac/internal/claims/{sub})
-	ResolveClaims(w http.ResponseWriter, r *http.Request, sub openapi_types.UUID)
+	ResolveClaims(w http.ResponseWriter, r *http.Request, sub int64)
 	// ListPermissions the compile-time catalog persisted in the db
 	// (GET /rbac/permissions)
 	ListPermissions(w http.ResponseWriter, r *http.Request)
@@ -78,10 +77,10 @@ type ServerInterface interface {
 	CreateRole(w http.ResponseWriter, r *http.Request)
 
 	// (DELETE /rbac/roles/{id})
-	DeleteRole(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	DeleteRole(w http.ResponseWriter, r *http.Request, id int64)
 	// UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 	// (PATCH /rbac/roles/{id})
-	UpdateRole(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	UpdateRole(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -90,7 +89,7 @@ type Unimplemented struct{}
 
 // ResolveClaims internal API — perms[] + ver for a subject; requires the shared internal secret
 // (GET /rbac/internal/claims/{sub})
-func (_ Unimplemented) ResolveClaims(w http.ResponseWriter, r *http.Request, sub openapi_types.UUID) {
+func (_ Unimplemented) ResolveClaims(w http.ResponseWriter, r *http.Request, sub int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -111,13 +110,13 @@ func (_ Unimplemented) CreateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 // (DELETE /rbac/roles/{id})
-func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 // (PATCH /rbac/roles/{id})
-func (_ Unimplemented) UpdateRole(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -137,9 +136,9 @@ func (siw *ServerInterfaceWrapper) ResolveClaims(w http.ResponseWriter, r *http.
 	_ = err
 
 	// ------------- Path parameter "sub" -------------
-	var sub openapi_types.UUID
+	var sub int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "sub", chi.URLParam(r, "sub"), &sub, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "sub", chi.URLParam(r, "sub"), &sub, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sub", Err: err})
 		return
@@ -205,9 +204,9 @@ func (siw *ServerInterfaceWrapper) DeleteRole(w http.ResponseWriter, r *http.Req
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
@@ -231,9 +230,9 @@ func (siw *ServerInterfaceWrapper) UpdateRole(w http.ResponseWriter, r *http.Req
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"strconv"
 	"crypto/subtle"
 	"errors"
 	"fmt"
@@ -71,8 +72,8 @@ type AuthResult struct {
 	AccessToken   string
 	User          *User
 	RefreshCookie string
-	SessionID     string
-	FamilyID      string
+	SessionID     int64
+	FamilyID     string
 }
 
 func lower(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
@@ -137,14 +138,37 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 	if err != nil {
 		return nil, err
 	}
-	u := &User{ID: sub, Email: email, PasswordHash: string(hash)}
-	if err := s.db.WithContext(ctx).Create(u).Error; err != nil {
-		return nil, err
+	id64, perr := strconv.ParseInt(strings.TrimSpace(sub), 10, 64)
+	if perr != nil || id64 <= 0 {
+		id64 = 0 // public registration: let the identity sequence assign it
 	}
-	if err := s.pub.Publish(ctx, StreamUsers, EventCreated, map[string]string{"sub": u.ID, "email": u.Email}); err != nil {
+
+	u := &User{Email: lower(email), PasswordHash: string(hash)}
+	if id64 > 0 {
+		if err := s.db.WithContext(ctx).Raw(
+			`INSERT INTO auth.users (id, email, password_hash) VALUES (?, ?, ?) RETURNING *`,
+			id64, u.Email, u.PasswordHash,
+		).Scan(u).Error; err != nil {
+			return nil, err
+		}
+		// Keep the identity sequence ahead of the explicit bootstrap id.
+		if err := s.db.WithContext(ctx).Exec(
+			`SELECT setval(pg_get_serial_sequence('auth.users', 'id'), GREATEST((SELECT MAX(id) FROM auth.users), 1))`,
+		).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := s.db.WithContext(ctx).Raw(
+			`INSERT INTO auth.users (email, password_hash) VALUES (?, ?) RETURNING *`,
+			u.Email, u.PasswordHash,
+		).Scan(u).Error; err != nil {
+			return nil, err
+		}
+	}
+	if err := s.pub.Publish(ctx, StreamUsers, EventCreated, map[string]string{"sub": strconv.FormatInt(u.ID, 10), "email": u.Email}); err != nil {
 		s.log.Error("publish user.created failed", "err", err)
 	}
-	s.log.Info("user registered", "sub", u.ID)
+	s.log.Info("user registered", "sub", strconv.FormatInt(u.ID, 10))
 	return u, nil
 }
 
@@ -214,7 +238,7 @@ func (s *Service) newSessionInFamily(ctx context.Context, u *User, family, ua, i
 		return nil, err
 	}
 	sess := Session{
-		ID: uuid.NewString(), UserID: u.ID, FamilyID: family,
+		UserID: u.ID, FamilyID: family,
 		RefreshTokenHash: sha256Hex(refresh), UserAgent: ua, IP: ip,
 		ExpiresAt: s.now().AddDate(0, 0, s.cfg.RefreshTTLDays),
 	}
@@ -223,9 +247,9 @@ func (s *Service) newSessionInFamily(ctx context.Context, u *User, family, ua, i
 	}
 	perms, ver := []string{}, int64(0)
 	if s.claims != nil {
-		perms, ver = s.claims.Resolve(ctx, u.ID)
+		perms, ver = s.claims.Resolve(ctx, strconv.FormatInt(u.ID, 10))
 	}
-	access, err := MintAccess(s.secret(), u.ID, u.Email, ver, perms, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
+	access, err := MintAccess(s.secret(), strconv.FormatInt(u.ID, 10), u.Email, ver, perms, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
 	if err != nil {
 		return nil, err
 	}
@@ -302,14 +326,14 @@ func (s *Service) Logout(ctx context.Context, refreshPlain string) error {
 }
 
 type sessionView struct {
-	ID        string    `json:"id"`
+	ID        int64     `json:"id"`
 	UserAgent string    `json:"userAgent"`
 	IP        string    `json:"ip"`
 	CreatedAt time.Time `json:"createdAt"`
 	Current   bool      `json:"current"`
 }
 
-func (s *Service) ListSessions(ctx context.Context, sub, currentHash string) ([]sessionView, error) {
+func (s *Service) ListSessions(ctx context.Context, sub int64, currentHash string) ([]sessionView, error) {
 	var rows []Session
 	err := s.db.Where("user_id = ? AND revoked_at IS NULL AND expires_at > ?", sub, s.now()).
 		Order("created_at DESC").Find(&rows).Error
@@ -326,7 +350,7 @@ func (s *Service) ListSessions(ctx context.Context, sub, currentHash string) ([]
 	return out, nil
 }
 
-func (s *Service) RevokeSession(ctx context.Context, sub, sessionID string) error {
+func (s *Service) RevokeSession(ctx context.Context, sub, sessionID int64) error {
 	res := s.db.Model(&Session{}).
 		Where("id = ? AND user_id = ? AND revoked_at IS NULL", sessionID, sub).
 		Update("revoked_at", s.now())
@@ -334,12 +358,12 @@ func (s *Service) RevokeSession(ctx context.Context, sub, sessionID string) erro
 		return res.Error
 	}
 	if res.RowsAffected == 0 {
-		return platform.ErrNotFound("session %s not found", sessionID)
+		return platform.ErrNotFound("session %d not found", sessionID)
 	}
 	return nil
 }
 
-func (s *Service) RevokeAllOtherSessions(ctx context.Context, sub, currentHash string) (int64, error) {
+func (s *Service) RevokeAllOtherSessions(ctx context.Context, sub int64, currentHash string) (int64, error) {
 	res := s.db.Model(&Session{}).
 		Where("user_id = ? AND revoked_at IS NULL AND refresh_token_hash <> ?", sub, currentHash).
 		Update("revoked_at", s.now())
@@ -355,7 +379,7 @@ func (s *Service) Forgot(ctx context.Context, email string) error {
 	}
 
 	jti := uuid.NewString()
-	token, err := MintReset(s.secret(), u.ID, jti, time.Duration(s.cfg.ResetTTLMinutes)*time.Minute)
+	token, err := MintReset(s.secret(), strconv.FormatInt(u.ID, 10), jti, time.Duration(s.cfg.ResetTTLMinutes)*time.Minute)
 	if err != nil {
 		return err
 	}

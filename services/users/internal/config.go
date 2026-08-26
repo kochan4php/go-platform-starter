@@ -12,7 +12,7 @@ type Config struct {
 }
 
 type Profile struct {
-	ID          string    `gorm:"type:uuid;primaryKey" json:"id"`
+	ID          int64     `gorm:"primaryKey" json:"id"`
 	DisplayName string    `gorm:"not null;default:''"  json:"displayName"`
 	AvatarUrl   string    `gorm:"not null;default:''"  json:"avatarUrl"`
 	CreatedAt   time.Time `                           json:"createdAt"`

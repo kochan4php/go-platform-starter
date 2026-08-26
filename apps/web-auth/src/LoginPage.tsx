@@ -5,7 +5,7 @@ import { login } from "./api";
 
 export interface SessionPayload {
   accessToken: string;
-  user: { id: string; email: string; perms?: string[]; ver?: number };
+  user: { id: number; email: string; perms?: string[]; ver?: number };
 }
 
 export default function LoginPage({ onLoggedIn }: { onLoggedIn(u: SessionPayload): void }) {

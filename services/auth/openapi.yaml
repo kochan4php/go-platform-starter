@@ -30,7 +30,7 @@ paths:
                       data:
                         type: object
                         properties:
-                          id: { type: string, format: uuid }
+                          id: { type: integer, format: int64 }
                           email: { type: string }
         "409":
           description: email already registered (documented enumeration trade — see PLAN risks)
@@ -70,7 +70,7 @@ paths:
                           user:
                             type: object
                             properties:
-                              id: { type: string }
+                              id: { type: integer, format: int64 }
                               email: { type: string }
         "401":
           description: unknown/wrong/locked are indistinguishable (incl. timing)
@@ -148,7 +148,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: integer, format: int64 }
       responses:
         "200": { description: revoked, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: unknown session, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
@@ -214,7 +214,7 @@ components:
     Session:
       type: object
       properties:
-        id: { type: string, format: uuid }
+        id: { type: integer, format: int64 }
         userAgent: { type: string }
         ip: { type: string }
         createdAt: { type: string, format: date-time }

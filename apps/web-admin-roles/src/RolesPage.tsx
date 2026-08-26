@@ -1,7 +1,7 @@
 import { PencilSimple, Trash } from "@phosphor-icons/react";
 import { Alert, Badge, Button, Card, Field, Input, Modal, Spinner } from "@starter/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type Role, api } from "./api-client";
 
 /**
@@ -14,6 +14,8 @@ import { type Role, api } from "./api-client";
 export default function RolesPage() {
   const [editing, setEditing] = useState<Role | null>(null);
   const [creating, setCreating] = useState(false);
+  // First role starts unfolded; clicking a rail pins it open without hover.
+  const [openId, setOpenId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const roles = useQuery({
@@ -26,12 +28,19 @@ export default function RolesPage() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: number) => {
       const { error } = await api.DELETE("/api/v1/rbac/roles/{id}", { params: { path: { id } } });
       if (error) throw new Error("delete failed");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
   });
+
+  // Keep the first slice unfolded so the page reads as content, not chrome.
+  useEffect(() => {
+    if (roles.data && roles.data.items.length > 0 && openId === null) {
+      setOpenId(roles.data.items[0].id);
+    }
+  }, [roles.data, openId]);
 
   if (roles.isPending) return <Spinner />;
   if (roles.isError) return <Alert message={(roles.error as Error).message} />;
@@ -50,64 +59,80 @@ export default function RolesPage() {
       </div>
 
       <div className="flex h-[440px] gap-px overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-line)]">
-        {items.map((role) => (
-          <section
-            key={role.id}
-            className="group relative min-w-0 flex-1 overflow-hidden bg-[var(--color-surface)] transition-all duration-700 ease-out hover:flex-[3.5]"
-          >
-            {/* collapsed rail */}
-            <div className="absolute inset-0 flex flex-col items-center justify-between py-6 transition-opacity duration-300 group-hover:opacity-0">
-              <span className="font-mono text-xs text-[var(--color-accent)]">
-                {String(role.permissions.length).padStart(2, "0")}
-              </span>
-              <span
-                className="text-sm font-bold tracking-wide text-[var(--color-muted)] group-hover:text-[var(--color-ink)]"
-                style={{ writingMode: "vertical-rl" }}
-              >
-                {role.name}
-              </span>
-              <span className="block size-1.5 rounded-full bg-[var(--color-line)]" />
-            </div>
+        {items.map((role) => {
+          const isOpen = openId === role.id;
+          return (
+            <section
+              key={role.id}
+              className={`group relative min-w-0 overflow-hidden transition-all duration-700 ease-out ${
+                isOpen
+                  ? "flex-[3.5] bg-[var(--color-surface)]"
+                  : "flex-1 bg-[var(--color-elevated)] hover:bg-[var(--color-surface)]"
+              }`}
+            >
+              {!isOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setOpenId(role.id)}
+                  aria-expanded={false}
+                  className="absolute inset-0 flex w-full cursor-pointer flex-col items-center justify-between py-6"
+                >
+                  <span className="font-mono text-xs text-[var(--color-accent)]">
+                    {String(role.permissions.length).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="text-sm font-bold tracking-wide text-[var(--color-muted)]"
+                    style={{ writingMode: "vertical-rl" }}
+                  >
+                    {role.name}
+                  </span>
+                  <span className="block size-1.5 rounded-full bg-white/10" />
+                </button>
+              ) : (
+                <div className="absolute inset-0 flex flex-col justify-between p-8">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
+                      Role
+                    </p>
+                    <h3 className="mt-2 text-3xl font-extrabold tracking-tight">{role.name}</h3>
+                    {role.description ? (
+                      <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-muted)]">
+                        {role.description}
+                      </p>
+                    ) : null}
+                  </div>
 
-            {/* unfolded panel */}
-            <div className="absolute inset-0 flex flex-col justify-between p-8 opacity-0 transition-opacity delay-150 duration-500 group-hover:opacity-100">
-              <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
-                  Role
-                </p>
-                <h3 className="mt-2 text-3xl font-extrabold tracking-tight">{role.name}</h3>
-                {role.description ? (
-                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-muted)]">
-                    {role.description}
-                  </p>
-                ) : null}
-              </div>
+                  <div>
+                    <p className="mb-3 text-sm font-semibold">{role.permissions.length} assigned</p>
+                    <div className="mb-6 flex max-h-24 flex-wrap gap-1.5 overflow-hidden">
+                      {role.permissions.slice(0, 6).map((perm) => (
+                        <Badge key={perm} tone="accent">
+                          {perm}
+                        </Badge>
+                      ))}
+                      {role.permissions.length > 6 ? <Badge>+{role.permissions.length - 6}</Badge> : null}
+                    </div>
 
-              <div>
-                <p className="mb-3 text-sm font-semibold">{role.permissions.length} assigned</p>
-                <div className="mb-6 flex max-h-24 flex-wrap gap-1.5 overflow-hidden">
-                  {role.permissions.slice(0, 6).map((perm) => (
-                    <Badge key={perm} tone="accent">
-                      {perm}
-                    </Badge>
-                  ))}
-                  {role.permissions.length > 6 ? <Badge>+{role.permissions.length - 6}</Badge> : null}
+                    <div className="flex gap-2">
+                      <Button variant="ghost" onClick={() => setEditing(role)}>
+                        <PencilSimple size={14} />
+                        Edit & sync
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => remove.mutate(role.id)}
+                        disabled={remove.isPending}
+                      >
+                        <Trash size={14} />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => setEditing(role)}>
-                    <PencilSimple size={14} />
-                    Edit & sync
-                  </Button>
-                  <Button variant="danger" onClick={() => remove.mutate(role.id)} disabled={remove.isPending}>
-                    <Trash size={14} />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </section>
-        ))}
+              )}
+            </section>
+          );
+        })}
 
         {items.length === 0 ? (
           <div className="flex w-full items-center justify-center p-10">

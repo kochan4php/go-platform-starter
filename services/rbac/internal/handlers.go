@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"strconv"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
@@ -8,8 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
-	oapitypes "github.com/oapi-codegen/runtime/types"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -40,8 +39,6 @@ func (h *Handlers) decode(r *http.Request, dst any) error {
 	}
 	return nil
 }
-
-func uuidString(u oapitypes.UUID) string { return uuid.UUID(u).String() }
 
 func (h *Handlers) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	items, err := h.svc.ListPermissions(r.Context())
@@ -83,7 +80,7 @@ func (h *Handlers) ListRoles(w http.ResponseWriter, r *http.Request) {
 	platform.ListOK(w, "ok", roles, platform.Meta{Limit: len(roles), Offset: 0, Total: int64(len(roles))})
 }
 
-func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
+func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) {
 	var in struct {
 		Name        string    `json:"name"`
 		Description string    `json:"description"`
@@ -93,7 +90,7 @@ func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id oapityp
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	role, err := h.svc.UpdateRole(r.Context(), uuidString(id), in.Name, in.Description, in.Permissions)
+	role, err := h.svc.UpdateRole(r.Context(), id, in.Name, in.Description, in.Permissions)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -101,23 +98,23 @@ func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id oapityp
 	platform.OK(w, http.StatusOK, "updated", role)
 }
 
-func (h *Handlers) DeleteRole(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
-	if err := h.svc.DeleteRole(r.Context(), uuidString(id)); err != nil {
+func (h *Handlers) DeleteRole(w http.ResponseWriter, r *http.Request, id int64) {
+	if err := h.svc.DeleteRole(r.Context(), id); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	platform.OK(w, http.StatusOK, "deleted", map[string]string{"id": uuidString(id)})
+	platform.OK(w, http.StatusOK, "deleted", map[string]any{"id": id})
 }
 
 // ResolveClaims is the internal claim-resolution API — guarded by the shared
 // internal secret header, never exposed through the gateway.
-func (h *Handlers) ResolveClaims(w http.ResponseWriter, r *http.Request, sub oapitypes.UUID) {
+func (h *Handlers) ResolveClaims(w http.ResponseWriter, r *http.Request, sub int64) {
 	if h.internalSecret == "" ||
 		subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Internal-Secret")), []byte(h.internalSecret)) != 1 {
 		platform.WriteError(w, h.log, platform.ErrForbidden("internal endpoint requires secret"))
 		return
 	}
-	claims, err := h.svc.ResolveClaims(r.Context(), uuidString(sub))
+	claims, err := h.svc.ResolveClaims(r.Context(), strconv.FormatInt(sub, 10))
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		claims = &Claims{Perms: []string{}, Ver: 0}

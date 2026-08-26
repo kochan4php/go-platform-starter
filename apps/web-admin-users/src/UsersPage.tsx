@@ -10,7 +10,7 @@ import { api } from "./api-client";
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export interface Profile {
-  id: string;
+  id: number;
   displayName: string;
   avatarUrl: string;
 }
@@ -105,7 +105,7 @@ export default function UsersPage() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["users"] });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: number) => {
       const { error } = await api.DELETE("/api/v1/users/{id}", { params: { path: { id } } });
       if (error) throw new Error("delete failed");
     },
@@ -294,7 +294,7 @@ function ProfileModal({
   onClose(): void;
   onSaved(): void;
 }) {
-  const [id, setId] = useState(profile?.id ?? "");
+  const [id, setId] = useState(profile?.id != null ? String(profile.id) : "");
   const [displayName, setDisplayName] = useState(profile?.displayName ?? "");
   const [error, setError] = useState("");
 
@@ -309,7 +309,7 @@ function ProfileModal({
         return;
       }
       const { error: e } = await api.POST("/api/v1/users", {
-        body: { id, displayName },
+        body: { id: Number(id), displayName },
       });
       if (e) throw new Error((e as { message?: string }).message ?? "create failed");
     },
@@ -331,13 +331,14 @@ function ProfileModal({
             <Input value={profile.id} disabled />
           </Field>
         ) : (
-          <Field label="User ID (uuid)">
+          <Field label="User ID (number)">
             <Input
               name="id"
+              type="number"
+              min={1}
               value={id}
               onChange={(e) => setId(e.target.value)}
               required
-              pattern="[0-9a-fA-F-]{36}"
             />
           </Field>
         )}

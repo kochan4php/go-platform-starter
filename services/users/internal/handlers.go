@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	oapitypes "github.com/oapi-codegen/runtime/types"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -29,7 +28,7 @@ func NewHandlers(svc *Service, log *slog.Logger) *Handlers {
 }
 
 type profileInput struct {
-	ID          string `json:"id" validate:"required,uuid"`
+	ID          int64  `json:"id" validate:"required,gt=0"`
 	DisplayName string `json:"displayName" validate:"max=120"`
 	AvatarUrl   string `json:"avatarUrl" validate:"max=400"`
 }
@@ -95,8 +94,8 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.
 	platform.ListOK(w, "ok", items, platform.Meta{Limit: limit, Offset: offset, Total: total})
 }
 
-func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
-	p, err := h.svc.Get(r.Context(), uuidString(id))
+func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id int64) {
+	p, err := h.svc.Get(r.Context(), fmt.Sprintf("%d", id))
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -104,7 +103,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id oapitypes.
 	platform.OK(w, http.StatusOK, "ok", p)
 }
 
-func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
+func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {
 	var in struct {
 		DisplayName *string `json:"displayName"`
 		AvatarUrl   *string `json:"avatarUrl"`
@@ -113,7 +112,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id oapityp
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	p, err := h.svc.Update(r.Context(), uuidString(id), in.DisplayName, in.AvatarUrl)
+	p, err := h.svc.Update(r.Context(), fmt.Sprintf("%d", id), in.DisplayName, in.AvatarUrl)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -121,17 +120,10 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id oapityp
 	platform.OK(w, http.StatusOK, "updated", p)
 }
 
-func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
-	if err := h.svc.Delete(r.Context(), uuidString(id)); err != nil {
+func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request, id int64) {
+	if err := h.svc.Delete(r.Context(), fmt.Sprintf("%d", id)); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	platform.OK(w, http.StatusOK, "deleted", map[string]string{"id": uuidString(id)})
-}
-
-func uuidString(u oapitypes.UUID) string {
-	if len(u) != 16 {
-		return ""
-	}
-	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
+	platform.OK(w, http.StatusOK, "deleted", map[string]any{"id": id})
 }

@@ -133,7 +133,7 @@ export function Badge({
   );
 }
 
-export function Avatar({ seed, alt = "" }: { seed: string; alt?: string }) {
+export function Avatar({ seed, alt = "" }: { seed: string | number; alt?: string }) {
   return (
     <img
       src={`https://picsum.photos/seed/${encodeURIComponent(seed)}/80/80`}

@@ -3,13 +3,12 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	oapitypes "github.com/oapi-codegen/runtime/types"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 	gen "github.com/kochan4php/go-platform-starter/services/auth/gen"
@@ -101,6 +100,11 @@ func withAuthScope(r *http.Request, sub, currentHash string) *http.Request {
 	return r.WithContext(ctx)
 }
 
+func subFromContextAsInt64(r *http.Request) int64 {
+	id, _ := strconv.ParseInt(subFromContext(r), 10, 64)
+	return id
+}
+
 func subFromContext(r *http.Request) string {
 	sub, _ := r.Context().Value(ctxKeySub{}).(string)
 	return sub
@@ -122,7 +126,7 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	platform.OK(w, http.StatusCreated, "registered", map[string]string{"id": u.ID, "email": u.Email})
+	platform.OK(w, http.StatusCreated, "registered", map[string]any{"id": u.ID, "email": u.Email})
 }
 
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +143,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	h.setRefreshCookie(w, res.RefreshCookie)
 	platform.OK(w, http.StatusOK, "logged_in", map[string]any{
 		"accessToken": res.AccessToken,
-		"user":        map[string]string{"id": res.User.ID, "email": res.User.Email},
+		"user":        map[string]any{"id": res.User.ID, "email": res.User.Email},
 	})
 }
 
@@ -169,7 +173,7 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ListSessions(w http.ResponseWriter, r *http.Request) {
-	items, err := h.svc.ListSessions(r.Context(), subFromContext(r), currentRefreshHash(r))
+	items, err := h.svc.ListSessions(r.Context(), subFromContextAsInt64(r), currentRefreshHash(r))
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -181,7 +185,7 @@ func (h *Handlers) ListSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
-	n, err := h.svc.RevokeAllOtherSessions(r.Context(), subFromContext(r), currentRefreshHash(r))
+	n, err := h.svc.RevokeAllOtherSessions(r.Context(), subFromContextAsInt64(r), currentRefreshHash(r))
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -189,16 +193,12 @@ func (h *Handlers) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
 	platform.OK(w, http.StatusOK, "revoked", map[string]int64{"count": n})
 }
 
-func (h *Handlers) RevokeSession(w http.ResponseWriter, r *http.Request, id oapitypes.UUID) {
-	if err := h.svc.RevokeSession(r.Context(), subFromContext(r), uuidFormat(id)); err != nil {
+func (h *Handlers) RevokeSession(w http.ResponseWriter, r *http.Request, id int64) {
+	if err := h.svc.RevokeSession(r.Context(), subFromContextAsInt64(r), id); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	platform.OK(w, http.StatusOK, "revoked", map[string]string{"id": uuidFormat(id)})
-}
-
-func uuidFormat(u oapitypes.UUID) string {
-	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
+	platform.OK(w, http.StatusOK, "revoked", map[string]any{"id": id})
 }
 
 func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {

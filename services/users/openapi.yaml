@@ -78,7 +78,7 @@ paths:
     get:
       operationId: getUser
       x-required-permission: "user:read:any"
-      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
       responses:
         "200":
           description: ok
@@ -95,7 +95,7 @@ paths:
     patch:
       operationId: updateUser
       x-required-permission: "user:update:any"
-      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
       requestBody:
         required: true
         content:
@@ -118,7 +118,7 @@ paths:
       operationId: deleteUser
       summary: hard-delete the profile row and emit user.deleted
       x-required-permission: "user:delete:any"
-      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
       responses:
         "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: unknown, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
@@ -152,7 +152,7 @@ components:
     Profile:
       type: object
       properties:
-        id: { type: string, format: uuid }
+        id: { type: integer, format: int64 }
         displayName: { type: string }
         avatarUrl: { type: string }
         createdAt: { type: string, format: date-time }
@@ -162,6 +162,6 @@ components:
       type: object
       required: [id]
       properties:
-        id: { type: string, format: uuid, description: existing subject id }
+        id: { type: integer, format: int64, description: existing subject id }
         displayName: { type: string, maxLength: 120 }
         avatarUrl: { type: string, maxLength: 400 }

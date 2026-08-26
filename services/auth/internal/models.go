@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID                  string     `gorm:"type:uuid;primaryKey"          json:"id"`
+	ID                  int64      `gorm:"primaryKey"                    json:"id"`
 	Email               string     `gorm:"not null"                      json:"email"`
 	PasswordHash        string     `gorm:"not null"                      json:"-"`
 	Status              string     `gorm:"not null;default:active"       json:"status"`
@@ -20,10 +20,10 @@ type User struct {
 func (User) TableName() string { return "auth.users" }
 
 type Session struct {
-	ID               string    `gorm:"type:uuid;primaryKey"`
-	UserID           string    `gorm:"type:uuid;not null;index"`
+	ID               int64     `gorm:"primaryKey"`
+	UserID           int64     `gorm:"not null;index"`
 	RefreshTokenHash string    `gorm:"not null;uniqueIndex"`
-	FamilyID         string    `gorm:"type:uuid;not null;index"`
+	FamilyID         string    `gorm:"not null;index"`
 	UserAgent        string    `gorm:"not null;default:''"`
 	IP               string    `gorm:"not null;default:''"`
 	ExpiresAt        time.Time `gorm:"not null"`

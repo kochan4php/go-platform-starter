@@ -367,8 +367,8 @@ export interface components {
       error: string;
     };
     Session: {
-      /** Format: uuid */
-      id?: string;
+      /** Format: int64 */
+      id?: number;
       userAgent?: string;
       ip?: string;
       /** Format: date-time */
@@ -396,15 +396,15 @@ export interface components {
       description?: string;
     };
     Role: {
-      /** Format: uuid */
-      id?: string;
+      /** Format: int64 */
+      id?: number;
       name?: string;
       description?: string;
       permissions?: string[];
     };
     Profile: {
-      /** Format: uuid */
-      id?: string;
+      /** Format: int64 */
+      id?: number;
       displayName?: string;
       avatarUrl?: string;
       /** Format: date-time */
@@ -414,10 +414,10 @@ export interface components {
     };
     ProfileInput: {
       /**
-       * Format: uuid
+       * Format: int64
        * @description existing subject id
        */
-      id: string;
+      id: number;
       displayName?: string;
       avatarUrl?: string;
     };
@@ -462,8 +462,8 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["EnvelopeOK"] & {
             data?: {
-              /** Format: uuid */
-              id?: string;
+              /** Format: int64 */
+              id?: number;
               email?: string;
             };
           };
@@ -505,7 +505,8 @@ export interface operations {
             data?: {
               accessToken?: string;
               user?: {
-                id?: string;
+                /** Format: int64 */
+                id?: number;
                 email?: string;
               };
             };
@@ -626,7 +627,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -836,7 +837,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -867,7 +868,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -916,7 +917,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        sub: string;
+        sub: number;
       };
       cookie?: never;
     };
@@ -1072,7 +1073,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -1105,7 +1106,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -1136,7 +1137,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        id: number;
       };
       cookie?: never;
     };

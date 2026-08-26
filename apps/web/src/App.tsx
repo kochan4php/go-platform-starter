@@ -1,7 +1,7 @@
 import { BrandMark, FooterStrip } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
 
@@ -204,19 +204,34 @@ function AdminRoutes() {
 
 /** UI hint only — the gateway enforces truth server-side. */
 function Gate() {
-  const { user, login } = useAuth();
+  const { user, login, booting } = useAuth();
+  const navigate = useNavigate();
+
+  // Hold rendering until the silent refresh settles, so a deep link like
+  // /admin/roles does not flash the auth branch and get redirected.
+  if (booting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
+          Restoring session…
+        </p>
+      </div>
+    );
+  }
 
   function handleLoggedIn(res: {
     accessToken: string;
-    user: { id: string; email: string; perms?: string[]; ver?: number };
+    user: { id: number | string; email: string; perms?: string[]; ver?: number };
   }) {
+    // The in-memory session is already live — navigate without a reload so
+    // the token never has to be recovered from a cookie mid-flight.
     login(res.accessToken, {
-      id: res.user.id,
+      id: String(res.user.id),
       email: res.user.email,
       perms: res.user.perms ?? [],
       ver: res.user.ver ?? 0,
     });
-    window.location.assign("/admin/users");
+    navigate("/admin/users", { replace: true });
   }
 
   return user ? (

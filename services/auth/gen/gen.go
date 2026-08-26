@@ -60,11 +60,11 @@ type ResetInput struct {
 
 // Session defines model for Session.
 type Session struct {
-	CreatedAt *time.Time          `json:"createdAt,omitempty"`
-	Current   *bool               `json:"current,omitempty"`
-	Id        *openapi_types.UUID `json:"id,omitempty"`
-	Ip        *string             `json:"ip,omitempty"`
-	UserAgent *string             `json:"userAgent,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	Current   *bool      `json:"current,omitempty"`
+	Id        *int64     `json:"id,omitempty"`
+	Ip        *string    `json:"ip,omitempty"`
+	UserAgent *string    `json:"userAgent,omitempty"`
 }
 
 // ForgotPasswordJSONRequestBody defines body for ForgotPassword for application/json ContentType.
@@ -107,7 +107,7 @@ type ServerInterface interface {
 	ListSessions(w http.ResponseWriter, r *http.Request)
 	// RevokeSession revoke one session of the authenticated user
 	// (DELETE /auth/sessions/{id})
-	RevokeSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	RevokeSession(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -164,7 +164,7 @@ func (_ Unimplemented) ListSessions(w http.ResponseWriter, r *http.Request) {
 
 // RevokeSession revoke one session of the authenticated user
 // (DELETE /auth/sessions/{id})
-func (_ Unimplemented) RevokeSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) RevokeSession(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -296,9 +296,9 @@ func (siw *ServerInterfaceWrapper) RevokeSession(w http.ResponseWriter, r *http.
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return

@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // EnvelopeFail defines model for EnvelopeFail.
@@ -37,11 +36,11 @@ type EnvelopeOK struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	AvatarUrl   *string             `json:"avatarUrl,omitempty"`
-	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
-	DisplayName *string             `json:"displayName,omitempty"`
-	Id          *openapi_types.UUID `json:"id,omitempty"`
-	UpdatedAt   *time.Time          `json:"updatedAt,omitempty"`
+	AvatarUrl   *string    `json:"avatarUrl,omitempty"`
+	CreatedAt   *time.Time `json:"createdAt,omitempty"`
+	DisplayName *string    `json:"displayName,omitempty"`
+	Id          *int64     `json:"id,omitempty"`
+	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
 }
 
 // ProfileInput defines model for ProfileInput.
@@ -50,7 +49,7 @@ type ProfileInput struct {
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Id existing subject id
-	Id openapi_types.UUID `json:"id"`
+	Id int64 `json:"id"`
 }
 
 // ListUsersParams defines parameters for ListUsers.
@@ -78,13 +77,13 @@ type ServerInterface interface {
 	Me(w http.ResponseWriter, r *http.Request)
 	// DeleteUser hard-delete the profile row and emit user.deleted
 	// (DELETE /users/{id})
-	DeleteUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	DeleteUser(w http.ResponseWriter, r *http.Request, id int64)
 
 	// (GET /users/{id})
-	GetUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	GetUser(w http.ResponseWriter, r *http.Request, id int64)
 
 	// (PATCH /users/{id})
-	UpdateUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	UpdateUser(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -111,17 +110,17 @@ func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUser hard-delete the profile row and emit user.deleted
 // (DELETE /users/{id})
-func (_ Unimplemented) DeleteUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) DeleteUser(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // (GET /users/{id})
-func (_ Unimplemented) GetUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) GetUser(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // (PATCH /users/{id})
-func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -215,9 +214,9 @@ func (siw *ServerInterfaceWrapper) DeleteUser(w http.ResponseWriter, r *http.Req
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
@@ -241,9 +240,9 @@ func (siw *ServerInterfaceWrapper) GetUser(w http.ResponseWriter, r *http.Reques
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
@@ -267,9 +266,9 @@ func (siw *ServerInterfaceWrapper) UpdateUser(w http.ResponseWriter, r *http.Req
 	_ = err
 
 	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	var id int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return

@@ -4,7 +4,7 @@ export const api = createApiClient();
 
 export interface LoginResult {
   accessToken: string;
-  user: { id: string; email: string };
+  user: { id: number; email: string };
 }
 
 export async function login(email: string, password: string): Promise<LoginResult> {
@@ -15,10 +15,10 @@ export async function login(email: string, password: string): Promise<LoginResul
   return payload;
 }
 
-export async function register(email: string, password: string): Promise<{ id: string; email: string }> {
+export async function register(email: string, password: string): Promise<{ id: number; email: string }> {
   const { data, error } = await api.POST("/api/v1/auth/register", { body: { email, password } });
   if (error) throw new Error(readMessage(error));
-  return data?.data as { id: string; email: string };
+  return data?.data as { id: number; email: string };
 }
 
 export async function forgot(email: string): Promise<void> {
