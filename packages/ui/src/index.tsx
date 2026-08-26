@@ -164,3 +164,22 @@ export function Stat({
     </div>
   );
 }
+
+/* ---- cross-surface identity ---- */
+
+export function BrandMark({ href = "/" }: { href?: string }) {
+  return (
+    <a href={href} className="flex items-center gap-3 font-bold tracking-tight">
+      <span className="block size-2 rounded-full bg-[var(--color-accent)]" />
+      Platform Console
+    </a>
+  );
+}
+
+export function FooterStrip() {
+  return (
+    <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
+      go-platform-starter · spec-first · schema-per-service
+    </p>
+  );
+}

@@ -1,3 +1,4 @@
+import { BrandMark, FooterStrip } from "@starter/ui";
 import type { ReactNode } from "react";
 
 const WORDS = ["Sessions", "Rotation", "Lockout", "Claims", "Rooms", "Presence", "Audit", "Streams"];
@@ -11,14 +12,16 @@ export default function AuthFrame({ children }: { children: ReactNode }) {
     <main className="ui-stage min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="relative mx-auto grid min-h-screen max-w-[1400px] grid-cols-12">
         <div className="col-span-12 flex flex-col justify-between px-6 py-8 md:px-14 lg:col-span-7 lg:py-16">
-          <header className="flex items-center gap-3">
-            <span className="block size-2 rounded-full bg-[var(--color-accent)]" />
-            <p className="text-sm font-semibold tracking-tight">Platform Console</p>
+          <header>
+            <BrandMark />
           </header>
 
           <div className="max-w-5xl py-16">{children}</div>
 
-          <footer className="overflow-hidden border-t border-[var(--color-line)] pt-5">
+          <footer className="mt-auto overflow-hidden border-t border-[var(--color-line)] pt-5">
+            <div className="mb-4">
+              <FooterStrip />
+            </div>
             <div className="flex w-max animate-ui-marquee gap-10 whitespace-nowrap will-change-transform">
               {[0, 1].map((copy) => (
                 <div key={copy} aria-hidden={copy === 1} className="flex gap-10">

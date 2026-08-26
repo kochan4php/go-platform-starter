@@ -1,3 +1,4 @@
+import { URL, fileURLToPath } from "node:url";
 import federation from "@originjs/vite-plugin-federation";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -10,6 +11,22 @@ import { defineConfig } from "vite";
 // must resolve to the remoteEntry.js URL.
 const remoteEntry = (name: string, port: number) =>
   `Promise.resolve((window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://localhost:${port}/assets/remoteEntry.js')`;
+
+// Development runs WITHOUT federation: remote pages resolve straight to
+// workspace sources through aliases, giving instant HMR across apps. The
+// federation plugin is production-only.
+const devAliases = {
+  "web_auth/LoginPage": fileURLToPath(new URL("../web-auth/src/LoginPage.tsx", import.meta.url)),
+  "web_auth/RegisterPage": fileURLToPath(new URL("../web-auth/src/RegisterPage.tsx", import.meta.url)),
+  "web_auth/ForgotPage": fileURLToPath(new URL("../web-auth/src/ForgotPage.tsx", import.meta.url)),
+  "web_auth/ResetPage": fileURLToPath(new URL("../web-auth/src/ResetPage.tsx", import.meta.url)),
+  "web_admin_users/UsersPage": fileURLToPath(
+    new URL("../web-admin-users/src/UsersPage.tsx", import.meta.url),
+  ),
+  "web_admin_roles/RolesPage": fileURLToPath(
+    new URL("../web-admin-roles/src/RolesPage.tsx", import.meta.url),
+  ),
+};
 
 export default defineConfig({
   plugins: [
@@ -25,6 +42,9 @@ export default defineConfig({
       shared: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
     }),
   ],
+  ...(process.env.NODE_ENV === "development"
+    ? { resolve: { alias: devAliases }, plugins: [react(), tailwindcss()] }
+    : {}),
   build: {
     target: "es2022",
     minify: "esbuild",

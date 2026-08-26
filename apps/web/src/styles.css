@@ -1,1 +1,8 @@
 @import "@starter/ui/styles.css";
+
+/* Dev mode resolves remote pages from workspace sources (see vite.config.ts);
+   teach Tailwind to scan them too, or their utility classes go missing. */
+@source "../../web-auth/src";
+@source "../../web-admin-users/src";
+@source "../../web-admin-roles/src";
+@source "../../../packages/ui/src";

@@ -1,3 +1,4 @@
+import { BrandMark, FooterStrip } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
@@ -82,10 +83,7 @@ function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-[248px] shrink-0 flex-col justify-between border-r border-[var(--color-line)] px-6 py-8">
       <div>
-        <a href="/" className="flex items-center gap-3 font-bold tracking-tight">
-          <span className="block size-2 rounded-full bg-[var(--color-accent)]" />
-          Platform Console
-        </a>
+        <BrandMark />
         <nav className="mt-12 space-y-1">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = pathname.startsWith(to);
@@ -152,9 +150,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 px-8 py-10">{children}</main>
 
         <footer className="border-t border-[var(--color-line)] px-8 py-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
-            go-platform-starter · spec-first · schema-per-service
-          </p>
+          <FooterStrip />
         </footer>
       </div>
     </div>

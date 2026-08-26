@@ -60,7 +60,7 @@ Admin login for seeded environments:
 ./scripts/deploy-lab.sh --down  # stop
 ```
 
-Shell at http://localhost:5173, gateway docs at http://localhost:8000/docs.
+Shell at http://localhost:5173 (same-origin /api proxy), gateway docs at http://localhost:8010/docs.
 Every service port is published (8081-8085, 8000, 5173-5176) so you can hit
 components directly or attach profilers.
 

@@ -19,4 +19,8 @@ test("login → admin table → logout", async ({ page }) => {
 
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
+
+  // Federated navigation: the register screen is a separate remote bundle.
+  await page.goto("/register");
+  await expect(page.getByRole("heading", { name: "Claim your seat." })).toBeVisible({ timeout: 15_000 });
 });

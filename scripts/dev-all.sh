@@ -78,33 +78,21 @@ port_busy() {
   return 0
 }
 
-# Force-stop whatever listens on our managed ports (Windows-safe).
+# Force-stop only OUR OWN dev processes. Never kill by bare port ownership:
+# on Docker Desktop the owner of a published port is com.docker.backend, and
+# killing it takes the whole daemon down.
 kill_managed() {
-  # Multiple passes: a process that restarts (or a listener whose owner was
-  # mid-restart during the previous pass) is caught by the next sweep.
-  for _ in 1 2 3; do
-    if [ "$WIN" = "1" ]; then
-      for port in "${MANAGED_PORTS[@]}"; do
-        powershell.exe -NoProfile -Command "
-          \$c = Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue
-          foreach (\$x in \$c) { Stop-Process -Id \$x.OwningProcess -Force -ErrorAction SilentlyContinue }
-        " >/dev/null 2>&1 || true
-      done
-    fi
-    if [ -f "$PID_FILE" ]; then
-      while read -r pid; do kill "$pid" 2>/dev/null || true; done < "$PID_FILE"
-    fi
-    sleep 1
-
-    local still=0
-    for port in "${MANAGED_PORTS[@]}"; do port_busy "$port" && still=1; done
-    [ "$still" = "0" ] && break
-  done
-
-  local leftover=0
-  for port in "${MANAGED_PORTS[@]}"; do port_busy "$port" && { leftover=1; log "WARNING: port $port still busy after cleanup" >&2; }; done
-  [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-  return 0
+  if [ "$WIN" = "1" ]; then
+    powershell.exe -NoProfile -ExecutionPolicy Bypass \
+      -File "$ROOT/scripts/stop-dev.ps1" >/dev/null 2>&1 || true
+  else
+    pkill -f 'tmp/dev/bin/(auth|users|rbac|worker|realtime|gateway)' 2>/dev/null || true
+    pkill -f 'vite --port 517' 2>/dev/null || true
+  fi
+  if [ -f "$PID_FILE" ]; then
+    while read -r pid; do kill "$pid" 2>/dev/null || true; done < "$PID_FILE"
+    rm -f "$PID_FILE"
+  fi
 }
 
 # Detect host ports already published by OTHER docker containers — the common
@@ -128,13 +116,13 @@ compose_infra() {
 }
 
 # --- shared environment ----------------------------------------------------------
-if [ "$MODE" = "up" ]; then
-  LAB_PG_PORT="${LAB_PG_PORT:-55432}"
-  LAB_REDIS_PORT="${LAB_REDIS_PORT:-56380}"
-  export LAB_PG_PORT LAB_REDIS_PORT
-  export DATABASE_URL="postgres://app:app@localhost:${LAB_PG_PORT}/app?sslmode=disable"
-  export REDIS_ADDR="localhost:${LAB_REDIS_PORT}"
-fi
+# Host-side ports default to collision-free values; override via env.
+LAB_PG_PORT="${LAB_PG_PORT:-55432}"
+LAB_REDIS_PORT="${LAB_REDIS_PORT:-56380}"
+LAB_GATEWAY_PORT="${LAB_GATEWAY_PORT:-8010}"
+export LAB_PG_PORT LAB_REDIS_PORT LAB_GATEWAY_PORT
+export DATABASE_URL="postgres://app:app@localhost:${LAB_PG_PORT}/app?sslmode=disable"
+export REDIS_ADDR="localhost:${LAB_REDIS_PORT}"
 export ACCESS_TOKEN_SECRET="${ACCESS_TOKEN_SECRET:-dev-secret-change-me-16+}"
 export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
 export APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://localhost:5173}"
@@ -142,7 +130,7 @@ export RBAC_INTERNAL_URL="${RBAC_INTERNAL_URL:-http://localhost:8083}"
 export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}"
 # Vite reads this at request time; without it the apps would fall back to
 # same-origin and miss the gateway listening on its own dev port.
-export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://localhost:8000}"
+export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://localhost:$LAB_GATEWAY_PORT}"
 
 PIDS=()
 cleanup() {
@@ -167,7 +155,7 @@ case "$MODE" in
     for spec in "${SERVICES[@]}"; do IFS='|' read -r name port _ <<<"$spec"
       port_busy "$port" && echo "$name     :$port  up" || echo "$name     :$port  down"
     done
-    port_busy 8000 && echo "gateway  :8000  up" || echo "gateway  :8000  down"
+    port_busy "$LAB_GATEWAY_PORT" && echo "gateway  :$LAB_GATEWAY_PORT  up" || echo "gateway  :$LAB_GATEWAY_PORT  down"
     for spec in "${WEB_APPS[@]}"; do IFS='|' read -r name port <<<"$spec"
       port_busy "$port" && echo "$name  :$port  up" || echo "$name  :$port  down"
     done
@@ -181,7 +169,7 @@ esac
 
 # --- up --------------------------------------------------------------------------
 log "checking managed ports"
-for port in "${MANAGED_PORTS[@]}"; do
+for port in "$LAB_GATEWAY_PORT" 8081 8082 8083 8084 8085 5173 5174 5175 5176; do
   if port_busy "$port"; then
     die "port $port already has a listener — dev-all may still be running. Stop first: ./scripts/dev-all.sh down"
   fi
@@ -208,7 +196,7 @@ launch_gateway() {
   (cd "$ROOT" && go build -o tmp/dev/bin/gateway ./services/gateway)
   (
     cd "$ROOT"
-    PORT=8000 \
+    PORT="$LAB_GATEWAY_PORT" \
     UPSTREAMS='{"auth":"http://localhost:8081","users":"http://localhost:8082","rbac":"http://localhost:8083","worker":"http://localhost:8084"}' \
     REALTIME_UPSTREAM=http://localhost:8085 \
     ./tmp/dev/bin/gateway >"$LOG_DIR/gateway.log" 2>&1
