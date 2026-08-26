@@ -143,11 +143,13 @@ case "$MODE" in
   down)
     trap - EXIT INT TERM
     kill_managed
+    # The lab stack shares every port with dev — it must not survive a down.
+    (cd "$ROOT/infra" && docker compose -p go-platform-lab -f compose.base.yml -f compose.lab.yml down >/dev/null 2>&1) || true
     if [ "$STOP_INFRA" = "1" ]; then
-      compose_infra down
-      log "processes stopped, infra containers removed"
+      compose_infra down -v >/dev/null 2>&1 || true
+      log "processes stopped, lab stack and infra containers removed (volumes wiped)"
     else
-      log "processes stopped (postgres/redis kept running)"
+      log "processes stopped (lab containers down; postgres/redis volumes kept)"
     fi
     exit 0
     ;;
@@ -171,7 +173,7 @@ esac
 log "checking managed ports"
 for port in "$LAB_GATEWAY_PORT" 8081 8082 8083 8084 8085 5173 5174 5175 5176; do
   if port_busy "$port"; then
-    die "port $port already has a listener — dev-all may still be running. Stop first: ./scripts/dev-all.sh down"
+    die "port $port already has a listener — the LAB stack or a previous dev-all is probably still up. Stop it: ./scripts/deploy-lab.sh --down  (or: ./scripts/dev-all.sh down)"
   fi
 done
 
