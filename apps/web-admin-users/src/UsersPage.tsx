@@ -174,11 +174,16 @@ export default function UsersPage() {
         </div>
 
         <div className="col-span-2 flex items-center justify-between gap-4 p-6">
-          <div>
+          <div className="flex h-full flex-col justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Window</p>
-            <p className="mt-1 font-mono text-sm tabular-nums">
-              {offset + 1}–{Math.min(offset + items.length, meta.total)} / {meta.total}
-            </p>
+            <div>
+              <p className="font-mono text-sm tabular-nums">
+                {offset + 1}–{Math.min(offset + items.length, meta.total)} / {meta.total}
+              </p>
+              <Button onClick={() => setRegistering(true)} className="mt-2 w-full">
+                New user
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -208,52 +213,58 @@ export default function UsersPage() {
 
       {/* directory table */}
       <Card title={`Users (${meta.total})`}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr>
-              <Th>User</Th>
-              <Th>ID</Th>
-              <Th>Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((u) => (
-              <tr key={u.id} className="transition-colors hover:bg-white/[0.03]">
-                <Td>
-                  <div className="flex items-center gap-3">
-                    <Avatar seed={u.id} alt="" />
-                    <span className="font-semibold">
-                      {u.displayName || <span className="text-[var(--color-muted)]">—</span>}
-                    </span>
-                  </div>
-                </Td>
-                <Td>
-                  <span className="font-mono text-xs text-[var(--color-muted)]">{u.id}</span>
-                </Td>
-                <Td>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" onClick={() => setEditing(u)}>
-                      <PencilSimple size={14} />
-                      Edit
-                    </Button>
-                    <Button variant="danger" onClick={() => remove.mutate(u.id)} disabled={remove.isPending}>
-                      Delete
-                    </Button>
-                  </div>
-                </Td>
-              </tr>
-            ))}
-            {items.length === 0 ? (
+        <div className="-mx-2 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
               <tr>
-                <Td>No profiles yet — they appear when users register.</Td>
-                <Td />
-                <Td />
-                <Td />
-                <Td />
+                <Th>User</Th>
+                <Th>ID</Th>
+                <Th>Actions</Th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((u) => (
+                <tr key={u.id} className="transition-colors hover:bg-white/[0.03]">
+                  <Td>
+                    <div className="flex items-center gap-3">
+                      <Avatar seed={u.id} alt="" />
+                      <span className="font-semibold">
+                        {u.displayName || <span className="text-[var(--color-muted)]">—</span>}
+                      </span>
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="font-mono text-xs text-[var(--color-muted)]">{u.id}</span>
+                  </Td>
+                  <Td>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" onClick={() => setEditing(u)}>
+                        <PencilSimple size={14} />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => remove.mutate(u.id)}
+                        disabled={remove.isPending}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+              {items.length === 0 ? (
+                <tr>
+                  <Td>No profiles yet — they appear when users register.</Td>
+                  <Td />
+                  <Td />
+                  <Td />
+                  <Td />
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {registering ? (

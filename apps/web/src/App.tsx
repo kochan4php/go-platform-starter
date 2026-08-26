@@ -1,6 +1,6 @@
 import { BrandMark, FooterStrip } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Component, type ReactNode, Suspense, lazy } from "react";
+import { Component, type ReactNode, Suspense, lazy, useState } from "react";
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
@@ -71,6 +71,40 @@ function IconSignOut({ className = "" }: { className?: string }) {
   );
 }
 
+function IconMenu({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={`size-[18px] ${className}`}
+      aria-hidden
+      focusable="false"
+    >
+      <title>menu</title>
+      <path d="M2 4h12M2 8h12M2 12h12" />
+    </svg>
+  );
+}
+
+function IconClose({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={`size-[18px] ${className}`}
+      aria-hidden
+      focusable="false"
+    >
+      <title>close</title>
+      <path d="M3.5 3.5l9 9m0-9-9 9" />
+    </svg>
+  );
+}
+
 const NAV = [
   { to: "/admin/users", label: "Users", icon: IconUsers },
   { to: "/admin/roles", label: "Roles & Permissions", icon: IconShield },
@@ -100,9 +134,6 @@ class RemoteErrorBoundary extends Component<
           <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
             {this.state.error.message || "An unexpected error occurred while loading this section."}
           </p>
-          <pre className="mt-3 max-w-full overflow-auto rounded-md bg-black/40 p-3 text-[11px] text-red-300">
-            {this.state.error.stack?.slice(0, 600)}
-          </pre>
           <button
             type="button"
             onClick={() => this.setState({ error: null })}
@@ -117,10 +148,14 @@ class RemoteErrorBoundary extends Component<
   }
 }
 
-function Sidebar() {
+function Sidebar({ open, onClose }: { open: boolean; onClose(): void }) {
   const { pathname } = useLocation();
   return (
-    <aside className="flex h-full w-[248px] shrink-0 flex-col justify-between border-r border-[var(--color-line)] px-6 py-8">
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 flex h-full w-[264px] shrink-0 transform flex-col justify-between border-r border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-8 transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 ${
+        open ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div>
         <BrandMark />
         <nav className="mt-12 space-y-1">
@@ -130,6 +165,7 @@ function Sidebar() {
               <Link
                 key={to}
                 to={to}
+                onClick={onClose}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-white/5 font-semibold text-[var(--color-ink)]"
@@ -147,12 +183,12 @@ function Sidebar() {
         </nav>
       </div>
 
-      <SessionChip />
+      <SessionChip onLogout={onClose} />
     </aside>
   );
 }
 
-function SessionChip() {
+function SessionChip({ onLogout }: { onLogout(): void }) {
   const { user, logout } = useAuth();
   if (!user) return null;
   return (
@@ -163,7 +199,10 @@ function SessionChip() {
       </p>
       <button
         type="button"
-        onClick={() => logout()}
+        onClick={() => {
+          logout();
+          onLogout();
+        }}
         className="mt-3 inline-flex items-center gap-2 text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
       >
         <IconSignOut className="size-3.5" />
@@ -176,21 +215,45 @@ function SessionChip() {
 function DashboardShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const title = pathname.startsWith("/admin/roles") ? "Roles & permissions" : "Directory";
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     // Fixed-height app shell: only this inner region scrolls; the sidebar and
     // chrome stay put no matter how long the page content is.
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      {/* mobile scrim */}
+      {menuOpen ? (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+        />
+      ) : null}
+
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-8 py-5">
+        {/* mobile bar */}
+        <div className="flex items-center gap-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-3 lg:hidden">
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMenuOpen((v) => !v)}
+            className="rounded-lg p-2 text-[var(--color-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-ink)]"
+          >
+            {menuOpen ? <IconClose /> : <IconMenu />}
+          </button>
+          <BrandMark />
+        </div>
+
+        <header className="border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-5 md:px-8">
           <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">Admin</p>
           <h1 className="text-lg font-bold tracking-tight">{title}</h1>
         </header>
 
-        <main className="ui-stage flex-1 overflow-y-auto px-8 py-10">{children}</main>
+        <main className="ui-stage flex-1 overflow-y-auto px-4 py-8 sm:px-6 md:px-8 md:py-10">{children}</main>
 
-        <footer className="border-t border-[var(--color-line)] px-8 py-5">
+        <footer className="border-t border-[var(--color-line)] px-4 py-5 sm:px-6 md:px-8">
           <FooterStrip />
         </footer>
       </div>
