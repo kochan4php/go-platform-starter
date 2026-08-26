@@ -392,6 +392,7 @@ Scaling notes, measured performance baselines and shard triggers:
 | [docs/SCALING.md](docs/SCALING.md) | pool sizing, HPA math, perf baselines, shard triggers |
 | [docs/ONBOARDING.md](docs/ONBOARDING.md) | 30-minute clone-to-PR path, port allocation table |
 | [docs/DOD.md](docs/DOD.md) | executed v6 definition-of-done checklist |
+| [docs/BACKLOG.md](docs/BACKLOG.md) | 1.200+ improvement backlog (security/perf/UI/UX/ops) |
 
 Deferred (explicit non-goals): gRPC between services, service mesh,
 multi-region, sharding, Storybook, i18n framework, Idempotency-Key middleware,

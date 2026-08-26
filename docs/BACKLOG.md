@@ -1,0 +1,1385 @@
+# BACKLOG — go-platform-starter
+
+> **1.202 improvement** dalam 18 kategori. Semua item diperiksa ulang terhadap
+> kondisi terkini repo (post integer-ID migration).
+
+## Legend
+
+| Ikon | Arti |
+| --- | --- |
+| 🔧 | **Engineering** — bisa langsung dikerjakan tanpa diskusi produk |
+| 🧭 | **Butuh keputusan produk** — dampaknya ke arah fitur/biaya/UX harus diputuskan dulu |
+
+Centang kotak (`- [ ]`) saat item selesai. Item dalam kategori tidak diurutkan
+by priority — baca seluruhnya lalu pilih.
+
+---
+
+## Security
+
+- [ ] 🔧 S1. MFA/TOTP: endpoint enroll + verify + UI QR code
+- [ ] 🔧 S2. Password policy: complexity check + breached-password check (HIBP k-anonymity)
+- [ ] 🔧 S3. Password history — blokir reuse N password terakhir (kolom `password_history`)
+- [ ] 🔧 S4. Concurrent session limit per user (max N sesi aktif)
+- [ ] 🔧 S5. Grace window refresh rotation (token lama valid ±10 dtk untuk multi-tab)
+- [ ] 🔧 S6. BroadcastChannel/SharedWorker coordination antar-tab (satu refresh saja)
+- [ ] 🔧 S7. Device fingerprint pada sesi (kolom device_id + tampil di UI)
+- [ ] 🧭 S8. Email verification flow (token + verify page + blokir login sebelum verify)
+- [ ] 🔧 S9. Account lockout notification email (via worker mail)
+- [ ] 🔧 S10. Suspicious-login detection (IP/UA berubah drastis → email warning)
+- [ ] 🧭 S11. CAPTCHA/Turnstile pada register + forgot setelah N kegagalan
+- [ ] 🔧 S12. Rate limit login per-account (bukan hanya per-IP di edge)
+- [ ] 🔧 S13. Password change flow untuk user yang sedang login (bukan hanya admin reset)
+- [ ] 🔧 S14. Old password verification wajib saat ganti password sendiri
+- [ ] 🔧 S15. Session regeneration saat privilege change (anti fixation)
+- [ ] 🔧 S16. Audit event lengkap semua auth event (login gagal/sukses/lockout/reset)
+- [ ] 🔧 S17. Refresh token binding per device-id (kolom device_id di sessions)
+- [ ] 🔧 S18. Admin endpoint: list active sessions per user
+- [ ] 🔧 S19. Admin force-logout endpoint + UI
+- [ ] 🔧 S20. Soft-delete user (status=deleted) sebagai alternatif hard delete
+- [ ] 🔧 S21. CSP header penuh di edge nginx (content directives lengkap)
+- [ ] 🔧 S22. HSTS preload directive + submission ke preload list
+- [ ] 🔧 S23. COOP/COEP/CORP headers di edge
+- [ ] 🔧 S24. Permissions-Policy granular per tipe endpoint
+- [ ] 🔧 S25. X-Request-ID validation (format + max length) sebelum di-echo balik
+- [ ] 🔧 S26. TLS 1.3-only cipher suite di edge TLS template
+- [ ] 🔧 S27. OCSP stapling di nginx TLS config
+- [ ] 🔧 S28. Internal secret rotasi tanpa downtime (dual-secret window)
+- [ ] 🧭 S29. mTLS antar service (service mesh atau cert rotation infra)
+- [ ] 🔧 S30. OpenAPI request validation middleware (kin-openapi) di gateway
+- [ ] 🔧 S31. Validasi max-length semua field di level spec
+- [ ] 🔧 S32. Sanitasi HTML di display_name (XSS via profile fields)
+- [ ] 🔧 S33. Validasi avatar_url: blokir `javascript:`/data URI, whitelist https
+- [ ] 🔧 S34. SSRF guard jika suatu saat server fetch avatar eksternal
+- [ ] 🧭 S35. Email normalization policy: blokir plus-addressing & dot-trick Gmail
+- [ ] 🔧 S36. Rate limit class per-endpoint via spec (`x-rate-limit-class` per route)
+- [ ] 🔧 S37. Request body size limit per-endpoint (bukan hanya global 1 MB)
+- [ ] 🧭 S38. File upload avatar asli (multipart → S3/MinIO presigned) menggantikan URL eksternal
+- [ ] 🔧 S39. Content-type sniffing guard di gateway
+- [ ] 🔧 S40. Fuzz test SQL injection di semua raw query
+- [ ] 🔧 S41. Scope `own` vs `any` benar-benar dipakai (user:update:own untuk edit diri)
+- [ ] 🧭 S42. ABAC: attribute-based rules (user hanya lihat data dirinya)
+- [ ] 🔧 S43. Resource-level authorization helper di platform (bukan cek manual per handler)
+- [ ] 🧭 S44. Permission expiration (sementara, auto-revoke setelah N hari)
+- [ ] 🧭 S45. Delegated admin (scope terbatas per divisi/OU)
+- [ ] 🔧 S46. Break-glass admin procedure + dokumentasi
+- [ ] 🧭 S47. Separation of duties: tidak bisa assign role ke diri sendiri
+- [ ] 🧭 S48. Approval workflow untuk perubahan role sensitif
+- [ ] 🔧 S49. Vault/Secrets Manager adapter untuk env secrets
+- [ ] 🔧 S50. ACCESS_TOKEN_SECRET rotasi tanpa downtime (kid + dual-key verify)
+- [ ] 🧭 S51. RS256/EdDSA signing menggantikan HS256 shared secret
+- [ ] 🔧 S52. Encrypt refresh_token_hash dengan app key (defense-in-depth)
+- [ ] 🔧 S53. Argon2id sebagai opsi password hashing di samping bcrypt
+- [ ] 🔧 S54. Audit semua titik secret compare pakai constant-time
+- [ ] 🔧 S55. Key derivation per-user untuk kebutuhan crypto per-user
+- [ ] 🔧 S56. NetworkPolicy default-deny antar service di k8s
+- [ ] 🔧 S57. Pod Security Standards (restricted) di semua deployment
+- [ ] 🔧 S58. read-only rootFilesystem + tmpfs mount di semua container
+- [ ] 🔧 S59. Verifikasi non-root user di semua image (distroless ✓, nginx ✓)
+- [ ] 🔧 S60. seccompProfile RuntimeDefault di semua container
+- [ ] 🔧 S61. Capabilities drop ALL di semua container
+- [ ] 🔧 S62. Image signing (cosign) + admission verification
+- [ ] 🔧 S63. SBOM generation (syft) per image di CI
+- [ ] 🔧 S64. Secret encryption at rest di etcd (KMS provider)
+- [ ] 🔧 S65. External Secrets Operator menggantikan env plaintext
+- [ ] 🔧 S66. Kubernetes audit log activation
+- [ ] 🔧 S67. Falco runtime threat detection
+- [ ] 🔧 S68. Semgrep rules custom untuk pattern khusus proyek ini
+- [ ] 🔧 S69. Trivy config scan untuk k8s manifests (bukan hanya filesystem)
+- [ ] 🔧 S70. gitleaks secret scanning di CI + pre-commit hook
+- [ ] 🔧 S71. Dependency license compliance scan
+- [ ] 🔧 S72. GDPR data export endpoint (user download semua data-nya)
+- [ ] 🔧 S73. GDPR right-to-erasure flow lengkap (delete + anonimisasi audit)
+- [ ] 🔧 S74. Data retention policy: audit_logs auto-purge > N bulan
+- [ ] 🧭 S75. Cookie policy + consent banner untuk deployment publik
+- [ ] 🔧 S76. SECURITY.md + responsible disclosure process
+- [ ] 🔧 S77. Internal penetration test checklist
+- [ ] 🔧 S78. E2E test: session fixation otomatis
+- [ ] 🔧 S79. E2E test: IDOR suite (akses resource user lain harus 403)
+- [ ] 🔧 S80. Security test: rate-limit bypass via X-Forwarded-For spoofing
+- [ ] 🔧 S81. Trusted Types untuk innerHTML (jika ada penggunaan)
+- [ ] 🔧 S82. Subresource Integrity untuk CDN scripts (Scalar, fontshare)
+- [ ] 🔧 S83. Self-host font Cabinet Grotesk (hilangkan dependensi CDN + privacy)
+- [ ] 🔧 S84. Referrer-Policy meta tag di index.html semua app
+- [ ] 🔧 S85. Audit: pastikan tidak ada innerHTML untuk render data user
+- [ ] 🔧 S86. CSP nonce untuk inline script config.js
+- [ ] 🔧 S87. autocomplete="new-password" pada field password register/reset
+- [ ] 🔧 S88. Dokumentasi kebijakan paste password (diizinkan — UX principle)
+- [ ] 🧭 S89. Idle timeout auto-logout di frontend (durasi configurable)
+- [ ] 🔧 S90. Tab visibility → re-validasi token saat tab kembali aktif
+- [ ] 🔧 S91. Validasi payload stream sebelum diproses (schema per event type)
+- [ ] 🔧 S92. DLQ access control (siapa boleh replay)
+- [ ] 🔧 S93. Audit event signing (HMAC) agar tak bisa dipalsukan producer lain
+- [ ] 🔧 S94. Redis ACL user terpisah per service (producer vs consumer)
+- [ ] 🔧 S95. Encrypted stream payload untuk sensitive field (opsional)
+- [ ] 🔧 S96. Threat model document (STRIDE per service)
+
+---
+
+## Performance
+
+- [ ] 🔧 P1. Composite index list users (`created_at DESC, id`)
+- [ ] 🔧 P2. Covering index sessions lookup (`user_id, revoked_at, expires_at`)
+- [ ] 🔧 P3. Partial index sessions aktif (`WHERE revoked_at IS NULL`)
+- [ ] 🔧 P4. EXPLAIN ANALYZE semua query panas + simpan hasil di docs/SCALING
+- [ ] 🔧 P5. GORM PreparedStmtCache via config
+- [ ] 🔧 P6. Connection pool tuning via env (MaxOpen/MaxIdle/ConnMaxLifetime)
+- [ ] 🧭 P7. PgBouncer integration (spike + docs dulu)
+- [ ] 🧭 P8. Read replica routing untuk query list (optional DSN)
+- [ ] 🔧 P9. Partitioning audit_logs per bulan (pg_partman)
+- [ ] 🔧 P10. VACUUM/ANALYZE tuning + monitoring bloat
+- [ ] 🔧 P11. Audit: verifikasi semua unique index benar-benar terpakai query
+- [ ] 🔧 P12. Cursor pagination users list (keyset: `WHERE (created_at, id) < ...`)
+- [ ] 🔧 P13. pprof endpoint (net/http/pprof) internal-only di semua service
+- [ ] 🔧 P14. GOMEMLIMIT env tuning
+- [ ] 🔧 P15. GOGC tuning via env
+- [ ] 🔧 P16. Benchmark JSON encoding (encoding/json vs alternatif) — ukur dulu
+- [ ] 🔧 P17. Response writer pooling (sync.Pool)
+- [ ] 🔧 P18. Sampling debug log di production (log rate limit)
+- [ ] 🔧 P19. Worker: concurrency pool via env (jumlah goroutine handler)
+- [ ] 🔧 P20. Worker: XACK batch pipeline
+- [ ] 🔧 P21. Worker: XREADGROUP count tuning via env
+- [ ] 🔧 P22. Gateway: Transport MaxIdleConnsPerHost tuning ke upstream
+- [ ] 🔧 P23. Gateway: HTTP/2 ke upstream
+- [ ] 🔧 P24. Gateway: response streaming tanpa buffer penuh
+- [ ] 🔧 P25. Gateway: hot-reload spec table tanpa restart (atomic swap)
+- [ ] 🔧 P26. Auth: bcrypt cost benchmark otomatis (target ~250 ms/hashing)
+- [ ] 🔧 P27. Auth: LRU cache user lookup by id (TTL 30 dtk, invalidate on write)
+- [ ] 🔧 P28. Realtime: hub ring buffer per room (hindari slice growth)
+- [ ] 🔧 P29. Realtime: write batching per connection
+- [ ] 🔧 P30. Realtime: permessage-deflate compression
+- [ ] 🔧 P31. Readiness probe critical-dependency-only per service
+- [ ] 🔧 P32. Graceful shutdown drain timeout configurable
+- [ ] 🔧 P33. Route-level code splitting audit (chunk overlap check)
+- [ ] 🔧 P34. Modulepreload untuk chunk roles/users on sidebar hover
+- [ ] 🔧 P35. width/height attribute semua img (anti-CLS)
+- [ ] 🔧 P36. Font self-host WOFF2 subset + font-display swap
+- [ ] 🔧 P37. Critical CSS inline di index.html
+- [ ] 🔧 P38. Ukur build target es2020 vs es2022 (size vs compat)
+- [ ] 🔧 P39. Phosphor import size audit (individual icon files)
+- [ ] 🔧 P40. React re-render audit UsersPage (modal typing)
+- [ ] 🔧 P41. Virtualized table untuk 1000+ rows (tanstack-virtual)
+- [ ] 🔧 P42. Debounce search input
+- [ ] 🔧 P43. Service worker cache static assets (Workbox)
+- [ ] 🔧 P44. Brotli compression di nginx (selain gzip)
+- [ ] 🔧 P45. Cache-Control stale-while-revalidate untuk hashed assets
+- [ ] 🔧 P46. dns-prefetch/preconnect ke fontshare CDN
+- [ ] 🔧 P47. content-visibility: auto pada marquee + bento
+- [ ] 🔧 P48. content-visibility: auto pada section bento cards
+- [ ] 🔧 P49. Skeleton dengan dimensi fixed (anti layout shift)
+- [ ] 🔧 P50. Lighthouse CI (LCP/INP/CLS budget gate)
+- [ ] 🔧 P51. Nginx: open_file_cache
+- [ ] 🔧 P52. Nginx: worker_processes auto + sendfile + tcp_nopush
+- [ ] 🔧 P53. Redis: io-threads 4 + lazyfree-lazy-eviction
+- [ ] 🔧 P54. Postgres: shared_buffers/work_mem tuning per environment
+- [ ] 🔧 P55. Postgres: pg_stat_activity dashboard panel
+- [ ] 🔧 P56. Docker: GOCACHE buildkit mount untuk go build layer
+- [ ] 🔧 P57. Evaluasi UPX compress binary (ukur startup time impact)
+- [ ] 🔧 P58. Compose: healthcheck start_interval untuk faster-ready
+- [ ] 🔧 P59. Edge: microcache /docs/openapi.json (proxy_cache 5s)
+- [ ] 🔧 P60. K8s: topologySpreadConstraints antar zone
+- [ ] 🔧 P61. ETag/If-None-Match pada GET /users list
+- [ ] 🔧 P62. Sparse fieldsets (?fields=id,email)
+- [ ] 🔧 P63. Batch endpoint GET /users?ids=1,2,3
+- [ ] 🔧 P64. Response compression level config
+- [ ] 🧭 P65. GraphQL gateway (evaluasi — kemungkinan tidak sekarang)
+- [ ] 🔧 P66. Fix N+1: permsForRole per-role → satu query IN + group in Go
+- [ ] 🔧 P67. attachPresence: prepared statement caching
+- [ ] 🔧 P68. Total count estimation mode untuk list besar (?count=estimate)
+- [ ] 🔧 P69. Stream claim: XAUTOCLAIM dengan JUSTID option
+- [ ] 🔧 P70. Worker audit insert: batching 100 per transaction
+- [ ] 🔧 P71. TanStack Query: placeholderData keepPreviousData (paginasi halus)
+- [ ] 🔧 P72. Optimistic update untuk delete/rename
+- [ ] 🔧 P73. Query persistence localStorage (instant back-navigation)
+- [ ] 🔧 P74. staleTime per-resource (permissions → Infinity)
+- [ ] 🔧 P75. gcTime tuning
+- [ ] 🔧 P76. Prefetch users list saat hover sidebar link
+- [ ] 🔧 P77. Verify query cancellation on unmount (AbortController)
+- [ ] 🔧 P78. rollup-plugin-visualizer + commit laporan bundle
+- [ ] 🔧 P79. esbuild drop console.log di production build
+- [ ] 🔧 P80. Tailwind purge audit + safelist review
+- [ ] 🔧 P81. Realtime presence heartbeat interval config
+- [ ] 🔧 P82. Realtime: per-connection write goroutine pool
+- [ ] 🔧 P83. Redis sharded pub/sub (SSPUBSUB) untuk skala besar
+- [ ] 🔧 P84. Build cache antar workspace (pnpm --filter shared deps)
+- [ ] 🔧 P85. Dockerfile: split COPY go.mod per-service untuk cache granular
+- [ ] 🔧 P86. CI build matrix paralel per-app
+- [ ] 🔧 P87. BuildKit remote cache (registry cache backend)
+- [ ] 🔧 P88. Pre-commit: warm go build cache
+- [ ] 🔧 P89. Vite: renderBuiltUrl untuk CDN asset path
+- [ ] 🔧 P90. SVG sprite generator untuk inline icons (dedup)
+- [ ] 🔧 P91. Go benchmark test handler panas + CI tracking
+- [ ] 🔧 P92. k6 load test script committed + hasil di SCALING.md
+- [ ] 🔧 P93. Continuous profiling (Pyroscope/Parca agent)
+- [ ] 🔧 P94. DB query duration histogram dengan label query-name
+- [ ] 🔧 P95. FE Web Vitals → kirim ke telemetry endpoint
+- [ ] 🔧 P96. OTel metrics p95 per route di Grafana
+
+---
+
+## UI/UX — Login, Register & Auth
+
+- [ ] 🔧 U1. Show/hide password toggle (eye icon) semua field password
+- [ ] 🔧 U2. Caps-lock warning pada field password
+- [ ] 🔧 U3. Password strength meter live (register + reset)
+- [ ] 🔧 U4. Konfirmasi password field di register
+- [ ] 🔧 U5. Inline email validation feedback real-time
+- [ ] 🔧 U6. Error message dengan ikon + aria-live assertive
+- [ ] 🔧 U7. Success animation (checkmark draw) setelah register/reset
+- [ ] 🔧 U8. Redirect intent: simpan URL asli, kembali setelah login
+- [ ] 🧭 U9. Remember-me checkbox (extend refresh TTL)
+- [ ] 🧭 U10. Social login (Google OAuth) — desain tombol dulu
+- [ ] 🔧 U11. Art plate parallax halus mengikuti mouse
+- [ ] 🔧 U12. Keyboard shortcut Enter submit di mana saja
+- [ ] 🔧 U13. Autofill styling fix (webkit autofill background)
+- [ ] 🔧 U14. Konsistensi loading spinner di semua tombol submit
+- [ ] 🔧 U15. Error shake animation pada form gagal
+- [ ] 🔧 U16. Forgot success: ilustrasi + tombol kirim ulang (cooldown 30s)
+- [ ] 🔧 U17. Reset: strength meter + konfirmasi password field
+- [ ] 🧭 U18. Terms & privacy checkbox + link dokumen legal
+- [ ] 🧭 U19. Email availability check debounced (butuh endpoint existence)
+- [ ] 🔧 U20. Favicon + title dinamis per auth state
+- [ ] 🔧 U21. Art plate beda gambar per halaman (login/register/forgot/reset)
+- [ ] 🔧 U22. Art plate gradient overlay animasi subtle
+- [ ] 🔧 U23. Marquee pause on hover
+- [ ] 🔧 U24. Mobile: art plate tampil sebagai banner tipis atas
+- [ ] 🔧 U25. Focus trap penuh di form
+- [ ] 🧭 U26. Language switcher placeholder (i18n ready)
+- [ ] 🔧 U27. BrandMark klik → tooltip versi aplikasi
+- [ ] 🔧 U28. Input label animasi float (opsional, konsisten)
+- [ ] 🧭 U29. Passkey/WebAuthn one-tap — desain dulu
+- [ ] 🧭 U30. Passkey support penuh (WebAuthn register/login) — fitur besar
+- [ ] 🔧 U31. Session expired: modal re-auth inline (bukan redirect penuh)
+- [ ] 🔧 U32. Login attempt counter tersisa ditampilkan ("3 percobaan lagi")
+- [ ] 🔧 U33. Lockout countdown timer ("coba lagi dalam 12:34")
+- [ ] 🔧 U34. Submit button disabled saat email invalid real-time
+- [ ] 🔧 U35. Error summary di atas form untuk screen reader
+- [ ] 🔧 U36. AuthFrame responsive breakpoint tuning 640–1024px
+- [ ] 🔧 U37. Reduced-motion: matikan semua animasi auth
+- [ ] 🔧 U38. High-contrast mode support
+- [ ] 🔧 U39. Touch target min 44px semua kontrol auth
+- [ ] 🔧 U40. Input error state styling merah + ikon
+- [ ] 🔧 U41. Input success state hijau setelah valid
+- [ ] 🔧 U42. Boot "Restoring session…" → skeleton shimmer
+- [ ] 🔧 U43. BrandMark klik → tooltip versi aplikasi
+- [ ] 🔧 U44. Marquee item klik → tooltip penjelasan fitur
+- [ ] 🔧 U45. Auth: dark scrollbar styling konsisten
+- [ ] 🔧 U46. Redirect after logout ke halaman asal
+- [ ] 🧭 U47. Multi-language error message mapping
+- [ ] 🔧 U48. Footer: versi build/commit info
+- [ ] 🔧 U49. Anti-clickjacking test visual
+- [ ] 🔧 U50. 429: tampilkan countdown dari header Retry-After
+- [ ] 🔧 U51. Register sukses: auto-fill email ke halaman login
+- [ ] 🔧 U52. Reset: validasi token saat load (sebelum user isi form)
+- [ ] 🔧 U53. Reset sukses: auto-redirect login + toast
+- [ ] 🔧 U54. Simpan scroll position saat error re-render
+- [ ] 🔧 U55. Dokumentasi: paste password diizinkan (UX principle)
+- [ ] 🔧 U56. Email field: trim + lowercase visual otomatis
+- [ ] 🔧 U57. Error boundary khusus auth + tombol reload
+- [ ] 🔧 U58. Art plate skeleton saat gambar loading
+- [ ] 🔧 U59. Konsistensi loading spinner semua tombol auth
+- [ ] 🔧 U60. Mobile: sticky submit button di form panjang
+- [ ] 🔧 U61. iOS input zoom prevention (font-size ≥ 16px saat focus)
+- [ ] 🔧 U62. Android back button handling di auth flow
+- [ ] 🔧 U63. Prefill email dari query param (?email=)
+- [ ] 🔧 U64. Reset token invalid → halaman error ramah + tombol minta ulang
+- [ ] 🔧 U65. Rate limit per-IP feedback di UI
+- [ ] 🔧 U66. Login sukses: welcome toast dengan nama user
+- [ ] 🔧 U67. Transisi antar halaman auth (View Transitions API)
+- [ ] 🔧 U68. Audit spacing form field (4px grid)
+- [ ] 🔧 U69. Ikon di setiap input (email, password — phosphor)
+- [ ] 🔧 U70. Placeholder contoh format (nama@perusahaan.com)
+- [ ] 🔧 U71. Helper text password policy di bawah field
+- [ ] 🔧 U72. Char counter pada field max-length
+- [ ] 🔧 U73. Form draft auto-save (sessionStorage)
+- [ ] 🔧 U74. A11y: error summary dengan anchor ke field
+- [ ] 🔧 U75. Screen reader announcement async state changes
+- [ ] 🔧 U76. Contrast audit semua teks auth (WCAG AA)
+- [ ] 🔧 U77. Focus order audit (tab sequence logis)
+- [ ] 🔧 U78. Mobile: tap = hover state (hilangkan hover-dependency)
+- [ ] 🔧 U79. Footer: status sistem kecil (dari /healthz)
+- [ ] 🔧 U80. Remember device (skip 2FA 30 hari) — setelah MFA ada
+
+---
+
+## UI/UX — Dashboard Shell & Global
+
+- [ ] 🔧 D1. Sidebar collapse toggle (icon-only mode, persist localStorage)
+- [ ] 🔧 D2. Sidebar tooltip saat collapsed
+- [ ] 🔧 D3. Breadcrumb di topbar (Admin / Users)
+- [ ] 🔧 D4. Global search Ctrl+K command palette (users, roles, actions)
+- [ ] 🔧 D5. Command palette (cmdk) dengan fuzzy search
+- [ ] 🔧 D6. Toast notification system global (success/error/info)
+- [ ] 🔧 D7. Toast untuk semua mutasi sukses (create/update/delete)
+- [ ] 🔧 D8. Confirm dialog untuk semua destructive action
+- [ ] 🔧 D9. Undo toast untuk delete (soft-delete 5 detik)
+- [ ] 🔧 D10. Dark/light theme toggle (token swap, persist)
+- [ ] 🔧 D11. Theme transition halus saat ganti
+- [ ] 🔧 D12. User chip dropdown menu (profile, settings, logout)
+- [ ] 🔧 D13. Avatar user di session chip
+- [ ] 🧭 D14. Notification bell + unread count (via realtime audit events)
+- [ ] 🔧 D15. Keyboard shortcuts: g+u users, g+r roles
+- [ ] 🔧 D16. Shortcut help modal (?)
+- [ ] 🔧 D17. 404 page UI proper
+- [ ] 🔧 D18. 403 page UI + tombol minta akses
+- [ ] 🔧 D19. Offline banner (navigator.onLine detection)
+- [ ] 🔧 D20. Session expiring warning banner
+- [ ] 🔧 D21. Page transition (View Transitions API)
+- [ ] 🔧 D22. Loading progress bar saat navigasi
+- [ ] 🔧 D23. Skeleton loading per-section
+- [ ] 🔧 D24. Empty state ilustrasi SVG per halaman
+- [ ] 🔧 D25. Error state ilustrasi + retry button
+- [ ] 🔧 D26. Sidebar badge count per menu
+- [ ] 🔧 D27. Sidebar section grouping (MANAGEMENT / SYSTEM)
+- [ ] 🔧 D28. Footer: link docs/API/health
+- [ ] 🔧 D29. Topbar: last-updated timestamp
+- [ ] 🔧 D30. Environment badge (DEV/UAT/DEMO/PROD) dari config
+- [ ] 🔧 D31. Mobile: bottom navigation bar alternatif
+- [ ] 🔧 D32. Swipe gesture buka drawer mobile
+- [ ] 🔧 D33. Drawer: ESC close + focus return
+- [ ] 🔧 D34. Drawer: focus trap saat terbuka
+- [ ] 🔧 D35. Scroll-to-top button konten panjang
+- [ ] 🔧 D36. Table sticky header saat scroll
+- [ ] 🔧 D37. Density toggle (compact/comfortable)
+- [ ] 🔧 D38. Column visibility toggle (persist)
+- [ ] 🔧 D39. Print stylesheet tabel
+- [ ] 🔧 D40. Global error page + copy error button
+- [ ] 🔧 D41. Copy error via clipboard API + toast
+- [ ] 🔧 D42. Health indicator sidebar (polling /healthz)
+- [ ] 🔧 D43. Version info sidebar footer
+- [ ] 🧭 D44. Onboarding checklist admin baru (first-run)
+- [ ] 🔧 D45. Tooltip konsisten semua truncated text
+- [ ] 🔧 D46. Truncation expand-on-click popover
+- [ ] 🔧 D47. Number formatting locale-aware
+- [ ] 🔧 D48. Relative time ("2 menit lalu") + tooltip absolut
+- [ ] 🔧 D49. Timezone handling per user
+- [ ] 🔧 D50. Skeleton bento cards
+- [ ] 🔧 D51. Skeleton tabel rows shimmer
+- [ ] 🔧 D52. Refetch indicator di topbar
+- [ ] 🔧 D53. Pause polling saat tab hidden
+- [ ] 🔧 D54. Optimistic online toggle
+- [ ] 🔧 D55. Sound feedback optional (mute default)
+- [ ] 🔧 D56. Sidebar active indicator animasi slide
+- [ ] 🔧 D57. Icon sidebar micro-interaction
+- [ ] 🔧 D58. Brand dot pulse saat background job jalan
+- [ ] 🔧 D59. Scroll progress bar konten panjang
+- [ ] 🔧 D60. Split-view (list + detail panel)
+- [ ] 🔧 D61. Detail slide-over (klik row → panel kanan)
+- [ ] 🔧 D62. Keyboard nav antar row (j/k)
+- [ ] 🔧 D63. Multi-select rows + bulk action bar
+- [ ] 🔧 D64. Bulk delete users
+- [ ] 🔧 D65. Export CSV/JSON selection
+- [ ] 🔧 D66. Import users CSV
+- [ ] 🔧 D67. Activity feed mini sidebar
+- [ ] 🔧 D68. System status page link
+- [ ] 🧭 D69. Feedback widget (lapor masalah → buat issue)
+- [ ] 🧭 D70. Help center link
+- [ ] 🧭 D71. Onboarding tour first login
+- [ ] 🔧 D72. Whats-new modal per release
+- [ ] 🔧 D73. Persist drawer/collapse state
+- [ ] 🔧 D74. Route transition preserve scroll
+- [ ] 🔧 D75. Table column resize drag
+- [ ] 🔧 D76. Server-side sort via header click
+- [ ] 🔧 D77. Filter chips persist per user
+- [ ] 🔧 D78. Save filter preset
+- [ ] 🔧 D79. Live table update via realtime invalidate
+- [ ] 🔧 D80. aria-live untuk hasil filter/search
+
+---
+
+## UI/UX — Manage Users
+
+- [ ] 🔧 E1. Search users server-side (?q= email/name)
+- [ ] 🔧 E2. Filter status online/offline
+- [ ] 🔧 E3. Filter by role
+- [ ] 🔧 E4. Filter tanggal registrasi (range)
+- [ ] 🔧 E5. Sort per kolom (name/email/created/last_login)
+- [ ] 🔧 E6. Page size selector (10/20/50)
+- [ ] 🔧 E7. Pagination first/last + jump to page
+- [ ] 🔧 E8. Detail slide-over: semua field + sesi + audit
+- [ ] 🔧 E9. Detail: sesi aktif per device + revoke per device
+- [ ] 🔧 E10. Detail: riwayat login (audit filtered)
+- [ ] 🔧 E11. Detail: assigned roles + ubah (pindah dari register modal)
+- [ ] 🧭 E12. Avatar upload file (bukan hanya URL)
+- [ ] 🔧 E13. Avatar crop/resize client-side
+- [ ] 🔧 E14. Avatar default inisial + warna hash (ganti picsum acak)
+- [ ] 🔧 E15. Ganti email: konfirmasi password dulu
+- [ ] 🧭 E16. Ganti email: kirim verifikasi ke email baru
+- [ ] 🔧 E17. Password reset: generate acak + copy button
+- [ ] 🔧 E18. Password reset: kirim via email (worker mail)
+- [ ] 🔧 E19. Force logout button per user
+- [ ] 🔧 E20. Lock/unlock user button (admin override)
+- [ ] 🔧 E21. Activate/deactivate user (status toggle)
+- [ ] 🔧 E22. Delete: confirm modal ketik email
+- [ ] 🔧 E23. Delete: checkbox "hapus juga sesi & audit"
+- [ ] 🔧 E24. Duplicate user (clone profile tanpa kredensial)
+- [ ] 🔧 E25. Kolom role badges per user
+- [ ] 🔧 E26. Row expand quick detail inline
+- [ ] 🔧 E27. Bulk select + bulk role assign
+- [ ] 🔧 E28. Bulk delete dengan confirm
+- [ ] 🔧 E29. Export selection CSV
+- [ ] 🔧 E30. Sticky action column saat scroll horizontal
+- [ ] 🔧 E31. Row action icon tooltip
+- [ ] 🔧 E32. Online dot tooltip last-seen detail
+- [ ] 🔧 E33. Session count badge kolom status
+- [ ] 🔧 E34. Last login relative time + icon
+- [ ] 🔧 E35. IP klik → popover lookup info
+- [ ] 🔧 E36. Device: ikon per OS
+- [ ] 🔧 E37. Avatar hover zoom preview besar
+- [ ] 🔧 E38. Nama klik → detail (bukan langsung edit)
+- [ ] 🔧 E39. Email klik → copy + mailto
+- [ ] 🔧 E40. ID klik → copy
+- [ ] 🔧 E41. Sort indicator visual jelas
+- [ ] 🔧 E42. Zebra striping optional toggle
+- [ ] 🔧 E43. Row height density toggle
+- [ ] 🔧 E44. Highlight row baru dibuat (flash)
+- [ ] 🔧 E45. Highlight row yang sedang online
+- [ ] 🔧 E46. Search box dalam card (client filter)
+- [ ] 🔧 E47. Result count update live
+- [ ] 🔧 E48. Pagination disable + tooltip alasan
+- [ ] 🔧 E49. Register modal: generate password (crypto random) + copy
+- [ ] 🔧 E50. Register modal: show/hide password
+- [ ] 🔧 E51. Register modal: validasi email unik real-time (debounced)
+- [ ] 🔧 E52. Register modal: role select dengan search
+- [ ] 🔧 E53. Register modal: gravatar fallback untuk avatar
+- [ ] 🧭 E54. Field telepon (kolom baru, optional)
+- [ ] 🧭 E55. Field divisi/tim (kolom baru, optional)
+- [ ] 🔧 E56. Modal edit: created_at/updated_at readonly di bawah
+- [ ] 🔧 E57. Modal edit: riwayat perubahan (audit)
+- [ ] 🔧 E58. Modal: unsaved changes warning saat close
+- [ ] 🔧 E59. Modal edit: warning ganti email = ubah email login
+- [ ] 🔧 E60. Toast sukses spesifik ("Profil Budi diperbarui")
+- [ ] 🔧 E61. 409 email duplikat: highlight field + pesan
+- [ ] 🔧 E62. Loading state tombol save konsisten
+- [ ] 🔧 E63. Keyboard: Enter save, ESC close di modal
+- [ ] 🔧 E64. Modal: full-screen sheet di mobile
+- [ ] 🔧 E65. Table loading overlay saat refetch
+- [ ] 🔧 E66. Optimistic delete dengan rollback
+- [ ] 🔧 E67. Link audit trail per row
+- [ ] 🔧 E68. Stat card klik → filter tabel
+- [ ] 🔧 E69. Stat card sparkline registrasi 7 hari
+- [ ] 🔧 E70. Empty state ilustrasi + CTA register
+
+---
+
+## UI/UX — Roles & Permissions
+
+- [ ] 🔧 F1. Search/filter roles by name
+- [ ] 🔧 F2. Search permission dalam checkbox list
+- [ ] 🔧 F3. Permission grouped by resource (user:*, role:*, …)
+- [ ] 🔧 F4. Permission group collapse/expand
+- [ ] 🔧 F5. Permission description tooltip
+- [ ] 🔧 F6. Badge "baru saja dibuat" pada permission
+- [ ] 🔧 F7. Indicator permission tak terpakai
+- [ ] 🔧 F8. Permission delete (guard: tak terpakai role mana pun)
+- [ ] 🔧 F9. Role detail: jumlah user memegang role
+- [ ] 🔧 F10. Klik user count → daftar user dengan role itu
+- [ ] 🔧 F11. Role duplicate/clone button
+- [ ] 🧭 F12. Default role untuk user baru (flag)
+- [ ] 🔧 F13. System role flag (admin tak terhapus, lock icon)
+- [ ] 🔧 F14. Role color/icon visual per role
+- [ ] 🔧 F15. Accordion animasi spring halus
+- [ ] 🔧 F16. Multi-open mode toggle
+- [ ] 🔧 F17. Keyboard arrow navigation antar slice
+- [ ] 🔧 F18. Accordion resize handle manual (drag)
+- [ ] 🔧 F19. Mobile: accordion → expandable cards
+- [ ] 🔧 F20. Permission diff preview sebelum save
+- [ ] 🔧 F21. Konfirmasi eksplisit saat mengurangi permission
+- [ ] 🔧 F22. Indicator "N user akan diminta login ulang"
+- [ ] 🔧 F23. Modal daftar user per role (assign dari sini)
+- [ ] 🔧 F24. Quick assign: search user + add
+- [ ] 🔧 F25. Quick remove user dari role
+- [ ] 🔧 F26. Permission matrix view (role × permission grid)
+- [ ] 🔧 F27. Matrix toggle langsung di grid
+- [ ] 🔧 F28. Matrix export PNG/CSV
+- [ ] 🔧 F29. Compare dua role side-by-side
+- [ ] 🧭 F30. Role template preset (Admin/Editor/Viewer)
+- [ ] 🔧 F31. Audit trail per role
+- [ ] 🔧 F32. Role usage map (halaman yang terkunci)
+- [ ] 🔧 F33. Simulasi permission (impersonate role)
+- [ ] 🔧 F34. Effective permissions calculator multi-role
+- [ ] 🔧 F35. Warning minimal 1 permission saat save kosong
+- [ ] 🔧 F36. Validasi format nama role + reserved words
+- [ ] 🔧 F37. Modal: unsaved changes warning saat close
+- [ ] 🔧 F38. Modal: ESC close + focus trap
+- [ ] 🔧 F39. Modal: full-screen di mobile
+- [ ] 🔧 F40. Modal: field error inline per-field
+- [ ] 🔧 F41. Toast sukses dengan nama role
+- [ ] 🔧 F42. Optimistic toggle permission
+- [ ] 🔧 F43. Skeleton accordion saat load
+- [ ] 🔧 F44. Empty search state + clear button
+- [ ] 🔧 F45. Sort roles by name/users/created
+- [ ] 🔧 F46. Role archived state (nonaktif tanpa hapus)
+- [ ] 🔧 F47. Bulk assign users ke role
+- [ ] 🔧 F48. Permission dependency hints
+- [ ] 🔧 F49. Permission usage map (route terkait)
+- [ ] 🔧 F50. Link permission → route registry
+- [ ] 🧭 F51. Role hierarchy visual (inheritance)
+- [ ] 🔧 F52. Export/import role definition JSON
+- [ ] 🔧 F53. Role changelog (audit diff)
+- [ ] 🧭 F54. Notifikasi ke user saat role-nya berubah
+- [ ] 🔧 F55. Sidebar badge jumlah role
+- [ ] 🔧 F56. Breadcrumb interaktif halaman roles
+- [ ] 🔧 F57. Indikator unsaved per slice
+- [ ] 🔧 F58. Panel sticky action bar saat scroll
+- [ ] 🔧 F59. Permission search highlight
+- [ ] 🔧 F60. Select all / none quick action
+- [ ] 🔧 F61. Group toggle per resource
+- [ ] 🔧 F62. Delete role: pindahkan user ke fallback role
+- [ ] 🔧 F63. Delete role: audit + konfirmasi ketik nama
+- [ ] 🔧 F64. Role icon picker
+- [ ] 🔧 F65. Role description markdown support
+- [ ] 🔧 F66. Permission name autocomplete dari sejarah
+- [ ] 🔧 F67. Real-time validasi format permission
+- [ ] 🔧 F68. Tooltip format di placeholder
+- [ ] 🔧 F69. Count badge update animasi
+- [ ] 🔧 F70. Empty roles ilustrasi + CTA
+
+---
+
+## Reliability & Resilience
+
+- [ ] 🔧 G1. Circuit breaker gateway→upstream (gobreaker)
+- [ ] 🔧 G2. Retry exponential backoff + jitter gateway→upstream (GET)
+- [ ] 🔧 G3. Health-based upstream ejection (outlier detection)
+- [ ] 🔧 G4. Multiple upstream per service (failover)
+- [ ] 🔧 G5. Request hedging GET kritis (duplicate setelah 200ms)
+- [ ] 🔧 G6. Timeout budget per-route di spec (x-timeout)
+- [ ] 🔧 G7. Deadline propagation context semua downstream
+- [ ] 🧭 G8. Redis Sentinel/Cluster mode
+- [ ] 🔧 G9. Redis read replica untuk cache get
+- [ ] 🔧 G10. Circuit breaker saat Redis down (fail static)
+- [ ] 🔧 G11. Postgres connection retry backoff di boot
+- [ ] 🔧 G12. Statement timeout global via config
+- [ ] 🔧 G13. Idle-in-transaction killer
+- [ ] 🔧 G14. Stream maxlen + approximate trimming
+- [ ] 🔧 G15. Consumer idle timeout → XAUTOCLAIM config
+- [ ] 🔧 G16. DLQ replay CLI (worker -replay)
+- [ ] 🔧 G17. DLQ alert metric saat ada isi
+- [ ] 🔧 G18. DLQ max depth + drop oldest policy
+- [ ] 🔧 G19. Poison pill handling (skip setelah N gagal)
+- [ ] 🔧 G20. Worker graceful drain mid-batch
+- [ ] 🔧 G21. Worker checkpoint progress per-batch
+- [ ] 🔧 G22. Idempotency table processed message IDs (persist)
+- [ ] 🔧 G23. Outbox pattern audit event
+- [ ] 🔧 G24. Event schema versioning (v field)
+- [ ] 🔧 G25. Realtime server ping/pong interval + dead connection cleanup
+- [ ] 🔧 G26. Realtime room capacity + overflow policy
+- [ ] 🔧 G27. FE realtime reconnect backoff + jitter
+- [ ] 🔧 G28. Realtime message ordering per-connection
+- [ ] 🔧 G29. Gateway graceful shutdown drain koneksi aktif
+- [ ] 🔧 G30. Gateway max conns per upstream (semaphore)
+- [ ] 🔧 G31. Compose restart policy + depends healthcheck semua
+- [ ] 🔧 G32. Compose resource limits semua container
+- [ ] 🔧 G33. Compose log rotation config semua
+- [ ] 🔧 G34. PodDisruptionBudget semua service
+- [ ] 🔧 G35. K8s topology spread constraints
+- [ ] 🔧 G36. K8s terminationGracePeriodSeconds tuning
+- [ ] 🔧 G37. K8s preStop hook sleep zero-downtime
+- [ ] 🔧 G38. K8s startupProbe service lambat
+- [ ] 🔧 G39. K8s priorityClassName gateway
+- [ ] 🔧 G40. pg_dump backup cron + retention + restore test
+- [ ] 🔧 G41. Redis RDB/AOF backup + restore docs
+- [ ] 🔧 G42. DR runbook (RTO/RPO target)
+- [ ] 🔧 G43. Infra-as-code full rebuild
+- [ ] 🔧 G44. Chaos: kill pod otomatis staging
+- [ ] 🔧 G45. Chaos: network latency injection
+- [ ] 🔧 G46. Circuit breaker per-dependency (redis/pg/mail)
+- [ ] 🔧 G47. Mail fallback provider kedua
+- [ ] 🔧 G48. Mail queue depth monitoring
+- [ ] 🔧 G49. Rate limit fail-open vs fail-close per-class
+- [ ] 🔧 G50. Gateway stale-while-error (cached GET saat upstream down)
+- [ ] 🔧 G51. Health endpoint: versi + commit info
+- [ ] 🔧 G52. Health: dependency latency breakdown
+- [ ] 🔧 G53. Startup fail-fast validation env + dependensi
+- [ ] 🔧 G54. Config hot reload subset (log level via SIGHUP)
+- [ ] 🔧 G55. Feature flag evaluator sederhana
+- [ ] 🔧 G56. Session cleanup job + metric rows deleted
+- [ ] 🔧 G57. Audit purge job retention config
+- [ ] 🔧 G58. Presence TTL cleanup stale session count
+- [ ] 🔧 G59. Rate limit counter repair setelah redis failover
+- [ ] 🔧 G60. Idempotency-Key middleware POST penting
+- [ ] 🔧 G61. Webhook delivery retry (infra worker siap)
+- [ ] 🔧 G62. Multi-region readiness checklist
+- [ ] 🔧 G63. Zero-downtime migration verification CI
+- [ ] 🔧 G64. Rollback migration otomatis saat health gate gagal
+- [ ] 🔧 G65. Deploy canary weight routing di edge
+- [ ] 🔧 G66. Deploy blue-green compose switch
+- [ ] 🔧 G67. Error rate anomaly detection
+- [ ] 🔧 G68. Auto-restart container OOM (compose policy)
+- [ ] 🔧 G69. Disk space monitoring + alert
+- [ ] 🔧 G70. Certificate expiry monitoring + alert
+
+---
+
+## Observability
+
+- [ ] 🔧 H1. Trace context propagate ke worker processing
+- [ ] 🔧 H2. Span per stream message handling
+- [ ] 🔧 H3. OTel collector export ke Tempo/Jaeger UI
+- [ ] 🔧 H4. Trace sampling ratio config
+- [ ] 🔧 H5. Span attributes standar (user.id, route, method)
+- [ ] 🔧 H6. trace_id di semua log termasuk worker (lengkapkan)
+- [ ] 🔧 H7. Loki log aggregation + Grafana datasource
+- [ ] 🔧 H8. Log-based error rate metric
+- [ ] 🔧 H9. Prometheus alert rules (5xx, p95, session errors)
+- [ ] 🔧 H10. Alertmanager routing (Slack/Discord/Email)
+- [ ] 🔧 H11. Grafana dashboard per-service
+- [ ] 🔧 H12. Grafana SLO overview dashboard
+- [ ] 🔧 H13. Grafana variable templating
+- [ ] 🔧 H14. Grafana annotations dari deploy
+- [ ] 🔧 H15. Grafana viewer role provisioning
+- [ ] 🔧 H16. Metric registrations_total
+- [ ] 🔧 H17. Metric logins_total {success,fail}
+- [ ] 🔧 H18. Metric lockouts_total
+- [ ] 🔧 H19. Metric roles_changed_total
+- [ ] 🔧 H20. Metric permission_created_total
+- [ ] 🔧 H21. Metric db_query_duration per query
+- [ ] 🔧 H22. Metric external_call_duration (mail)
+- [ ] 🔧 H23. Gauge session_active count
+- [ ] 🔧 H24. Verify Go runtime metrics (goroutines/heap/GC)
+- [ ] 🔧 H25. Process metrics (fds, threads)
+- [ ] 🔧 H26. Build info metric (version/commit/date)
+- [ ] 🔧 H27. pprof expose + docs profiling
+- [ ] 🧭 H28. Sentry release tracking + source map upload
+- [ ] 🧭 H29. Sentry FE performance tracing
+- [ ] 🧭 H30. Sentry session replay (optional)
+- [ ] 🔧 H31. Error code catalog + metric by code
+- [ ] 🔧 H32. Slow query threshold per-env + sample rate
+- [ ] 🔧 H33. Access log sampling high-traffic path
+- [ ] 🔧 H34. PII scrubbing log (email masking)
+- [ ] 🔧 H35. Log retention + collector rotation config
+- [ ] 🔧 H36. Synthetic monitoring blackbox login flow
+- [ ] 🔧 H37. External uptime monitoring docs
+- [ ] 🔧 H38. Status page generator dari health
+- [ ] 🔧 H39. Trace propagate ke realtime WS messages
+- [ ] 🔧 H40. Gateway span attributes upstream latency
+- [ ] 🔧 H41. FE Web Vitals collector → endpoint
+- [ ] 🔧 H42. FE error boundary → errorreporter
+- [ ] 🔧 H43. FE user action breadcrumbs
+- [ ] 🔧 H44. Alert threshold testing
+- [ ] 🔧 H45. On-call runbook per alert
+- [ ] 🔧 H46. Metric cardinality audit
+- [ ] 🔧 H47. OTel baggage propagation
+- [ ] 🔧 H48. Continuous profiling (Pyroscope)
+- [ ] 🔧 H49. pg_stat_statements + dashboard
+- [ ] 🔧 H50. Slow query alert
+- [ ] 🔧 H51. Redis latency monitoring + bigkey scan
+- [ ] 🔧 H52. Stream consumer lag dashboard
+- [ ] 🔧 H53. DLQ depth gauge + alert dashboard
+- [ ] 🔧 H54. Worker processed/failed rate per handler
+- [ ] 🔧 H55. Deploy webhook → Grafana annotation
+- [ ] 🔧 H56. Incident timeline template
+- [ ] 🔧 H57. Postmortem template + docs
+- [ ] 🔧 H58. Error budget policy doc
+- [ ] 🔧 H59. SLO availability + latency per service
+- [ ] 🔧 H60. SLO dashboard burn rate
+- [ ] 🔧 H61. Tail-based sampling slow requests only
+- [ ] 🔧 H62. FE kirim X-Request-ID ke backend
+- [ ] 🔧 H63. Debug log level per-request header
+- [ ] 🔧 H64. Observability docs: apa yang diukur
+
+---
+
+## Testing & QA
+
+- [ ] 🔧 I1. Unit test users service CRUD + validasi
+- [ ] 🔧 I2. Unit test rbac SetUserRoles (unknown role)
+- [ ] 🔧 I3. Unit test rbac CreatePermission (format + duplikat)
+- [ ] 🔧 I4. Unit test auth EnsureBootstrapAdmin (conflict reset)
+- [ ] 🔧 I5. Unit test auth SetPasswordByID (not found + revoke)
+- [ ] 🔧 I6. Integration test POST /rbac/permissions
+- [ ] 🔧 I7. Integration test PUT /rbac/users/{id}/roles (ver bump)
+- [ ] 🔧 I8. Integration test PATCH /users email conflict → 409
+- [ ] 🔧 I9. Integration test POST /auth/users/{id}/password
+- [ ] 🔧 I10. Integration test login telemetry terisi
+- [ ] 🔧 I11. Integration test online status (session aktif)
+- [ ] 🔧 I12. Contract test FE↔BE schema validation
+- [ ] 🔧 I13. Property-based test validator permission name
+- [ ] 🔧 I14. Fuzz test handler decode
+- [ ] 🔧 I15. Race detector di CI (go test -race, Linux)
+- [ ] 🔧 I16. Coverage report + gate ≥70%
+- [ ] 🔧 I17. Coverage badge per-package
+- [ ] 🔧 I18. Mutation testing spike (go-mutesting)
+- [ ] 🔧 I19. E2E: login gagal → error message
+- [ ] 🔧 I20. E2E: lockout flow (5x gagal → locked)
+- [ ] 🔧 I21. E2E: multi-tab refresh rotation simulasi
+- [ ] 🔧 I22. E2E: session expired → redirect login
+- [ ] 🔧 I23. E2E: akses /admin tanpa login → redirect
+- [ ] 🔧 I24. E2E: akses roles tanpa permission → 403 UI
+- [ ] 🔧 I25. E2E permanen: create role duplikat → inline error
+- [ ] 🔧 I26. E2E: edit email duplikat → inline error
+- [ ] 🔧 I27. E2E: avatar URL invalid → fallback inisial
+- [ ] 🔧 I28. E2E: pagination next/prev
+- [ ] 🔧 I29. E2E: logout dari roles page
+- [ ] 🔧 I30. E2E: keyboard navigation sidebar
+- [ ] 🔧 I31. E2E mobile: register flow penuh
+- [ ] 🔧 I32. E2E mobile: roles accordion tap
+- [ ] 🔧 I33. Visual regression screenshot diff halaman utama
+- [ ] 🔧 I34. A11y scan axe-core per halaman
+- [ ] 🔧 I35. Lighthouse a11y score gate ≥95
+- [ ] 🔧 I36. Unit test FE: AuthProvider boot refresh
+- [ ] 🔧 I37. Unit test FE: session-expired event handler
+- [ ] 🔧 I38. Unit test FE: deviceLabel helper
+- [ ] 🔧 I39. Unit test FE: RequirePermission cabang booting
+- [ ] 🔧 I40. Unit test contracts: silentRefresh single-flight
+- [ ] 🔧 I41. Unit test contracts: GATEWAY_URL semua cabang
+- [ ] 🔧 I42. Integration test worker: SetUserRoles audit emitted
+- [ ] 🔧 I43. Test migration up/down idempotency (2x)
+- [ ] 🔧 I44. Regression test: skema uuid lama → integer path
+- [ ] 🔧 I45. Testcontainers reuse optimization
+- [ ] 🔧 I46. Golden file envelope response
+- [ ] 🔧 I47. Load test k6 users list 100 VU
+- [ ] 🔧 I48. Load test login storm
+- [ ] 🔧 I49. Soak test 1 jam memory leak check
+- [ ] 🔧 I50. Security test SQLi payload suite
+- [ ] 🔧 I51. Security test XSS di display_name
+- [ ] 🔧 I52. Security test CSRF dari origin lain
+- [ ] 🔧 I53. Chaos: redis down saat login (fail-open verify)
+- [ ] 🔧 I54. Chaos: postgres restart saat traffic
+- [ ] 🔧 I55. Snapshot test ui primitives
+- [ ] 🔧 I56. Storybook interaction test (jika diadopsi)
+- [ ] 🔧 I57. Test data builder pattern Profile/Role
+- [ ] 🔧 I58. Test fixtures golden users JSON
+- [ ] 🔧 I59. API fuzzing restler/openapi-fuzzer staging
+- [ ] 🔧 I60. Contract drift detection CI (openapi.json diff)
+- [ ] 🔧 I61. Test naming convention doc
+- [ ] 🔧 I62. Test worker DLQ replay flow
+- [ ] 🔧 I63. Test audit event semua mutasi (spy publisher)
+- [ ] 🔧 I64. Test pagination boundary offset melebihi total
+- [ ] 🔧 I65. Test sort/filter param invalid → 400
+- [ ] 🔧 I66. Test concurrent register email sama (satu sukses)
+- [ ] 🔧 I67. Test concurrent refresh single-flight
+- [ ] 🔧 I68. Test role assignment race dua assign bersamaan
+- [ ] 🔧 I69. Test ver bump setelah role change
+- [ ] 🔧 I70. Test delete user → sesi revoked
+- [ ] 🔧 I71. Test admin reset password → sesi revoked
+- [ ] 🔧 I72. Test ganti email → login email baru
+- [ ] 🔧 I73. Test avatar URL invalid → fallback
+- [ ] 🔧 I74. Test online status berubah saat revoke
+- [ ] 🔧 I75. Test telemetry IP/UA dari header asli
+- [ ] 🔧 I76. Test device label mapping UA umum
+- [ ] 🔧 I77. Test budget gate gagal saat bundle membengkak
+- [ ] 🔧 I78. Test check-deps menangkap impor lintas app
+- [ ] 🔧 I79. Visual test drawer mobile buka/tutup
+- [ ] 🔧 I80. Test i18n fallback (jika diadopsi)
+
+---
+
+## Developer Experience
+
+- [ ] 🔧 J1. Makefile target `make dev-test` (gates pra-push)
+- [ ] 🔧 J2. Makefile `make open` (shell/docs/health)
+- [ ] 🔧 J3. Pre-commit hook husky + lint-staged (biome + gofumpt)
+- [ ] 🔧 J4. commit-msg hook commitlint lokal
+- [ ] 🔧 J5. .editorconfig
+- [ ] 🔧 J6. .vscode/settings.json + extensions.json
+- [ ] 🔧 J7. .vscode/launch.json (delve debug)
+- [ ] 🔧 J8. Devcontainer (Go + Node + Docker)
+- [ ] 🔧 J9. shellcheck semua script di CI
+- [ ] 🔧 J10. actionlint untuk workflow files
+- [ ] 🔧 J11. yamllint semua yaml
+- [ ] 🔧 J12. markdownlint docs
+- [ ] 🔧 J13. Air config per-service committed
+- [ ] 🔧 J14. Evaluasi go run -watch (Go experiment)
+- [ ] 🔧 J15. Swagger UI lokal per-service (tanpa gateway)
+- [ ] 🔧 J16. Seed data realistis (20 user + roles variatif)
+- [ ] 🔧 J17. make seed-reset (wipe + seed cepat)
+- [ ] 🔧 J18. Generator `new-service <name>` dari _template
+- [ ] 🔧 J19. Generator `new-migration <svc> <name>`
+- [ ] 🔧 J20. Script db-shell per service
+- [ ] 🔧 J21. Script logs <svc> dengan filter
+- [ ] 🔧 J22. Script open-docs (buka Scalar)
+- [ ] 🧭 J23. Task runner alternatif (Task/Just) evaluasi
+- [ ] 🔧 J24. make check-env validasi keys .env.example
+- [ ] 🔧 J25. Env var reference auto-generate dari struct tag
+- [ ] 🔧 J26. Whats-new modal baca dari changelog
+- [ ] 🔧 J27. Local HTTPS dev (mkcert) untuk secure cookie
+- [ ] 🔧 J28. Delve attach debug script
+- [ ] 🔧 J29. make test-watch (watch mode)
+- [ ] 🔧 J30. FE test watch script per-app
+- [ ] 🔧 J31. Index halaman standalone dev entries (semua remote)
+- [ ] 🔧 J32. MSW node mock server standalone
+- [ ] 🔧 J33. Fake data generator CLI
+- [ ] 🔧 J34. DB diagram auto-generate dari migration
+- [ ] 🔧 J35. OpenAPI diff report di PR (oasdiff)
+- [ ] 🔧 J36. Breaking change gate (oasdiff breaking → fail)
+- [ ] 🔧 J37. PR template dengan checklist
+- [ ] 🔧 J38. Issue templates (bug/feature)
+- [ ] 🔧 J39. CODEOWNERS per directory
+- [ ] 🔧 J40. CONTRIBUTING.md
+- [ ] 🔧 J41. GOVERNANCE.md
+- [ ] 🔧 J42. Support matrix doc (OS/Node/Go)
+- [ ] 🔧 J43. Troubleshooting guide
+- [ ] 🔧 J44. FAQ doc
+- [ ] 🔧 J45. Glossary istilah domain
+- [ ] 🔧 J46. ADR template
+- [ ] 🔧 J47. ADR index table
+- [ ] 🔧 J48. Renovate tuning (schedule + grouping)
+- [ ] 🔧 J49. Renovate automerge patch devDeps
+- [ ] 🔧 J50. Renovate lockFileMaintenance schedule
+- [ ] 🔧 J51. Mailpit (local email inbox) di compose lab
+- [ ] 🔧 J52. RedisInsight di compose lab
+- [ ] 🔧 J53. pgweb optional di lab
+- [ ] 🔧 J54. make psql shortcut
+- [ ] 🔧 J55. make redis-cli shortcut
+- [ ] 🔧 J56. Dev environment banner persist dari env
+- [ ] 🔧 J57. Error message link ke troubleshooting docs
+- [ ] 🔧 J58. Handler skeleton generator dari spec
+- [ ] 🔧 J59. new-service generator + spec + e2e stub
+- [ ] 🔧 J60. revive inline doc comment lint
+- [ ] 🔧 J61. TODO/FIXME scan CI dengan issue link
+- [ ] 🔧 J62. Generated code header verification
+- [ ] 🔧 J63. Error wrapping convention lint
+- [ ] 🔧 J64. Go version manager docs (mise)
+- [ ] 🔧 J65. Node version manager docs (fnm)
+- [ ] 🔧 J66. Windows dev guide (PowerShell)
+- [ ] 🔧 J67. macOS dev guide (brew)
+- [ ] 🔧 J68. Linux dev guide (apt)
+- [ ] 🔧 J69. pprof how-to guide untuk dev
+- [ ] 🔧 J70. Delve + vscode debugging guide
+- [ ] 🔧 J71. Tracing lokal guide
+- [ ] 🔧 J72. Test data isolation guide
+- [ ] 🔧 J73. danger.js review automation
+- [ ] 🔧 J74. Release notes verify (release-please jalan)
+- [ ] 🔧 J75. Internal npm mirror config (network lambat)
+- [ ] 🔧 J76. Consistent error wrapping convention doc
+
+---
+
+## Architecture & Scalability
+
+- [ ] 🔧 K1. Template drift check (template vs services diff CI)
+- [ ] 🔧 K2. Shared DTO types di platform (anti duplikasi struct)
+- [ ] 🧭 K3. gRPC antar service (evaluasi — deferred)
+- [ ] 🔧 K4. Event-carried state transfer (display_name di user.created)
+- [ ] 🔧 K5. CQRS ringan: read model users list
+- [ ] 🔧 K6. Outbox table pattern semua event
+- [ ] 🔧 K7. Event replay tooling dari stream awal
+- [ ] 🔧 K8. Saga pattern multi-service flow (register+role+profile)
+- [ ] 🔧 K9. Anti-corruption layer untuk integrasi pihak ketiga
+- [ ] 🧭 K10. Service mesh evaluasi doc (istio/linkerd triggers)
+- [ ] 🧭 K11. Multi-tenant readiness (tenant_id + scoping)
+- [ ] 🔧 K12. Sharding strategy docs (users by id hash triggers)
+- [ ] 🔧 K13. Read model denormalisasi dashboard stats
+- [ ] 🔧 K14. Materialized view statistik harian
+- [ ] 🧭 K15. Event sourcing audit penuh (evaluasi)
+- [ ] 🧭 K16. BFF pattern per-platform (mobile BFF)
+- [ ] 🧭 K17. Mobile client API contract review
+- [ ] 🧭 K18. Public API + API key auth
+- [ ] 🧭 K19. Webhook system outbound
+- [ ] 🔧 K20. Worker handler plugin architecture
+- [ ] 🔧 K21. Dynamic worker handler registration (config-driven)
+- [ ] 🔧 K22. Service discovery abstraction via env
+- [ ] 🧭 K23. Centralized config service (evaluasi vs env)
+- [ ] 🔧 K24. Blue-green infra template
+- [ ] 🧭 K25. Multi-region active-passive docs
+- [ ] 🧭 K26. Data residency per deployment
+- [ ] 🧭 K27. Compliance mode toggle
+- [ ] 🧭 K28. Centralized rate limiter service
+- [ ] 🔧 K29. Token introspection endpoint
+- [ ] 🧭 K30. OIDC provider mode
+- [ ] 🧭 K31. SCIM provisioning (enterprise)
+- [ ] 🧭 K32. LDAP/AD connector (enterprise)
+- [ ] 🧭 K33. SAML support (enterprise)
+- [ ] 🧭 K34. Organization/workspace hierarchy
+- [ ] 🧭 K35. Team/division entity
+- [ ] 🧭 K36. Invitation flow (email invite)
+- [ ] 🔧 K37. User lifecycle state machine
+- [ ] 🧭 K38. Service account entity (non-human)
+- [ ] 🧭 K39. API key entity + scopes
+- [ ] 🧭 K40. Delegated admin scopes
+- [ ] 🧭 K41. Permission inheritance hierarchy
+- [ ] 🧭 K42. Resource-scoped permissions (per-entity ACL)
+- [ ] 🧭 K43. Policy-as-code (OPA evaluasi)
+- [ ] 🧭 K44. Event sourcing audit penuh
+- [ ] 🧭 K45. Search service terpisah (Meilisearch)
+- [ ] 🧭 K46. Notification service terpisah
+- [ ] 🧭 K47. File storage service (S3/MinIO)
+- [ ] 🔧 K48. Image processing (resize avatar)
+- [ ] 🧭 K49. Reporting service (async export)
+- [ ] 🧭 K50. Data warehouse pipeline (CDC)
+- [ ] 🧭 K51. CDC via Debezium
+- [ ] 🧭 K52. Message broker abstraction (→Kafka path)
+- [ ] 🔧 K53. Scheduler service terpisah
+- [ ] 🔧 K54. Leader election library formal
+- [ ] 🔧 K55. Distributed lock library formal
+- [ ] 🔧 K56. Idempotency service
+- [ ] 🔧 K57. Distributed rate limiter service
+- [ ] 🧭 K58. Feature flag service
+- [ ] 🧭 K59. Config service dengan audit
+- [ ] 🔧 K60. Secrets rotation service
+- [ ] 🔧 K61. Certificate management automation
+- [ ] 🔧 K62. Edge: multiple gateway + LB
+- [ ] 🔧 K63. Gateway plugin/middleware registry
+- [ ] 🧭 K64. Gateway per-tenant routing
+- [ ] 🔧 K65. Gateway request transformation rules
+- [ ] 🔧 K66. Gateway response caching layer
+- [ ] 🔧 K67. Gateway WebSocket routing dinamis
+- [ ] 🔧 K68. Gateway quota management per-consumer
+- [ ] 🧭 K69. Gateway metering (roadmap jauh)
+- [ ] 🔧 K70. Architecture fitness functions (arch tests)
+
+---
+
+## Data & Migrations
+
+- [ ] 🔧 L1. Migration lint CI (DROP tanpa IF EXISTS, dll)
+- [ ] 🔧 L2. Migration up test dari nol eksplisit di CI
+- [ ] 🔧 L3. Migration down test semua
+- [ ] 🔧 L4. Migration checksum verification (anti edit file yang sudah jalan)
+- [ ] 🔧 L5. Schema docs auto-generate dari information_schema
+- [ ] 🔧 L6. ERD auto-generate (dbml)
+- [ ] 🔧 L7. Data dictionary doc per tabel
+- [ ] 🔧 L8. COMMENT ON column + generate docs
+- [ ] 🔧 L9. Default value audit semua kolom
+- [ ] 🔧 L10. Constraint naming convention (ck_/fk_/uq_)
+- [ ] 🔧 L11. CHECK constraints (email format, status enum di DB level)
+- [ ] 🔧 L12. Postgres ENUM type untuk status
+- [ ] 🔧 L13. updated_at trigger otomatis DB-level
+- [ ] 🔧 L14. created_by/updated_by kolom
+- [ ] 🧭 L15. Soft delete deleted_at kolom (jika restore diinginkan)
+- [ ] 🔧 L16. Index bloat monitoring
+- [ ] 🔧 L17. Unused index cleanup job
+- [ ] 🔧 L18. Duplicate index detection
+- [ ] 🔧 L19. FK audit: semua relasi logis punya FK atau documented tanpa FK
+- [ ] 🔧 L20. ON DELETE behavior audit semua FK
+- [ ] 🔧 L21. Data type konsistensi TEXT vs VARCHAR
+- [ ] 🔧 L22. Collation + encoding standard doc
+- [ ] 🔧 L23. Audit TIMESTAMPTZ semua kolom waktu
+- [ ] 🔧 L24. Sequence gap monitoring
+- [ ] 🔧 L25. Identity cache size tuning
+- [ ] 🔧 L26. Migration dry-run (transaction + rollback)
+- [ ] 🔧 L27. Migration duration tracking + alert
+- [ ] 🔧 L28. Lock timeout config migration
+- [ ] 🔧 L29. CREATE INDEX CONCURRENTLY untuk tabel besar
+- [ ] 🔧 L30. Rollback playbook per-migration
+- [ ] 🔧 L31. Data backfill pattern batch
+- [ ] 🔧 L32. Backfill job framework worker
+- [ ] 🔧 L33. Schema registry doc single source
+- [ ] 🔧 L34. Schema drift detection antar environment
+- [ ] 🔧 L35. Backup restore verification mingguan
+- [ ] 🔧 L36. Point-in-time recovery (WAL archiving)
+- [ ] 🔧 L37. Data masking staging copy
+- [ ] 🔧 L38. Anonymized dataset generator dev
+- [ ] 🔧 L39. Seed data versioning idempotent
+- [ ] 🔧 L40. Seed idempotency audit semua seeder
+- [ ] 🔧 L41. Referential integrity report antar schema
+- [ ] 🔧 L42. Query review checklist PR yang ubah SQL
+- [ ] 🔧 L43. Slow query budget per-endpoint
+- [ ] 🔧 L44. Table growth projection doc
+- [ ] 🔧 L45. Archive strategy data lama
+- [ ] 🔧 L46. Archive purge automation
+- [ ] 🔧 L47. Unique constraint audit
+- [ ] 🔧 L48. Partial unique index (jika soft delete)
+- [ ] 🔧 L49. Generated columns (email_domain)
+- [ ] 🔧 L50. Full-text search index tsvector
+- [ ] 🔧 L51. Trigram index fuzzy search (pg_trgm)
+- [ ] 🔧 L52. JSONB metadata + GIN index
+- [ ] 🔧 L53. DB-level audit trigger
+- [ ] 🧭 L54. Row-level security (multi-tenant)
+- [ ] 🔧 L55. Vacuum/analyze schedule automation
+- [ ] 🔧 L56. Migration style guide doc
+
+---
+
+## API & Contracts
+
+- [ ] 🔧 M1. OpenAPI description lengkap semua endpoint
+- [ ] 🔧 M2. Example request/response per endpoint
+- [ ] 🔧 M3. Operation tags grouping
+- [ ] 🔧 M4. Deprecated flag documentation
+- [ ] 🔧 M5. Spectral spec lint ruleset
+- [ ] 🔧 M6. Error response standard reference semua endpoint
+- [ ] 🔧 M7. Pagination component enforced semua list
+- [ ] 🔧 M8. Sorting parameter standard
+- [ ] 🔧 M9. Filtering standard (RSQL/JSONapi style)
+- [ ] 🔧 M10. Sparse fieldsets
+- [ ] 🔧 M11. Idempotency-Key header spec
+- [ ] 🔧 M12. Rate limit headers dokumentasi
+- [ ] 🧭 M13. ETag/If-Match optimistic locking spec
+- [ ] 🔧 M14. Bulk endpoint spec standard
+- [ ] 🧭 M15. Webhook subscription spec
+- [ ] 🔧 M16. Async operation spec (202 + status)
+- [ ] 🔧 M17. File upload spec (multipart)
+- [ ] 🔧 M18. Export/download spec
+- [ ] 🔧 M19. Health endpoint spec standard
+- [ ] 🔧 M20. Metrics endpoint excluded documented
+- [ ] 🧭 M21. /v2 scaffold strategy doc
+- [ ] 🔧 M22. Deprecation sunset header middleware
+- [ ] 🔧 M23. API changelog dari spec diff
+- [ ] 🔧 M24. SDK versioning alignment
+- [ ] 🔧 M25. Runtime response validation test
+- [ ] 🔧 M26. Envelope message konsistensi bahasa
+- [ ] 🔧 M27. Error code enum terpusat
+- [ ] 🧭 M28. Error message multi-bahasa Accept-Language
+- [ ] 🧭 M29. Content negotiation XML (kemungkinan no)
+- [ ] 🔧 M30. HATEOAS ringan (next/prev url)
+- [ ] 🔧 M31. Cursor pagination spec + implementasi
+- [ ] 🔧 M32. Total count estimation mode
+- [ ] 🔧 M33. Include related (?include=roles)
+- [ ] 🔧 M34. Batch get endpoint
+- [ ] 🔧 M35. Search endpoint (?q= full text)
+- [ ] 🔧 M36. Audit viewer filter params spec
+- [ ] 🔧 M37. Audit viewer export endpoint
+- [ ] 🔧 M38. Session list endpoint users service
+- [ ] 🔧 M39. Revoke session per-session-id endpoint
+- [ ] 🔧 M40. Revoke all sessions per-user endpoint
+- [ ] 🔧 M41. User activation/deactivation endpoint
+- [ ] 🔧 M42. GET user's roles endpoint
+- [ ] 🔧 M43. Permission existence check (HEAD)
+- [ ] 🔧 M44. Bulk permission create
+- [ ] 🔧 M45. GET /roles/{id}/users
+- [ ] 🔧 M46. /me gabung profile + roles + permissions
+- [ ] 🔧 M47. /me cache headers
+- [ ] 🔧 M48. Health detail mode (?detail=1)
+- [ ] 🔧 M49. /version endpoint semua service
+- [ ] 🔧 M50. OpenAPI server URLs per-environment
+- [ ] 🔧 M51. Security scheme definitions lengkap
+- [ ] 🔧 M52. Spec link objects antar operation
+- [ ] 🔧 M53. Discriminator event payload types
+- [ ] 🔧 M54. Webhook spec (openapi webhooks)
+- [ ] 🔧 M55. Default value documentation
+- [ ] 🔧 M56. Nullable vs optional audit
+- [ ] 🔧 M57. ApiClient interface cleanup (hilangkan cast)
+- [ ] 🔧 M58. Codegen split output per-tag
+- [ ] 🔧 M59. Codegen zod schema untuk FE validation
+- [ ] 🔧 M60. Contracts tree-shakeable per-path export
+
+---
+
+## Docs & Governance
+
+- [ ] 🔧 N1. README badges (CI/coverage/Go version/license)
+- [ ] 🔧 N2. README screenshot/GIF dashboard
+- [ ] 🔧 N3. README quickstart video
+- [ ] 🔧 N4. ADR 0002+: integer ids, users table move, consolidated migrations
+- [ ] 🔧 N5. ADR supercede/link mechanism
+- [ ] 🔧 N6. SECURITY.md public disclosure
+- [ ] 🔧 N7. CONTRIBUTING.md
+- [ ] 🧭 N8. CODE_OF_CONDUCT.md
+- [ ] 🔧 N9. GOVERNANCE.md
+- [ ] 🔧 N10. SUPPORT.md
+- [ ] 🔧 N11. FAQ.md
+- [ ] 🔧 N12. TROUBLESHOOTING.md
+- [ ] 🔧 N13. RUNBOOK.md operasional
+- [ ] 🔧 N14. BACKUP_RESTORE.md
+- [ ] 🔧 N15. RELEASE.md proses rilis
+- [ ] 🔧 N16. TESTING.md strategi lengkap
+- [ ] 🔧 N17. PERFORMANCE.md gabungan hasil ukur
+- [ ] 🔧 N18. DECISIONS log ringkas
+- [ ] 🔧 N19. Diagram detail worker + realtime
+- [ ] 🔧 N20. Sequence diagram auth flow
+- [ ] 🔧 N21. Sequence diagram register + materialize
+- [ ] 🔧 N22. Sequence diagram refresh rotation
+- [ ] 🔧 N23. State diagram session lifecycle
+- [ ] 🔧 N24. Contoh curl per endpoint di docs
+- [ ] 🔧 N25. Glossary istilah domain
+- [ ] 🔧 N26. Port table auto-generate dari compose
+- [ ] 🔧 N27. Env var reference auto-generate
+- [ ] 🔧 N28. Docs versioning snapshot
+- [ ] 🧭 N29. Docs portal (mkdocs material/docusaurus)
+- [ ] 🔧 N31. CHANGELOG.md generated + committed
+- [ ] 🔧 N32. Release notes draft di PR
+- [ ] 🔧 N33. Migration guide antar minor
+- [ ] 🔧 N34. Upgrade guide lab/uat/prod step-by-step
+- [ ] 🔧 N35. Capacity planning worksheet
+- [ ] 🔧 N36. Cost estimation per environment
+- [ ] 🔧 N37. Dependency licenses summary
+- [ ] 🔧 N38. Data flow diagram semua stream
+- [ ] 🔧 N39. Trust boundaries diagram
+- [ ] 🔧 N40. Threat model per service
+- [ ] 🔧 N41. Incident response playbook
+- [ ] 🧭 N42. On-call rotation doc
+- [ ] 🔧 N43. Service ownership matrix
+- [ ] 🔧 N44. Definition of done per tipe work
+- [ ] 🔧 N45. Coding standards Go + TS
+- [ ] 🔧 N46. Naming conventions doc
+- [ ] 🔧 N47. Git workflow doc
+- [ ] 🔧 N48. Code review guidelines
+- [ ] 🧭 N49. Pair/mob programming guide
+- [ ] 🔧 N50. Knowledge sharing cadence
+- [ ] 🔧 N51. Learning resources list
+- [ ] 🔧 N52. Archive policy docs lama
+
+---
+
+## CI/CD & Release
+
+- [ ] 🔧 C1. CI job matrix parallel (go/web/e2e/security)
+- [ ] 🔧 C2. Concurrency cancel superseded runs
+- [ ] 🔧 C3. Verify go build cache hit rate
+- [ ] 🔧 C4. Verify pnpm store cache hit
+- [ ] 🔧 C5. BuildKit registry cache backend
+- [ ] 🔧 C6. Test shards paralel per-package
+- [ ] 🔧 C7. Flaky test detector (re-run + label)
+- [ ] 🔧 C8. Branch protection + required checks doc
+- [ ] 🧭 C9. Environment protection rules (manual approval uat/demo)
+- [ ] 🧭 C10. Auto-deploy uat after merge main
+- [ ] 🧭 C11. Auto-deploy demo nightly
+- [ ] 🧭 C12. Prod deploy approval gate
+- [ ] 🔧 C13. Pre-deploy backup otomatis
+- [ ] 🔧 C14. Post-deploy smoke otomatis
+- [ ] 🔧 C15. Rollback otomatis saat smoke gagal
+- [ ] 🔧 C16. Deploy notification Slack/Discord
+- [ ] 🔧 C17. Verify release-please berjalan
+- [ ] 🔧 C18. Changelog per-component
+- [ ] 🔧 C19. Image tag semver + latest + sha
+- [ ] 🔧 C20. GitHub release dengan artifacts
+- [ ] 🔧 C21. Jenkins parallel stage lint+test
+- [ ] 🔧 C22. Jenkins lockable resource per-env
+- [ ] 🔧 C23. Jenkins credentials masked best practice
+- [ ] 🔧 C24. Jenkins build discarder policy
+- [ ] 🔧 C25. Jenkins skip docker saat docs-only change
+- [ ] 🔧 C26. CI path filters (skip go job saat docs only)
+- [ ] 🔧 C27. Draft PR subset checks
+- [ ] 🔧 C28. Nightly full suite (load + chaos)
+- [ ] 🔧 C29. Renovate PR automerge scheduled
+- [ ] 🔧 C30. JUnit test report publishing
+- [ ] 🔧 C31. Flaky test quarantine folder
+- [ ] 🔧 C32. Coverage diff comment di PR
+- [ ] 🔧 C33. Bundle size diff comment di PR
+- [ ] 🔧 C34. Lighthouse CI comment di PR
+- [ ] 🧭 C35. Preview environment per-PR
+- [ ] 🔧 C36. Preview auto-destroy setelah merge
+- [ ] 🧭 C37. GitOps (Argo CD evaluasi)
+- [ ] 🔧 C38. Kustomize overlay per-env
+- [ ] 🧭 C39. Helm chart evaluasi
+- [ ] 🔧 C40. Secret scanning pre-receive hook
+- [ ] 🔧 C41. Auto-delete merged branches
+- [ ] 🔧 C42. Protected version tags
+- [ ] 🔧 C43. Registry retention policy old tags
+- [ ] 🔧 C44. Registry vulnerability rescan scheduled
+- [ ] 🔧 C45. Provenance attestation (SLSA)
+- [ ] 🔧 C46. Deploy drift detection
+- [ ] 🧭 C47. Runbook automation evaluasi
+- [ ] 🧭 C48. Change freeze calendar
+- [ ] 🔧 C49. Deploy audit (who/when/what)
+- [ ] 🔧 C50. Rollback dry-run mode
+- [ ] 🔧 C51. Monorepo decision doc
+- [ ] 🧭 C52. Self-hosted runner build lambat
+- [ ] 🔧 C53. Test impact analysis (jalankan terdampak saja)
+- [ ] 🔧 C54. Release candidate process (rc tag)
+- [ ] 🔧 C55. Hotfix branch workflow doc
+- [ ] 🔧 C56. Feature branch environment on-demand
+
+---
+
+## Infra & Ops
+
+- [ ] 🔧 F1. Terraform/Opentofu provisi VPS
+- [ ] 🔧 F2. Ansible bootstrap VPS playbook
+- [ ] 🔧 F3. Firewall script (hanya 80/443/SSH)
+- [ ] 🔧 F4. SSH hardening guide (key-only, fail2ban)
+- [ ] 🔧 F5. fail2ban config auth endpoint
+- [ ] 🔧 F6. CrowdSec IP blocklist integration
+- [ ] 🔧 F7. node_exporter + VPS dashboards
+- [ ] 🔧 F8. Disk alert 80% + auto-clean docker cron
+- [ ] 🔧 F9. Memory alert + swap config doc
+- [ ] 🔧 F10. CPU alert sustained high
+- [ ] 🔧 F11. Logrotate semua log VPS
+- [ ] 🔧 F12. Unattended-upgrades security patches
+- [ ] 🔧 F13. Kernel sysctl tuning (somaxconn, file-max)
+- [ ] 🔧 F14. chrony time sync (JWT exp critical)
+- [ ] 🔧 F15. DNS health check + failover doc
+- [ ] 🧭 F16. Cloudflare setup guide (proxy + cache)
+- [ ] 🧭 F17. Cloudflare WAF rules auth endpoint
+- [ ] 🔧 F18. DDoS mitigation doc
+- [ ] 🧭 F19. Multi-VPS load balancer setup
+- [ ] 🧭 F20. Database VPS terpisah
+- [ ] 🧭 F21. Redis VPS terpisah
+- [ ] 🧭 F22. Backup VPS offsite (restic)
+- [ ] 🔧 F23. Backup encryption at rest
+- [ ] 🔧 F24. Restore drill kuartalan
+- [ ] 🧭 F25. Immutable infrastructure path
+- [ ] 🔧 F26. Packer golden image VPS
+- [ ] 🔧 F27. Zero-downtime VPS deploy (blue-green port swap)
+- [ ] 🔧 F28. Health-check LB removal
+- [ ] 🔧 F29. Systemd unit compose auto-start
+- [ ] 🔧 F30. Docker daemon.json tuning
+- [ ] 🧭 F31. Watchtower container auto-update
+- [ ] 🔧 F32. Registry mirror pull cepat
+- [ ] 🔧 F33. IPv6 support doc
+- [ ] 🔧 F34. Internal DNS coredns service names
+- [ ] 🔧 F35. Secrets disk encryption (age/sops)
+- [ ] 🔧 F36. VPS access audit log
+- [ ] 🔧 F37. Bastion/jump host pattern
+- [ ] 🧭 F38. Tailscale/wireguard admin access
+- [ ] 🔧 F39. VPS resource dashboard
+- [ ] 🔧 F40. VPS sizing recommendation per user count
+- [ ] 🔧 F41. Cost estimasi bulanan per skala
+- [ ] 🔧 F42. Scale-up playbook vertikal
+- [ ] 🔧 F43. Scale-out playbook multi-VPS
+- [ ] 🔧 F44. Migration path VPS → K8s
+- [ ] 🔧 F45. CIS hardening benchmark VPS
+- [ ] 🔧 F46. VPS compromise incident response
+- [ ] 🔧 F47. Data residency region VPS
+- [ ] 🔧 F48. SLA uptime target doc
+- [ ] 🔧 F49. Maintenance window + announcement template
+- [ ] 🔧 F50. Vendor lock-in assessment
+- [ ] 🔧 F51. Exit strategy doc
+- [ ] 🔧 F52. Documentation portal terpusat
+- [ ] 🧭 F53. Public status page
+- [ ] 🧭 F54. On-prem air-gapped variant
+- [ ] 🔧 F55. ARM VPS support (multi-arch build)
+- [ ] 🔧 F56. Multi-arch image build CI (amd64+arm64)
+
+---
+
+## Frontend Engineering
+
+- [ ] 🔧 Q1. State management audit doc (context vs query vs URL)
+- [ ] 🔧 Q2. Error boundary granular per-card
+- [ ] 🔧 Q3. Suspense boundary granular per-widget
+- [ ] 🔧 Q4. Progressive loading pattern
+- [ ] 🧭 Q5. react-hook-form + zod resolver evaluasi
+- [ ] 🔧 Q6. Zod schema share dari openapi codegen
+- [ ] 🔧 Q7. axe-core CI scan per halaman
+- [ ] 🔧 Q8. Skip-to-content link
+- [ ] 🔧 Q9. Landmark regions audit lengkap
+- [ ] 🔧 Q10. Form error announcement a11y
+- [ ] 🔧 Q11. Table caption + scope a11y
+- [ ] 🔧 Q12. Color contrast token audit
+- [ ] 🔧 Q13. Screen reader testing doc
+- [ ] 🧭 Q14. i18n framework (lingui/react-i18next)
+- [ ] 🧭 Q15. i18n bahasa Indonesia default + EN
+- [ ] 🧭 Q16. i18n pluralization + date format
+- [ ] 🧭 Q17. Design tokens single source (Figma style)
+- [ ] 🔧 Q18. Dark/light theme implementasi penuh
+- [ ] 🔧 Q19. Theme system preference detection
+- [ ] 🧭 Q20. Framer-motion evaluasi
+- [ ] 🔧 Q21. Page enter stagger konsisten
+- [ ] 🔧 Q22. Button press scale micro-interaction
+- [ ] 🔧 Q23. Skeleton component library lengkap
+- [ ] 🔧 Q24. Icon weight konsistensi phosphor
+- [ ] 🔧 Q25. Typography clamp audit konsisten
+- [ ] 🔧 Q26. Spacing 4/8px grid audit
+- [ ] 🔧 Q27. Z-index scale token terpusat
+- [ ] 🔧 Q28. Breakpoint dokumentasi konsisten
+- [ ] 🔧 Q29. Container query per-komponen
+- [ ] 🔧 Q30. Print-friendly dashboard
+- [ ] 🔧 Q31. 404 custom page
+- [ ] 🔧 Q32. Offline detection UI
+- [ ] 🧭 Q33. PWA manifest + service worker
+- [ ] 🔧 Q34. PWA offline fallback page
+- [ ] 🧭 Q35. Web push notification
+- [ ] 🧭 Q36. Privacy-friendly analytics
+- [ ] 🧭 Q37. Feature flags client hook
+- [ ] 🧭 Q38. A/B testing infra
+- [ ] 🔧 Q39. Memo audit list render
+- [ ] 🔧 Q40. useTransition filter berat
+- [ ] 🔧 Q41. React compiler rules lint
+- [ ] 🔧 Q42. Zod safeParse API response
+- [ ] 🔧 Q43. AppError class discrimination
+- [ ] 🔧 Q44. Retry policy per-query exposure
+- [ ] 🔧 Q45. Auth context reducer pattern
+- [ ] 🔧 Q46. Session heartbeat visual indicator
+- [ ] 🔧 Q47. Multi-tab BroadcastChannel sync
+- [ ] 🔧 Q48. Route guard composition (perm + role + custom)
+- [ ] 🔧 Q49. Breadcrumb dari route meta
+- [ ] 🔧 Q50. Promise-based confirm dialog provider
+- [ ] 🔧 Q51. Copy-to-clipboard hook + toast
+- [ ] 🔧 Q52. useDebounce/useThrottle hooks
+- [ ] 🔧 Q53. useLocalStorage hook SSR-safe
+- [ ] 🔧 Q54. useMediaQuery hook
+- [ ] 🔧 Q55. Virtual list hook tabel besar
+- [ ] 🔧 Q56. Drag-and-drop reorder
+- [ ] 🔧 Q57. Date picker component filter range
+- [ ] 🔧 Q58. File dropzone component
+- [ ] 🔧 Q59. Image lightbox component
+- [ ] 🔧 Q60. Empty component variant ilustrasi
+- [ ] 🔧 Q61. Stat card trend arrow component
+- [ ] 🔧 Q62. Timeline component audit
+- [ ] 🔧 Q63. Badge variants lengkap
+- [ ] 🔧 Q64. Tooltip component library konsisten
+
+---
+
+## Product / Roadmap
+
+- [ ] 🔧 R1. Profil self-service page (edit nama, avatar, ganti password)
+- [ ] 🔧 R2. Sesi saya page (device list + revoke)
+- [ ] 🔧 R3. Audit viewer admin UI (endpoint sudah ada)
+- [ ] 🔧 R4. Dashboard overview page agregat
+- [ ] 🔧 R5. Grafik registrasi harian
+- [ ] 🧭 R6. In-app notification center
+- [ ] 🧭 R7. Email digest mingguan (worker job)
+- [ ] 🧭 R8. User invitation flow (email invite link)
+- [ ] 🧭 R9. Bulk invite CSV
+- [ ] 🔧 R10. User import/export
+- [ ] 🔧 R11. Role templates library
+- [ ] 🧭 R12. Permission request workflow (approval)
+- [ ] 🧭 R13. Approval inbox admin
+- [ ] 🧭 R14. Delegation akses sementara
+- [ ] 🧭 R15. User impersonation (ter-audit)
+- [ ] 🔧 R16. Audit log viewer filter + export lengkap
+- [ ] 🔧 R17. Session management page user sendiri
+- [ ] 🧭 R18. Account deletion self-service (grace period)
+- [ ] 🧭 R19. Email change self-service (verifikasi)
+- [ ] 🔧 R20. Password change self-service
+- [ ] 🧭 R21. Two-factor auth setup page
+- [ ] 🔧 R22. Recovery codes generation
+- [ ] 🔧 R23. Login history page user
+- [ ] 🔧 R24. Realtime admin dashboard (user online live)
+- [ ] 🧭 R25. Broadcast message ke user online
+- [ ] 🧭 R26. Chat/notification antar user
+- [ ] 🔧 R27. Presence API publik
+- [ ] 🔧 R28. API playground di docs (Scalar try-it)
+- [ ] 🧭 R29. API key management page
+- [ ] 🧭 R30. Webhook management page
+- [ ] 🔧 R31. Audit export scheduled email
+- [ ] 🔧 R32. User activity heatmap
+- [ ] 🔧 R33. Role usage analytics
+- [ ] 🔧 R34. Permission simulation tool
+- [ ] 🧭 R35. Compliance report generator
+- [ ] 🔧 R36. Data retention settings page
+- [ ] 🧭 R37. Branding customization per deployment
+- [ ] 🧭 R38. Custom domain per tenant
+- [ ] 🧭 R39. Onboarding wizard user baru
+- [ ] 🧭 R40. Guided tour dashboard
+- [ ] 🔧 R41. Global search lintar resource
+- [ ] 🔧 R42. Saved views/filters
+- [ ] 🔧 R43. Scheduled reports
+- [ ] 🧭 R44. Slack integration notif
+- [ ] 🧭 R45. Discord bot query
+- [ ] 🔧 R46. CLI tool admin ops
+- [ ] 🧭 R47. Terraform provider platform
+- [ ] 🔧 R48. Public API docs portal
+- [ ] 🔧 R49. Rate limit dashboard per consumer
+- [ ] 🧭 R50. Billing/usage metering
+- [ ] 🧭 R51. Marketplace template role
+- [ ] 🧭 R52. ML anomaly login detection
+- [ ] 🧭 R53. Risk-based auth scoring
+- [ ] 🧭 R54. Passwordless magic link
+- [ ] 🧭 R55. Social login Google/GitHub
+- [ ] 🧭 R56. Enterprise SSO SAML/OIDC
+
+---
+
+## Ringkasan
+
+| Kategori | Jumlah |
+| --- | --- |
+| Security | 96 |
+| Performance | 96 |
+| UI/UX Auth | 80 |
+| UI/UX Shell | 80 |
+| UI/UX Users | 70 |
+| UI/UX Roles | 70 |
+| Reliability | 70 |
+| Observability | 64 |
+| Testing & QA | 80 |
+| Developer Experience | 76 |
+| Architecture | 70 |
+| Data & Migrations | 56 |
+| API & Contracts | 60 |
+| Docs & Governance | 52 |
+| CI/CD & Release | 56 |
+| Infra & Ops | 56 |
+| FE Engineering | 64 |
+| Product/Roadmap | 56 |
+| **Total** | **1.202** |
+
+Item 🔧 (engineering) bisa langsung dikerjakan kapan pun. Item 🧭 butuh
+keputusan lo dulu (arah produk, biaya infra, atau breaking change) — jangan
+dikerjakan tanpa diskusi.
