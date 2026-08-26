@@ -226,6 +226,23 @@ export interface paths {
     patch: operations["updateRole"];
     trace?: never;
   };
+  "/api/v1/rbac/users/{id}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** replace the role set assigned to a user (bumps their ver) */
+    put: operations["setUserRoles"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/rbac/internal/claims/{sub}": {
     parameters: {
       query?: never;
@@ -409,6 +426,12 @@ export interface components {
       email?: string;
       displayName?: string;
       avatarUrl?: string;
+      online?: boolean;
+      activeSessions?: number;
+      /** Format: date-time */
+      lastLoginAt?: string | null;
+      lastLoginIp?: string;
+      lastLoginUserAgent?: string;
       /** Format: date-time */
       createdAt?: string;
       /** Format: date-time */
@@ -941,6 +964,43 @@ export interface operations {
       };
       /** @description unknown role */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeFail"];
+        };
+      };
+    };
+  };
+  setUserRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          roleIds: number[];
+        };
+      };
+    };
+    responses: {
+      /** @description ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeOK"];
+        };
+      };
+      /** @description unknown role in set */
+      400: {
         headers: {
           [name: string]: unknown;
         };

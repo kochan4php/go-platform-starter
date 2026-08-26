@@ -20,10 +20,17 @@ type Profile struct {
 	Status              string    `gorm:"not null;default:active"   json:"-"`
 	FailedLoginAttempts int       `gorm:"not null;default:0"        json:"-"`
 	LockedUntil         *time.Time `                                json:"-"`
-	DisplayName         string    `gorm:"not null;default:''"       json:"displayName"`
-	AvatarUrl           string    `gorm:"not null;default:''"       json:"avatarUrl"`
-	CreatedAt           time.Time `                                 json:"createdAt"`
-	UpdatedAt           time.Time `                                 json:"updatedAt"`
+	DisplayName         string     `gorm:"not null;default:''"       json:"displayName"`
+	AvatarUrl           string     `gorm:"not null;default:''"       json:"avatarUrl"`
+	LastLoginAt         *time.Time `                                 json:"lastLoginAt"`
+	LastLoginIP         string     `gorm:"not null;default:''"       json:"lastLoginIp"`
+	LastLoginUserAgent  string     `gorm:"not null;default:''"       json:"lastLoginUserAgent"`
+	CreatedAt           time.Time  `                                 json:"createdAt"`
+	UpdatedAt           time.Time  `                                 json:"updatedAt"`
+
+	// Computed at read time from auth.sessions (same database, read-only).
+	Online         bool `gorm:"-" json:"online"`
+	ActiveSessions int  `gorm:"-" json:"activeSessions"`
 }
 
 func (Profile) TableName() string { return "users.users" }

@@ -22,6 +22,29 @@ func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, pub platform.S
 	return &Service{db: db, rdb: rdb, log: log.With("component", "service"), pub: pub}
 }
 
+// attachPresence stamps online/activeSessions per profile by counting live
+// sessions in auth.sessions (read-only cross-schema access, no FK).
+func (s *Service) attachPresence(ctx context.Context, profiles []Profile) {
+	var aggs []struct {
+		UserID int64
+		N      int
+	}
+	if err := s.db.WithContext(ctx).Raw(
+		`SELECT user_id, COUNT(*) AS n FROM auth.sessions
+		 WHERE revoked_at IS NULL AND expires_at > now() GROUP BY user_id`,
+	).Scan(&aggs).Error; err != nil {
+		return // presence is best-effort; list stays usable without it
+	}
+	count := make(map[int64]int, len(aggs))
+	for _, a := range aggs {
+		count[a.UserID] = a.N
+	}
+	for i := range profiles {
+		profiles[i].ActiveSessions = count[profiles[i].ID]
+		profiles[i].Online = count[profiles[i].ID] > 0
+	}
+}
+
 func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
 	if in.ID <= 0 {
 		return nil, platform.ErrBadRequest("id must be a positive integer")
@@ -46,6 +69,7 @@ func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
 		}
 		return nil, err
 	}
+	s.attachPresence(ctx, []Profile{p})
 	return &p, nil
 }
 
@@ -61,6 +85,7 @@ func (s *Service) List(ctx context.Context, limit, offset int) ([]Profile, int64
 	if err := db.Order("created_at DESC").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
+	s.attachPresence(ctx, items)
 	return items, total, nil
 }
 

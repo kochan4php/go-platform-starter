@@ -50,6 +50,21 @@ func (h *Handlers) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	platform.OK(w, http.StatusOK, "ok", map[string]any{"items": items})
 }
 
+func (h *Handlers) SetUserRoles(w http.ResponseWriter, r *http.Request, id int64) {
+	var in struct {
+		RoleIds []int64 `json:"roleIds"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.SetUserRoles(r.Context(), id, in.RoleIds); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "roles_assigned", map[string]any{"id": id, "count": len(in.RoleIds)})
+}
+
 func (h *Handlers) CreatePermission(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Name string `json:"name"`

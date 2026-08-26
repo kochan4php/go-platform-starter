@@ -61,6 +61,11 @@ type UpdateRoleJSONBody struct {
 	Permissions *[]string `json:"permissions,omitempty"`
 }
 
+// SetUserRolesJSONBody defines parameters for SetUserRoles.
+type SetUserRolesJSONBody struct {
+	RoleIds []int64 `json:"roleIds"`
+}
+
 // CreatePermissionJSONRequestBody defines body for CreatePermission for application/json ContentType.
 type CreatePermissionJSONRequestBody CreatePermissionJSONBody
 
@@ -69,6 +74,9 @@ type CreateRoleJSONRequestBody = RoleInput
 
 // UpdateRoleJSONRequestBody defines body for UpdateRole for application/json ContentType.
 type UpdateRoleJSONRequestBody UpdateRoleJSONBody
+
+// SetUserRolesJSONRequestBody defines body for SetUserRoles for application/json ContentType.
+type SetUserRolesJSONRequestBody SetUserRolesJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -93,6 +101,9 @@ type ServerInterface interface {
 	// UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 	// (PATCH /rbac/roles/{id})
 	UpdateRole(w http.ResponseWriter, r *http.Request, id int64)
+	// SetUserRoles replace the role set assigned to a user (bumps their ver)
+	// (PUT /rbac/users/{id}/roles)
+	SetUserRoles(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -135,6 +146,12 @@ func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id int
 // UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 // (PATCH /rbac/roles/{id})
 func (_ Unimplemented) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetUserRoles replace the role set assigned to a user (bumps their ver)
+// (PUT /rbac/users/{id}/roles)
+func (_ Unimplemented) SetUserRoles(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -281,6 +298,32 @@ func (siw *ServerInterfaceWrapper) UpdateRole(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// SetUserRoles operation middleware
+func (siw *ServerInterfaceWrapper) SetUserRoles(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetUserRoles(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -411,6 +454,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/rbac/roles/{id}", wrapper.UpdateRole)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/rbac/users/{id}/roles", wrapper.SetUserRoles)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/internal/claims/{sub}", wrapper.ResolveClaims)

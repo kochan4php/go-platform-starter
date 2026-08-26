@@ -45,6 +45,7 @@ export interface ApiClient {
   GET: ReturnType<typeof createFetchClient<paths>>["GET"];
   POST: ReturnType<typeof createFetchClient<paths>>["POST"];
   PATCH: ReturnType<typeof createFetchClient<paths>>["PATCH"];
+  PUT: ReturnType<typeof createFetchClient<paths>>["PUT"];
   DELETE: ReturnType<typeof createFetchClient<paths>>["DELETE"];
 }
 

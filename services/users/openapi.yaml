@@ -156,6 +156,11 @@ components:
         email: { type: string }
         displayName: { type: string }
         avatarUrl: { type: string }
+        online: { type: boolean }
+        activeSessions: { type: integer }
+        lastLoginAt: { type: string, format: date-time, nullable: true }
+        lastLoginIp: { type: string }
+        lastLoginUserAgent: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 

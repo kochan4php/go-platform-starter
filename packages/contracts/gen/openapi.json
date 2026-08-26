@@ -720,6 +720,68 @@
         }
       }
     },
+    "/api/v1/rbac/users/{id}/roles": {
+      "put": {
+        "operationId": "setUserRoles",
+        "summary": "replace the role set assigned to a user (bumps their ver)",
+        "x-required-permission": "role:update:any",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "roleIds"
+                ],
+                "properties": {
+                  "roleIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "unknown role in set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rbac/internal/claims/{sub}": {
       "get": {
         "operationId": "resolveClaims",
@@ -1405,6 +1467,23 @@
             "type": "string"
           },
           "avatarUrl": {
+            "type": "string"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "activeSessions": {
+            "type": "integer"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastLoginIp": {
+            "type": "string"
+          },
+          "lastLoginUserAgent": {
             "type": "string"
           },
           "createdAt": {

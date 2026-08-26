@@ -39,15 +39,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn(u: SessionPayload
         Welcome back
       </p>
       <h1 className="max-w-5xl text-[clamp(2.75rem,4.6vw,5rem)] font-extrabold leading-[1.02] tracking-tight">
-        Run the
-        <span className="mx-3 inline-block h-10 w-24 translate-y-1 overflow-hidden rounded-full align-middle">
-          <img
-            src="https://picsum.photos/seed/control-room/480/160"
-            alt=""
-            className="h-full w-full object-cover grayscale contrast-125"
-          />
-        </span>
-        whole platform
+        Run the whole platform
         <br />
         from one quiet room.
       </h1>

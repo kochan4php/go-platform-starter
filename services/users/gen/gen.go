@@ -36,12 +36,17 @@ type EnvelopeOK struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	AvatarUrl   *string    `json:"avatarUrl,omitempty"`
-	CreatedAt   *time.Time `json:"createdAt,omitempty"`
-	DisplayName *string    `json:"displayName,omitempty"`
-	Email       *string    `json:"email,omitempty"`
-	Id          *int64     `json:"id,omitempty"`
-	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
+	ActiveSessions     *int       `json:"activeSessions,omitempty"`
+	AvatarUrl          *string    `json:"avatarUrl,omitempty"`
+	CreatedAt          *time.Time `json:"createdAt,omitempty"`
+	DisplayName        *string    `json:"displayName,omitempty"`
+	Email              *string    `json:"email,omitempty"`
+	Id                 *int64     `json:"id,omitempty"`
+	LastLoginAt        *time.Time `json:"lastLoginAt,omitempty"`
+	LastLoginIp        *string    `json:"lastLoginIp,omitempty"`
+	LastLoginUserAgent *string    `json:"lastLoginUserAgent,omitempty"`
+	Online             *bool      `json:"online,omitempty"`
+	UpdatedAt          *time.Time `json:"updatedAt,omitempty"`
 }
 
 // ProfileInput defines model for ProfileInput.

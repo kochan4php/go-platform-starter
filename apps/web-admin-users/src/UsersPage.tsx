@@ -14,6 +14,11 @@ export interface Profile {
   email: string;
   displayName: string;
   avatarUrl: string;
+  online?: boolean;
+  activeSessions?: number;
+  lastLoginAt?: string | null;
+  lastLoginIp?: string;
+  lastLoginUserAgent?: string;
 }
 
 interface ListMeta {
@@ -23,6 +28,36 @@ interface ListMeta {
 }
 
 const LIMIT = 20;
+
+/** Compact browser-os label from a raw User-Agent string. */
+function deviceLabel(ua?: string): string {
+  if (!ua) return "—";
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /OPR\//.test(ua)
+      ? "Opera"
+      : /Chrome\//.test(ua)
+        ? "Chrome"
+        : /Firefox\//.test(ua)
+          ? "Firefox"
+          : /Safari\//.test(ua)
+            ? "Safari"
+            : /curl/.test(ua)
+              ? "curl"
+              : "Unknown";
+  const os = /Windows/.test(ua)
+    ? "Windows"
+    : /Android/.test(ua)
+      ? "Android"
+      : /iPhone|iPad|iOS/.test(ua)
+        ? "iOS"
+        : /Mac OS/.test(ua)
+          ? "macOS"
+          : /Linux/.test(ua)
+            ? "Linux"
+            : "";
+  return [browser, os].filter(Boolean).join(" · ");
+}
 
 const REVEAL =
   "Every profile on this platform is provisioned by auth events, materialized by streams, and flushed through idempotent workers.";
@@ -215,12 +250,15 @@ export default function UsersPage() {
       {/* directory table */}
       <Card title={`Users (${meta.total})`}>
         <div className="-mx-2 overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[880px] text-sm">
             <thead>
               <tr>
                 <Th>User</Th>
                 <Th>Email</Th>
-                <Th>ID</Th>
+                <Th>Status</Th>
+                <Th>Last login</Th>
+                <Th>IP</Th>
+                <Th>Device</Th>
                 <Th>Actions</Th>
               </tr>
             </thead>
@@ -229,14 +267,50 @@ export default function UsersPage() {
                 <tr key={u.id} className="transition-colors hover:bg-white/[0.03]">
                   <Td>
                     <div className="flex items-center gap-3">
-                      <Avatar seed={u.id} alt="" />
+                      <span className="relative">
+                        <Avatar seed={u.id} alt="" />
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 block size-2.5 rounded-full border-2 border-[var(--color-surface)] ${
+                            u.online ? "bg-emerald-400" : "bg-neutral-500"
+                          }`}
+                          title={u.online ? "Online" : "Offline"}
+                        />
+                      </span>
                       <span className="font-semibold">
                         {u.displayName || <span className="text-[var(--color-muted)]">—</span>}
                       </span>
                     </div>
                   </Td>
                   <Td>
-                    <span className="font-mono text-xs text-[var(--color-muted)]">{u.id}</span>
+                    <span className="truncate text-[var(--color-muted)]">{u.email}</span>
+                  </Td>
+                  <Td>
+                    {u.online ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300">
+                        <span className="block size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                        Online
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--color-muted)]">Offline</span>
+                    )}
+                  </Td>
+                  <Td>
+                    <span className="font-mono text-xs text-[var(--color-muted)]">
+                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "—"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="font-mono text-xs text-[var(--color-muted)]">
+                      {u.lastLoginIp || "—"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span
+                      className="block max-w-[180px] truncate text-xs text-[var(--color-muted)]"
+                      title={u.lastLoginUserAgent || ""}
+                    >
+                      {deviceLabel(u.lastLoginUserAgent)}
+                    </span>
                   </Td>
                   <Td>
                     <div className="flex gap-2">
@@ -362,18 +436,48 @@ function RegisterUserModal({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  const [roleIds, setRoleIds] = useState<number[]>([]);
   const [error, setError] = useState("");
+
+  const roles = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/rbac/roles");
+      if (error) throw new Error("failed to load roles");
+      return (data?.data as { items?: { id: number; name: string }[] })?.items ?? [];
+    },
+  });
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error: e } = await api.POST("/api/v1/auth/register", {
-        body: { email, password },
-      });
-      if (e) throw new Error((e as { message?: string }).message ?? "registration failed");
+      const reg = await api.POST("/api/v1/auth/register", { body: { email, password } });
+      if (reg.error) throw new Error((reg.error as { message?: string }).message ?? "registration failed");
+      const newId = (reg.data?.data as { id: number }).id;
+
+      if (displayName || avatarUrl) {
+        const { error: e } = await api.PATCH("/api/v1/users/{id}", {
+          params: { path: { id: newId } },
+          body: { id: newId, displayName, avatarUrl },
+        });
+        if (e) throw new Error("registered, but saving profile failed");
+      }
+      if (roleIds.length > 0) {
+        const { error: e } = await api.PUT("/api/v1/rbac/users/{id}/roles", {
+          params: { path: { id: newId } },
+          body: { roleIds },
+        });
+        if (e) throw new Error("registered, but assigning roles failed");
+      }
     },
     onSuccess: onSaved,
     onError: (err) => setError((err as Error).message),
   });
+
+  const toggleRole = (id: number) =>
+    setRoleIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   return (
     <Modal title="Register user" onClose={onClose}>
@@ -384,6 +488,41 @@ function RegisterUserModal({
         }}
         className="space-y-4"
       >
+        {/* avatar preview */}
+        <div className="flex items-center gap-4">
+          {avatarUrl && !avatarBroken ? (
+            <img
+              src={avatarUrl}
+              alt="Avatar preview"
+              onError={() => setAvatarBroken(true)}
+              className="size-16 rounded-2xl border border-[var(--color-line)] object-cover grayscale"
+            />
+          ) : (
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-dashed border-[var(--color-line)] text-lg font-bold text-[var(--color-muted)]">
+              {(displayName || email || "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <Field label="Avatar URL (optional)">
+            <Input
+              name="avatarUrl"
+              value={avatarUrl}
+              onChange={(e) => {
+                setAvatarUrl(e.target.value);
+                setAvatarBroken(false);
+              }}
+              placeholder="https://…"
+            />
+          </Field>
+        </div>
+
+        <Field label="Display name">
+          <Input
+            name="displayName"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            maxLength={120}
+          />
+        </Field>
         <Field label="Email">
           <Input
             name="email"
@@ -403,10 +542,35 @@ function RegisterUserModal({
             required
           />
         </Field>
+
+        <fieldset>
+          <legend className="ui-label block">Assigned roles</legend>
+          <div className="max-h-36 space-y-1.5 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-elevated)] p-3 text-sm">
+            {roles.isPending ? <Spinner /> : null}
+            {(roles.data ?? []).map((r) => (
+              <label
+                key={r.id}
+                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-white/5"
+              >
+                <input
+                  type="checkbox"
+                  checked={roleIds.includes(r.id)}
+                  onChange={() => toggleRole(r.id)}
+                  className="size-3.5 accent-[var(--color-accent)]"
+                />
+                <span>{r.name}</span>
+              </label>
+            ))}
+            {roles.data !== undefined && roles.data.length === 0 ? (
+              <p className="px-2 text-xs text-[var(--color-muted)]">No roles yet.</p>
+            ) : null}
+          </div>
+        </fieldset>
+
         {error ? <Alert message={error} /> : null}
         <p className="text-xs text-[var(--color-muted)]">
-          The profile row is created automatically. Share the temporary password with the user so they can log
-          in and change it.
+          The ID is assigned automatically. Share the temporary password with the user so they can log in and
+          change it.
         </p>
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose}>

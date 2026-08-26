@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users.users (
     locked_until          TIMESTAMPTZ,
     display_name          TEXT        NOT NULL DEFAULT '',
     avatar_url            TEXT        NOT NULL DEFAULT '',
+    last_login_at         TIMESTAMPTZ,
+    last_login_ip         TEXT        NOT NULL DEFAULT '',
+    last_login_user_agent TEXT        NOT NULL DEFAULT '',
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );

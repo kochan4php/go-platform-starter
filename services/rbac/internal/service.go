@@ -257,6 +257,35 @@ type Claims struct {
 }
 
 // ResolveClaims returns the effective permission set + max ver of a subject.
+// SetUserRoles replaces the role set of a subject and bumps their claims
+// ver so already-issued tokens refresh on their next request.
+func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int64) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if len(roleIDs) > 0 {
+			var known int64
+			if err := tx.Model(&Role{}).Where("id IN ?", roleIDs).Count(&known).Error; err != nil {
+				return err
+			}
+			if int(known) != len(roleIDs) {
+				return platform.ErrBadRequest("unknown role in set")
+			}
+		}
+		if err := tx.Exec(`DELETE FROM rbac.user_roles WHERE user_id = ?`, userID).Error; err != nil {
+			return err
+		}
+		for _, rid := range roleIDs {
+			if err := tx.Exec(
+				`INSERT INTO rbac.user_roles (user_id, role_id, ver) VALUES (?, ?, 1)
+				 ON CONFLICT (user_id) DO UPDATE SET role_id = EXCLUDED.role_id, ver = rbac.user_roles.ver + 1`,
+				userID, rid,
+			).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error) {
 	// sub arrives as the decimal-string JWT subject (users.id).
 	subID, perr := strconv.ParseInt(sub, 10, 64)

@@ -194,6 +194,13 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 		Updates(map[string]any{"failed_login_attempts": 0, "locked_until": nil}).Error; err != nil {
 		return nil, err
 	}
+	// Login telemetry for the users dashboard (IP, device, recency).
+	if err := s.db.Exec(
+		`UPDATE users.users SET last_login_at = now(), last_login_ip = ?, last_login_user_agent = ? WHERE id = ?`,
+		ip, userAgent, u.ID,
+	).Error; err != nil {
+		s.log.Warn("login telemetry update failed", "err", err)
+	}
 	_ = s.rdb.Del(ctx, s.failKey(email)).Err()
 
 	return s.startSession(ctx, u, userAgent, ip)
