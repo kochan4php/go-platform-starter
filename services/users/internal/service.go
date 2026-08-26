@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"strings"
 	"fmt"
 	"log/slog"
 
@@ -89,10 +90,19 @@ func (s *Service) List(ctx context.Context, limit, offset int) ([]Profile, int64
 	return items, total, nil
 }
 
-func (s *Service) Update(ctx context.Context, id string, displayName, avatarUrl *string) (*Profile, error) {
+func (s *Service) Update(ctx context.Context, id string, email, displayName, avatarUrl *string) (*Profile, error) {
 	p, err := s.Get(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if email != nil && lower2(*email) != lower2(p.Email) {
+		var taken int64
+		s.db.WithContext(ctx).Model(&Profile{}).
+			Where("lower(email) = ? AND id <> ?", lower2(*email), p.ID).Count(&taken)
+		if taken > 0 {
+			return nil, platform.ErrConflict("email %s already in use", *email)
+		}
+		p.Email = lower2(*email)
 	}
 	if displayName != nil {
 		p.DisplayName = *displayName
@@ -130,3 +140,6 @@ func (s *Service) audit(ctx context.Context, action, entity, entityID string) {
 		ActorSub: "system", Action: action, Entity: entity, EntityID: entityID,
 	})
 }
+
+
+func lower2(s string) string { return strings.ToLower(strings.TrimSpace(s)) }

@@ -23,7 +23,7 @@ export default function RolesPage() {
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/rbac/roles");
       if (error) throw new Error((error as { message?: string }).message ?? "failed to load roles");
-      return (data?.data ?? { items: [] as Role[] }) as { items: Role[] };
+      return (data?.data as { items?: Role[] })?.items ?? [];
     },
   });
 
@@ -37,15 +37,15 @@ export default function RolesPage() {
 
   // Keep the first slice unfolded so the page reads as content, not chrome.
   useEffect(() => {
-    if (roles.data && roles.data.items.length > 0 && openId === null) {
-      setOpenId(roles.data.items[0].id);
+    if (roles.data && roles.data.length > 0 && openId === null) {
+      setOpenId(roles.data[0].id);
     }
   }, [roles.data, openId]);
 
   if (roles.isPending) return <Spinner />;
   if (roles.isError) return <Alert message={(roles.error as Error).message} />;
 
-  const items = roles.data.items;
+  const items = roles.data ?? [];
 
   return (
     <div className="space-y-8">

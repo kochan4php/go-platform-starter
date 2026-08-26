@@ -141,6 +141,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/users/{id}/password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** admin sets a new password for a user (revokes their sessions) */
+    post: operations["adminSetUserPassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/docs": {
     parameters: {
       query?: never;
@@ -443,6 +460,8 @@ export interface components {
        * @description existing subject id
        */
       id: number;
+      /** Format: email */
+      email?: string;
       displayName?: string;
       avatarUrl?: string;
     };
@@ -726,6 +745,43 @@ export interface operations {
       };
       /** @description invalid/expired/consumed token or weak password */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeFail"];
+        };
+      };
+    };
+  };
+  adminSetUserPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          newPassword: string;
+        };
+      };
+    };
+    responses: {
+      /** @description password updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeOK"];
+        };
+      };
+      /** @description user not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

@@ -378,19 +378,34 @@ function ProfileModal({
   onClose(): void;
   onSaved(): void;
 }) {
+  const [email, setEmail] = useState(profile.email);
   const [displayName, setDisplayName] = useState(profile.displayName);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
 
   const save = useMutation({
     mutationFn: async () => {
       const { error: e } = await api.PATCH("/api/v1/users/{id}", {
         params: { path: { id: profile.id } },
-        body: { id: profile.id, displayName },
+        body: { id: profile.id, email, displayName, avatarUrl },
       });
-      if (e) throw new Error("update failed");
+      if (e) throw new Error((e as { message?: string }).message ?? "update failed");
+
+      if (newPassword) {
+        const { error: pe } = await api.POST("/api/v1/auth/users/{id}/password", {
+          params: { path: { id: profile.id } },
+          body: { newPassword },
+        });
+        if (pe) throw new Error((pe as { message?: string }).message ?? "password reset failed");
+      }
     },
     onSuccess: onSaved,
-    onError: (err) => setError((err as Error).message),
+    onError: (err) => {
+      const msg = (err as Error).message;
+      setError(msg.includes("already in use") ? "That email is already in use." : msg);
+    },
   });
 
   return (
@@ -402,9 +417,33 @@ function ProfileModal({
         }}
         className="space-y-4"
       >
-        <Field label="ID">
-          <Input value={profile.id} disabled />
-        </Field>
+        {/* avatar preview */}
+        <div className="flex items-center gap-4">
+          {avatarUrl && !avatarBroken ? (
+            <img
+              src={avatarUrl}
+              alt="Avatar preview"
+              onError={() => setAvatarBroken(true)}
+              className="size-16 rounded-2xl border border-[var(--color-line)] object-cover grayscale"
+            />
+          ) : (
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-dashed border-[var(--color-line)] text-lg font-bold text-[var(--color-muted)]">
+              {(displayName || email || "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <Field label="Avatar URL">
+            <Input
+              name="avatarUrl"
+              value={avatarUrl}
+              onChange={(e) => {
+                setAvatarUrl(e.target.value);
+                setAvatarBroken(false);
+              }}
+              placeholder="https://…"
+            />
+          </Field>
+        </div>
+
         <Field label="Display name">
           <Input
             name="displayName"
@@ -413,6 +452,26 @@ function ProfileModal({
             maxLength={120}
           />
         </Field>
+        <Field label="Email">
+          <Input
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Field>
+        <Field label="New password (leave blank to keep current)">
+          <Input
+            name="newPassword"
+            type="text"
+            minLength={8}
+            placeholder="min 8 chars — revokes their sessions"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+        </Field>
+
         {error ? <Alert message={error} /> : null}
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose}>
@@ -442,6 +501,7 @@ function RegisterUserModal({
   const [roleIds, setRoleIds] = useState<number[]>([]);
   const [error, setError] = useState("");
 
+  // Same normalized shape as the roles page (shared ["roles"] cache entry).
   const roles = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
@@ -488,7 +548,6 @@ function RegisterUserModal({
         }}
         className="space-y-4"
       >
-        {/* avatar preview */}
         <div className="flex items-center gap-4">
           {avatarUrl && !avatarBroken ? (
             <img

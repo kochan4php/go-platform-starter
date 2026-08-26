@@ -201,6 +201,21 @@ func (h *Handlers) RevokeSession(w http.ResponseWriter, r *http.Request, id int6
 	platform.OK(w, http.StatusOK, "revoked", map[string]any{"id": id})
 }
 
+func (h *Handlers) AdminSetUserPassword(w http.ResponseWriter, r *http.Request, id int64) {
+	var in struct {
+		NewPassword string `json:"newPassword" validate:"required,min=8,max=72"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.SetPasswordByID(r.Context(), id, in.NewPassword); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "password_updated", struct{}{})
+}
+
 func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var in forgotInput
 	if err := h.decode(r, &in); err != nil {

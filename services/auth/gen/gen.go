@@ -67,6 +67,11 @@ type Session struct {
 	UserAgent *string    `json:"userAgent,omitempty"`
 }
 
+// AdminSetUserPasswordJSONBody defines parameters for AdminSetUserPassword.
+type AdminSetUserPasswordJSONBody struct {
+	NewPassword string `json:"newPassword"`
+}
+
 // ForgotPasswordJSONRequestBody defines body for ForgotPassword for application/json ContentType.
 type ForgotPasswordJSONRequestBody = ForgotInput
 
@@ -78,6 +83,9 @@ type RegisterJSONRequestBody = RegisterInput
 
 // ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
 type ResetPasswordJSONRequestBody = ResetInput
+
+// AdminSetUserPasswordJSONRequestBody defines body for AdminSetUserPassword for application/json ContentType.
+type AdminSetUserPasswordJSONRequestBody AdminSetUserPasswordJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -108,6 +116,9 @@ type ServerInterface interface {
 	// RevokeSession revoke one session of the authenticated user
 	// (DELETE /auth/sessions/{id})
 	RevokeSession(w http.ResponseWriter, r *http.Request, id int64)
+	// AdminSetUserPassword admin sets a new password for a user (revokes their sessions)
+	// (POST /auth/users/{id}/password)
+	AdminSetUserPassword(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -165,6 +176,12 @@ func (_ Unimplemented) ListSessions(w http.ResponseWriter, r *http.Request) {
 // RevokeSession revoke one session of the authenticated user
 // (DELETE /auth/sessions/{id})
 func (_ Unimplemented) RevokeSession(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminSetUserPassword admin sets a new password for a user (revokes their sessions)
+// (POST /auth/users/{id}/password)
+func (_ Unimplemented) AdminSetUserPassword(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -315,6 +332,32 @@ func (siw *ServerInterfaceWrapper) RevokeSession(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// AdminSetUserPassword operation middleware
+func (siw *ServerInterfaceWrapper) AdminSetUserPassword(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminSetUserPassword(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -454,6 +497,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/reset", wrapper.ResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/users/{id}/password", wrapper.AdminSetUserPassword)
 	})
 
 	return r

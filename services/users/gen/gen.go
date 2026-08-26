@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // EnvelopeFail defines model for EnvelopeFail.
@@ -51,8 +52,9 @@ type Profile struct {
 
 // ProfileInput defines model for ProfileInput.
 type ProfileInput struct {
-	AvatarUrl   *string `json:"avatarUrl,omitempty"`
-	DisplayName *string `json:"displayName,omitempty"`
+	AvatarUrl   *string              `json:"avatarUrl,omitempty"`
+	DisplayName *string              `json:"displayName,omitempty"`
+	Email       *openapi_types.Email `json:"email,omitempty"`
 
 	// Id existing subject id
 	Id int64 `json:"id"`

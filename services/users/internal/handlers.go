@@ -105,6 +105,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id int64) {
 
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {
 	var in struct {
+		Email       *string `json:"email"`
 		DisplayName *string `json:"displayName"`
 		AvatarUrl   *string `json:"avatarUrl"`
 	}
@@ -112,7 +113,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) 
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	p, err := h.svc.Update(r.Context(), fmt.Sprintf("%d", id), in.DisplayName, in.AvatarUrl)
+	p, err := h.svc.Update(r.Context(), fmt.Sprintf("%d", id), in.Email, in.DisplayName, in.AvatarUrl)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return

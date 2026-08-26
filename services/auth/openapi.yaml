@@ -182,6 +182,25 @@ paths:
         "400": { description: invalid/expired/consumed token or weak password, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
       x-rate-limit-class: strict
 
+  /auth/users/{id}/password:
+    post:
+      operationId: adminSetUserPassword
+      summary: admin sets a new password for a user (revokes their sessions)
+      x-required-permission: "user:update:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPassword]
+              properties:
+                newPassword: { type: string, minLength: 8, maxLength: 72 }
+      responses:
+        "200": { description: password updated, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: user not found, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

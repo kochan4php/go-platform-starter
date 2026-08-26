@@ -124,6 +124,30 @@ func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password
 	return nil
 }
 
+// SetPasswordByID lets an admin replace a user's password and revoke their
+// sessions, forcing re-login with the new credential.
+func (s *Service) SetPasswordByID(ctx context.Context, userID int64, newPassword string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.cfg.BcryptCost)
+	if err != nil {
+		return err
+	}
+	res := s.db.WithContext(ctx).Exec(
+		`UPDATE users.users SET password_hash = ? WHERE id = ?`, string(hash), userID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return platform.ErrNotFound("user %d not found", userID)
+	}
+	if err := s.db.WithContext(ctx).Exec(
+		`DELETE FROM auth.sessions WHERE user_id = ?`, userID,
+	).Error; err != nil {
+		return err
+	}
+	s.log.Info("password set by admin", "sub", strconv.FormatInt(userID, 10))
+	return nil
+}
+
 func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password string) (*User, error) {
 	email = lower(email)
 	_, lookupErr := findUserByEmail(s.db.WithContext(ctx), email)
