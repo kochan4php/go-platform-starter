@@ -184,6 +184,7 @@ function RoleModal({
   const [name, setName] = useState(role?.name ?? "");
   const [description, setDescription] = useState(role?.description ?? "");
   const [permissions, setPermissions] = useState<string[]>(role?.permissions ?? []);
+  const [newPerm, setNewPerm] = useState("");
   const [error, setError] = useState("");
 
   // The catalog comes from the rbac service — unknown permission names are
@@ -195,6 +196,14 @@ function RoleModal({
       if (error) throw new Error("failed to load permission catalog");
       return (data?.data as { items?: string[] })?.items ?? [];
     },
+  });
+
+  const createPermissionMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const { error: e } = await api.POST("/api/v1/rbac/permissions", { body: { name } });
+      if (e) throw new Error((e as { message?: string }).message ?? "create failed");
+    },
+    onSuccess: () => catalog.refetch(),
   });
 
   const save = useMutation({
@@ -242,7 +251,38 @@ function RoleModal({
         </Field>
 
         <fieldset>
-          <legend className="ui-label block">Permissions (synced ver bump applies on save)</legend>
+          <legend className="ui-label block">Permissions (saving syncs and bumps affected users ver)</legend>
+          <form
+            className="mb-2 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = newPerm.trim().toLowerCase();
+              if (!name || permissions.includes(name)) return;
+              createPermissionMutation.mutate(name, {
+                onSuccess: () => {
+                  setPermissions((cur) => [...cur, name]);
+                  setNewPerm("");
+                  catalog.refetch();
+                },
+                onError: (err) => setError((err as Error).message),
+              });
+            }}
+          >
+            <Input
+              value={newPerm}
+              onChange={(e) => setNewPerm(e.target.value)}
+              placeholder="resource:action:scope"
+              aria-label="New permission name"
+              className="flex-1 font-mono text-xs"
+            />
+            <Button
+              type="submit"
+              variant="ghost"
+              disabled={!newPerm.trim() || createPermissionMutation.isPending}
+            >
+              Add
+            </Button>
+          </form>
           <div className="max-h-48 space-y-1.5 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-elevated)] p-3 text-sm">
             {catalog.isPending ? <Spinner /> : null}
             {(catalog.data ?? []).map((perm) => (

@@ -46,6 +46,12 @@ type RoleInput struct {
 	Name        string  `json:"name"`
 }
 
+// CreatePermissionJSONBody defines parameters for CreatePermission.
+type CreatePermissionJSONBody struct {
+	// Name Example: report:export:any
+	Name string `json:"name"`
+}
+
 // UpdateRoleJSONBody defines parameters for UpdateRole.
 type UpdateRoleJSONBody struct {
 	Description *string `json:"description,omitempty"`
@@ -54,6 +60,9 @@ type UpdateRoleJSONBody struct {
 	// Permissions full replacement set; unknown permission -> 400
 	Permissions *[]string `json:"permissions,omitempty"`
 }
+
+// CreatePermissionJSONRequestBody defines body for CreatePermission for application/json ContentType.
+type CreatePermissionJSONRequestBody CreatePermissionJSONBody
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody = RoleInput
@@ -69,6 +78,9 @@ type ServerInterface interface {
 	// ListPermissions the compile-time catalog persisted in the db
 	// (GET /rbac/permissions)
 	ListPermissions(w http.ResponseWriter, r *http.Request)
+	// CreatePermission add a permission to the catalog (idempotent)
+	// (POST /rbac/permissions)
+	CreatePermission(w http.ResponseWriter, r *http.Request)
 
 	// (GET /rbac/roles)
 	ListRoles(w http.ResponseWriter, r *http.Request)
@@ -96,6 +108,12 @@ func (_ Unimplemented) ResolveClaims(w http.ResponseWriter, r *http.Request, sub
 // ListPermissions the compile-time catalog persisted in the db
 // (GET /rbac/permissions)
 func (_ Unimplemented) ListPermissions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreatePermission add a permission to the catalog (idempotent)
+// (POST /rbac/permissions)
+func (_ Unimplemented) CreatePermission(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -160,6 +178,20 @@ func (siw *ServerInterfaceWrapper) ListPermissions(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListPermissions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePermission operation middleware
+func (siw *ServerInterfaceWrapper) CreatePermission(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePermission(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -364,6 +396,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/permissions", wrapper.ListPermissions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/rbac/permissions", wrapper.CreatePermission)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/roles", wrapper.ListRoles)

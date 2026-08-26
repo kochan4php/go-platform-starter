@@ -1,5 +1,5 @@
 import { useGSAP } from "@gsap/react";
-import { ArrowRight, PencilSimple, Plus } from "@phosphor-icons/react";
+import { ArrowRight, PencilSimple } from "@phosphor-icons/react";
 import { Alert, Avatar, Button, Card, Field, Input, Modal, Spinner, Stat, Td, Th } from "@starter/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { gsap } from "gsap";
@@ -30,7 +30,6 @@ const REVEAL =
 export default function UsersPage() {
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState<Profile | null>(null);
-  const [creating, setCreating] = useState(false);
   const queryClient = useQueryClient();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -180,10 +179,6 @@ export default function UsersPage() {
               {offset + 1}–{Math.min(offset + items.length, meta.total)} / {meta.total}
             </p>
           </div>
-          <Button variant="ghost" onClick={() => setCreating(true)}>
-            New user
-            <Plus size={15} weight="bold" />
-          </Button>
         </div>
 
         <div className="col-span-2 flex items-center justify-between gap-3 px-6 py-3">
@@ -249,7 +244,9 @@ export default function UsersPage() {
             ))}
             {items.length === 0 ? (
               <tr>
-                <Td>No profiles yet.</Td>
+                <Td>No profiles yet — they appear when users register.</Td>
+                <Td />
+                <Td />
                 <Td />
                 <Td />
               </tr>
@@ -258,16 +255,6 @@ export default function UsersPage() {
         </table>
       </Card>
 
-      {creating ? (
-        <ProfileModal
-          title="Create user"
-          onClose={() => setCreating(false)}
-          onSaved={() => {
-            setCreating(false);
-            refresh();
-          }}
-        />
-      ) : null}
       {editing ? (
         <ProfileModal
           title="Edit user"
@@ -290,28 +277,20 @@ function ProfileModal({
   onSaved,
 }: {
   title: string;
-  profile?: Profile;
+  profile: Profile;
   onClose(): void;
   onSaved(): void;
 }) {
-  const [id, setId] = useState(profile?.id != null ? String(profile.id) : "");
-  const [displayName, setDisplayName] = useState(profile?.displayName ?? "");
+  const [displayName, setDisplayName] = useState(profile.displayName);
   const [error, setError] = useState("");
 
   const save = useMutation({
     mutationFn: async () => {
-      if (profile) {
-        const { error: e } = await api.PATCH("/api/v1/users/{id}", {
-          params: { path: { id: profile.id } },
-          body: { id: profile.id, displayName },
-        });
-        if (e) throw new Error("update failed");
-        return;
-      }
-      const { error: e } = await api.POST("/api/v1/users", {
-        body: { id: Number(id), displayName },
+      const { error: e } = await api.PATCH("/api/v1/users/{id}", {
+        params: { path: { id: profile.id } },
+        body: { id: profile.id, displayName },
       });
-      if (e) throw new Error((e as { message?: string }).message ?? "create failed");
+      if (e) throw new Error("update failed");
     },
     onSuccess: onSaved,
     onError: (err) => setError((err as Error).message),
@@ -326,22 +305,9 @@ function ProfileModal({
         }}
         className="space-y-4"
       >
-        {profile ? (
-          <Field label="ID">
-            <Input value={profile.id} disabled />
-          </Field>
-        ) : (
-          <Field label="User ID (number)">
-            <Input
-              name="id"
-              type="number"
-              min={1}
-              value={id}
-              onChange={(e) => setId(e.target.value)}
-              required
-            />
-          </Field>
-        )}
+        <Field label="ID">
+          <Input value={profile.id} disabled />
+        </Field>
         <Field label="Display name">
           <Input
             name="displayName"

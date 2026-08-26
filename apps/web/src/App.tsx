@@ -1,7 +1,7 @@
 import { BrandMark, FooterStrip } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Component, type ReactNode, Suspense, lazy } from "react";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
 
@@ -16,8 +16,7 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
 
-// Hand-drawn 16px stroke icons — keeps the host bundle free of any icon
-// library; remotes can afford richer sets.
+// Hand-drawn 16px stroke icons keep the host bundle free of icon libraries.
 function IconUsers({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -74,23 +73,54 @@ function IconSignOut({ className = "" }: { className?: string }) {
 
 const NAV = [
   { to: "/admin/users", label: "Users", icon: IconUsers },
-  { to: "/admin/roles", label: "Roles", icon: IconShield },
+  { to: "/admin/roles", label: "Roles & Permissions", icon: IconShield },
 ] as const;
+
+/** Catches render errors inside any federated remote so one broken screen
+ *  never blanks the whole console. */
+class RemoteErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="p-8">
+          <h2 className="text-lg font-bold">Something went wrong</h2>
+          <p className="mt-2 max-w-lg text-sm text-[var(--color-muted)]">
+            {this.state.error.message || "An unexpected error occurred while loading this section."}
+          </p>
+          <pre className="mt-3 max-w-full overflow-auto rounded-md bg-black/40 p-3 text-[11px] text-red-300">
+            {this.state.error.stack?.slice(0, 600)}
+          </pre>
+          <button
+            type="button"
+            onClick={() => this.setState({ error: null })}
+            className="mt-4 rounded-xl border border-[var(--color-line)] px-3 py-1.5 text-sm hover:bg-white/5"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Sidebar() {
   const { pathname } = useLocation();
-  const { logout } = useAuth();
   return (
-    <aside className="sticky top-0 flex h-screen w-[248px] shrink-0 flex-col justify-between border-r border-[var(--color-line)] px-6 py-8">
+    <aside className="flex h-full w-[248px] shrink-0 flex-col justify-between border-r border-[var(--color-line)] px-6 py-8">
       <div>
         <BrandMark />
         <nav className="mt-12 space-y-1">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = pathname.startsWith(to);
             return (
-              <a
+              <Link
                 key={to}
-                href={to}
+                to={to}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-white/5 font-semibold text-[var(--color-ink)]"
@@ -102,19 +132,19 @@ function Sidebar() {
                 {active ? (
                   <span className="ml-auto block size-1.5 rounded-full bg-[var(--color-accent)]" />
                 ) : null}
-              </a>
+              </Link>
             );
           })}
         </nav>
       </div>
 
-      <SessionChip onLogout={logout} />
+      <SessionChip />
     </aside>
   );
 }
 
-function SessionChip({ onLogout }: { onLogout(): Promise<void> }) {
-  const user = useAuth().user;
+function SessionChip() {
+  const { user, logout } = useAuth();
   if (!user) return null;
   return (
     <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
@@ -124,7 +154,7 @@ function SessionChip({ onLogout }: { onLogout(): Promise<void> }) {
       </p>
       <button
         type="button"
-        onClick={() => onLogout()}
+        onClick={() => logout()}
         className="mt-3 inline-flex items-center gap-2 text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
       >
         <IconSignOut className="size-3.5" />
@@ -134,45 +164,28 @@ function SessionChip({ onLogout }: { onLogout(): Promise<void> }) {
   );
 }
 
-function DashboardShell({ children }: { children: React.ReactNode }) {
+function DashboardShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const title = pathname.startsWith("/admin/roles") ? "Roles & permissions" : "Directory";
 
   return (
-    <div className="flex">
+    // Fixed-height app shell: only this inner region scrolls; the sidebar and
+    // chrome stay put no matter how long the page content is.
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col">
-        <header className="sticky top-0 z-10 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 px-8 py-5 backdrop-blur-md">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-8 py-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">Admin</p>
           <h1 className="text-lg font-bold tracking-tight">{title}</h1>
         </header>
 
-        <main className="flex-1 px-8 py-10">{children}</main>
+        <main className="ui-stage flex-1 overflow-y-auto px-8 py-10">{children}</main>
 
         <footer className="border-t border-[var(--color-line)] px-8 py-5">
           <FooterStrip />
         </footer>
       </div>
     </div>
-  );
-}
-
-interface LoginResult {
-  accessToken: string;
-  user: { id: string; email: string; perms?: string[]; ver?: number };
-}
-
-function renderAuthRoutes(onLoggedIn: (u: LoginResult) => void) {
-  return (
-    <Suspense fallback={<p className="px-8 py-10 text-sm text-[var(--color-muted)]">Loading…</p>}>
-      <Routes>
-        <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot" element={<ForgotPage />} />
-        <Route path="/reset" element={<ResetPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Suspense>
   );
 }
 
@@ -202,29 +215,31 @@ function AdminRoutes() {
   );
 }
 
+interface LoginResult {
+  accessToken: string;
+  user: { id: number | string; email: string; perms?: string[]; ver?: number };
+}
+
+function AuthRoutes(onLoggedIn: (u: LoginResult) => void) {
+  return (
+    <Suspense fallback={<p className="px-8 py-10 text-sm text-[var(--color-muted)]">Loading…</p>}>
+      <Routes>
+        <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot" element={<ForgotPage />} />
+        <Route path="/reset" element={<ResetPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
 /** UI hint only — the gateway enforces truth server-side. */
 function Gate() {
   const { user, login, booting } = useAuth();
   const navigate = useNavigate();
 
-  // Hold rendering until the silent refresh settles, so a deep link like
-  // /admin/roles does not flash the auth branch and get redirected.
-  if (booting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
-          Restoring session…
-        </p>
-      </div>
-    );
-  }
-
-  function handleLoggedIn(res: {
-    accessToken: string;
-    user: { id: number | string; email: string; perms?: string[]; ver?: number };
-  }) {
-    // The in-memory session is already live — navigate without a reload so
-    // the token never has to be recovered from a cookie mid-flight.
+  function handleLoggedIn(res: LoginResult) {
     login(res.accessToken, {
       id: String(res.user.id),
       email: res.user.email,
@@ -234,12 +249,26 @@ function Gate() {
     navigate("/admin/users", { replace: true });
   }
 
+  // Hold rendering until the silent refresh settles, so deep links like
+  // /admin/roles do not flash the auth branch and get redirected.
+  if (booting && !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="animate-pulse font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
+          Restoring session…
+        </p>
+      </div>
+    );
+  }
+
   return user ? (
     <DashboardShell>
-      <AdminRoutes />
+      <RemoteErrorBoundary>
+        <AdminRoutes />
+      </RemoteErrorBoundary>
     </DashboardShell>
   ) : (
-    renderAuthRoutes(handleLoggedIn)
+    AuthRoutes(handleLoggedIn)
   );
 }
 
@@ -248,7 +277,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <main className="ui-stage min-h-screen w-full max-w-full overflow-x-hidden">
+          <main className="min-h-screen w-full max-w-full overflow-x-hidden">
             <Gate />
           </main>
         </BrowserRouter>

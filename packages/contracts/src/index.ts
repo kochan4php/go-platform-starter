@@ -90,6 +90,35 @@ export const GATEWAY_URL = (() => {
  * one silent refresh via the gateway httpOnly cookie on 401, retry-once.
  * Cheap to instantiate; the token itself lives on globalThis.
  */
+/**
+ * Single-flight silent refresh shared by every client instance across every
+ * federated bundle: concurrent 401s wait on ONE refresh call instead of
+ * racing cookie rotation against each other.
+ */
+let inflightRefresh: Promise<string | undefined> | null = null;
+
+export function silentRefresh(baseUrl = GATEWAY_URL): Promise<string | undefined> {
+  if (!inflightRefresh) {
+    inflightRefresh = fetch(`${baseUrl}/api/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(async (res) => {
+        if (!res.ok) return undefined;
+        const body = (await res.json()) as { data?: { accessToken?: string } };
+        const token = body.data?.accessToken;
+        if (!token) return undefined;
+        setAccessToken(token);
+        return token;
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        inflightRefresh = null;
+      });
+  }
+  return inflightRefresh;
+}
+
 export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
   const baseUrl = opts.baseUrl ?? GATEWAY_URL;
   const client = createFetchClient<paths>({ baseUrl, credentials: "include" });
@@ -105,21 +134,15 @@ export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
       const skipRefresh = url.pathname.endsWith("/auth/refresh") || url.pathname.endsWith("/auth/login");
       if (response.status !== 401 || skipRefresh) return response;
 
-      // Silent refresh: the httpOnly refresh cookie rides along automatically.
-      const refreshed = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!refreshed.ok) {
+      const token = await silentRefresh(baseUrl);
+      if (!token) {
         setAccessToken(undefined);
         opts.onSessionExpired?.();
+        window.dispatchEvent(new Event("starter:session-expired"));
         return response; // surface the original 401
       }
-      const body = (await refreshed.json()) as { data: { accessToken: string } };
-      setAccessToken(body.data.accessToken);
-
       // Retry the original call exactly once.
-      request.headers.set("Authorization", `Bearer ${body.data.accessToken}`);
+      request.headers.set("Authorization", `Bearer ${token}`);
       return fetch(request);
     },
   });

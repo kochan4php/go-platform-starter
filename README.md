@@ -31,7 +31,8 @@ manifests with HPA.
 - **users** — profile CRUD plus `/me` served purely from identity headers (zero
   cross-service calls); paginated lists using the shared
   `{items, meta:{limit,offset,total}}` envelope.
-- **rbac** — role/permission CRUD with permission sync that bumps the `ver`
+- **rbac** — role/permission CRUD plus runtime permission creation from the UI,
+  with permission sync that bumps the `ver`
   claim of every affected user (forcing token refresh); compile-time
   permission catalog in `internal/platform/permissions`; idempotent seeders
   for the catalog and the bootstrap admin role.

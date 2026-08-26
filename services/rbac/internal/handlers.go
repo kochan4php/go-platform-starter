@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -47,6 +48,22 @@ func (h *Handlers) ListPermissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	platform.OK(w, http.StatusOK, "ok", map[string]any{"items": items})
+}
+
+func (h *Handlers) CreatePermission(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Name string `json:"name"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	name := strings.ToLower(strings.TrimSpace(in.Name))
+	if err := h.svc.CreatePermission(r.Context(), name); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusCreated, "created", map[string]string{"name": name})
 }
 
 func (h *Handlers) CreateRole(w http.ResponseWriter, r *http.Request) {

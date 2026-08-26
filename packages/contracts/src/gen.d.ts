@@ -185,7 +185,8 @@ export interface paths {
     /** the compile-time catalog persisted in the db */
     get: operations["listPermissions"];
     put?: never;
-    post?: never;
+    /** add a permission to the catalog (idempotent) */
+    post: operations["createPermission"];
     delete?: never;
     options?: never;
     head?: never;
@@ -768,6 +769,42 @@ export interface operations {
               items?: string[];
             };
           };
+        };
+      };
+    };
+  };
+  createPermission: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @example report:export:any */
+          name: string;
+        };
+      };
+    };
+    responses: {
+      /** @description created (or already exists) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeOK"];
+        };
+      };
+      /** @description invalid name */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnvelopeFail"];
         };
       };
     };

@@ -2,6 +2,8 @@ package internal
 
 import (
 	"context"
+	"strings"
+	"regexp"
 	"strconv"
 	"fmt"
 
@@ -87,6 +89,28 @@ func (s *Service) Seed(ctx context.Context) error {
 		platform.BootstrapSub, admin.ID)
 	s.log.Info("rbac seeded", "roles", 1, "permissions", len(perms))
 	return nil
+}
+
+// CreatePermission adds a new permission to the catalog. Names follow the
+// compile-time convention <resource>:<action>:<scope>; duplicates are a no-op
+// so seeding and manual creation never conflict.
+func (s *Service) CreatePermission(ctx context.Context, name string) error {
+	if !validPermissionName(name) {
+		return platform.ErrBadRequest("permission must look like resource:action:scope (lowercase)")
+	}
+	res := s.db.WithContext(ctx).Exec(
+		`INSERT INTO rbac.permissions (name) VALUES (?) ON CONFLICT (name) DO NOTHING`, name)
+	if res.Error != nil {
+		return res.Error
+	}
+	s.audit(ctx, "create", "permission", name)
+	return nil
+}
+
+var permNameRe = regexp.MustCompile(`^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$`)
+
+func validPermissionName(name string) bool {
+	return permNameRe.MatchString(strings.TrimSpace(name))
 }
 
 func (s *Service) ListPermissions(ctx context.Context) ([]string, error) {

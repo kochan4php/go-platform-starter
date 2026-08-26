@@ -1,4 +1,4 @@
-import { GATEWAY_URL, decodeClaims, getAccessToken, setAccessToken } from "@starter/contracts";
+import { GATEWAY_URL, decodeClaims, getAccessToken, setAccessToken, silentRefresh } from "@starter/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
@@ -37,13 +37,11 @@ export function AuthProvider({
   useEffect(() => {
     if (initialUser != null) return;
     let cancelled = false;
-    fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, { method: "POST", credentials: "include" })
-      .then(async (res) => (res.ok ? ((await res.json()) as { data?: { accessToken?: string } }) : null))
-      .then((body) => {
-        if (cancelled) return;
-        const token = body?.data?.accessToken;
-        if (!token) return;
-        setAccessToken(token);
+    // Single-flight: StrictMode (and any duplicate callers) share ONE refresh
+    // call, so cookie rotation can never be mistaken for token reuse.
+    silentRefresh(GATEWAY_URL)
+      .then((token) => {
+        if (cancelled || !token) return;
         const claims = decodeClaims(token);
         setUser({
           id: claims?.sub ?? "",
@@ -52,7 +50,6 @@ export function AuthProvider({
           ver: claims?.ver ?? 0,
         });
       })
-      .catch(() => undefined)
       .finally(() => {
         if (!cancelled) setBooting(false);
       });
@@ -61,6 +58,15 @@ export function AuthProvider({
     };
     // Bootstrap runs once per mount; initialUser is only a test seed.
   }, [initialUser]);
+
+  useEffect(() => {
+    const onExpired = () => {
+      setAccessToken(undefined);
+      setUser(null);
+    };
+    window.addEventListener("starter:session-expired", onExpired);
+    return () => window.removeEventListener("starter:session-expired", onExpired);
+  }, []);
 
   const login = useCallback((accessToken: string, u: SessionUser) => {
     setAccessToken(accessToken);

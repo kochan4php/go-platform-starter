@@ -8,6 +8,27 @@ info:
 
 paths:
   /rbac/permissions:
+    post:
+      operationId: createPermission
+      summary: add a permission to the catalog (idempotent)
+      x-required-permission: "role:update:any"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, example: "report:export:any" }
+      responses:
+        "201":
+          description: created (or already exists)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EnvelopeOK" }
+        "400": { description: invalid name, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
     get:
       operationId: listPermissions
       summary: the compile-time catalog persisted in the db
