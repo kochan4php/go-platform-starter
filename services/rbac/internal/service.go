@@ -17,7 +17,7 @@ type Role struct {
 	ID          int64    `gorm:"primaryKey" json:"id"`
 	Name        string   `gorm:"not null;uniqueIndex" json:"name"`
 	Description string   `gorm:"not null;default:''"  json:"description"`
-	Permissions []string `gorm:"-"                    json:"permissions,omitempty"`
+	Permissions []string `gorm:"-"                       json:"permissions"`
 }
 
 func (Role) TableName() string { return "rbac.roles" }
@@ -162,6 +162,9 @@ func (s *Service) permsForRole(ctx context.Context, roleID int64) []string {
 	out := []string{}
 	if err := rows.Scan(&out).Error; err != nil {
 		return []string{}
+	}
+	if out == nil {
+		out = []string{}
 	}
 	return out
 }

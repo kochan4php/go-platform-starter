@@ -30,6 +30,7 @@ const REVEAL =
 export default function UsersPage() {
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState<Profile | null>(null);
+  const [registering, setRegistering] = useState(false);
   const queryClient = useQueryClient();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -255,6 +256,15 @@ export default function UsersPage() {
         </table>
       </Card>
 
+      {registering ? (
+        <RegisterUserModal
+          onClose={() => setRegistering(false)}
+          onSaved={() => {
+            setRegistering(false);
+            refresh();
+          }}
+        />
+      ) : null}
       {editing ? (
         <ProfileModal
           title="Edit user"
@@ -323,6 +333,74 @@ function ProfileModal({
           </Button>
           <Button type="submit" disabled={save.isPending}>
             Save
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function RegisterUserModal({
+  onClose,
+  onSaved,
+}: {
+  onClose(): void;
+  onSaved(): void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error: e } = await api.POST("/api/v1/auth/register", {
+        body: { email, password },
+      });
+      if (e) throw new Error((e as { message?: string }).message ?? "registration failed");
+    },
+    onSuccess: onSaved,
+    onError: (err) => setError((err as Error).message),
+  });
+
+  return (
+    <Modal title="Register user" onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+        className="space-y-4"
+      >
+        <Field label="Email">
+          <Input
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Field>
+        <Field label="Temporary password (min 8 chars)">
+          <Input
+            name="password"
+            type="text"
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </Field>
+        {error ? <Alert message={error} /> : null}
+        <p className="text-xs text-[var(--color-muted)]">
+          The profile row is created automatically. Share the temporary password with the user so they can log
+          in and change it.
+        </p>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={save.isPending}>
+            Register
           </Button>
         </div>
       </form>

@@ -155,7 +155,7 @@ export function Stat({
   hint?: string;
 }) {
   return (
-    <div className="flex h-full flex-col justify-between gap-6 p-6">
+    <div className="flex h-full flex-col justify-between gap-6 p-6 transition-colors hover:bg-white/[0.02]">
       <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">{label}</p>
       <div>
         <p className="font-mono text-5xl font-medium tabular-nums tracking-tighter">{value}</p>

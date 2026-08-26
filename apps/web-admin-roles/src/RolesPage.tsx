@@ -78,7 +78,7 @@ export default function RolesPage() {
                   className="absolute inset-0 flex w-full cursor-pointer flex-col items-center justify-between py-6"
                 >
                   <span className="font-mono text-xs text-[var(--color-accent)]">
-                    {String(role.permissions.length).padStart(2, "0")}
+                    {String((role.permissions ?? []).length).padStart(2, "0")}
                   </span>
                   <span
                     className="text-sm font-bold tracking-wide text-[var(--color-muted)]"
@@ -103,14 +103,16 @@ export default function RolesPage() {
                   </div>
 
                   <div>
-                    <p className="mb-3 text-sm font-semibold">{role.permissions.length} assigned</p>
+                    <p className="mb-3 text-sm font-semibold">{(role.permissions ?? []).length} assigned</p>
                     <div className="mb-6 flex max-h-24 flex-wrap gap-1.5 overflow-hidden">
-                      {role.permissions.slice(0, 6).map((perm) => (
+                      {(role.permissions ?? []).slice(0, 6).map((perm) => (
                         <Badge key={perm} tone="accent">
                           {perm}
                         </Badge>
                       ))}
-                      {role.permissions.length > 6 ? <Badge>+{role.permissions.length - 6}</Badge> : null}
+                      {(role.permissions?.length ?? 0) > 6 ? (
+                        <Badge>+{role.permissions.length - 6}</Badge>
+                      ) : null}
                     </div>
 
                     <div className="flex gap-2">

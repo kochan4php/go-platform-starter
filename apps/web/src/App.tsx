@@ -78,10 +78,19 @@ const NAV = [
 
 /** Catches render errors inside any federated remote so one broken screen
  *  never blanks the whole console. */
-class RemoteErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+class RemoteErrorBoundary extends Component<
+  { children: ReactNode; resetKey?: string },
+  { error: Error | null }
+> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) {
     return { error };
+  }
+  componentDidUpdate(prev: { resetKey?: string }) {
+    // Navigating to a different section clears the crash state automatically.
+    if (prev.resetKey !== this.props.resetKey && this.state.error) {
+      this.setState({ error: null });
+    }
   }
   render() {
     if (this.state.error) {
@@ -238,6 +247,7 @@ function AuthRoutes(onLoggedIn: (u: LoginResult) => void) {
 function Gate() {
   const { user, login, booting } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   function handleLoggedIn(res: LoginResult) {
     login(res.accessToken, {
@@ -263,7 +273,7 @@ function Gate() {
 
   return user ? (
     <DashboardShell>
-      <RemoteErrorBoundary>
+      <RemoteErrorBoundary resetKey={pathname}>
         <AdminRoutes />
       </RemoteErrorBoundary>
     </DashboardShell>
