@@ -105,8 +105,12 @@ export function Th({ children }: { children: ReactNode }) {
   );
 }
 
-export function Td({ children }: { children?: ReactNode }) {
-  return <td className="border-t border-[var(--color-line)] px-4 py-3.5 align-middle">{children}</td>;
+export function Td({ children, className = "" }: { children?: ReactNode; className?: string }) {
+  return (
+    <td className={`border-t border-[var(--color-line)] px-4 py-3.5 align-middle ${className}`}>
+      {children}
+    </td>
+  );
 }
 
 export function Modal({
@@ -250,14 +254,27 @@ export function Badge({
   );
 }
 
-export function Avatar({ seed, alt = "" }: { seed: string | number; alt?: string }) {
+export function Avatar({
+  seed,
+  alt = "",
+  label,
+}: {
+  seed: string | number;
+  alt?: string;
+  label?: string;
+}) {
+  const text = label?.trim() || String(seed);
+  const hue = [...String(seed)].reduce((total, char) => (total * 31 + char.charCodeAt(0)) % 360, 0);
   return (
-    <img
-      src={`https://picsum.photos/seed/${encodeURIComponent(seed)}/80/80`}
-      alt={alt}
-      loading="lazy"
-      className="size-8 shrink-0 rounded-full object-cover grayscale contrast-110"
-    />
+    <span
+      role={alt ? "img" : undefined}
+      aria-label={alt || undefined}
+      aria-hidden={!alt || undefined}
+      style={{ backgroundColor: `hsl(${hue} 42% 84%)`, color: `hsl(${hue} 52% 24%)` }}
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold uppercase transition-transform hover:z-20 hover:scale-150"
+    >
+      {text.charAt(0) || "?"}
+    </span>
   );
 }
 

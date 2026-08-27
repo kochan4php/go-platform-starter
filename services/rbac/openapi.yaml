@@ -135,6 +135,13 @@ paths:
         "404": { description: unknown role, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
   /rbac/users/{id}/roles:
+    get:
+      operationId: getUserRoles
+      summary: list roles assigned to a user
+      x-required-permission: "role:read:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses:
+        "200": { description: ok, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
     put:
       operationId: setUserRoles
       summary: replace the role set assigned to a user (bumps their ver)

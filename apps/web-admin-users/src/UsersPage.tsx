@@ -31,6 +31,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
+  Fragment,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
   useCallback,
@@ -47,11 +48,16 @@ export interface Profile {
   email: string;
   displayName: string;
   avatarUrl: string;
+  status: "active" | "inactive";
+  lockedUntil?: string | null;
+  roles?: Array<{ id: number; name: string }>;
   online?: boolean;
   activeSessions?: number;
   lastLoginAt?: string | null;
   lastLoginIp?: string;
   lastLoginUserAgent?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ListMeta {
@@ -60,15 +66,29 @@ interface ListMeta {
   total: number;
 }
 
-const LIMIT = 20;
+const PAGE_SIZES = [10, 20, 50] as const;
 
 type SortField = "createdAt" | "displayName" | "email" | "lastLoginAt";
 type SortDirection = "asc" | "desc";
-type ColumnKey = "select" | "user" | "email" | "status" | "lastLogin" | "ip" | "device" | "actions";
+type ColumnKey =
+  | "select"
+  | "id"
+  | "user"
+  | "email"
+  | "role"
+  | "status"
+  | "lastLogin"
+  | "created"
+  | "ip"
+  | "device"
+  | "actions";
 
 interface UserFilters {
   query: string;
   status: "all" | "online" | "offline";
+  roleId: number;
+  registeredFrom: string;
+  registeredTo: string;
 }
 
 interface FilterPreset extends UserFilters {
@@ -83,10 +103,13 @@ interface ActivityItem {
 
 const DEFAULT_COLUMNS: Record<ColumnKey, boolean> = {
   select: true,
+  id: false,
   user: true,
   email: false,
+  role: true,
   status: true,
   lastLogin: true,
+  created: false,
   ip: false,
   device: true,
   actions: true,
@@ -94,13 +117,16 @@ const DEFAULT_COLUMNS: Record<ColumnKey, boolean> = {
 
 const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
   select: 48,
+  id: 110,
   user: 300,
   email: 250,
+  role: 180,
   status: 100,
   lastLogin: 140,
+  created: 140,
   ip: 150,
   device: 170,
-  actions: 170,
+  actions: 430,
 };
 
 /** Compact browser-os label from a raw User-Agent string. */
@@ -133,6 +159,20 @@ function deviceLabel(ua?: string): string {
   return [browser, os].filter(Boolean).join(" · ");
 }
 
+function deviceIcon(ua?: string): string {
+  if (/Android|iPhone|iPad|iOS/.test(ua ?? "")) return "▯";
+  if (/Windows|Mac OS|Linux/.test(ua ?? "")) return "▣";
+  return "◇";
+}
+
+function ipDescription(ip?: string): string {
+  if (!ip) return "No IP recorded";
+  if (/^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|fc|fd)/i.test(ip)) {
+    return "Private or loopback network address";
+  }
+  return "Public network address";
+}
+
 const REVEAL =
   "Every profile on this platform is provisioned by auth events, materialized by streams, and flushed through idempotent workers.";
 const REVEAL_WORDS = (() => {
@@ -144,11 +184,44 @@ const REVEAL_WORDS = (() => {
   });
 })();
 
+function dateBoundary(value: string | undefined, end: boolean): string | undefined {
+  if (!value) return undefined;
+  return new Date(`${value}T${end ? "23:59:59.999" : "00:00:00.000"}`).toISOString();
+}
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+function randomPassword(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return `Aa1!${[...bytes].map((byte) => alphabet[byte % alphabet.length]).join("")}`;
+}
+
+async function copyText(
+  value: string,
+  notify: (kind: "success" | "error", message: string) => void,
+): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(value);
+    notify("success", "Copied to clipboard");
+  } catch {
+    notify("error", "Clipboard access was denied");
+  }
+}
+
 /** Query keys follow docs/QUERY_KEYS.md: ['users', filters], ['user', id]. */
 export default function UsersPage() {
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [registering, setRegistering] = useState(false);
+  const [registerSeed, setRegisterSeed] = useState<Profile | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
   const [activeRow, setActiveRow] = useState(0);
   const [sortField, setSortField] = useState<SortField>("createdAt");
@@ -157,43 +230,106 @@ export default function UsersPage() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [presetName, setPresetName] = useState("");
   const [importing, setImporting] = useState(false);
+  const [newUserId, setNewUserId] = useState<number | null>(null);
+  const [bulkRoleId, setBulkRoleId] = useState(0);
+  const [bulkAssigning, setBulkAssigning] = useState(false);
   const queryClient = useQueryClient();
   const toast = useToast();
   const confirm = useConfirm();
   const drawer = useDrawer();
   const pageVisible = usePageVisible();
   const { userKey, timeZone } = usePreferences();
-  const [filters, setFilters] = useStored<UserFilters>(`users-filters:${userKey}`, {
+  const [filters, setFilters] = useStored<UserFilters>(`users-filters:v2:${userKey}`, {
     query: "",
     status: "all",
+    roleId: 0,
+    registeredFrom: "",
+    registeredTo: "",
   });
-  const [presets, setPresets] = useStored<FilterPreset[]>(`users-filter-presets:${userKey}`, []);
+  const applyFilters = (next: UserFilters) => {
+    setOffset(0);
+    setFilters(next);
+  };
+  const [presets, setPresets] = useStored<FilterPreset[]>(`users-filter-presets:v2:${userKey}`, []);
   const [visibleColumns, setVisibleColumns] = useStored<Record<ColumnKey, boolean>>(
-    `users-columns:v2:${userKey}`,
+    `users-columns:v3:${userKey}`,
     DEFAULT_COLUMNS,
   );
   const [columnWidths, setColumnWidths] = useStored<Record<ColumnKey, number>>(
-    `users-column-widths:v2:${userKey}`,
+    `users-column-widths:v3:${userKey}`,
     DEFAULT_WIDTHS,
   );
   const [liveEnabled, setLiveEnabled] = useStored(`users-live:${userKey}`, true);
+  const [pageSize, setPageSize] = useStored<(typeof PAGE_SIZES)[number]>(`users-page-size:${userKey}`, 20);
+  const [zebraRows, setZebraRows] = useStored(`users-zebra:${userKey}`, false);
+  const [compactRows, setCompactRows] = useStored(`users-compact:${userKey}`, false);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
   const importRef = useRef<HTMLInputElement>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const countRef = useRef<HTMLParagraphElement>(null);
+  const deferredQuery = useDebouncedValue(filters.query.trim(), 300);
+
+  const roles = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/rbac/roles");
+      if (error) throw new Error("failed to load roles");
+      return (data?.data as { items?: { id: number; name: string }[] })?.items ?? [];
+    },
+  });
+  const stats = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/users/stats");
+      if (error) throw new Error("failed to load user stats");
+      return data?.data as {
+        total: number;
+        online: number;
+        registrations: Array<{ day: string; count: number }>;
+      };
+    },
+    refetchInterval: liveEnabled && pageVisible ? 30_000 : false,
+  });
 
   const users = useQuery({
-    queryKey: ["users", { limit: LIMIT, offset, sort: sortField, order: sortDirection }],
+    queryKey: [
+      "users",
+      {
+        limit: pageSize,
+        offset,
+        q: deferredQuery,
+        presence: filters.status,
+        roleId: filters.roleId,
+        registeredFrom: filters.registeredFrom,
+        registeredTo: filters.registeredTo,
+        sort: sortField,
+        order: sortDirection,
+      },
+    ],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/users", {
-        params: { query: { limit: LIMIT, offset, sort: sortField, order: sortDirection } },
+        params: {
+          query: {
+            limit: pageSize,
+            offset,
+            q: deferredQuery || undefined,
+            presence: filters.status === "all" ? undefined : filters.status,
+            roleId: filters.roleId || undefined,
+            registeredFrom: dateBoundary(filters.registeredFrom, false),
+            registeredTo: dateBoundary(filters.registeredTo, true),
+            sort: sortField,
+            order: sortDirection,
+          },
+        },
       });
       if (error) throw new Error((error as { message?: string }).message ?? "failed to load users");
-      return (data?.data ?? { items: [], meta: { limit: LIMIT, offset: 0, total: 0 } }) as {
+      return (data?.data ?? { items: [], meta: { limit: pageSize, offset: 0, total: 0 } }) as {
         items: Profile[];
         meta: ListMeta;
       };
     },
+    placeholderData: (previous) => previous,
     refetchInterval: liveEnabled && pageVisible ? 30_000 : false,
     refetchIntervalInBackground: false,
   });
@@ -206,10 +342,11 @@ export default function UsersPage() {
 
   const invalidateUsers = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["users"] });
+    queryClient.invalidateQueries({ queryKey: ["user-stats"] });
   }, [queryClient]);
   const realtime = useRealtimeUsers(liveEnabled, invalidateUsers, addActivity);
 
-  const total = users.data?.meta.total ?? 0;
+  const total = stats.data?.total ?? users.data?.meta.total ?? 0;
 
   // GSAP pass one: numeral count-up once the first page resolves.
   useGSAP(
@@ -263,12 +400,21 @@ export default function UsersPage() {
     { scope: rootRef, dependencies: [users.isSuccess] },
   );
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["users"] });
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["users"] }),
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] }),
+    ]);
+  };
 
   const remove = useMutation({
     mutationFn: async (ids: number[]) => {
       await Promise.all(
         ids.map(async (id) => {
+          const sessions = await api.DELETE("/api/v1/auth/users/{id}/sessions", {
+            params: { path: { id } },
+          });
+          if (sessions.error) throw new Error(`session cleanup failed for user ${id}`);
           const { error } = await api.DELETE("/api/v1/users/{id}", { params: { path: { id } } });
           if (error) throw new Error(`delete failed for user ${id}`);
         }),
@@ -314,6 +460,12 @@ export default function UsersPage() {
 
   const requestDelete = async (targets: Profile[]) => {
     if (targets.length === 0) return;
+    const expected = targets.length === 1 ? targets[0].email : `DELETE ${targets.length}`;
+    const typed = window.prompt(`Type ${expected} to confirm permanent deletion.`);
+    if (typed !== expected) {
+      if (typed !== null) toast("error", "Deletion confirmation did not match");
+      return;
+    }
     const subject =
       targets.length === 1 ? targets[0]?.displayName || targets[0]?.email : `${targets.length} users`;
     const ok = await confirm(
@@ -326,14 +478,12 @@ export default function UsersPage() {
   };
 
   const queryItems = users.data?.items ?? [];
-  const items = queryItems.filter((user) => {
-    if (pendingDeleteIds.has(user.id)) return false;
-    const needle = filters.query.trim().toLowerCase();
-    if (needle && !`${user.displayName} ${user.email}`.toLowerCase().includes(needle)) return false;
-    if (filters.status === "online" && !user.online) return false;
-    if (filters.status === "offline" && user.online) return false;
-    return true;
-  });
+  const immediateNeedle = filters.query.trim().toLowerCase();
+  const items = queryItems.filter(
+    (user) =>
+      !pendingDeleteIds.has(user.id) &&
+      (!immediateNeedle || `${user.displayName} ${user.email}`.toLowerCase().includes(immediateNeedle)),
+  );
 
   const openDetail = useCallback(
     (user: Profile) => {
@@ -502,10 +652,34 @@ export default function UsersPage() {
 
   const { meta } = users.data;
   const newest = items[0];
-  const pageCount = Math.max(1, Math.ceil(meta.total / LIMIT));
-  const currentPage = Math.floor(offset / LIMIT) + 1;
+  const pageCount = Math.max(1, Math.ceil(meta.total / pageSize));
+  const currentPage = Math.floor(offset / pageSize) + 1;
   const visibleKeys = (Object.keys(visibleColumns) as ColumnKey[]).filter((key) => visibleColumns[key]);
   const selectedUsers = items.filter((user) => selectedIds.has(user.id));
+  const assignBulkRole = async () => {
+    if (!bulkRoleId || selectedUsers.length === 0) return;
+    setBulkAssigning(true);
+    try {
+      await Promise.all(
+        selectedUsers.map(async (user) => {
+          const roleIds = [...new Set([...(user.roles ?? []).map((role) => role.id), bulkRoleId])];
+          const { error } = await api.PUT("/api/v1/rbac/users/{id}/roles", {
+            params: { path: { id: user.id } },
+            body: { roleIds },
+          });
+          if (error) throw new Error(`Could not assign role to ${user.email}`);
+        }),
+      );
+      setSelectedIds(new Set<number>());
+      setBulkRoleId(0);
+      await refresh();
+      toast("success", `Role assigned to ${formatNumber(selectedUsers.length)} users`);
+    } catch (error) {
+      toast("error", (error as Error).message);
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
 
   return (
     <div ref={rootRef} className="space-y-8">
@@ -526,13 +700,20 @@ export default function UsersPage() {
         data-testid="profiles-summary"
         className="grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-line)] sm:grid-cols-2 lg:auto-flow-dense lg:grid-cols-6"
       >
-        <div className="ui-card min-h-40 rounded-none border-0 sm:col-span-2 sm:min-h-52 lg:col-span-4 lg:row-span-2">
+        <button
+          type="button"
+          title="Clear filters and show every profile"
+          onClick={() =>
+            applyFilters({ query: "", status: "all", roleId: 0, registeredFrom: "", registeredTo: "" })
+          }
+          className="ui-card min-h-40 rounded-none border-0 text-left sm:col-span-2 sm:min-h-52 lg:col-span-4 lg:row-span-2"
+        >
           <Stat
             label="Profiles on record"
             value={<span ref={countRef}>0</span>}
             hint={`showing ${items.length} on this page · ${pageCount} page${pageCount > 1 ? "s" : ""}`}
           />
-        </div>
+        </button>
 
         <div className="relative min-h-40 overflow-hidden sm:min-h-52 lg:col-span-2 lg:row-span-2 lg:min-h-[220px]">
           <img
@@ -552,7 +733,7 @@ export default function UsersPage() {
           <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-muted)]">Latest arrival</p>
           {newest ? (
             <div className="flex items-center gap-3">
-              <Avatar seed={newest.id} alt="" />
+              <Avatar seed={newest.id} label={newest.displayName || newest.email} alt="" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{newest.displayName || newest.email}</p>
                 <p className="truncate font-mono text-[11px] text-[var(--color-muted)]">{newest.email}</p>
@@ -570,9 +751,23 @@ export default function UsersPage() {
               <p className="font-mono text-sm tabular-nums">
                 {offset + 1}–{Math.min(offset + items.length, meta.total)} / {meta.total}
               </p>
-              <Button onClick={() => setRegistering(true)} className="mt-2 w-full">
+              <Button
+                onClick={() => {
+                  setRegisterSeed(null);
+                  setRegistering(true);
+                }}
+                className="mt-2 w-full"
+              >
                 New user
               </Button>
+              <button
+                type="button"
+                onClick={() => applyFilters({ ...filters, status: "online" })}
+                className="mt-3 block text-left text-xs text-[var(--color-success)] hover:underline"
+              >
+                {formatNumber(stats.data?.online ?? 0)} online now
+              </button>
+              <RegistrationSparkline values={stats.data?.registrations ?? []} />
             </div>
           </div>
         </div>
@@ -581,22 +776,55 @@ export default function UsersPage() {
           <span className="font-mono text-xs text-[var(--color-muted)]">
             page {currentPage} of {pageCount}
           </span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="ghost"
               disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - LIMIT))}
+              title={offset === 0 ? "Already on the first page" : "First page"}
+              onClick={() => setOffset(0)}
+            >
+              First
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={offset === 0}
+              title={offset === 0 ? "No previous page" : "Previous page"}
+              onClick={() => setOffset(Math.max(0, offset - pageSize))}
             >
               Prev
             </Button>
             <Button
               variant="ghost"
-              disabled={offset + LIMIT >= meta.total}
-              onClick={() => setOffset(offset + LIMIT)}
+              disabled={offset + pageSize >= meta.total}
+              title={offset + pageSize >= meta.total ? "No next page" : "Next page"}
+              onClick={() => setOffset(offset + pageSize)}
             >
               Next
               <ArrowRight size={14} weight="bold" />
             </Button>
+            <Button
+              variant="ghost"
+              disabled={currentPage >= pageCount}
+              title={currentPage >= pageCount ? "Already on the last page" : "Last page"}
+              onClick={() => setOffset((pageCount - 1) * pageSize)}
+            >
+              Last
+            </Button>
+            <label className="inline-flex items-center gap-2 text-xs text-[var(--color-muted)]">
+              Page
+              <input
+                type="number"
+                min={1}
+                max={pageCount}
+                value={currentPage}
+                aria-label="Jump to page"
+                onChange={(event) => {
+                  const page = Math.min(pageCount, Math.max(1, Number(event.target.value) || 1));
+                  setOffset((page - 1) * pageSize);
+                }}
+                className="w-16 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-2 py-1.5"
+              />
+            </label>
           </div>
         </div>
       </div>
@@ -605,10 +833,10 @@ export default function UsersPage() {
         <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
           <Input
             type="search"
-            aria-label="Filter users"
+            aria-label="Search users"
             placeholder="Filter this page by name or email…"
             value={filters.query}
-            onChange={(event) => setFilters({ ...filters, query: event.target.value })}
+            onChange={(event) => applyFilters({ ...filters, query: event.target.value })}
             className="min-w-52 flex-1"
           />
           {(["all", "online", "offline"] as const).map((status) => (
@@ -616,7 +844,7 @@ export default function UsersPage() {
               key={status}
               type="button"
               aria-pressed={filters.status === status}
-              onClick={() => setFilters({ ...filters, status })}
+              onClick={() => applyFilters({ ...filters, status })}
               className={`rounded-lg px-3 py-2 text-xs font-medium capitalize transition-colors ${
                 filters.status === status
                   ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
@@ -626,6 +854,54 @@ export default function UsersPage() {
               {status}
             </button>
           ))}
+          <select
+            aria-label="Filter by role"
+            value={filters.roleId ?? 0}
+            onChange={(event) => applyFilters({ ...filters, roleId: Number(event.target.value) })}
+            className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2 text-xs"
+          >
+            <option value={0}>All roles</option>
+            {(roles.data ?? []).map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+          <Input
+            type="date"
+            aria-label="Registered from"
+            title="Registered from"
+            value={filters.registeredFrom ?? ""}
+            onChange={(event) => applyFilters({ ...filters, registeredFrom: event.target.value })}
+            className="w-auto"
+          />
+          <Input
+            type="date"
+            aria-label="Registered to"
+            title="Registered to"
+            min={filters.registeredFrom || undefined}
+            value={filters.registeredTo ?? ""}
+            onChange={(event) => applyFilters({ ...filters, registeredTo: event.target.value })}
+            className="w-auto"
+          />
+          <label className="inline-flex items-center gap-2 text-xs text-[var(--color-muted)]">
+            Rows
+            <select
+              aria-label="Rows per page"
+              value={pageSize}
+              onChange={(event) => {
+                setOffset(0);
+                setPageSize(Number(event.target.value) as (typeof PAGE_SIZES)[number]);
+              }}
+              className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-2 py-2"
+            >
+              {PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             aria-pressed={liveEnabled}
@@ -638,6 +914,22 @@ export default function UsersPage() {
               className={`size-1.5 rounded-full ${realtime.connected ? "bg-[var(--color-success)]" : "bg-[var(--color-muted)]"}`}
             />
             Live {liveEnabled ? "on" : "off"}
+          </button>
+          <button
+            type="button"
+            aria-pressed={zebraRows}
+            onClick={() => setZebraRows(!zebraRows)}
+            className="rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]"
+          >
+            Zebra {zebraRows ? "on" : "off"}
+          </button>
+          <button
+            type="button"
+            aria-pressed={compactRows}
+            onClick={() => setCompactRows(!compactRows)}
+            className="rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]"
+          >
+            {compactRows ? "Compact" : "Comfortable"}
           </button>
           <details className="relative">
             <summary className="cursor-pointer list-none rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]">
@@ -707,7 +999,7 @@ export default function UsersPage() {
             <button
               key={preset.name}
               type="button"
-              onClick={() => setFilters({ query: preset.query, status: preset.status })}
+              onClick={() => applyFilters({ ...filters, ...preset })}
               className="rounded-lg border border-[var(--color-line)] px-2.5 py-1.5 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
             >
               {preset.name}
@@ -720,6 +1012,26 @@ export default function UsersPage() {
             <strong className="text-sm">{formatNumber(selectedIds.size)} selected</strong>
             <Button variant="ghost" onClick={() => exportUsers("csv", selectedUsers)}>
               Export selection
+            </Button>
+            <select
+              aria-label="Role for selected users"
+              value={bulkRoleId}
+              onChange={(event) => setBulkRoleId(Number(event.target.value))}
+              className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-2 py-2 text-xs"
+            >
+              <option value={0}>Choose role…</option>
+              {(roles.data ?? []).map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="ghost"
+              disabled={!bulkRoleId || bulkAssigning}
+              onClick={() => void assignBulkRole()}
+            >
+              {bulkAssigning ? "Assigning…" : "Assign role"}
             </Button>
             <Button variant="danger" onClick={() => requestDelete(selectedUsers)}>
               Delete selection
@@ -737,7 +1049,15 @@ export default function UsersPage() {
 
       {/* directory table */}
       <Card title={`Users (${meta.total})`}>
-        <div className="-mx-2 max-h-[60vh] overflow-auto">
+        <div className="relative -mx-2 max-h-[60vh] overflow-auto" aria-busy={users.isFetching}>
+          {users.isFetching ? (
+            <div
+              className="sticky left-0 top-0 z-30 flex h-1 w-full overflow-hidden"
+              aria-label="Refreshing users"
+            >
+              <span className="w-full animate-pulse bg-[var(--color-accent)]" />
+            </div>
+          ) : null}
           <table
             className="w-full text-sm"
             aria-rowcount={items.length}
@@ -778,6 +1098,9 @@ export default function UsersPage() {
                     />
                   </ResizableHeader>
                 ) : null}
+                {visibleColumns.id ? (
+                  <ResizableHeader column="id" label="ID" widths={columnWidths} onResize={startResize} />
+                ) : null}
                 {visibleColumns.user ? (
                   <SortableHeader
                     column="user"
@@ -802,6 +1125,9 @@ export default function UsersPage() {
                     onResize={startResize}
                   />
                 ) : null}
+                {visibleColumns.role ? (
+                  <ResizableHeader column="role" label="Roles" widths={columnWidths} onResize={startResize} />
+                ) : null}
                 {visibleColumns.status ? (
                   <ResizableHeader
                     column="status"
@@ -815,6 +1141,18 @@ export default function UsersPage() {
                     column="lastLogin"
                     label="Last login"
                     field="lastLoginAt"
+                    activeField={sortField}
+                    direction={sortDirection}
+                    onSort={toggleSort}
+                    widths={columnWidths}
+                    onResize={startResize}
+                  />
+                ) : null}
+                {visibleColumns.created ? (
+                  <SortableHeader
+                    column="created"
+                    label="Created"
+                    field="createdAt"
                     activeField={sortField}
                     direction={sortDirection}
                     onSort={toggleSort}
@@ -845,128 +1183,271 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {items.map((u, index) => (
-                <tr
-                  key={u.id}
-                  data-user-row={index}
-                  tabIndex={index === activeRow ? 0 : -1}
-                  aria-selected={selectedIds.has(u.id)}
-                  onFocus={() => setActiveRow(index)}
-                  onClick={() => openDetail(u)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openDetail(u);
-                    }
-                  }}
-                  className={`ui-row cursor-pointer transition-colors hover:bg-[var(--color-hover)] focus:bg-[var(--color-hover)] ${selectedIds.has(u.id) ? "bg-[var(--color-selected)]" : ""}`}
-                >
-                  {visibleColumns.select ? (
-                    <Td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${u.displayName || u.email}`}
-                        checked={selectedIds.has(u.id)}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={() => toggleSelected(u.id)}
-                        className="accent-[var(--color-accent)]"
-                      />
-                    </Td>
-                  ) : null}
-                  {visibleColumns.user ? (
-                    <Td>
-                      <div className="flex items-center gap-3">
-                        <span className="relative">
-                          <Avatar seed={u.id} alt="" />
+                <Fragment key={u.id}>
+                  <tr
+                    data-user-row={index}
+                    tabIndex={index === activeRow ? 0 : -1}
+                    aria-selected={selectedIds.has(u.id)}
+                    onFocus={() => setActiveRow(index)}
+                    onClick={() => openDetail(u)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openDetail(u);
+                      }
+                    }}
+                    className={`ui-row cursor-pointer transition-colors hover:bg-[var(--color-hover)] focus:bg-[var(--color-hover)] ${selectedIds.has(u.id) ? "bg-[var(--color-selected)]" : ""} ${u.online ? "shadow-[inset_3px_0_var(--color-success)]" : ""} ${zebraRows ? "even:bg-[var(--color-elevated)]" : ""} ${compactRows ? "[&>td]:py-2" : ""} ${newUserId === u.id ? "animate-pulse bg-[var(--color-accent)]/10" : ""}`}
+                  >
+                    {visibleColumns.select ? (
+                      <Td>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${u.displayName || u.email}`}
+                          checked={selectedIds.has(u.id)}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={() => toggleSelected(u.id)}
+                          className="accent-[var(--color-accent)]"
+                        />
+                      </Td>
+                    ) : null}
+                    {visibleColumns.id ? (
+                      <Td>
+                        <button
+                          type="button"
+                          title="Copy user ID"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void copyText(String(u.id), toast);
+                          }}
+                          className="font-mono text-xs text-[var(--color-muted)] hover:underline"
+                        >
+                          {String(u.id).slice(0, 10)}
+                        </button>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.user ? (
+                      <Td>
+                        <div className="flex items-center gap-3">
+                          <span className="relative">
+                            <Avatar seed={u.id} label={u.displayName || u.email} alt="" />
+                            <span
+                              className={`absolute -bottom-0.5 -right-0.5 block size-2.5 rounded-full border-2 border-[var(--color-surface)] ${
+                                u.online ? "bg-[var(--color-success)]" : "bg-[var(--color-muted)]"
+                              }`}
+                              title={
+                                u.online
+                                  ? `Online · ${u.activeSessions ?? 0} active sessions`
+                                  : u.lastLoginAt
+                                    ? `Offline · last seen ${relativeTime(u.lastLoginAt)}`
+                                    : "Offline · never logged in"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold">
+                              {u.displayName || (
+                                <span className="text-[var(--color-muted)]">Unnamed user</span>
+                              )}
+                            </span>
+                            <span className="mt-0.5 block truncate text-xs text-[var(--color-muted)]">
+                              {u.email || "No email"}
+                            </span>
+                          </span>
+                        </div>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.email ? (
+                      <Td>
+                        <span className="inline-flex items-center gap-2">
+                          <a
+                            href={`mailto:${u.email}`}
+                            onClick={(event) => event.stopPropagation()}
+                            className="hover:underline"
+                          >
+                            <ExpandableText text={u.email || "—"} max={28} />
+                          </a>
+                          <button
+                            type="button"
+                            title="Copy email"
+                            aria-label={`Copy ${u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void copyText(u.email, toast);
+                            }}
+                            className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                          >
+                            ⧉
+                          </button>
+                        </span>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.role ? (
+                      <Td>
+                        <div className="flex flex-wrap gap-1">
+                          {(u.roles ?? []).length > 0 ? (
+                            u.roles?.map((role) => (
+                              <span
+                                key={role.id}
+                                className="rounded-full bg-[var(--color-accent)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)]"
+                              >
+                                {role.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-[var(--color-muted)]">No role</span>
+                          )}
+                        </div>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.status ? (
+                      <Td>
+                        {u.online ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-success)]">
+                            <span className="block size-1.5 animate-pulse rounded-full bg-[var(--color-success)]" />
+                            Online
+                            {u.activeSessions ? (
+                              <span
+                                title={`${u.activeSessions} active sessions`}
+                                className="rounded-full bg-[var(--color-success)]/15 px-1.5 py-0.5 font-mono text-[10px]"
+                              >
+                                {u.activeSessions}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[var(--color-muted)]">Offline</span>
+                        )}
+                      </Td>
+                    ) : null}
+                    {visibleColumns.lastLogin ? (
+                      <Td>
+                        {u.lastLoginAt ? (
                           <span
-                            className={`absolute -bottom-0.5 -right-0.5 block size-2.5 rounded-full border-2 border-[var(--color-surface)] ${
-                              u.online ? "bg-[var(--color-success)]" : "bg-[var(--color-muted)]"
-                            }`}
-                            title={u.online ? "Online" : "Offline"}
-                          />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate font-semibold">
-                            {u.displayName || <span className="text-[var(--color-muted)]">Unnamed user</span>}
+                            title={formatDateTime(u.lastLoginAt, timeZone)}
+                            className="font-mono text-xs text-[var(--color-muted)]"
+                          >
+                            <span aria-hidden>◷ </span>
+                            {relativeTime(u.lastLoginAt)}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs text-[var(--color-muted)]">
-                            {u.email || "No email"}
+                        ) : (
+                          <span className="font-mono text-xs text-[var(--color-muted)]">—</span>
+                        )}
+                      </Td>
+                    ) : null}
+                    {visibleColumns.created ? (
+                      <Td>
+                        {u.createdAt ? (
+                          <span
+                            title={formatDateTime(u.createdAt, timeZone)}
+                            className="font-mono text-xs text-[var(--color-muted)]"
+                          >
+                            {relativeTime(u.createdAt)}
                           </span>
-                        </span>
-                      </div>
-                    </Td>
-                  ) : null}
-                  {visibleColumns.email ? (
-                    <Td>
-                      <ExpandableText text={u.email || "—"} max={28} />
-                    </Td>
-                  ) : null}
-                  {visibleColumns.status ? (
-                    <Td>
-                      {u.online ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-success)]">
-                          <span className="block size-1.5 animate-pulse rounded-full bg-[var(--color-success)]" />
-                          Online
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[var(--color-muted)]">Offline</span>
-                      )}
-                    </Td>
-                  ) : null}
-                  {visibleColumns.lastLogin ? (
-                    <Td>
-                      {u.lastLoginAt ? (
-                        <span
-                          title={formatDateTime(u.lastLoginAt, timeZone)}
-                          className="font-mono text-xs text-[var(--color-muted)]"
+                        ) : (
+                          <span className="font-mono text-xs text-[var(--color-muted)]">—</span>
+                        )}
+                      </Td>
+                    ) : null}
+                    {visibleColumns.ip ? (
+                      <Td>
+                        <details
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          className="relative font-mono text-xs"
                         >
-                          {relativeTime(u.lastLoginAt)}
+                          <summary className="cursor-pointer text-[var(--color-muted)]">
+                            <ExpandableText text={u.lastLoginIp || "—"} max={22} />
+                          </summary>
+                          <p className="absolute z-30 mt-1 w-48 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-xl">
+                            {ipDescription(u.lastLoginIp)}
+                          </p>
+                        </details>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.device ? (
+                      <Td>
+                        <span className="text-xs text-[var(--color-muted)]">
+                          <span aria-hidden>{deviceIcon(u.lastLoginUserAgent)} </span>
+                          <ExpandableText text={deviceLabel(u.lastLoginUserAgent)} max={22} />
                         </span>
-                      ) : (
-                        <span className="font-mono text-xs text-[var(--color-muted)]">—</span>
-                      )}
-                    </Td>
+                      </Td>
+                    ) : null}
+                    {visibleColumns.actions ? (
+                      <Td className="sticky right-0 z-10 bg-[var(--color-surface)]">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            title={`Expand ${u.displayName || u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setExpandedIds((current) => {
+                                const next = new Set(current);
+                                if (next.has(u.id)) next.delete(u.id);
+                                else next.add(u.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {expandedIds.has(u.id) ? "Collapse" : "Expand"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            title={`View audit trail for ${u.displayName || u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openDetail(u);
+                            }}
+                          >
+                            Audit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            title={`Edit ${u.displayName || u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setEditing(u);
+                            }}
+                          >
+                            <PencilSimple size={14} />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            title={`Duplicate ${u.displayName || u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setRegisterSeed(u);
+                              setRegistering(true);
+                            }}
+                          >
+                            Duplicate
+                          </Button>
+                          <Button
+                            variant="danger"
+                            title={`Delete ${u.displayName || u.email}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void requestDelete([u]);
+                            }}
+                            disabled={remove.isPending}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </Td>
+                    ) : null}
+                  </tr>
+                  {expandedIds.has(u.id) ? (
+                    <tr>
+                      <td
+                        colSpan={Math.max(1, visibleKeys.length)}
+                        className="border-t border-[var(--color-line)] bg-[var(--color-elevated)] px-6 py-4"
+                      >
+                        <UserQuickDetail user={u} timeZone={timeZone} />
+                      </td>
+                    </tr>
                   ) : null}
-                  {visibleColumns.ip ? (
-                    <Td>
-                      <span className="font-mono text-xs text-[var(--color-muted)]">
-                        <ExpandableText text={u.lastLoginIp || "—"} max={22} />
-                      </span>
-                    </Td>
-                  ) : null}
-                  {visibleColumns.device ? (
-                    <Td>
-                      <span className="text-xs text-[var(--color-muted)]">
-                        <ExpandableText text={deviceLabel(u.lastLoginUserAgent)} max={22} />
-                      </span>
-                    </Td>
-                  ) : null}
-                  {visibleColumns.actions ? (
-                    <Td>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setEditing(u);
-                          }}
-                        >
-                          <PencilSimple size={14} />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void requestDelete([u]);
-                          }}
-                          disabled={remove.isPending}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </Td>
-                  ) : null}
-                </tr>
+                </Fragment>
               ))}
               {items.length === 0 ? (
                 <tr>
@@ -1005,9 +1486,12 @@ export default function UsersPage() {
 
       {registering ? (
         <RegisterUserModal
+          initialProfile={registerSeed}
           onClose={() => setRegistering(false)}
-          onSaved={() => {
+          onSaved={(id) => {
             setRegistering(false);
+            setNewUserId(id);
+            window.setTimeout(() => setNewUserId(null), 4_000);
             refresh();
             realtime.broadcast("create");
             addActivity("User registered");
@@ -1025,7 +1509,7 @@ export default function UsersPage() {
             refresh();
             realtime.broadcast("update");
             addActivity(`User ${editing?.displayName || editing?.email || "profile"} updated`);
-            toast("success", "User updated");
+            toast("success", `Profile ${editing?.displayName || editing?.email || "user"} updated`);
           }}
         />
       ) : null}
@@ -1036,10 +1520,13 @@ export default function UsersPage() {
 function columnLabel(key: ColumnKey): string {
   const labels: Record<ColumnKey, string> = {
     select: "selection",
+    id: "ID",
     user: "user",
     email: "email",
+    role: "roles",
     status: "status",
     lastLogin: "last login",
+    created: "created",
     ip: "IP address",
     device: "device",
     actions: "actions",
@@ -1061,7 +1548,9 @@ function ResizableHeader({
   children?: ReactNode;
 }) {
   return (
-    <th className="relative px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
+    <th
+      className={`relative px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)] ${column === "actions" ? "sticky right-0 z-20 bg-[var(--color-surface)]" : ""}`}
+    >
       {children ?? label}
       <span
         role="separator"
@@ -1114,26 +1603,248 @@ function SortableHeader({
   );
 }
 
-function UserDetail({ user, timeZone }: { user: Profile; timeZone: string }) {
+function UserQuickDetail({ user, timeZone }: { user: Profile; timeZone: string }) {
   return (
-    <dl className="space-y-4 text-sm">
-      <div className="flex items-center gap-3">
-        <Avatar seed={user.id} alt="" />
-        <div className="min-w-0">
-          <dt className="sr-only">Name</dt>
-          <dd className="truncate font-semibold">{user.displayName || "Unnamed user"}</dd>
-          <dd className="truncate text-xs text-[var(--color-muted)]">{user.email}</dd>
-        </div>
-      </div>
-      <DetailRow label="Status" value={user.online ? "Online" : "Offline"} />
-      <DetailRow label="Active sessions" value={formatNumber(user.activeSessions ?? 0)} />
-      <DetailRow
-        label="Last login"
-        value={user.lastLoginAt ? formatDateTime(user.lastLoginAt, timeZone) : "Never"}
-      />
-      <DetailRow label="IP address" value={user.lastLoginIp || "—"} />
-      <DetailRow label="Device" value={deviceLabel(user.lastLoginUserAgent)} />
+    <dl className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+      <DetailRow label="Email" value={user.email} />
+      <DetailRow label="Roles" value={(user.roles ?? []).map((role) => role.name).join(", ") || "No role"} />
+      <DetailRow label="Sessions" value={formatNumber(user.activeSessions ?? 0)} />
+      <DetailRow label="Created" value={user.createdAt ? formatDateTime(user.createdAt, timeZone) : "—"} />
     </dl>
+  );
+}
+
+function UserDetail({ user, timeZone }: { user: Profile; timeZone: string }) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [roleIds, setRoleIds] = useState(() => (user.roles ?? []).map((role) => role.id));
+  const allRoles = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/rbac/roles");
+      if (error) throw new Error("failed to load roles");
+      return (data?.data as { items?: { id: number; name: string }[] })?.items ?? [];
+    },
+  });
+  const sessions = useQuery({
+    queryKey: ["user", user.id, "sessions"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/auth/users/{id}/sessions", {
+        params: { path: { id: user.id } },
+      });
+      if (error) throw new Error("failed to load sessions");
+      return (
+        (
+          data?.data as {
+            items?: Array<{ id: number; userAgent: string; ip: string; createdAt: string }>;
+          }
+        )?.items ?? []
+      );
+    },
+  });
+  const audit = useQuery({
+    queryKey: ["user", user.id, "audit"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/audit/viewer", {
+        params: { query: { limit: 20, offset: 0, entityId: String(user.id) } },
+      });
+      if (error) throw new Error("failed to load audit history");
+      return (
+        (
+          data?.data as {
+            items?: Array<{ id: number; action: string; actorSub: string; createdAt: string }>;
+          }
+        )?.items ?? []
+      );
+    },
+  });
+  const changed = () => {
+    void queryClient.invalidateQueries({ queryKey: ["users"] });
+    void queryClient.invalidateQueries({ queryKey: ["user", user.id] });
+  };
+  const state = useMutation({
+    mutationFn: async (body: { status?: "active" | "inactive"; locked?: boolean }) => {
+      const { error } = await api.PATCH("/api/v1/auth/users/{id}/state", {
+        params: { path: { id: user.id } },
+        body,
+      });
+      if (error) throw new Error("failed to update account state");
+    },
+    onSuccess: () => {
+      changed();
+      toast("success", `Account ${user.displayName || user.email} updated`);
+    },
+    onError: (error) => toast("error", (error as Error).message),
+  });
+  const revoke = useMutation({
+    mutationFn: async (sessionId?: number) => {
+      const result = sessionId
+        ? await api.DELETE("/api/v1/auth/users/{id}/sessions/{sessionId}", {
+            params: { path: { id: user.id, sessionId } },
+          })
+        : await api.DELETE("/api/v1/auth/users/{id}/sessions", {
+            params: { path: { id: user.id } },
+          });
+      if (result.error) throw new Error("failed to revoke sessions");
+    },
+    onSuccess: () => {
+      void sessions.refetch();
+      changed();
+      toast("success", `Sessions for ${user.displayName || user.email} revoked`);
+    },
+    onError: (error) => toast("error", (error as Error).message),
+  });
+  const saveRoles = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.PUT("/api/v1/rbac/users/{id}/roles", {
+        params: { path: { id: user.id } },
+        body: { roleIds },
+      });
+      if (error) throw new Error("failed to update roles");
+    },
+    onSuccess: () => {
+      changed();
+      toast("success", `Roles for ${user.displayName || user.email} updated`);
+    },
+    onError: (error) => toast("error", (error as Error).message),
+  });
+
+  return (
+    <div className="space-y-6 text-sm">
+      <dl className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Avatar seed={user.id} label={user.displayName || user.email} alt="" />
+          <div className="min-w-0">
+            <dt className="sr-only">Name</dt>
+            <dd className="truncate font-semibold">{user.displayName || "Unnamed user"}</dd>
+            <dd className="truncate text-xs text-[var(--color-muted)]">{user.email}</dd>
+          </div>
+        </div>
+        <DetailRow label="Status" value={user.online ? "Online" : "Offline"} />
+        <DetailRow
+          label="Account"
+          value={`${user.status ?? "active"}${user.lockedUntil && new Date(user.lockedUntil) > new Date() ? " · locked" : ""}`}
+        />
+        <DetailRow label="Active sessions" value={formatNumber(user.activeSessions ?? 0)} />
+        <DetailRow
+          label="Last login"
+          value={user.lastLoginAt ? formatDateTime(user.lastLoginAt, timeZone) : "Never"}
+        />
+        <DetailRow label="IP address" value={user.lastLoginIp || "—"} />
+        <DetailRow label="Device" value={deviceLabel(user.lastLoginUserAgent)} />
+        <DetailRow label="Created" value={user.createdAt ? formatDateTime(user.createdAt, timeZone) : "—"} />
+        <DetailRow label="Updated" value={user.updatedAt ? formatDateTime(user.updatedAt, timeZone) : "—"} />
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)]">ID</dt>
+          <dd className="mt-1 flex items-center gap-2 break-all font-mono text-xs">
+            {user.id}
+            <button type="button" className="underline" onClick={() => void copyText(String(user.id), toast)}>
+              Copy
+            </button>
+          </dd>
+        </div>
+      </dl>
+
+      <section>
+        <h4 className="font-semibold">Account controls</h4>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button
+            variant="ghost"
+            disabled={state.isPending}
+            onClick={() => state.mutate({ status: user.status === "inactive" ? "active" : "inactive" })}
+          >
+            {user.status === "inactive" ? "Activate" : "Deactivate"}
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={state.isPending}
+            onClick={() =>
+              state.mutate({ locked: !(user.lockedUntil && new Date(user.lockedUntil) > new Date()) })
+            }
+          >
+            {user.lockedUntil && new Date(user.lockedUntil) > new Date() ? "Unlock" : "Lock"}
+          </Button>
+          <Button variant="danger" disabled={revoke.isPending} onClick={() => revoke.mutate(undefined)}>
+            Force logout
+          </Button>
+        </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="font-semibold">Assigned roles</h4>
+          <Button variant="ghost" disabled={saveRoles.isPending} onClick={() => saveRoles.mutate()}>
+            Save roles
+          </Button>
+        </div>
+        <div className="mt-2 space-y-1">
+          {(allRoles.data ?? []).map((role) => (
+            <label key={role.id} className="ui-choice">
+              <input
+                type="checkbox"
+                checked={roleIds.includes(role.id)}
+                onChange={() =>
+                  setRoleIds((current) =>
+                    current.includes(role.id)
+                      ? current.filter((id) => id !== role.id)
+                      : [...current, role.id],
+                  )
+                }
+              />
+              {role.name}
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="font-semibold">Active sessions</h4>
+          <span className="font-mono text-xs text-[var(--color-muted)]">{sessions.data?.length ?? 0}</span>
+        </div>
+        <ul className="mt-2 space-y-2">
+          {(sessions.data ?? []).map((session) => (
+            <li key={session.id} className="rounded-lg border border-[var(--color-line)] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p>{deviceLabel(session.userAgent)}</p>
+                  <p className="mt-1 font-mono text-[10px] text-[var(--color-muted)]">
+                    {session.ip || "Unknown IP"} · {formatDateTime(session.createdAt, timeZone)}
+                  </p>
+                </div>
+                <Button
+                  variant="danger"
+                  disabled={revoke.isPending}
+                  onClick={() => revoke.mutate(session.id)}
+                >
+                  Revoke
+                </Button>
+              </div>
+            </li>
+          ))}
+          {sessions.isPending ? <li className="text-[var(--color-muted)]">Loading sessions…</li> : null}
+          {sessions.data?.length === 0 ? (
+            <li className="text-[var(--color-muted)]">No active sessions.</li>
+          ) : null}
+        </ul>
+      </section>
+
+      <section>
+        <h4 className="font-semibold">Audit history</h4>
+        <ol className="mt-2 space-y-2">
+          {(audit.data ?? []).map((entry) => (
+            <li key={entry.id} className="border-l-2 border-[var(--color-line)] pl-3">
+              <p className="capitalize">{entry.action}</p>
+              <time className="font-mono text-[10px] text-[var(--color-muted)]">
+                {formatDateTime(entry.createdAt, timeZone)} · {entry.actorSub || "system"}
+              </time>
+            </li>
+          ))}
+          {audit.isPending ? <li className="text-[var(--color-muted)]">Loading audit history…</li> : null}
+          {audit.data?.length === 0 ? <li className="text-[var(--color-muted)]">No audit entries.</li> : null}
+        </ol>
+      </section>
+    </div>
   );
 }
 
@@ -1143,6 +1854,31 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <dt className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)]">{label}</dt>
       <dd className="mt-1 break-words">{value}</dd>
     </div>
+  );
+}
+
+function RegistrationSparkline({ values }: { values: Array<{ day: string; count: number }> }) {
+  if (values.length === 0) return null;
+  const max = Math.max(1, ...values.map((item) => item.count));
+  const points = values
+    .map((item, index) => `${(index / Math.max(1, values.length - 1)) * 120},${28 - (item.count / max) * 24}`)
+    .join(" ");
+  return (
+    <svg
+      viewBox="0 0 120 32"
+      role="img"
+      aria-label={`Registrations over seven days: ${values.map((item) => item.count).join(", ")}`}
+      className="mt-3 h-8 w-32 text-[var(--color-accent)]"
+    >
+      <title>Seven-day registration trend</title>
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
 
@@ -1304,10 +2040,40 @@ function ProfileModal({
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [avatarBroken, setAvatarBroken] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
+  const history = useQuery({
+    queryKey: ["user", profile.id, "audit"],
+    queryFn: async () => {
+      const { data, error: historyError } = await api.GET("/api/v1/audit/viewer", {
+        params: { query: { limit: 10, offset: 0, entityId: String(profile.id) } },
+      });
+      if (historyError) throw new Error("failed to load change history");
+      return (
+        (data?.data as { items?: Array<{ id: number; action: string; createdAt: string }> })?.items ?? []
+      );
+    },
+  });
+  const emailChanged = email.trim().toLowerCase() !== profile.email.trim().toLowerCase();
+  const dirty =
+    email !== profile.email ||
+    displayName !== profile.displayName ||
+    avatarUrl !== profile.avatarUrl ||
+    newPassword !== "";
+  const requestClose = () => {
+    if (!dirty || window.confirm("Discard unsaved changes?")) onClose();
+  };
 
   const save = useMutation({
     mutationFn: async () => {
+      if (emailChanged) {
+        const confirmation = await api.POST("/api/v1/auth/confirm-password", {
+          body: { password: adminPassword },
+        });
+        if (confirmation.error) throw new Error("Your password could not be confirmed.");
+      }
       const { error: e } = await api.PATCH("/api/v1/users/{id}", {
         params: { path: { id: profile.id } },
         body: { id: profile.id, email, displayName, avatarUrl },
@@ -1329,13 +2095,22 @@ function ProfileModal({
     },
   });
 
+  const sendReset = useMutation({
+    mutationFn: async () => {
+      const { error: resetError } = await api.POST("/api/v1/auth/forgot", { body: { email } });
+      if (resetError) throw new Error("could not send password reset email");
+    },
+    onSuccess: () => toast("success", `Password reset email queued for ${email}`),
+    onError: (resetError) => toast("error", (resetError as Error).message),
+  });
+
   return (
     <Modal
       title={title}
       eyebrow="Edit resource"
       description="Update the profile identity and optionally rotate the user's password."
       size="lg"
-      onClose={onClose}
+      onClose={requestClose}
     >
       <form
         onSubmit={(e) => {
@@ -1381,9 +2156,25 @@ function ProfileModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-invalid={error.includes("already in use")}
               />
             </Field>
           </div>
+          {emailChanged ? (
+            <div className="mt-4 space-y-2">
+              <Alert message="Changing this address also changes the user's login email." />
+              <Field label="Confirm your password">
+                <Input
+                  name="adminPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={adminPassword}
+                  onChange={(event) => setAdminPassword(event.target.value)}
+                  required
+                />
+              </Field>
+            </div>
+          ) : null}
         </ModalSection>
 
         <ModalSection
@@ -1391,24 +2182,74 @@ function ProfileModal({
           description="Leave this blank to keep the current password. A new password revokes active sessions."
         >
           <Field label="New password">
-            <Input
-              name="newPassword"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              placeholder="At least 8 characters"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                name="newPassword"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                minLength={8}
+                placeholder="At least 8 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              <Button type="button" variant="ghost" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Hide" : "Show"}
+              </Button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button type="button" variant="ghost" onClick={() => setNewPassword(randomPassword())}>
+                Generate
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!newPassword}
+                onClick={() => void copyText(newPassword, toast)}
+              >
+                Copy
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={sendReset.isPending}
+                onClick={() => sendReset.mutate()}
+              >
+                Send reset email
+              </Button>
+            </div>
           </Field>
         </ModalSection>
 
+        <ModalSection title="Change history" description="Recent audit entries for this user.">
+          <ol className="space-y-2">
+            {(history.data ?? []).map((entry) => (
+              <li key={entry.id} className="flex items-center justify-between gap-3 text-xs">
+                <span className="capitalize">{entry.action}</span>
+                <time className="font-mono text-[10px] text-[var(--color-muted)]">
+                  {formatDateTime(entry.createdAt)}
+                </time>
+              </li>
+            ))}
+            {history.isPending ? (
+              <li className="text-xs text-[var(--color-muted)]">Loading history…</li>
+            ) : null}
+            {history.data?.length === 0 ? (
+              <li className="text-xs text-[var(--color-muted)]">No changes yet.</li>
+            ) : null}
+          </ol>
+        </ModalSection>
+
+        <p className="font-mono text-[10px] text-[var(--color-muted)]">
+          Created {profile.createdAt ? formatDateTime(profile.createdAt) : "—"} · Updated{" "}
+          {profile.updatedAt ? formatDateTime(profile.updatedAt) : "—"}
+        </p>
+
         {error ? <Alert message={error} /> : null}
         <ModalActions>
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={requestClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={save.isPending}>
+          <Button type="submit" disabled={save.isPending || (emailChanged && !adminPassword)}>
             {save.isPending ? "Saving…" : "Save changes"}
           </Button>
         </ModalActions>
@@ -1418,19 +2259,27 @@ function ProfileModal({
 }
 
 function RegisterUserModal({
+  initialProfile,
   onClose,
   onSaved,
 }: {
+  initialProfile: Profile | null;
   onClose(): void;
-  onSaved(): void;
+  onSaved(id: number): void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [displayName, setDisplayName] = useState(initialProfile?.displayName ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatarUrl ?? "");
   const [avatarBroken, setAvatarBroken] = useState(false);
-  const [roleIds, setRoleIds] = useState<number[]>([]);
+  const [roleIds, setRoleIds] = useState<number[]>(() =>
+    (initialProfile?.roles ?? []).map((role) => role.id),
+  );
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [roleQuery, setRoleQuery] = useState("");
+  const toast = useToast();
+  const deferredEmail = useDebouncedValue(email.trim().toLowerCase(), 300);
 
   // Same normalized shape as the roles page (shared ["roles"] cache entry).
   const roles = useQuery({
@@ -1439,6 +2288,19 @@ function RegisterUserModal({
       const { data, error } = await api.GET("/api/v1/rbac/roles");
       if (error) throw new Error("failed to load roles");
       return (data?.data as { items?: { id: number; name: string }[] })?.items ?? [];
+    },
+  });
+
+  const emailCheck = useQuery({
+    queryKey: ["users", "email-check", deferredEmail],
+    enabled: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(deferredEmail),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/users", {
+        params: { query: { limit: 10, offset: 0, q: deferredEmail } },
+      });
+      if (error) throw new Error("email check failed");
+      const items = (data?.data as { items?: Profile[] })?.items ?? [];
+      return items.some((user) => user.email.toLowerCase() === deferredEmail);
     },
   });
 
@@ -1462,6 +2324,7 @@ function RegisterUserModal({
         });
         if (e) throw new Error("registered, but assigning roles failed");
       }
+      return newId;
     },
     onSuccess: onSaved,
     onError: (err) => setError((err as Error).message),
@@ -1472,7 +2335,7 @@ function RegisterUserModal({
 
   return (
     <Modal
-      title="Register user"
+      title={initialProfile ? "Duplicate user" : "Register user"}
       eyebrow="Create resource"
       description="Create credentials, complete the profile, and assign initial access in one flow."
       size="lg"
@@ -1522,21 +2385,44 @@ function RegisterUserModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-invalid={emailCheck.data === true}
               />
             </Field>
+            {emailCheck.isFetching ? (
+              <p className="text-xs text-[var(--color-muted)]">Checking email…</p>
+            ) : null}
+            {emailCheck.data ? <Alert message="That email is already registered." /> : null}
           </div>
           <div className="mt-4">
             <Field label="Temporary password">
-              <Input
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                placeholder="At least 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  minLength={8}
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button type="button" variant="ghost" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? "Hide" : "Show"}
+                </Button>
+              </div>
+              <div className="mt-2 flex gap-2">
+                <Button type="button" variant="ghost" onClick={() => setPassword(randomPassword())}>
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={!password}
+                  onClick={() => void copyText(password, toast)}
+                >
+                  Copy
+                </Button>
+              </div>
             </Field>
           </div>
         </ModalSection>
@@ -1547,23 +2433,33 @@ function RegisterUserModal({
         >
           <fieldset>
             <legend className="sr-only">Assigned roles</legend>
+            <Input
+              type="search"
+              aria-label="Search roles"
+              placeholder="Search roles…"
+              value={roleQuery}
+              onChange={(event) => setRoleQuery(event.target.value)}
+              className="mb-2"
+            />
             <div className="max-h-40 space-y-1 overflow-auto rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-2">
               {roles.isPending ? (
                 <div className="flex items-center gap-2 px-2 py-3 text-xs text-[var(--color-muted)]">
                   <Spinner /> Loading roles…
                 </div>
               ) : null}
-              {(roles.data ?? []).map((r) => (
-                <label key={r.id} className="ui-choice">
-                  <input
-                    type="checkbox"
-                    checked={roleIds.includes(r.id)}
-                    onChange={() => toggleRole(r.id)}
-                    className="size-3.5 accent-[var(--color-accent)]"
-                  />
-                  <span>{r.name}</span>
-                </label>
-              ))}
+              {(roles.data ?? [])
+                .filter((role) => role.name.toLowerCase().includes(roleQuery.trim().toLowerCase()))
+                .map((r) => (
+                  <label key={r.id} className="ui-choice">
+                    <input
+                      type="checkbox"
+                      checked={roleIds.includes(r.id)}
+                      onChange={() => toggleRole(r.id)}
+                      className="size-3.5 accent-[var(--color-accent)]"
+                    />
+                    <span>{r.name}</span>
+                  </label>
+                ))}
               {roles.data !== undefined && roles.data.length === 0 ? (
                 <p className="px-2 py-3 text-xs text-[var(--color-muted)]">No roles available yet.</p>
               ) : null}
@@ -1580,7 +2476,10 @@ function RegisterUserModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={save.isPending || !email || password.length < 8}>
+          <Button
+            type="submit"
+            disabled={save.isPending || !email || password.length < 8 || emailCheck.data === true}
+          >
             {save.isPending ? "Registering…" : "Register user"}
           </Button>
         </ModalActions>

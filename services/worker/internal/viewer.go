@@ -37,13 +37,20 @@ func AuditViewer(db *gorm.DB, internalSecret string) http.HandlerFunc {
 			platform.Fail(w, http.StatusBadRequest, "bad_request", err.Error())
 			return
 		}
+		query := db.Table("audit.audit_logs")
+		if entity := r.URL.Query().Get("entity"); entity != "" {
+			query = query.Where("entity = ?", entity)
+		}
+		if entityID := r.URL.Query().Get("entityId"); entityID != "" {
+			query = query.Where("entity_id = ?", entityID)
+		}
 		var total int64
-		if err := db.Table("audit.audit_logs").Count(&total).Error; err != nil {
+		if err := query.Count(&total).Error; err != nil {
 			platform.Fail(w, http.StatusInternalServerError, "internal_server_error", "")
 			return
 		}
 		rows := []row{}
-		if err := db.Table("audit.audit_logs").
+		if err := query.
 			Select("id, actor_sub AS \"actorSub\", action, entity, entity_id AS \"entityId\", meta, created_at").
 			Order("id DESC").Limit(limit).Offset(offset).
 			Scan(&rows).Error; err != nil {

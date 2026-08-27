@@ -21,6 +21,7 @@ afterEach(() => {
   cleanup();
   getMock.mockReset();
   deleteMock.mockReset();
+  vi.restoreAllMocks();
   vi.useRealTimers();
 });
 
@@ -41,23 +42,30 @@ function mount() {
 }
 
 it("renders the paginated table and deletes a profile", async () => {
-  (getMock as Mock).mockResolvedValue({
+  (getMock as Mock).mockImplementation(async (path: string) => ({
     data: {
       success: true,
       message: "ok",
-      data: {
-        items: [
-          {
-            id: "11111111-1111-1111-1111-111111111111",
-            email: "ada@example.local",
-            displayName: "Ada",
-            avatarUrl: "",
-          },
-        ],
-        meta: { limit: 20, offset: 0, total: 1 },
-      },
+      data:
+        path === "/api/v1/rbac/roles"
+          ? { items: [] }
+          : path === "/api/v1/users/stats"
+            ? { total: 1, online: 0, registrations: [] }
+            : {
+                items: [
+                  {
+                    id: 111,
+                    email: "ada@example.local",
+                    displayName: "Ada",
+                    avatarUrl: "",
+                    status: "active",
+                    roles: [],
+                  },
+                ],
+                meta: { limit: 20, offset: 0, total: 1 },
+              },
     },
-  });
+  }));
   (deleteMock as Mock).mockResolvedValue({ data: { success: true }, error: undefined });
 
   mount();
@@ -72,6 +80,39 @@ it("renders the paginated table and deletes a profile", async () => {
   const profilesSummary = screen.getByTestId("profiles-summary");
   expect(profilesSummary.classList.contains("grid-cols-1")).toBe(true);
   expect(profilesSummary.classList.contains("sm:grid-cols-2")).toBe(true);
+
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), {
+    target: { value: "ada" },
+  });
+  await waitFor(() =>
+    expect(
+      getMock.mock.calls.some(
+        ([path, options]) =>
+          path === "/api/v1/users" &&
+          (options as { params?: { query?: { q?: string } } })?.params?.query?.q === "ada",
+      ),
+    ).toBe(true),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "online" }));
+  await waitFor(() =>
+    expect(
+      getMock.mock.calls.some(
+        ([path, options]) =>
+          path === "/api/v1/users" &&
+          (options as { params?: { query?: { presence?: string } } })?.params?.query?.presence === "online",
+      ),
+    ).toBe(true),
+  );
+  fireEvent.change(screen.getByRole("combobox", { name: "Rows per page" }), { target: { value: "10" } });
+  await waitFor(() =>
+    expect(
+      getMock.mock.calls.some(
+        ([path, options]) =>
+          path === "/api/v1/users" &&
+          (options as { params?: { query?: { limit?: number } } })?.params?.query?.limit === 10,
+      ),
+    ).toBe(true),
+  );
 
   fireEvent.click(screen.getByRole("row", { name: /Ada ada@example\.local/i }));
   const detailDrawer = screen.getByRole("dialog", { name: "User details" });
@@ -93,6 +134,7 @@ it("renders the paginated table and deletes a profile", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
   // The delete button now opens a confirm dialog — accept it.
+  vi.spyOn(window, "prompt").mockReturnValue("ada@example.local");
   await userEvent.click(screen.getByRole("button", { name: "Delete" }));
   // The confirm dialog renders with the title "Delete Ada?" and a "Delete" confirm button.
   await waitFor(() => screen.getByRole("dialog", { name: /Delete Ada/i }));
@@ -102,7 +144,15 @@ it("renders the paginated table and deletes a profile", async () => {
   fireEvent.click(buttons[buttons.length - 1]);
   expect(deleteMock).not.toHaveBeenCalled();
   await act(async () => vi.advanceTimersByTimeAsync(5_000));
-  expect(deleteMock).toHaveBeenCalledTimes(1);
-  const [, opts] = (deleteMock as Mock).mock.calls[0] as [string, { params: { path: { id: string } } }];
-  expect(opts.params.path.id).toBe("11111111-1111-1111-1111-111111111111");
+  expect(deleteMock).toHaveBeenCalledTimes(2);
+  expect(deleteMock).toHaveBeenNthCalledWith(
+    1,
+    "/api/v1/auth/users/{id}/sessions",
+    expect.objectContaining({ params: { path: { id: 111 } } }),
+  );
+  expect(deleteMock).toHaveBeenNthCalledWith(
+    2,
+    "/api/v1/users/{id}",
+    expect.objectContaining({ params: { path: { id: 111 } } }),
+  );
 });

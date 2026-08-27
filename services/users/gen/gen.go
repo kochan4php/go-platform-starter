@@ -14,6 +14,63 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for ProfileStatus.
+const (
+	Active   ProfileStatus = "active"
+	Inactive ProfileStatus = "inactive"
+)
+
+// Valid indicates whether the value is a known member of the ProfileStatus enum.
+func (e ProfileStatus) Valid() bool {
+	switch e {
+	case Active:
+		return true
+	case Inactive:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListUsersParamsLimit.
+const (
+	N10 ListUsersParamsLimit = 10
+	N20 ListUsersParamsLimit = 20
+	N50 ListUsersParamsLimit = 50
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsLimit enum.
+func (e ListUsersParamsLimit) Valid() bool {
+	switch e {
+	case N10:
+		return true
+	case N20:
+		return true
+	case N50:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListUsersParamsPresence.
+const (
+	Offline ListUsersParamsPresence = "offline"
+	Online  ListUsersParamsPresence = "online"
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsPresence enum.
+func (e ListUsersParamsPresence) Valid() bool {
+	switch e {
+	case Offline:
+		return true
+	case Online:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListUsersParamsSort.
 const (
 	CreatedAt   ListUsersParamsSort = "createdAt"
@@ -79,18 +136,24 @@ type EnvelopeOK struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	ActiveSessions     *int       `json:"activeSessions,omitempty"`
-	AvatarUrl          *string    `json:"avatarUrl,omitempty"`
-	CreatedAt          *time.Time `json:"createdAt,omitempty"`
-	DisplayName        *string    `json:"displayName,omitempty"`
-	Email              *string    `json:"email,omitempty"`
-	Id                 *int64     `json:"id,omitempty"`
-	LastLoginAt        *time.Time `json:"lastLoginAt,omitempty"`
-	LastLoginIp        *string    `json:"lastLoginIp,omitempty"`
-	LastLoginUserAgent *string    `json:"lastLoginUserAgent,omitempty"`
-	Online             *bool      `json:"online,omitempty"`
-	UpdatedAt          *time.Time `json:"updatedAt,omitempty"`
+	ActiveSessions     *int           `json:"activeSessions,omitempty"`
+	AvatarUrl          *string        `json:"avatarUrl,omitempty"`
+	CreatedAt          *time.Time     `json:"createdAt,omitempty"`
+	DisplayName        *string        `json:"displayName,omitempty"`
+	Email              *string        `json:"email,omitempty"`
+	Id                 *int64         `json:"id,omitempty"`
+	LastLoginAt        *time.Time     `json:"lastLoginAt,omitempty"`
+	LastLoginIp        *string        `json:"lastLoginIp,omitempty"`
+	LastLoginUserAgent *string        `json:"lastLoginUserAgent,omitempty"`
+	LockedUntil        *time.Time     `json:"lockedUntil,omitempty"`
+	Online             *bool          `json:"online,omitempty"`
+	Roles              *[]RoleSummary `json:"roles,omitempty"`
+	Status             *ProfileStatus `json:"status,omitempty"`
+	UpdatedAt          *time.Time     `json:"updatedAt,omitempty"`
 }
+
+// ProfileStatus defines model for Profile.Status.
+type ProfileStatus string
 
 // ProfileInput defines model for ProfileInput.
 type ProfileInput struct {
@@ -102,13 +165,42 @@ type ProfileInput struct {
 	Id int64 `json:"id"`
 }
 
+// RoleSummary defines model for RoleSummary.
+type RoleSummary struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// UserStats defines model for UserStats.
+type UserStats struct {
+	Online        int64 `json:"online"`
+	Registrations []struct {
+		Count int64              `json:"count"`
+		Day   openapi_types.Date `json:"day"`
+	} `json:"registrations"`
+	Total int64 `json:"total"`
+}
+
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
-	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit  *ListUsersParamsLimit `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
-	Sort   *ListUsersParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
-	Order  *ListUsersParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+
+	// Q case-insensitive email/display-name search
+	Q              *string                  `form:"q,omitempty" json:"q,omitempty"`
+	Presence       *ListUsersParamsPresence `form:"presence,omitempty" json:"presence,omitempty"`
+	RoleId         *int64                   `form:"roleId,omitempty" json:"roleId,omitempty"`
+	RegisteredFrom *time.Time               `form:"registeredFrom,omitempty" json:"registeredFrom,omitempty"`
+	RegisteredTo   *time.Time               `form:"registeredTo,omitempty" json:"registeredTo,omitempty"`
+	Sort           *ListUsersParamsSort     `form:"sort,omitempty" json:"sort,omitempty"`
+	Order          *ListUsersParamsOrder    `form:"order,omitempty" json:"order,omitempty"`
 }
+
+// ListUsersParamsLimit defines parameters for ListUsers.
+type ListUsersParamsLimit int
+
+// ListUsersParamsPresence defines parameters for ListUsers.
+type ListUsersParamsPresence string
 
 // ListUsersParamsSort defines parameters for ListUsers.
 type ListUsersParamsSort string
@@ -133,6 +225,9 @@ type ServerInterface interface {
 	// Me the caller's profile, served purely from identity headers
 	// (GET /users/me)
 	Me(w http.ResponseWriter, r *http.Request)
+	// GetUserStats directory totals and seven-day registration series
+	// (GET /users/stats)
+	GetUserStats(w http.ResponseWriter, r *http.Request)
 	// DeleteUser hard-delete the profile row and emit user.deleted
 	// (DELETE /users/{id})
 	DeleteUser(w http.ResponseWriter, r *http.Request, id int64)
@@ -163,6 +258,12 @@ func (_ Unimplemented) CreateUserProfile(w http.ResponseWriter, r *http.Request)
 // Me the caller's profile, served purely from identity headers
 // (GET /users/me)
 func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetUserStats directory totals and seven-day registration series
+// (GET /users/stats)
+func (_ Unimplemented) GetUserStats(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -226,6 +327,71 @@ func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "presence" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "presence", r.URL.Query(), &params.Presence, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "presence"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "presence", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "roleId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "roleId", r.URL.Query(), &params.RoleId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "roleId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "roleId", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "registeredFrom" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "registeredFrom", r.URL.Query(), &params.RegisteredFrom, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "registeredFrom"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registeredFrom", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "registeredTo" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "registeredTo", r.URL.Query(), &params.RegisteredTo, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "registeredTo"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registeredTo", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "sort" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -282,6 +448,20 @@ func (siw *ServerInterfaceWrapper) Me(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.Me(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetUserStats operation middleware
+func (siw *ServerInterfaceWrapper) GetUserStats(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUserStats(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -490,6 +670,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/users", wrapper.CreateUserProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/stats", wrapper.GetUserStats)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/users/{id}", wrapper.DeleteUser)

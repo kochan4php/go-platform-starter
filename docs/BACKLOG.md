@@ -389,76 +389,79 @@ by priority — baca seluruhnya lalu pilih.
 
 ## UI/UX — Manage Users
 
-- [ ] 🔧 E1. Search users server-side (?q= email/name)
-- [ ] 🔧 E2. Filter status online/offline
-- [ ] 🔧 E3. Filter by role
-- [ ] 🔧 E4. Filter tanggal registrasi (range)
-- [ ] 🔧 E5. Sort per kolom (name/email/created/last_login)
-- [ ] 🔧 E6. Page size selector (10/20/50)
-- [ ] 🔧 E7. Pagination first/last + jump to page
-- [ ] 🔧 E8. Detail slide-over: semua field + sesi + audit
-- [ ] 🔧 E9. Detail: sesi aktif per device + revoke per device
-- [ ] 🔧 E10. Detail: riwayat login (audit filtered)
-- [ ] 🔧 E11. Detail: assigned roles + ubah (pindah dari register modal)
+- [x] 🔧 E1. Search users server-side (?q= email/name)
+- [x] 🔧 E2. Filter status online/offline
+- [x] 🔧 E3. Filter by role
+- [x] 🔧 E4. Filter tanggal registrasi (range)
+- [x] 🔧 E5. Sort per kolom (name/email/created/last_login)
+- [x] 🔧 E6. Page size selector (10/20/50)
+- [x] 🔧 E7. Pagination first/last + jump to page
+- [x] 🔧 E8. Detail slide-over: semua field + sesi + audit
+- [x] 🔧 E9. Detail: sesi aktif per device + revoke per device
+- [x] 🔧 E10. Detail: riwayat login (audit filtered)
+- [x] 🔧 E11. Detail: assigned roles + ubah (pindah dari register modal)
 - [ ] 🧭 E12. Avatar upload file (bukan hanya URL)
 - [ ] 🔧 E13. Avatar crop/resize client-side
-- [ ] 🔧 E14. Avatar default inisial + warna hash (ganti picsum acak)
-- [ ] 🔧 E15. Ganti email: konfirmasi password dulu
+- [x] 🔧 E14. Avatar default inisial + warna hash (ganti picsum acak)
+- [x] 🔧 E15. Ganti email: konfirmasi password dulu
 - [ ] 🧭 E16. Ganti email: kirim verifikasi ke email baru
-- [ ] 🔧 E17. Password reset: generate acak + copy button
-- [ ] 🔧 E18. Password reset: kirim via email (worker mail)
-- [ ] 🔧 E19. Force logout button per user
-- [ ] 🔧 E20. Lock/unlock user button (admin override)
-- [ ] 🔧 E21. Activate/deactivate user (status toggle)
-- [ ] 🔧 E22. Delete: confirm modal ketik email
+- [x] 🔧 E17. Password reset: generate acak + copy button
+- [x] 🔧 E18. Password reset: kirim via email (worker mail)
+- [x] 🔧 E19. Force logout button per user
+- [x] 🔧 E20. Lock/unlock user button (admin override)
+- [x] 🔧 E21. Activate/deactivate user (status toggle)
+- [x] 🔧 E22. Delete: confirm modal ketik email
 - [ ] 🔧 E23. Delete: checkbox "hapus juga sesi & audit"
-- [ ] 🔧 E24. Duplicate user (clone profile tanpa kredensial)
-- [ ] 🔧 E25. Kolom role badges per user
-- [ ] 🔧 E26. Row expand quick detail inline
-- [ ] 🔧 E27. Bulk select + bulk role assign
-- [ ] 🔧 E28. Bulk delete dengan confirm
-- [ ] 🔧 E29. Export selection CSV
-- [ ] 🔧 E30. Sticky action column saat scroll horizontal
-- [ ] 🔧 E31. Row action icon tooltip
-- [ ] 🔧 E32. Online dot tooltip last-seen detail
-- [ ] 🔧 E33. Session count badge kolom status
-- [ ] 🔧 E34. Last login relative time + icon
-- [ ] 🔧 E35. IP klik → popover lookup info
-- [ ] 🔧 E36. Device: ikon per OS
-- [ ] 🔧 E37. Avatar hover zoom preview besar
-- [ ] 🔧 E38. Nama klik → detail (bukan langsung edit)
-- [ ] 🔧 E39. Email klik → copy + mailto
-- [ ] 🔧 E40. ID klik → copy
-- [ ] 🔧 E41. Sort indicator visual jelas
-- [ ] 🔧 E42. Zebra striping optional toggle
-- [ ] 🔧 E43. Row height density toggle
-- [ ] 🔧 E44. Highlight row baru dibuat (flash)
-- [ ] 🔧 E45. Highlight row yang sedang online
-- [ ] 🔧 E46. Search box dalam card (client filter)
-- [ ] 🔧 E47. Result count update live
-- [ ] 🔧 E48. Pagination disable + tooltip alasan
-- [ ] 🔧 E49. Register modal: generate password (crypto random) + copy
-- [ ] 🔧 E50. Register modal: show/hide password
-- [ ] 🔧 E51. Register modal: validasi email unik real-time (debounced)
-- [ ] 🔧 E52. Register modal: role select dengan search
+- [x] 🔧 E24. Duplicate user (clone profile tanpa kredensial)
+- [x] 🔧 E25. Kolom role badges per user
+- [x] 🔧 E26. Row expand quick detail inline
+- [x] 🔧 E27. Bulk select + bulk role assign
+- [x] 🔧 E28. Bulk delete dengan confirm
+- [x] 🔧 E29. Export selection CSV
+- [x] 🔧 E30. Sticky action column saat scroll horizontal
+- [x] 🔧 E31. Row action icon tooltip
+- [x] 🔧 E32. Online dot tooltip last-seen detail
+- [x] 🔧 E33. Session count badge kolom status
+- [x] 🔧 E34. Last login relative time + icon
+- [x] 🔧 E35. IP klik → popover lookup info
+- [x] 🔧 E36. Device: ikon per OS
+- [x] 🔧 E37. Avatar hover zoom preview besar
+- [x] 🔧 E38. Nama klik → detail (bukan langsung edit)
+- [x] 🔧 E39. Email klik → copy + mailto
+- [x] 🔧 E40. ID klik → copy
+- [x] 🔧 E41. Sort indicator visual jelas
+- [x] 🔧 E42. Zebra striping optional toggle
+- [x] 🔧 E43. Row height density toggle
+- [x] 🔧 E44. Highlight row baru dibuat (flash)
+- [x] 🔧 E45. Highlight row yang sedang online
+- [x] 🔧 E46. Search box dalam card (client filter)
+- [x] 🔧 E47. Result count update live
+- [x] 🔧 E48. Pagination disable + tooltip alasan
+- [x] 🔧 E49. Register modal: generate password (crypto random) + copy
+- [x] 🔧 E50. Register modal: show/hide password
+- [x] 🔧 E51. Register modal: validasi email unik real-time (debounced)
+- [x] 🔧 E52. Register modal: role select dengan search
 - [ ] 🔧 E53. Register modal: gravatar fallback untuk avatar
 - [ ] 🧭 E54. Field telepon (kolom baru, optional)
 - [ ] 🧭 E55. Field divisi/tim (kolom baru, optional)
-- [ ] 🔧 E56. Modal edit: created_at/updated_at readonly di bawah
-- [ ] 🔧 E57. Modal edit: riwayat perubahan (audit)
-- [ ] 🔧 E58. Modal: unsaved changes warning saat close
-- [ ] 🔧 E59. Modal edit: warning ganti email = ubah email login
-- [ ] 🔧 E60. Toast sukses spesifik ("Profil Budi diperbarui")
-- [ ] 🔧 E61. 409 email duplikat: highlight field + pesan
-- [ ] 🔧 E62. Loading state tombol save konsisten
-- [ ] 🔧 E63. Keyboard: Enter save, ESC close di modal
-- [ ] 🔧 E64. Modal: full-screen sheet di mobile
-- [ ] 🔧 E65. Table loading overlay saat refetch
-- [ ] 🔧 E66. Optimistic delete dengan rollback
-- [ ] 🔧 E67. Link audit trail per row
-- [ ] 🔧 E68. Stat card klik → filter tabel
-- [ ] 🔧 E69. Stat card sparkline registrasi 7 hari
-- [ ] 🔧 E70. Empty state ilustrasi + CTA register
+- [x] 🔧 E56. Modal edit: created_at/updated_at readonly di bawah
+- [x] 🔧 E57. Modal edit: riwayat perubahan (audit)
+- [x] 🔧 E58. Modal: unsaved changes warning saat close
+- [x] 🔧 E59. Modal edit: warning ganti email = ubah email login
+- [x] 🔧 E60. Toast sukses spesifik ("Profil Budi diperbarui")
+- [x] 🔧 E61. 409 email duplikat: highlight field + pesan
+- [x] 🔧 E62. Loading state tombol save konsisten
+- [x] 🔧 E63. Keyboard: Enter save, ESC close di modal
+- [x] 🔧 E64. Modal: full-screen sheet di mobile
+- [x] 🔧 E65. Table loading overlay saat refetch
+- [x] 🔧 E66. Optimistic delete dengan rollback
+- [x] 🔧 E67. Link audit trail per row
+- [x] 🔧 E68. Stat card klik → filter tabel
+- [x] 🔧 E69. Stat card sparkline registrasi 7 hari
+- [x] 🔧 E70. Empty state ilustrasi + CTA register
+
+> E13 menunggu keputusan upload E12; E23 tidak menghapus audit karena audit harus immutable;
+> E53 digantikan E14 agar email tidak dikirim ke Gravatar dan avatar tidak bergantung jaringan eksternal.
 
 ---
 

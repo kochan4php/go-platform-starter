@@ -184,7 +184,7 @@ table {
 	}
 
 	.ui-modal-root {
-		@apply fixed inset-0 z-[100] grid place-items-center overflow-hidden p-3 sm:p-6;
+		@apply fixed inset-0 z-[100] grid place-items-center overflow-hidden p-0 sm:p-6;
 		width: 100vw;
 		min-height: 100dvh;
 		isolation: isolate;
@@ -192,7 +192,7 @@ table {
 	}
 
 	.ui-modal-panel {
-		@apply relative m-0 flex max-h-[calc(100dvh-1.5rem)] w-full flex-col overflow-hidden rounded-[22px] border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink)] sm:max-h-[calc(100dvh-3rem)];
+		@apply relative m-0 flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden rounded-none border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink)] sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:rounded-[22px];
 		inset: auto;
 		box-shadow: 0 28px 80px var(--color-shadow), inset 0 1px 0
 			color-mix(in srgb, var(--color-ink) 5%, transparent);

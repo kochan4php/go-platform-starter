@@ -201,6 +201,72 @@ paths:
         "200": { description: password updated, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: user not found, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
+  /auth/confirm-password:
+    post:
+      operationId: confirmPassword
+      summary: re-authenticate the current user before a sensitive admin action
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 1, maxLength: 72 }
+      responses:
+        "200": { description: confirmed, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "401": { description: invalid password, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/users/{id}/sessions:
+    get:
+      operationId: adminListUserSessions
+      summary: list active sessions for a managed user
+      x-required-permission: "user:read:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses:
+        "200": { description: ok, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+    delete:
+      operationId: adminRevokeUserSessions
+      summary: force logout a managed user on every device
+      x-required-permission: "user:update:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses:
+        "200": { description: revoked, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/users/{id}/sessions/{sessionId}:
+    delete:
+      operationId: adminRevokeUserSession
+      summary: revoke one active session for a managed user
+      x-required-permission: "user:update:any"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        - { name: sessionId, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "200": { description: revoked, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: unknown session, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/users/{id}/state:
+    patch:
+      operationId: adminSetUserState
+      summary: activate/deactivate and lock/unlock a managed user
+      x-required-permission: "user:update:any"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [active, inactive] }
+                locked: { type: boolean }
+      responses:
+        "200": { description: updated, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: user not found, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

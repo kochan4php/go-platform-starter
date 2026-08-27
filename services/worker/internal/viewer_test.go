@@ -72,4 +72,23 @@ func TestAuditViewerPaginatesAndGuardsSecret(t *testing.T) {
 	if _, ok := env.Data.Items[0]["actorSub"]; !ok {
 		t.Fatalf("camelCase fields missing: %s", res.Body.String())
 	}
+
+	filtered := do("/api/v1/audit/viewer?limit=20&entity=role&entityId=missing", secret)
+	if filtered.Code != http.StatusOK {
+		t.Fatalf("expected filtered 200, got %d: %s", filtered.Code, filtered.Body.String())
+	}
+	var filteredEnv struct {
+		Data struct {
+			Items []map[string]any `json:"items"`
+			Meta  struct {
+				Total int64 `json:"total"`
+			} `json:"meta"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(filtered.Body.Bytes(), &filteredEnv); err != nil {
+		t.Fatal(err)
+	}
+	if len(filteredEnv.Data.Items) != 0 || filteredEnv.Data.Meta.Total != 0 {
+		t.Fatalf("audit filter leaked unrelated rows: %s", filtered.Body.String())
+	}
 }

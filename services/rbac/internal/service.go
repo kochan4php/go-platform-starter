@@ -2,10 +2,10 @@ package internal
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"regexp"
 	"strconv"
-	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -30,16 +30,16 @@ type permissionRow struct {
 func (permissionRow) TableName() string { return "rbac.permissions" }
 
 type rolePermission struct {
-	RoleID       int64  `gorm:"column:role_id"`
-	PermissionID int64  `gorm:"column:permission_id"`
+	RoleID       int64 `gorm:"column:role_id"`
+	PermissionID int64 `gorm:"column:permission_id"`
 }
 
 func (rolePermission) TableName() string { return "rbac.role_permissions" }
 
 type userRole struct {
-	UserID  int64  `gorm:"column:user_id"`
-	RoleID  int64  `gorm:"column:role_id"`
-	Ver     int64  `gorm:"column:ver"`
+	UserID int64 `gorm:"column:user_id"`
+	RoleID int64 `gorm:"column:role_id"`
+	Ver    int64 `gorm:"column:ver"`
 }
 
 func (userRole) TableName() string { return "rbac.user_roles" }
@@ -270,20 +270,37 @@ func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int6
 				return platform.ErrBadRequest("unknown role in set")
 			}
 		}
+		var nextVersion int64
+		if err := tx.Raw(
+			`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
+			 ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1
+			 RETURNING ver`, userID,
+		).Scan(&nextVersion).Error; err != nil {
+			return err
+		}
 		if err := tx.Exec(`DELETE FROM rbac.user_roles WHERE user_id = ?`, userID).Error; err != nil {
 			return err
 		}
 		for _, rid := range roleIDs {
 			if err := tx.Exec(
-				`INSERT INTO rbac.user_roles (user_id, role_id, ver) VALUES (?, ?, 1)
-				 ON CONFLICT (user_id) DO UPDATE SET role_id = EXCLUDED.role_id, ver = rbac.user_roles.ver + 1`,
-				userID, rid,
+				`INSERT INTO rbac.user_roles (user_id, role_id, ver) VALUES (?, ?, ?)
+				 ON CONFLICT (user_id, role_id) DO UPDATE SET ver = EXCLUDED.ver`,
+				userID, rid, nextVersion,
 			).Error; err != nil {
 				return err
 			}
 		}
 		return nil
 	})
+}
+
+func (s *Service) GetUserRoles(ctx context.Context, userID int64) ([]Role, error) {
+	roles := []Role{}
+	err := s.db.WithContext(ctx).Table("rbac.roles r").
+		Select("r.id, r.name, r.description").
+		Joins("JOIN rbac.user_roles ur ON ur.role_id = r.id").
+		Where("ur.user_id = ?", userID).Order("r.name ASC").Scan(&roles).Error
+	return roles, err
 }
 
 func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error) {
@@ -297,11 +314,12 @@ func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error
 		return nil, err
 	}
 	c := Claims{Perms: []string{}, Ver: 0}
+	if err := s.db.WithContext(ctx).Table("rbac.user_versions").
+		Select("ver").Where("user_id = ?", subID).Scan(&c.Ver).Error; err != nil {
+		return nil, err
+	}
 	seen := map[string]bool{}
 	for _, ur := range urs {
-		if ur.Ver > c.Ver {
-			c.Ver = ur.Ver
-		}
 		for _, p := range s.permsForRole(ctx, ur.RoleID) {
 			if !seen[p] {
 				seen[p] = true

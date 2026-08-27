@@ -13,6 +13,24 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for AdminSetUserStateJSONBodyStatus.
+const (
+	Active   AdminSetUserStateJSONBodyStatus = "active"
+	Inactive AdminSetUserStateJSONBodyStatus = "inactive"
+)
+
+// Valid indicates whether the value is a known member of the AdminSetUserStateJSONBodyStatus enum.
+func (e AdminSetUserStateJSONBodyStatus) Valid() bool {
+	switch e {
+	case Active:
+		return true
+	case Inactive:
+		return true
+	default:
+		return false
+	}
+}
+
 // EnvelopeFail defines model for EnvelopeFail.
 type EnvelopeFail struct {
 	Error   string `json:"error"`
@@ -67,10 +85,27 @@ type Session struct {
 	UserAgent *string    `json:"userAgent,omitempty"`
 }
 
+// ConfirmPasswordJSONBody defines parameters for ConfirmPassword.
+type ConfirmPasswordJSONBody struct {
+	Password string `json:"password"`
+}
+
 // AdminSetUserPasswordJSONBody defines parameters for AdminSetUserPassword.
 type AdminSetUserPasswordJSONBody struct {
 	NewPassword string `json:"newPassword"`
 }
+
+// AdminSetUserStateJSONBody defines parameters for AdminSetUserState.
+type AdminSetUserStateJSONBody struct {
+	Locked *bool                            `json:"locked,omitempty"`
+	Status *AdminSetUserStateJSONBodyStatus `json:"status,omitempty"`
+}
+
+// AdminSetUserStateJSONBodyStatus defines parameters for AdminSetUserState.
+type AdminSetUserStateJSONBodyStatus string
+
+// ConfirmPasswordJSONRequestBody defines body for ConfirmPassword for application/json ContentType.
+type ConfirmPasswordJSONRequestBody ConfirmPasswordJSONBody
 
 // ForgotPasswordJSONRequestBody defines body for ForgotPassword for application/json ContentType.
 type ForgotPasswordJSONRequestBody = ForgotInput
@@ -87,8 +122,14 @@ type ResetPasswordJSONRequestBody = ResetInput
 // AdminSetUserPasswordJSONRequestBody defines body for AdminSetUserPassword for application/json ContentType.
 type AdminSetUserPasswordJSONRequestBody AdminSetUserPasswordJSONBody
 
+// AdminSetUserStateJSONRequestBody defines body for AdminSetUserState for application/json ContentType.
+type AdminSetUserStateJSONRequestBody AdminSetUserStateJSONBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ConfirmPassword re-authenticate the current user before a sensitive admin action
+	// (POST /auth/confirm-password)
+	ConfirmPassword(w http.ResponseWriter, r *http.Request)
 	// ForgotPassword always-200 password reset request (anti-enumeration)
 	// (POST /auth/forgot)
 	ForgotPassword(w http.ResponseWriter, r *http.Request)
@@ -119,11 +160,29 @@ type ServerInterface interface {
 	// AdminSetUserPassword admin sets a new password for a user (revokes their sessions)
 	// (POST /auth/users/{id}/password)
 	AdminSetUserPassword(w http.ResponseWriter, r *http.Request, id int64)
+	// AdminRevokeUserSessions force logout a managed user on every device
+	// (DELETE /auth/users/{id}/sessions)
+	AdminRevokeUserSessions(w http.ResponseWriter, r *http.Request, id int64)
+	// AdminListUserSessions list active sessions for a managed user
+	// (GET /auth/users/{id}/sessions)
+	AdminListUserSessions(w http.ResponseWriter, r *http.Request, id int64)
+	// AdminRevokeUserSession revoke one active session for a managed user
+	// (DELETE /auth/users/{id}/sessions/{sessionId})
+	AdminRevokeUserSession(w http.ResponseWriter, r *http.Request, id int64, sessionId int64)
+	// AdminSetUserState activate/deactivate and lock/unlock a managed user
+	// (PATCH /auth/users/{id}/state)
+	AdminSetUserState(w http.ResponseWriter, r *http.Request, id int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// ConfirmPassword re-authenticate the current user before a sensitive admin action
+// (POST /auth/confirm-password)
+func (_ Unimplemented) ConfirmPassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // ForgotPassword always-200 password reset request (anti-enumeration)
 // (POST /auth/forgot)
@@ -185,6 +244,30 @@ func (_ Unimplemented) AdminSetUserPassword(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// AdminRevokeUserSessions force logout a managed user on every device
+// (DELETE /auth/users/{id}/sessions)
+func (_ Unimplemented) AdminRevokeUserSessions(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminListUserSessions list active sessions for a managed user
+// (GET /auth/users/{id}/sessions)
+func (_ Unimplemented) AdminListUserSessions(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminRevokeUserSession revoke one active session for a managed user
+// (DELETE /auth/users/{id}/sessions/{sessionId})
+func (_ Unimplemented) AdminRevokeUserSession(w http.ResponseWriter, r *http.Request, id int64, sessionId int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminSetUserState activate/deactivate and lock/unlock a managed user
+// (PATCH /auth/users/{id}/state)
+func (_ Unimplemented) AdminSetUserState(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ServerInterfaceWrapper converts contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler            ServerInterface
@@ -193,6 +276,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ConfirmPassword operation middleware
+func (siw *ServerInterfaceWrapper) ConfirmPassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConfirmPassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ForgotPassword operation middleware
 func (siw *ServerInterfaceWrapper) ForgotPassword(w http.ResponseWriter, r *http.Request) {
@@ -358,6 +455,119 @@ func (siw *ServerInterfaceWrapper) AdminSetUserPassword(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// AdminRevokeUserSessions operation middleware
+func (siw *ServerInterfaceWrapper) AdminRevokeUserSessions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminRevokeUserSessions(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminListUserSessions operation middleware
+func (siw *ServerInterfaceWrapper) AdminListUserSessions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminListUserSessions(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminRevokeUserSession operation middleware
+func (siw *ServerInterfaceWrapper) AdminRevokeUserSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", chi.URLParam(r, "sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sessionId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminRevokeUserSession(w, r, id, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminSetUserState operation middleware
+func (siw *ServerInterfaceWrapper) AdminSetUserState(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminSetUserState(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -500,6 +710,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/users/{id}/password", wrapper.AdminSetUserPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/confirm-password", wrapper.ConfirmPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/auth/users/{id}/sessions", wrapper.AdminRevokeUserSessions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/auth/users/{id}/sessions", wrapper.AdminListUserSessions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/auth/users/{id}/sessions/{sessionId}", wrapper.AdminRevokeUserSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/auth/users/{id}/state", wrapper.AdminSetUserState)
 	})
 
 	return r

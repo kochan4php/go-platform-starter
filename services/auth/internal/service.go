@@ -2,12 +2,12 @@ package internal
 
 import (
 	"context"
-	"strconv"
 	"crypto/subtle"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -73,7 +73,7 @@ type AuthResult struct {
 	User          *User
 	RefreshCookie string
 	SessionID     int64
-	FamilyID     string
+	FamilyID      string
 }
 
 func lower(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
@@ -206,7 +206,7 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 		return nil, err
 	}
 
-	if u.LockedUntil != nil && u.LockedUntil.After(s.now()) {
+	if u.Status != "active" || (u.LockedUntil != nil && u.LockedUntil.After(s.now())) {
 		return nil, ErrBadCredentials()
 	}
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) != nil {
@@ -227,7 +227,18 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	}
 	_ = s.rdb.Del(ctx, s.failKey(email)).Err()
 
-	return s.startSession(ctx, u, userAgent, ip)
+	result, err := s.startSession(ctx, u, userAgent, ip)
+	if err != nil {
+		return nil, err
+	}
+	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{
+		ActorSub: strconv.FormatInt(u.ID, 10),
+		Action:   "login",
+		Entity:   "user",
+		EntityID: strconv.FormatInt(u.ID, 10),
+		Meta:     map[string]any{"ip": ip, "userAgent": userAgent},
+	})
+	return result, nil
 }
 
 func (s *Service) recordFailedAttempt(ctx context.Context, u *User) {
@@ -399,6 +410,55 @@ func (s *Service) RevokeAllOtherSessions(ctx context.Context, sub int64, current
 		Where("user_id = ? AND revoked_at IS NULL AND refresh_token_hash <> ?", sub, currentHash).
 		Update("revoked_at", s.now())
 	return res.RowsAffected, res.Error
+}
+
+func (s *Service) ConfirmPassword(ctx context.Context, sub int64, password string) error {
+	var user User
+	if err := s.db.WithContext(ctx).First(&user, "id = ?", sub).Error; err != nil {
+		return ErrBadCredentials()
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
+		return ErrBadCredentials()
+	}
+	return nil
+}
+
+func (s *Service) SetUserState(ctx context.Context, sub int64, status *string, locked *bool) error {
+	updates := map[string]any{}
+	if status != nil {
+		if *status != "active" && *status != "inactive" {
+			return platform.ErrBadRequest("status must be active or inactive")
+		}
+		updates["status"] = *status
+	}
+	if locked != nil {
+		if *locked {
+			updates["locked_until"] = s.now().AddDate(100, 0, 0)
+		} else {
+			updates["locked_until"] = nil
+			updates["failed_login_attempts"] = 0
+		}
+	}
+	if len(updates) == 0 {
+		return platform.ErrBadRequest("status or locked is required")
+	}
+	result := s.db.WithContext(ctx).Model(&User{}).Where("id = ?", sub).Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return platform.ErrNotFound("user %d not found", sub)
+	}
+	if (status != nil && *status == "inactive") || (locked != nil && *locked) {
+		if _, err := s.RevokeAllOtherSessions(ctx, sub, ""); err != nil {
+			return err
+		}
+		_ = s.rdb.Publish(ctx, channelLogout, sub).Err()
+	}
+	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{
+		ActorSub: "system", Action: "state.update", Entity: "user", EntityID: strconv.FormatInt(sub, 10),
+	})
+	return nil
 }
 
 func (s *Service) Forgot(ctx context.Context, email string) error {

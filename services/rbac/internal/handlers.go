@@ -1,13 +1,13 @@
 package internal
 
 import (
-	"strconv"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
@@ -63,6 +63,15 @@ func (h *Handlers) SetUserRoles(w http.ResponseWriter, r *http.Request, id int64
 		return
 	}
 	platform.OK(w, http.StatusOK, "roles_assigned", map[string]any{"id": id, "count": len(in.RoleIds)})
+}
+
+func (h *Handlers) GetUserRoles(w http.ResponseWriter, r *http.Request, id int64) {
+	items, err := h.svc.GetUserRoles(r.Context(), id)
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "ok", map[string]any{"items": items})
 }
 
 func (h *Handlers) CreatePermission(w http.ResponseWriter, r *http.Request) {

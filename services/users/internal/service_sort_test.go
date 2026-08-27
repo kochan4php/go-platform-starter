@@ -23,3 +23,11 @@ func TestUserOrderClause(t *testing.T) {
 		})
 	}
 }
+
+func TestListFiltersZeroValue(t *testing.T) {
+	t.Parallel()
+	filters := ListFilters{}
+	if filters.Query != "" || filters.Presence != "" || filters.RoleID != 0 || filters.RegisteredFrom != nil || filters.RegisteredTo != nil {
+		t.Fatal("zero-value ListFilters must leave the list query unfiltered")
+	}
+}

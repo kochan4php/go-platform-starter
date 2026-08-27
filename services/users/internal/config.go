@@ -14,12 +14,12 @@ type Config struct {
 // Profile is the merged identity+profile row owned by this service.
 // Credentials columns (password_hash, lockout) are managed by auth.
 type Profile struct {
-	ID                  int64     `gorm:"primaryKey"                json:"id"`
-	Email               string    `gorm:"not null"                  json:"email"`
-	PasswordHash        string    `gorm:"not null"                  json:"-"`
-	Status              string    `gorm:"not null;default:active"   json:"-"`
-	FailedLoginAttempts int       `gorm:"not null;default:0"        json:"-"`
-	LockedUntil         *time.Time `                                json:"-"`
+	ID                  int64      `gorm:"primaryKey"                json:"id"`
+	Email               string     `gorm:"not null"                  json:"email"`
+	PasswordHash        string     `gorm:"not null"                  json:"-"`
+	Status              string     `gorm:"not null;default:active"   json:"status"`
+	FailedLoginAttempts int        `gorm:"not null;default:0"        json:"-"`
+	LockedUntil         *time.Time `                                json:"lockedUntil"`
 	DisplayName         string     `gorm:"not null;default:''"       json:"displayName"`
 	AvatarUrl           string     `gorm:"not null;default:''"       json:"avatarUrl"`
 	LastLoginAt         *time.Time `                                 json:"lastLoginAt"`
@@ -29,8 +29,14 @@ type Profile struct {
 	UpdatedAt           time.Time  `                                 json:"updatedAt"`
 
 	// Computed at read time from auth.sessions (same database, read-only).
-	Online         bool `gorm:"-" json:"online"`
-	ActiveSessions int  `gorm:"-" json:"activeSessions"`
+	Online         bool          `gorm:"-" json:"online"`
+	ActiveSessions int           `gorm:"-" json:"activeSessions"`
+	Roles          []RoleSummary `gorm:"-" json:"roles"`
 }
 
 func (Profile) TableName() string { return "users.users" }
+
+type RoleSummary struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}

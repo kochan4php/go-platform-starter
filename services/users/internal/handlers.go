@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -79,12 +80,16 @@ func (h *Handlers) CreateUserProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.ListUsersParams) {
-	limit, offset := 10, 0
+	limit, offset := 20, 0
 	if params.Limit != nil {
-		limit = *params.Limit
+		limit = int(*params.Limit)
 	}
 	if params.Offset != nil {
 		offset = *params.Offset
+	}
+	if (limit != 10 && limit != 20 && limit != 50) || offset < 0 {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("limit must be 10, 20, or 50 and offset must be non-negative"))
+		return
 	}
 	sort, order := "createdAt", "desc"
 	if params.Sort != nil {
@@ -93,7 +98,23 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.
 	if params.Order != nil {
 		order = string(*params.Order)
 	}
-	items, total, err := h.svc.List(r.Context(), limit, offset, sort, order)
+	filters := ListFilters{}
+	if params.Q != nil {
+		filters.Query = *params.Q
+	}
+	if params.Presence != nil {
+		filters.Presence = string(*params.Presence)
+	}
+	if params.RoleId != nil {
+		filters.RoleID = *params.RoleId
+	}
+	if params.RegisteredFrom != nil {
+		filters.RegisteredFrom = (*time.Time)(params.RegisteredFrom)
+	}
+	if params.RegisteredTo != nil {
+		filters.RegisteredTo = (*time.Time)(params.RegisteredTo)
+	}
+	items, total, err := h.svc.List(r.Context(), limit, offset, sort, order, filters)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -108,6 +129,15 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id int64) {
 		return
 	}
 	platform.OK(w, http.StatusOK, "ok", p)
+}
+
+func (h *Handlers) GetUserStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.svc.Stats(r.Context())
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "ok", stats)
 }
 
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {

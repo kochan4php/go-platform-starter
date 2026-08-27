@@ -168,6 +168,36 @@ func indexOf(s, sub string) int {
 
 // --- tests ------------------------------------------------------------------
 
+func TestAdminStateAndPasswordConfirmation(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	user, err := f.svc.Register(ctx, "state@example.local", "password-123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.svc.ConfirmPassword(ctx, user.ID, "password-123"); err != nil {
+		t.Fatalf("confirm valid password: %v", err)
+	}
+	if err := f.svc.ConfirmPassword(ctx, user.ID, "wrong-password"); err == nil {
+		t.Fatal("wrong password was accepted")
+	}
+	inactive := "inactive"
+	if err := f.svc.SetUserState(ctx, user.ID, &inactive, nil); err != nil {
+		t.Fatalf("deactivate: %v", err)
+	}
+	if _, err := f.svc.Login(ctx, user.Email, "password-123", "test", "127.0.0.1"); err == nil {
+		t.Fatal("inactive user logged in")
+	}
+	active := "active"
+	unlocked := false
+	if err := f.svc.SetUserState(ctx, user.ID, &active, &unlocked); err != nil {
+		t.Fatalf("activate: %v", err)
+	}
+	if _, err := f.svc.Login(ctx, user.Email, "password-123", "test", "127.0.0.1"); err != nil {
+		t.Fatalf("active user login: %v", err)
+	}
+}
+
 func TestRegisterEmitsUserCreatedAndRejectsDuplicates(t *testing.T) {
 	f := newFixture(t)
 	ctx := context.Background()

@@ -216,6 +216,67 @@ func (h *Handlers) AdminSetUserPassword(w http.ResponseWriter, r *http.Request, 
 	platform.OK(w, http.StatusOK, "password_updated", struct{}{})
 }
 
+func (h *Handlers) ConfirmPassword(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Password string `json:"password" validate:"required,max=72"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.ConfirmPassword(r.Context(), subFromContextAsInt64(r), in.Password); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "confirmed", struct{}{})
+}
+
+func (h *Handlers) AdminListUserSessions(w http.ResponseWriter, r *http.Request, id int64) {
+	items, err := h.svc.ListSessions(r.Context(), id, "")
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "ok", map[string]any{
+		"items": items,
+		"meta":  platform.Meta{Limit: len(items), Offset: 0, Total: int64(len(items))},
+	})
+}
+
+func (h *Handlers) AdminRevokeUserSessions(w http.ResponseWriter, r *http.Request, id int64) {
+	count, err := h.svc.RevokeAllOtherSessions(r.Context(), id, "")
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	_ = h.svc.rdb.Publish(r.Context(), channelLogout, id).Err()
+	platform.OK(w, http.StatusOK, "revoked", map[string]int64{"count": count})
+}
+
+func (h *Handlers) AdminRevokeUserSession(w http.ResponseWriter, r *http.Request, id, sessionID int64) {
+	if err := h.svc.RevokeSession(r.Context(), id, sessionID); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "revoked", map[string]any{"id": sessionID})
+}
+
+func (h *Handlers) AdminSetUserState(w http.ResponseWriter, r *http.Request, id int64) {
+	var in struct {
+		Status *string `json:"status"`
+		Locked *bool   `json:"locked"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.SetUserState(r.Context(), id, in.Status, in.Locked); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "updated", map[string]any{"id": id})
+}
+
 func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var in forgotInput
 	if err := h.decode(r, &in); err != nil {

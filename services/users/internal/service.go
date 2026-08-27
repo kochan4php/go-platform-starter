@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -19,13 +20,35 @@ type Service struct {
 	pub platform.StreamPublisher
 }
 
+type ListFilters struct {
+	Query          string
+	Presence       string
+	RoleID         int64
+	RegisteredFrom *time.Time
+	RegisteredTo   *time.Time
+}
+
+type UserStats struct {
+	Total         int64             `json:"total"`
+	Online        int64             `json:"online"`
+	Registrations []RegistrationDay `json:"registrations"`
+}
+
+type RegistrationDay struct {
+	Day   string `json:"day"`
+	Count int64  `json:"count"`
+}
+
 func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, pub platform.StreamPublisher) *Service {
 	return &Service{db: db, rdb: rdb, log: log.With("component", "service"), pub: pub}
 }
 
 // attachPresence stamps online/activeSessions per profile by counting live
 // sessions in auth.sessions (read-only cross-schema access, no FK).
-func (s *Service) attachPresence(ctx context.Context, profiles []Profile) {
+func (s *Service) attachManagementData(ctx context.Context, profiles []Profile) {
+	if len(profiles) == 0 {
+		return
+	}
 	var aggs []struct {
 		UserID int64
 		N      int
@@ -43,6 +66,32 @@ func (s *Service) attachPresence(ctx context.Context, profiles []Profile) {
 	for i := range profiles {
 		profiles[i].ActiveSessions = count[profiles[i].ID]
 		profiles[i].Online = count[profiles[i].ID] > 0
+	}
+
+	ids := make([]int64, len(profiles))
+	for i := range profiles {
+		ids[i] = profiles[i].ID
+	}
+	var assignments []struct {
+		UserID int64
+		ID     int64
+		Name   string
+	}
+	if err := s.db.WithContext(ctx).Table("rbac.user_roles ur").
+		Select("ur.user_id, r.id, r.name").
+		Joins("JOIN rbac.roles r ON r.id = ur.role_id").
+		Where("ur.user_id IN ?", ids).Order("r.name ASC").Scan(&assignments).Error; err != nil {
+		return
+	}
+	byUser := make(map[int64][]RoleSummary, len(profiles))
+	for _, assignment := range assignments {
+		byUser[assignment.UserID] = append(byUser[assignment.UserID], RoleSummary{ID: assignment.ID, Name: assignment.Name})
+	}
+	for i := range profiles {
+		profiles[i].Roles = byUser[profiles[i].ID]
+		if profiles[i].Roles == nil {
+			profiles[i].Roles = []RoleSummary{}
+		}
 	}
 }
 
@@ -70,24 +119,67 @@ func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
 		}
 		return nil, err
 	}
-	s.attachPresence(ctx, []Profile{p})
+	s.attachManagementData(ctx, []Profile{p})
 	return &p, nil
 }
 
-func (s *Service) List(ctx context.Context, limit, offset int, sort, order string) ([]Profile, int64, error) {
+func (s *Service) List(ctx context.Context, limit, offset int, sort, order string, filters ListFilters) ([]Profile, int64, error) {
 	var (
 		items []Profile
 		total int64
 	)
 	db := s.db.WithContext(ctx).Model(&Profile{})
+	if query := strings.TrimSpace(filters.Query); query != "" {
+		needle := "%" + strings.ToLower(query) + "%"
+		db = db.Where("LOWER(email) LIKE ? OR LOWER(display_name) LIKE ?", needle, needle)
+	}
+	if filters.Presence == "online" {
+		db = db.Where("EXISTS (SELECT 1 FROM auth.sessions s WHERE s.user_id = users.users.id AND s.revoked_at IS NULL AND s.expires_at > now())")
+	} else if filters.Presence == "offline" {
+		db = db.Where("NOT EXISTS (SELECT 1 FROM auth.sessions s WHERE s.user_id = users.users.id AND s.revoked_at IS NULL AND s.expires_at > now())")
+	}
+	if filters.RoleID > 0 {
+		db = db.Where("EXISTS (SELECT 1 FROM rbac.user_roles ur WHERE ur.user_id = users.users.id AND ur.role_id = ?)", filters.RoleID)
+	}
+	if filters.RegisteredFrom != nil {
+		db = db.Where("created_at >= ?", *filters.RegisteredFrom)
+	}
+	if filters.RegisteredTo != nil {
+		db = db.Where("created_at <= ?", *filters.RegisteredTo)
+	}
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	if err := db.Order(userOrderClause(sort, order)).Limit(limit).Offset(offset).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
-	s.attachPresence(ctx, items)
+	s.attachManagementData(ctx, items)
 	return items, total, nil
+}
+
+func (s *Service) Stats(ctx context.Context) (*UserStats, error) {
+	stats := &UserStats{Registrations: []RegistrationDay{}}
+	if err := s.db.WithContext(ctx).Model(&Profile{}).Count(&stats.Total).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.WithContext(ctx).Raw(
+		`SELECT COUNT(DISTINCT user_id) FROM auth.sessions
+		 WHERE revoked_at IS NULL AND expires_at > now()`,
+	).Scan(&stats.Online).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.WithContext(ctx).Raw(
+		`SELECT to_char(days.day, 'YYYY-MM-DD') AS day, COUNT(u.id) AS count
+		 FROM generate_series(
+		   date_trunc('day', now()) - interval '6 days',
+		   date_trunc('day', now()), interval '1 day'
+		 ) AS days(day)
+		 LEFT JOIN users.users u ON u.created_at >= days.day AND u.created_at < days.day + interval '1 day'
+		 GROUP BY days.day ORDER BY days.day`,
+	).Scan(&stats.Registrations).Error; err != nil {
+		return nil, err
+	}
+	return stats, nil
 }
 
 func userOrderClause(sort, order string) string {

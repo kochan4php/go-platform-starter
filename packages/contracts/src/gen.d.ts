@@ -4,1382 +4,1693 @@
  */
 
 export interface paths {
-  "/api/v1/auth/register": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** create credentials; emits user.created onto users.events */
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** create credentials; emits user.created onto users.events */
-    post: operations["register"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** uniform-401 login with lockout; mints access token + sets refresh cookie */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** uniform-401 login with lockout; mints access token + sets refresh cookie */
-    post: operations["login"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/refresh": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** rotate the refresh cookie (reuse kills the family) and mint a new access token */
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** rotate the refresh cookie (reuse kills the family) and mint a new access token */
-    post: operations["refresh"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** revoke the session carried by the refresh cookie and clear it */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** revoke the session carried by the refresh cookie and clear it */
-    post: operations["logout"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** active sessions of the authenticated user */
+        get: operations["listSessions"];
+        put?: never;
+        post?: never;
+        /** revoke every other session of the authenticated user */
+        delete: operations["revokeAllSessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** active sessions of the authenticated user */
-    get: operations["listSessions"];
-    put?: never;
-    post?: never;
-    /** revoke every other session of the authenticated user */
-    delete: operations["revokeAllSessions"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/sessions/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** revoke one session of the authenticated user */
+        delete: operations["revokeSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** revoke one session of the authenticated user */
-    delete: operations["revokeSession"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/forgot": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** always-200 password reset request (anti-enumeration) */
+        post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** always-200 password reset request (anti-enumeration) */
-    post: operations["forgotPassword"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/reset": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** consume a single-use reset token, set new password, wipe all sessions */
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** consume a single-use reset token, set new password, wipe all sessions */
-    post: operations["resetPassword"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/users/{id}/password": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/users/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** admin sets a new password for a user (revokes their sessions) */
+        post: operations["adminSetUserPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** admin sets a new password for a user (revokes their sessions) */
-    post: operations["adminSetUserPassword"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/docs": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/confirm-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** re-authenticate the current user before a sensitive admin action */
+        post: operations["confirmPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Scalar UI over the aggregate spec */
-    get: operations["scalarDocs"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/docs/openapi.json": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/users/{id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** list active sessions for a managed user */
+        get: operations["adminListUserSessions"];
+        put?: never;
+        post?: never;
+        /** force logout a managed user on every device */
+        delete: operations["adminRevokeUserSessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** aggregate OpenAPI document composed from every upstream at boot */
-    get: operations["aggregateSpec"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/rbac/permissions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/users/{id}/sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** revoke one active session for a managed user */
+        delete: operations["adminRevokeUserSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** the compile-time catalog persisted in the db */
-    get: operations["listPermissions"];
-    put?: never;
-    /** add a permission to the catalog (idempotent) */
-    post: operations["createPermission"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/rbac/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/users/{id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** activate/deactivate and lock/unlock a managed user */
+        patch: operations["adminSetUserState"];
+        trace?: never;
     };
-    get: operations["listRoles"];
-    put?: never;
-    post: operations["createRole"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/rbac/roles/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/docs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Scalar UI over the aggregate spec */
+        get: operations["scalarDocs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["deleteRole"];
-    options?: never;
-    head?: never;
-    /** rename/describe and/or sync the permission set; bumps affected users' ver */
-    patch: operations["updateRole"];
-    trace?: never;
-  };
-  "/api/v1/rbac/users/{id}/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/docs/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** aggregate OpenAPI document composed from every upstream at boot */
+        get: operations["aggregateSpec"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    /** replace the role set assigned to a user (bumps their ver) */
-    put: operations["setUserRoles"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/rbac/internal/claims/{sub}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/rbac/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** the compile-time catalog persisted in the db */
+        get: operations["listPermissions"];
+        put?: never;
+        /** add a permission to the catalog (idempotent) */
+        post: operations["createPermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** internal API — perms[] + ver for a subject; requires the shared internal secret */
-    get: operations["resolveClaims"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/info": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/rbac/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRoles"];
+        put?: never;
+        post: operations["createRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** ws url + protocol version for the web client */
-    get: operations["realtimeInfo"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/rbac/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteRole"];
+        options?: never;
+        head?: never;
+        /** rename/describe and/or sync the permission set; bumps affected users' ver */
+        patch: operations["updateRole"];
+        trace?: never;
     };
-    /** the caller's profile, served purely from identity headers */
-    get: operations["me"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/rbac/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** list roles assigned to a user */
+        get: operations["getUserRoles"];
+        /** replace the role set assigned to a user (bumps their ver) */
+        put: operations["setUserRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** paginated profiles with validated server-side sorting */
-    get: operations["listUsers"];
-    put?: never;
-    /** provision a profile row for an existing sub */
-    post: operations["createUserProfile"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/rbac/internal/claims/{sub}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** internal API — perms[] + ver for a subject; requires the shared internal secret */
+        get: operations["resolveClaims"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getUser"];
-    put?: never;
-    post?: never;
-    /** hard-delete the profile row and emit user.deleted */
-    delete: operations["deleteUser"];
-    options?: never;
-    head?: never;
-    patch: operations["updateUser"];
-    trace?: never;
-  };
-  "/api/v1/audit/viewer": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ws url + protocol version for the web client */
+        get: operations["realtimeInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** paginated audit trail, newest first */
-    get: operations["listAuditEntries"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/ping": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** the caller's profile, served purely from identity headers */
+        get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** liveness-style demo endpoint proving spec → codegen → handler wiring */
-    get: operations["ping"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** paginated profiles with validated server-side sorting */
+        get: operations["listUsers"];
+        put?: never;
+        /** provision a profile row for an existing sub */
+        post: operations["createUserProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** directory totals and seven-day registration series */
+        get: operations["getUserStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUser"];
+        put?: never;
+        post?: never;
+        /** hard-delete the profile row and emit user.deleted */
+        delete: operations["deleteUser"];
+        options?: never;
+        head?: never;
+        patch: operations["updateUser"];
+        trace?: never;
+    };
+    "/api/v1/audit/viewer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** paginated audit trail, newest first */
+        get: operations["listAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** liveness-style demo endpoint proving spec → codegen → handler wiring */
+        get: operations["ping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    EnvelopeMeta: {
-      limit: number;
-      offset: number;
-      /** Format: int64 */
-      total: number;
+    schemas: {
+        EnvelopeMeta: {
+            limit: number;
+            offset: number;
+            /** Format: int64 */
+            total: number;
+        };
+        EnvelopeOK: {
+            success: boolean;
+            message: string;
+            /** @description endpoint-specific payload */
+            data: unknown;
+        };
+        EnvelopeFail: {
+            success: boolean;
+            message: string;
+            error: string;
+        };
+        Session: {
+            /** Format: int64 */
+            id?: number;
+            userAgent?: string;
+            ip?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            current?: boolean;
+        };
+        RegisterInput: {
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        LoginInput: {
+            email: string;
+            password: string;
+        };
+        ForgotInput: {
+            email: string;
+        };
+        ResetInput: {
+            token: string;
+            newPassword: string;
+        };
+        RoleInput: {
+            name: string;
+            description?: string;
+        };
+        Role: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            description?: string;
+            permissions?: string[];
+        };
+        Profile: {
+            /** Format: int64 */
+            id?: number;
+            email?: string;
+            displayName?: string;
+            avatarUrl?: string;
+            /** @enum {string} */
+            status?: "active" | "inactive";
+            /** Format: date-time */
+            lockedUntil?: string | null;
+            roles?: components["schemas"]["RoleSummary"][];
+            online?: boolean;
+            activeSessions?: number;
+            /** Format: date-time */
+            lastLoginAt?: string | null;
+            lastLoginIp?: string;
+            lastLoginUserAgent?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        RoleSummary: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        UserStats: {
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            online: number;
+            registrations: {
+                /** Format: date */
+                day: string;
+                /** Format: int64 */
+                count: number;
+            }[];
+        };
+        ProfileInput: {
+            /**
+             * Format: int64
+             * @description existing subject id
+             */
+            id: number;
+            /** Format: email */
+            email?: string;
+            displayName?: string;
+            avatarUrl?: string;
+        };
+        AuditEntry: {
+            /** Format: int64 */
+            id?: number;
+            actorSub?: string;
+            action?: string;
+            entity?: string;
+            entityId?: string;
+            meta?: unknown;
+            /** Format: date-time */
+            createdAt?: string;
+        };
     };
-    EnvelopeOK: {
-      success: boolean;
-      message: string;
-      /** @description endpoint-specific payload */
-      data: unknown;
-    };
-    EnvelopeFail: {
-      success: boolean;
-      message: string;
-      error: string;
-    };
-    Session: {
-      /** Format: int64 */
-      id?: number;
-      userAgent?: string;
-      ip?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      current?: boolean;
-    };
-    RegisterInput: {
-      /** Format: email */
-      email: string;
-      password: string;
-    };
-    LoginInput: {
-      email: string;
-      password: string;
-    };
-    ForgotInput: {
-      email: string;
-    };
-    ResetInput: {
-      token: string;
-      newPassword: string;
-    };
-    RoleInput: {
-      name: string;
-      description?: string;
-    };
-    Role: {
-      /** Format: int64 */
-      id?: number;
-      name?: string;
-      description?: string;
-      permissions?: string[];
-    };
-    Profile: {
-      /** Format: int64 */
-      id?: number;
-      email?: string;
-      displayName?: string;
-      avatarUrl?: string;
-      online?: boolean;
-      activeSessions?: number;
-      /** Format: date-time */
-      lastLoginAt?: string | null;
-      lastLoginIp?: string;
-      lastLoginUserAgent?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
-    };
-    ProfileInput: {
-      /**
-       * Format: int64
-       * @description existing subject id
-       */
-      id: number;
-      /** Format: email */
-      email?: string;
-      displayName?: string;
-      avatarUrl?: string;
-    };
-    AuditEntry: {
-      /** Format: int64 */
-      id?: number;
-      actorSub?: string;
-      action?: string;
-      entity?: string;
-      entityId?: string;
-      meta?: unknown;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  register: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RegisterInput"];
-      };
-    };
-    responses: {
-      /** @description created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              /** Format: int64 */
-              id?: number;
-              email?: string;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterInput"];
             };
-          };
         };
-      };
-      /** @description email already registered (documented enumeration trade — see PLAN risks) */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  login: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["LoginInput"];
-      };
-    };
-    responses: {
-      /** @description logged in */
-      200: {
-        headers: {
-          /** @description refresh_token httpOnly cookie */
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              accessToken?: string;
-              user?: {
-                /** Format: int64 */
-                id?: number;
-                email?: string;
-              };
+        responses: {
+            /** @description created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            /** Format: int64 */
+                            id?: number;
+                            email?: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description unknown/wrong/locked are indistinguishable (incl. timing) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  refresh: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description rotated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              accessToken?: string;
+            /** @description email already registered (documented enumeration trade — see PLAN risks) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
             };
-          };
         };
-      };
-      /** @description missing/invalid/replayed refresh token */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
     };
-  };
-  logout: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description logged out */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-    };
-  };
-  listSessions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              items?: components["schemas"]["Session"][];
-              meta?: components["schemas"]["EnvelopeMeta"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginInput"];
             };
-          };
         };
-      };
-    };
-  };
-  revokeAllSessions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-    };
-  };
-  revokeSession: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description revoked */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description unknown session */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  forgotPassword: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ForgotInput"];
-      };
-    };
-    responses: {
-      /** @description uniform response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-    };
-  };
-  resetPassword: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ResetInput"];
-      };
-    };
-    responses: {
-      /** @description password updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description invalid/expired/consumed token or weak password */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  adminSetUserPassword: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          newPassword: string;
-        };
-      };
-    };
-    responses: {
-      /** @description password updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description user not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  scalarDocs: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description html */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  aggregateSpec: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description json */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": Record<string, never>;
-        };
-      };
-    };
-  };
-  listPermissions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              items?: string[];
+        responses: {
+            /** @description logged in */
+            200: {
+                headers: {
+                    /** @description refresh_token httpOnly cookie */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            accessToken?: string;
+                            user?: {
+                                /** Format: int64 */
+                                id?: number;
+                                email?: string;
+                            };
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-    };
-  };
-  createPermission: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @example report:export:any */
-          name: string;
-        };
-      };
-    };
-    responses: {
-      /** @description created (or already exists) */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description invalid name */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  listRoles: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              items?: components["schemas"]["Role"][];
-              meta?: components["schemas"]["EnvelopeMeta"];
+            /** @description unknown/wrong/locked are indistinguishable (incl. timing) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
             };
-          };
         };
-      };
     };
-  };
-  createRole: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoleInput"];
-      };
-    };
-    responses: {
-      /** @description created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Role"];
-          };
-        };
-      };
-      /** @description duplicate role name */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  deleteRole: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description deleted */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description unknown role */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  updateRole: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoleInput"] & {
-          /** @description full replacement set; unknown permission -> 400 */
-          permissions?: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Role"];
-          };
-        };
-      };
-      /** @description unknown permission in set */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-      /** @description unknown role */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  setUserRoles: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          roleIds: number[];
-        };
-      };
-    };
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description unknown role in set */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  resolveClaims: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        sub: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              perms?: string[];
-              /** Format: int64 */
-              ver?: number;
+        requestBody?: never;
+        responses: {
+            /** @description rotated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            accessToken?: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description missing/wrong internal secret */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  realtimeInfo: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              wsUrl?: string;
-              protocol?: string;
+            /** @description missing/invalid/replayed refresh token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
             };
-          };
         };
-      };
     };
-  };
-  me: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Profile"];
-          };
-        };
-      };
-      /** @description no identity */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  listUsers: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-        sort?: "createdAt" | "displayName" | "email" | "lastLoginAt";
-        order?: "asc" | "desc";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              items?: components["schemas"]["Profile"][];
-              meta?: components["schemas"]["EnvelopeMeta"];
+        requestBody?: never;
+        responses: {
+            /** @description logged out */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
             };
-          };
         };
-      };
     };
-  };
-  createUserProfile: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProfileInput"];
-      };
-    };
-    responses: {
-      /** @description created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    listSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Profile"];
-          };
-        };
-      };
-      /** @description profile already exists */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  getUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Profile"];
-          };
-        };
-      };
-      /** @description unknown */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  deleteUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description deleted */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
-        };
-      };
-      /** @description unknown */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  updateUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProfileInput"];
-      };
-    };
-    responses: {
-      /** @description updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: components["schemas"]["Profile"];
-          };
-        };
-      };
-      /** @description unknown */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
-    };
-  };
-  listAuditEntries: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description ok */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"] & {
-            data?: {
-              items?: components["schemas"]["AuditEntry"][];
-              meta?: components["schemas"]["EnvelopeMeta"];
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["Session"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
             };
-          };
         };
-      };
-      /** @description missing internal secret */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["EnvelopeFail"];
-        };
-      };
     };
-  };
-  ping: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description pong envelope */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    revokeAllSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EnvelopeOK"];
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
         };
-      };
     };
-  };
+    revokeSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotInput"];
+            };
+        };
+        responses: {
+            /** @description uniform response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetInput"];
+            };
+        };
+        responses: {
+            /** @description password updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid/expired/consumed token or weak password */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    adminSetUserPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    newPassword: string;
+                };
+            };
+        };
+        responses: {
+            /** @description password updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    confirmPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description confirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid password */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    adminListUserSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    adminRevokeUserSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    adminRevokeUserSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                sessionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    adminSetUserState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status?: "active" | "inactive";
+                    locked?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    scalarDocs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description html */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    aggregateSpec: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description json */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    listPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: string[];
+                        };
+                    };
+                };
+            };
+        };
+    };
+    createPermission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example report:export:any */
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description created (or already exists) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    listRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["Role"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+        };
+    };
+    createRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInput"];
+            };
+        };
+        responses: {
+            /** @description created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Role"];
+                    };
+                };
+            };
+            /** @description duplicate role name */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    deleteRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown role */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInput"] & {
+                    /** @description full replacement set; unknown permission -> 400 */
+                    permissions?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Role"];
+                    };
+                };
+            };
+            /** @description unknown permission in set */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            /** @description unknown role */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    getUserRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    setUserRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    roleIds: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown role in set */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    resolveClaims: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            perms?: string[];
+                            /** Format: int64 */
+                            ver?: number;
+                        };
+                    };
+                };
+            };
+            /** @description missing/wrong internal secret */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    realtimeInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            wsUrl?: string;
+                            protocol?: string;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Profile"];
+                    };
+                };
+            };
+            /** @description no identity */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: {
+                limit?: 10 | 20 | 50;
+                offset?: number;
+                /** @description case-insensitive email/display-name search */
+                q?: string;
+                presence?: "online" | "offline";
+                roleId?: number;
+                registeredFrom?: string;
+                registeredTo?: string;
+                sort?: "createdAt" | "displayName" | "email" | "lastLoginAt";
+                order?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["Profile"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+        };
+    };
+    createUserProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInput"];
+            };
+        };
+        responses: {
+            /** @description created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Profile"];
+                    };
+                };
+            };
+            /** @description profile already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    getUserStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["UserStats"];
+                    };
+                };
+            };
+        };
+    };
+    getUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Profile"];
+                    };
+                };
+            };
+            /** @description unknown */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    deleteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    updateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInput"];
+            };
+        };
+        responses: {
+            /** @description updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: components["schemas"]["Profile"];
+                    };
+                };
+            };
+            /** @description unknown */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    listAuditEntries: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                entity?: string;
+                entityId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["AuditEntry"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+            /** @description missing internal secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    ping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description pong envelope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
 }
