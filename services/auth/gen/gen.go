@@ -76,6 +76,11 @@ type ResetInput struct {
 	Token       string `json:"token"`
 }
 
+// ResetTokenInput defines model for ResetTokenInput.
+type ResetTokenInput struct {
+	Token string `json:"token"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
@@ -119,6 +124,9 @@ type RegisterJSONRequestBody = RegisterInput
 // ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
 type ResetPasswordJSONRequestBody = ResetInput
 
+// ValidateResetTokenJSONRequestBody defines body for ValidateResetToken for application/json ContentType.
+type ValidateResetTokenJSONRequestBody = ResetTokenInput
+
 // AdminSetUserPasswordJSONRequestBody defines body for AdminSetUserPassword for application/json ContentType.
 type AdminSetUserPasswordJSONRequestBody AdminSetUserPasswordJSONBody
 
@@ -148,6 +156,9 @@ type ServerInterface interface {
 	// ResetPassword consume a single-use reset token, set new password, wipe all sessions
 	// (POST /auth/reset)
 	ResetPassword(w http.ResponseWriter, r *http.Request)
+	// ValidateResetToken validate a reset token without consuming its single-use grant
+	// (POST /auth/reset/validate)
+	ValidateResetToken(w http.ResponseWriter, r *http.Request)
 	// RevokeAllSessions revoke every other session of the authenticated user
 	// (DELETE /auth/sessions)
 	RevokeAllSessions(w http.ResponseWriter, r *http.Request)
@@ -217,6 +228,12 @@ func (_ Unimplemented) Register(w http.ResponseWriter, r *http.Request) {
 // ResetPassword consume a single-use reset token, set new password, wipe all sessions
 // (POST /auth/reset)
 func (_ Unimplemented) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ValidateResetToken validate a reset token without consuming its single-use grant
+// (POST /auth/reset/validate)
+func (_ Unimplemented) ValidateResetToken(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -366,6 +383,20 @@ func (siw *ServerInterfaceWrapper) ResetPassword(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ResetPassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ValidateResetToken operation middleware
+func (siw *ServerInterfaceWrapper) ValidateResetToken(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ValidateResetToken(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -707,6 +738,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/reset", wrapper.ResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/reset/validate", wrapper.ValidateResetToken)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/users/{id}/password", wrapper.AdminSetUserPassword)

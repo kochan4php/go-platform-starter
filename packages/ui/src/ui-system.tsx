@@ -70,6 +70,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => toast, [toast]);
 
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: ToastKind; message?: string }>).detail;
+      if (!detail?.message) return;
+      toast(detail.kind ?? "info", detail.message);
+    };
+    window.addEventListener("starter:toast-request", receive);
+    return () => window.removeEventListener("starter:toast-request", receive);
+  }, [toast]);
+
   return (
     <ToastCtx.Provider value={value}>
       {children}

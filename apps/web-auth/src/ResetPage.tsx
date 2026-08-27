@@ -1,60 +1,161 @@
-import { Alert, Button, Card, Field, Input } from "@starter/ui";
-import { type FormEvent, useState } from "react";
+import { Card, SkeletonBlock, SkeletonLine } from "@starter/ui";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import AuthFrame from "./AuthFrame";
-import { reset } from "./api";
+import { type AuthApiError, reset, validateReset } from "./api";
+import { ErrorSummary, PasswordInput, SubmitButton, SuccessPanel, authNavigate } from "./auth-ui";
 
 export default function ResetPage() {
-  const params = new URLSearchParams(window.location.search);
-  const [token, setToken] = useState(params.get("token") ?? "");
+  const token = new URLSearchParams(window.location.search).get("token") ?? "";
+  const email = new URLSearchParams(window.location.search).get("email") ?? "";
+  const [tokenState, setTokenState] = useState<"checking" | "valid" | "invalid">("checking");
   const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
+  const [redirectIn, setRedirectIn] = useState(3);
+  const strongEnough = newPassword.length >= 8;
+  const matches = Boolean(confirm) && confirm === newPassword;
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  useEffect(() => {
+    let active = true;
+    if (!token) {
+      setTokenState("invalid");
+      return;
+    }
+    validateReset(token)
+      .then(() => active && setTokenState("valid"))
+      .catch(() => active && setTokenState("invalid"));
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!done) return;
+    const timer = setInterval(() => setRedirectIn((seconds) => Math.max(0, seconds - 1)), 1000);
+    const redirect = setTimeout(() => {
+      sessionStorage.setItem("auth:notice", "Password updated. Log in with your new password.");
+      window.location.assign(`/login${email ? `?email=${encodeURIComponent(email)}` : ""}`);
+    }, 3000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(redirect);
+    };
+  }, [done, email]);
+
+  const errors = useMemo(() => {
+    const items: Array<{ field: string; message: string }> = [];
+    if (touched && !strongEnough)
+      items.push({ field: "reset-password", message: "Choose a stronger password" });
+    if (touched && !matches) items.push({ field: "reset-confirm", message: "Passwords must match" });
+    if (error) items.push({ field: "reset-password", message: error });
+    return items;
+  }, [error, matches, strongEnough, touched]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setTouched(true);
+    if (tokenState !== "valid" || !strongEnough || !matches) return;
+    setBusy(true);
     setError("");
     try {
       await reset(token, newPassword);
       setDone(true);
-    } catch (err) {
-      setError((err as Error).message || "reset failed");
+    } catch (caught) {
+      const apiError = caught as AuthApiError;
+      const message = apiError.message || "Reset failed";
+      setError(message);
+      if (apiError.status === 400 || /token|expired/i.test(message)) setTokenState("invalid");
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <AuthFrame>
-      <p className="mb-6 font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-accent)]">
+    <AuthFrame page="reset">
+      <p className="mb-5 font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-accent)]">
         One last step
       </p>
-      <h1 className="max-w-5xl text-[clamp(2.75rem,4.6vw,5rem)] font-extrabold leading-[1.02] tracking-tight">
+      <h1 className="max-w-5xl text-[clamp(2.5rem,4.6vw,5rem)] font-extrabold leading-[1.02] tracking-tight">
         Set it once,
         <br />
         remember it twice.
       </h1>
-
-      <div className="mt-12 max-w-md">
+      <div className="mt-10 max-w-md sm:mt-12">
         <Card>
-          <form onSubmit={submit} className="space-y-4">
-            <Field label="Reset token">
-              <Input name="token" value={token} onChange={(e) => setToken(e.target.value)} required />
-            </Field>
-            <Field label="New password (min 8 chars)">
-              <Input
-                type="password"
-                name="newPassword"
-                minLength={8}
+          {tokenState === "checking" ? (
+            <output aria-live="polite" aria-label="Validating reset link" className="block space-y-4 py-2">
+              <SkeletonLine w="w-2/3" />
+              <SkeletonBlock h="h-12" />
+              <SkeletonBlock h="h-12" />
+            </output>
+          ) : tokenState === "invalid" ? (
+            <div className="py-3 text-center" role="alert">
+              <span
+                className="mx-auto grid size-14 place-items-center rounded-full border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-2xl font-bold text-[var(--color-danger)]"
+                aria-hidden
+              >
+                !
+              </span>
+              <h2 className="mt-4 text-xl font-bold">This reset link is not valid</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">
+                It may have expired or already been used. Request a fresh, single-use link.
+              </p>
+              <a
+                href="/forgot"
+                onClick={(event) => authNavigate(event, "/forgot")}
+                className="mt-5 inline-flex min-h-11 items-center font-semibold text-[var(--color-accent)] underline underline-offset-4"
+              >
+                Request another link →
+              </a>
+            </div>
+          ) : done ? (
+            <SuccessPanel
+              title="Password updated"
+              message={`All existing sessions were signed out. Redirecting to login in ${redirectIn}s.`}
+            />
+          ) : (
+            <form
+              onSubmit={submit}
+              className={`ui-auth-form space-y-4 ${error ? "animate-auth-shake" : ""}`}
+              noValidate
+            >
+              <ErrorSummary errors={errors} />
+              <PasswordInput
+                id="reset-password"
+                label="New password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
+                autoComplete="new-password"
+                onChange={setNewPassword}
+                withStrength
+                error={touched && !strongEnough ? "Use at least 8 characters" : undefined}
+                valid={touched && strongEnough}
               />
-            </Field>
-            {error ? <Alert message={error} /> : null}
-            {done ? <Alert kind="info" message="Password updated — all sessions were signed out." /> : null}
-            <Button type="submit">Set new password</Button>
-          </form>
+              <PasswordInput
+                id="reset-confirm"
+                label="Confirm password"
+                value={confirm}
+                autoComplete="new-password"
+                onChange={setConfirm}
+                error={touched && !matches ? "Passwords do not match" : undefined}
+                valid={touched && matches}
+              />
+              <div className="ui-auth-sticky-actions pt-1">
+                <SubmitButton busy={busy} disabled={!strongEnough || !matches}>
+                  Set new password
+                </SubmitButton>
+              </div>
+            </form>
+          )}
         </Card>
         <p className="mt-5 text-sm text-[var(--color-muted)]">
-          <a href="/login" className="text-[var(--color-ink)] underline-offset-4 hover:underline">
+          <a
+            href="/login"
+            onClick={(event) => authNavigate(event, "/login")}
+            className="inline-flex min-h-11 items-center text-[var(--color-ink)] underline-offset-4 hover:underline"
+          >
             Back to login
           </a>
         </p>

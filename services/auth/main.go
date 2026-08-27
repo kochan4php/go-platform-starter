@@ -26,9 +26,8 @@ var specFS embed.FS
 
 var strictPaths = map[string]bool{
 	"/register": true, "/login": true, "/refresh": true,
-	"/forgot": true, "/reset": true,
+	"/forgot": true, "/reset": true, "/reset/validate": true,
 }
-
 
 func main() {
 	migrateOnly := flag.Bool("migrate", false, "run migrations then exit")

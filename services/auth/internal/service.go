@@ -492,6 +492,23 @@ func (s *Service) Forgot(ctx context.Context, email string) error {
 
 func resetJTIKey(jti string) string { return "reset:jti:" + jti }
 
+// ValidateReset verifies a reset grant without consuming it. The actual reset
+// still performs an atomic GETDEL, preserving single-use semantics under races.
+func (s *Service) ValidateReset(ctx context.Context, rawToken string) error {
+	claims, err := ParseToken(s.secret(), rawToken, PurposeReset)
+	if err != nil {
+		return platform.ErrBadRequest("invalid or expired reset token")
+	}
+	storedSub, err := s.rdb.Get(ctx, resetJTIKey(claims.JTI)).Result()
+	if errors.Is(err, redis.Nil) || (err == nil && storedSub != claims.Sub) {
+		return platform.ErrBadRequest("invalid or expired reset token")
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Service) Reset(ctx context.Context, rawToken, newPassword string) error {
 	claims, err := ParseToken(s.secret(), rawToken, PurposeReset)
 	if err != nil {

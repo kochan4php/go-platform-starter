@@ -24,3 +24,12 @@ if (!("scrollTo" in window)) {
   // biome-ignore lint/suspicious/noExplicitAny: legacy stub
   (window as any).scrollTo = () => undefined;
 }
+
+if (!HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    this.open = false;
+  };
+}

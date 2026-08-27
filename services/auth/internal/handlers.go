@@ -303,6 +303,21 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	platform.OK(w, http.StatusOK, "password_updated", struct{}{})
 }
 
+func (h *Handlers) ValidateResetToken(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Token string `json:"token" validate:"required"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.ValidateReset(r.Context(), in.Token); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "token_valid", struct{}{})
+}
+
 func clientIP(r *http.Request) string {
 	if xf := r.Header.Get("X-Forwarded-For"); xf != "" {
 		return strings.TrimSpace(strings.Split(xf, ",")[0])

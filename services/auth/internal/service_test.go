@@ -317,6 +317,12 @@ func TestForgotIsUniformAndResetIsSingleUseAndWipesSessions(t *testing.T) {
 		t.Fatalf("forgot: %v", err)
 	}
 	token := resetTokenFromMail(t, f)
+	if err := f.svc.ValidateReset(ctx, token); err != nil {
+		t.Fatalf("preflight must accept an unused reset token: %v", err)
+	}
+	if err := f.svc.ValidateReset(ctx, "not-a-token"); err == nil {
+		t.Fatal("preflight must reject an invalid reset token")
+	}
 
 	if _, err := f.svc.Login(ctx, "erin@example.local", "password-123", "ua", "ip"); err != nil {
 		t.Fatalf("login before reset: %v", err)
@@ -333,5 +339,8 @@ func TestForgotIsUniformAndResetIsSingleUseAndWipesSessions(t *testing.T) {
 	}
 	if err := f.svc.Reset(ctx, token, "again-password-789"); err == nil {
 		t.Fatal("replayed reset token must fail (single-use)")
+	}
+	if err := f.svc.ValidateReset(ctx, token); err == nil {
+		t.Fatal("preflight must reject a consumed reset token")
 	}
 }

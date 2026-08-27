@@ -1,5 +1,5 @@
 import { usePreferences } from "@starter/ui";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth-context";
 import { useConfirm, useToast } from "../lib/ui";
 
@@ -8,6 +8,7 @@ export function SessionMenu({ collapsed }: { collapsed: boolean }) {
   const toast = useToast();
   const confirm = useConfirm();
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
   const { soundEnabled, setSoundEnabled, timeZone, setTimeZone } = usePreferences();
 
   if (!user) return null;
@@ -18,6 +19,7 @@ export function SessionMenu({ collapsed }: { collapsed: boolean }) {
       label: "Log out",
     });
     if (!approved) return;
+    sessionStorage.setItem("auth:return-to", pathname + search);
     await logout();
     toast("info", "You have been logged out.");
     navigate("/login", { replace: true });

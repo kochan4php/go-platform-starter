@@ -143,6 +143,230 @@ table {
       focus:border-[var(--color-accent)]/60 focus:bg-[var(--color-surface)];
 	}
 
+	.ui-auth-field {
+		min-height: 3.5rem;
+	}
+
+	.ui-auth-input {
+		min-height: 3.5rem;
+		padding: 1.35rem 3.2rem 0.35rem 2.75rem;
+		font-size: 1rem;
+	}
+
+	.ui-auth-input::placeholder {
+		opacity: 0;
+		transition: opacity 160ms ease;
+	}
+
+	.ui-auth-input:focus::placeholder {
+		opacity: 0.55;
+	}
+
+	.ui-auth-floating-label {
+		position: absolute;
+		left: 2.75rem;
+		top: 1.05rem;
+		pointer-events: none;
+		font-size: 0.875rem;
+		color: var(--color-muted);
+		transition: transform 160ms ease, color 160ms ease, font-size 160ms ease;
+		transform-origin: left center;
+	}
+
+	.ui-auth-input:focus + .ui-auth-floating-label,
+	.ui-auth-input:not(:placeholder-shown) + .ui-auth-floating-label,
+	.ui-auth-input:-webkit-autofill + .ui-auth-floating-label {
+		transform: translateY(-0.62rem);
+		font-size: 0.625rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.ui-auth-input:focus + .ui-auth-floating-label {
+		color: var(--color-accent);
+	}
+
+	.ui-auth-icon,
+	.ui-auth-state {
+		position: absolute;
+		top: 50%;
+		z-index: 1;
+		transform: translateY(-50%);
+	}
+
+	.ui-auth-password-field .ui-auth-state {
+		right: 3.35rem;
+	}
+
+	.ui-auth-icon {
+		left: 0.95rem;
+		color: var(--color-muted);
+	}
+
+	.ui-auth-icon svg,
+	.ui-auth-password-toggle svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.ui-auth-state {
+		right: 0.95rem;
+		font-weight: 800;
+	}
+
+	.ui-input-error {
+		border-color: color-mix(in srgb, var(--color-danger) 70%, transparent);
+		background: color-mix(
+			in srgb,
+			var(--color-danger) 7%,
+			var(--color-elevated)
+		);
+	}
+
+	.ui-input-valid {
+		border-color: color-mix(in srgb, var(--color-success) 55%, transparent);
+	}
+
+	.ui-auth-password-toggle {
+		position: absolute;
+		right: 0.45rem;
+		top: 0.35rem;
+		z-index: 3;
+		display: grid;
+		min-width: 2.75rem;
+		min-height: 2.75rem;
+		place-items: center;
+		border-radius: 0.65rem;
+		color: var(--color-muted);
+		transition: color 160ms ease, background-color 160ms ease;
+	}
+
+	.ui-auth-password-toggle:hover,
+	.ui-auth-password-toggle:active {
+		background: var(--color-hover);
+		color: var(--color-ink);
+	}
+
+	.ui-auth-error-summary {
+		border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+		border-radius: 0.75rem;
+		background: color-mix(in srgb, var(--color-danger) 9%, transparent);
+		padding: 0.75rem 1rem;
+		font-size: 0.8125rem;
+		color: var(--color-danger);
+	}
+
+	.ui-auth-success-check {
+		display: grid;
+		width: 3.75rem;
+		height: 3.75rem;
+		margin-inline: auto;
+		place-items: center;
+		border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--color-success) 10%, transparent);
+		color: var(--color-success);
+	}
+
+	.ui-auth-success-check svg {
+		width: 2.5rem;
+		height: 2.5rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 3;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-dasharray: 40;
+		animation: ui-check-draw 520ms ease-out both;
+	}
+
+	.ui-auth-art-card {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		border: 1px solid var(--color-line);
+		border-radius: 1.75rem;
+		background: var(--color-elevated);
+		box-shadow: 0 28px 70px var(--color-shadow);
+		transform: translate(var(--auth-art-x, 0), var(--auth-art-y, 0));
+		transition: transform 160ms ease-out;
+	}
+
+	.ui-auth-art-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		filter: grayscale(1) contrast(1.2);
+		transition: opacity 300ms ease, transform 700ms ease-out;
+	}
+
+	.ui-auth-art-card:hover .ui-auth-art-image {
+		transform: scale(1.035);
+	}
+
+	.ui-auth-art-overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			145deg,
+			transparent 20%,
+			color-mix(in srgb, var(--color-accent) 22%, transparent) 55%,
+			rgba(0, 0, 0, 0.72)
+		);
+		background-size: 180% 180%;
+		animation: ui-auth-gradient 9s ease-in-out infinite alternate;
+	}
+
+	.ui-auth-mobile-art {
+		position: relative;
+	}
+
+	.ui-auth-desktop-art .ui-auth-art-card {
+		inset: 12.5% 1rem 12.5% 0;
+	}
+
+	.ui-auth-popover {
+		position: absolute;
+		left: 0;
+		top: 100%;
+		margin-top: 0.25rem;
+		border: 1px solid var(--color-line);
+		border-radius: 0.5rem;
+		background: var(--color-elevated);
+		padding: 0.4rem 0.6rem;
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		color: var(--color-muted);
+		box-shadow: 0 8px 24px var(--color-shadow);
+	}
+
+	.ui-auth-health::before {
+		content: "";
+		display: inline-block;
+		width: 0.45rem;
+		height: 0.45rem;
+		margin-right: 0.35rem;
+		border-radius: 999px;
+		background: var(--color-muted);
+	}
+
+	.ui-auth-health-operational::before {
+		background: var(--color-success);
+	}
+	.ui-auth-health-unavailable::before {
+		background: var(--color-danger);
+	}
+
+	.ui-auth-marquee:hover .animate-ui-marquee,
+	.ui-auth-marquee:focus-within .animate-ui-marquee {
+		animation-play-state: paused;
+	}
+
 	.ui-input:-webkit-autofill,
 	.ui-input:-webkit-autofill:hover,
 	.ui-input:-webkit-autofill:focus {
@@ -196,6 +420,20 @@ table {
 		inset: auto;
 		box-shadow: 0 28px 80px var(--color-shadow), inset 0 1px 0
 			color-mix(in srgb, var(--color-ink) 5%, transparent);
+	}
+
+	.ui-reauth-dialog {
+		position: fixed;
+		inset: 0;
+		margin: auto;
+		height: auto;
+		max-height: calc(100dvh - 2rem);
+		border: 1px solid var(--color-line);
+	}
+
+	.ui-reauth-dialog::backdrop {
+		background: var(--color-scrim);
+		backdrop-filter: blur(6px);
 	}
 
 	.ui-modal-body {
@@ -322,6 +560,75 @@ table {
 	}
 	to {
 		transform: translateX(-50%);
+	}
+}
+
+@keyframes ui-check-draw {
+	from {
+		stroke-dashoffset: 40;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes ui-auth-gradient {
+	from {
+		background-position: 0% 0%;
+	}
+	to {
+		background-position: 100% 100%;
+	}
+}
+
+@keyframes ui-auth-shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	25% {
+		transform: translateX(-5px);
+	}
+	75% {
+		transform: translateX(5px);
+	}
+}
+
+.animate-auth-shake {
+	animation: ui-auth-shake 240ms ease-out;
+}
+
+@media (max-width: 639px) {
+	.ui-auth-sticky-actions {
+		position: sticky;
+		bottom: 0;
+		z-index: 5;
+		margin-inline: -0.35rem;
+		padding: 0.75rem 0.35rem max(0.75rem, env(safe-area-inset-bottom));
+		background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+		backdrop-filter: blur(12px);
+	}
+}
+
+@media (prefers-contrast: more) {
+	.ui-card,
+	.ui-input,
+	.ui-auth-art-card {
+		border-color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+	}
+	.ui-input:focus {
+		border-color: var(--color-accent);
+	}
+}
+
+@media (forced-colors: active) {
+	.ui-auth-art-card {
+		display: none;
+	}
+	.ui-auth-success-check,
+	.ui-input-error,
+	.ui-input-valid {
+		border: 2px solid CanvasText;
 	}
 }
 
@@ -471,6 +778,10 @@ table {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none !important;
+	}
 	.animate-ui-marquee,
 	.animate-slide-in-right,
 	.animate-fade-up,
@@ -481,5 +792,15 @@ table {
 	.ui-skeleton,
 	.ui-count-pop {
 		animation: none !important;
+	}
+	.ui-auth-success-check svg,
+	.ui-auth-art-overlay,
+	.animate-auth-shake {
+		animation: none !important;
+	}
+	.ui-auth-art-card,
+	.ui-auth-art-image {
+		transform: none !important;
+		transition: none !important;
 	}
 }

@@ -219,85 +219,85 @@ by priority — baca seluruhnya lalu pilih.
 
 ## UI/UX — Login, Register & Auth
 
-- [ ] 🔧 U1. Show/hide password toggle (eye icon) semua field password
-- [ ] 🔧 U2. Caps-lock warning pada field password
-- [ ] 🔧 U3. Password strength meter live (register + reset)
-- [ ] 🔧 U4. Konfirmasi password field di register
-- [ ] 🔧 U5. Inline email validation feedback real-time
-- [ ] 🔧 U6. Error message dengan ikon + aria-live assertive
-- [ ] 🔧 U7. Success animation (checkmark draw) setelah register/reset
-- [ ] 🔧 U8. Redirect intent: simpan URL asli, kembali setelah login
+- [x] 🔧 U1. Show/hide password toggle (eye icon) semua field password
+- [x] 🔧 U2. Caps-lock warning pada field password
+- [x] 🔧 U3. Password strength meter live (register + reset)
+- [x] 🔧 U4. Konfirmasi password field di register
+- [x] 🔧 U5. Inline email validation feedback real-time
+- [x] 🔧 U6. Error message dengan ikon + aria-live assertive
+- [x] 🔧 U7. Success animation (checkmark draw) setelah register/reset
+- [x] 🔧 U8. Redirect intent: simpan URL asli, kembali setelah login
 - [ ] 🧭 U9. Remember-me checkbox (extend refresh TTL)
 - [ ] 🧭 U10. Social login (Google OAuth) — desain tombol dulu
-- [ ] 🔧 U11. Art plate parallax halus mengikuti mouse
-- [ ] 🔧 U12. Keyboard shortcut Enter submit di mana saja
-- [ ] 🔧 U13. Autofill styling fix (webkit autofill background)
-- [ ] 🔧 U14. Konsistensi loading spinner di semua tombol submit
-- [ ] 🔧 U15. Error shake animation pada form gagal
-- [ ] 🔧 U16. Forgot success: ilustrasi + tombol kirim ulang (cooldown 30s)
-- [ ] 🔧 U17. Reset: strength meter + konfirmasi password field
+- [x] 🔧 U11. Art plate parallax halus mengikuti mouse
+- [x] 🔧 U12. Keyboard shortcut Enter submit di mana saja
+- [x] 🔧 U13. Autofill styling fix (webkit autofill background)
+- [x] 🔧 U14. Konsistensi loading spinner di semua tombol submit
+- [x] 🔧 U15. Error shake animation pada form gagal
+- [x] 🔧 U16. Forgot success: ilustrasi + tombol kirim ulang (cooldown 30s)
+- [x] 🔧 U17. Reset: strength meter + konfirmasi password field
 - [ ] 🧭 U18. Terms & privacy checkbox + link dokumen legal
 - [ ] 🧭 U19. Email availability check debounced (butuh endpoint existence)
-- [ ] 🔧 U20. Favicon + title dinamis per auth state
-- [ ] 🔧 U21. Art plate beda gambar per halaman (login/register/forgot/reset)
-- [ ] 🔧 U22. Art plate gradient overlay animasi subtle
-- [ ] 🔧 U23. Marquee pause on hover
-- [ ] 🔧 U24. Mobile: art plate tampil sebagai banner tipis atas
-- [ ] 🔧 U25. Focus trap penuh di form
+- [x] 🔧 U20. Favicon + title dinamis per auth state
+- [x] 🔧 U21. Art plate beda gambar per halaman (login/register/forgot/reset)
+- [x] 🔧 U22. Art plate gradient overlay animasi subtle
+- [x] 🔧 U23. Marquee pause on hover
+- [x] 🔧 U24. Mobile: art plate tampil sebagai banner tipis atas
+- [x] 🔧 U25. Focus trap penuh di form
 - [ ] 🧭 U26. Language switcher placeholder (i18n ready)
-- [ ] 🔧 U27. BrandMark klik → tooltip versi aplikasi
-- [ ] 🔧 U28. Input label animasi float (opsional, konsisten)
+- [x] 🔧 U27. BrandMark klik → tooltip versi aplikasi
+- [x] 🔧 U28. Input label animasi float (opsional, konsisten)
 - [ ] 🧭 U29. Passkey/WebAuthn one-tap — desain dulu
 - [ ] 🧭 U30. Passkey support penuh (WebAuthn register/login) — fitur besar
-- [ ] 🔧 U31. Session expired: modal re-auth inline (bukan redirect penuh)
-- [ ] 🔧 U32. Login attempt counter tersisa ditampilkan ("3 percobaan lagi")
-- [ ] 🔧 U33. Lockout countdown timer ("coba lagi dalam 12:34")
-- [ ] 🔧 U34. Submit button disabled saat email invalid real-time
-- [ ] 🔧 U35. Error summary di atas form untuk screen reader
-- [ ] 🔧 U36. AuthFrame responsive breakpoint tuning 640–1024px
-- [ ] 🔧 U37. Reduced-motion: matikan semua animasi auth
-- [ ] 🔧 U38. High-contrast mode support
-- [ ] 🔧 U39. Touch target min 44px semua kontrol auth
-- [ ] 🔧 U40. Input error state styling merah + ikon
-- [ ] 🔧 U41. Input success state hijau setelah valid
-- [ ] 🔧 U42. Boot "Restoring session…" → skeleton shimmer
-- [ ] 🔧 U43. BrandMark klik → tooltip versi aplikasi
-- [ ] 🔧 U44. Marquee item klik → tooltip penjelasan fitur
-- [ ] 🔧 U45. Auth: dark scrollbar styling konsisten
-- [ ] 🔧 U46. Redirect after logout ke halaman asal
+- [x] 🔧 U31. Session expired: modal re-auth inline (bukan redirect penuh)
+- [x] 🔧 U32. Login attempt counter tersisa ditampilkan ("3 percobaan lagi")
+- [x] 🔧 U33. Lockout countdown timer ("coba lagi dalam 12:34")
+- [x] 🔧 U34. Submit button disabled saat email invalid real-time
+- [x] 🔧 U35. Error summary di atas form untuk screen reader
+- [x] 🔧 U36. AuthFrame responsive breakpoint tuning 640–1024px
+- [x] 🔧 U37. Reduced-motion: matikan semua animasi auth
+- [x] 🔧 U38. High-contrast mode support
+- [x] 🔧 U39. Touch target min 44px semua kontrol auth
+- [x] 🔧 U40. Input error state styling merah + ikon
+- [x] 🔧 U41. Input success state hijau setelah valid
+- [x] 🔧 U42. Boot "Restoring session…" → skeleton shimmer
+- [x] 🔧 U43. BrandMark klik → tooltip versi aplikasi
+- [x] 🔧 U44. Marquee item klik → tooltip penjelasan fitur
+- [x] 🔧 U45. Auth: dark scrollbar styling konsisten
+- [x] 🔧 U46. Redirect after logout ke halaman asal
 - [ ] 🧭 U47. Multi-language error message mapping
-- [ ] 🔧 U48. Footer: versi build/commit info
-- [ ] 🔧 U49. Anti-clickjacking test visual
-- [ ] 🔧 U50. 429: tampilkan countdown dari header Retry-After
-- [ ] 🔧 U51. Register sukses: auto-fill email ke halaman login
-- [ ] 🔧 U52. Reset: validasi token saat load (sebelum user isi form)
-- [ ] 🔧 U53. Reset sukses: auto-redirect login + toast
-- [ ] 🔧 U54. Simpan scroll position saat error re-render
-- [ ] 🔧 U55. Dokumentasi: paste password diizinkan (UX principle)
-- [ ] 🔧 U56. Email field: trim + lowercase visual otomatis
-- [ ] 🔧 U57. Error boundary khusus auth + tombol reload
-- [ ] 🔧 U58. Art plate skeleton saat gambar loading
-- [ ] 🔧 U59. Konsistensi loading spinner semua tombol auth
-- [ ] 🔧 U60. Mobile: sticky submit button di form panjang
-- [ ] 🔧 U61. iOS input zoom prevention (font-size ≥ 16px saat focus)
-- [ ] 🔧 U62. Android back button handling di auth flow
-- [ ] 🔧 U63. Prefill email dari query param (?email=)
-- [ ] 🔧 U64. Reset token invalid → halaman error ramah + tombol minta ulang
-- [ ] 🔧 U65. Rate limit per-IP feedback di UI
-- [ ] 🔧 U66. Login sukses: welcome toast dengan nama user
-- [ ] 🔧 U67. Transisi antar halaman auth (View Transitions API)
-- [ ] 🔧 U68. Audit spacing form field (4px grid)
-- [ ] 🔧 U69. Ikon di setiap input (email, password — phosphor)
-- [ ] 🔧 U70. Placeholder contoh format (nama@perusahaan.com)
-- [ ] 🔧 U71. Helper text password policy di bawah field
-- [ ] 🔧 U72. Char counter pada field max-length
-- [ ] 🔧 U73. Form draft auto-save (sessionStorage)
-- [ ] 🔧 U74. A11y: error summary dengan anchor ke field
-- [ ] 🔧 U75. Screen reader announcement async state changes
-- [ ] 🔧 U76. Contrast audit semua teks auth (WCAG AA)
-- [ ] 🔧 U77. Focus order audit (tab sequence logis)
-- [ ] 🔧 U78. Mobile: tap = hover state (hilangkan hover-dependency)
-- [ ] 🔧 U79. Footer: status sistem kecil (dari /healthz)
+- [x] 🔧 U48. Footer: versi build/commit info
+- [x] 🔧 U49. Anti-clickjacking test visual
+- [x] 🔧 U50. 429: tampilkan countdown dari header Retry-After
+- [x] 🔧 U51. Register sukses: auto-fill email ke halaman login
+- [x] 🔧 U52. Reset: validasi token saat load (sebelum user isi form)
+- [x] 🔧 U53. Reset sukses: auto-redirect login + toast
+- [x] 🔧 U54. Simpan scroll position saat error re-render
+- [x] 🔧 U55. Dokumentasi: paste password diizinkan (UX principle)
+- [x] 🔧 U56. Email field: trim + lowercase visual otomatis
+- [x] 🔧 U57. Error boundary khusus auth + tombol reload
+- [x] 🔧 U58. Art plate skeleton saat gambar loading
+- [x] 🔧 U59. Konsistensi loading spinner semua tombol auth
+- [x] 🔧 U60. Mobile: sticky submit button di form panjang
+- [x] 🔧 U61. iOS input zoom prevention (font-size ≥ 16px saat focus)
+- [x] 🔧 U62. Android back button handling di auth flow
+- [x] 🔧 U63. Prefill email dari query param (?email=)
+- [x] 🔧 U64. Reset token invalid → halaman error ramah + tombol minta ulang
+- [x] 🔧 U65. Rate limit per-IP feedback di UI
+- [x] 🔧 U66. Login sukses: welcome toast dengan nama user
+- [x] 🔧 U67. Transisi antar halaman auth (View Transitions API)
+- [x] 🔧 U68. Audit spacing form field (4px grid)
+- [x] 🔧 U69. Ikon di setiap input (email, password — phosphor)
+- [x] 🔧 U70. Placeholder contoh format (nama@perusahaan.com)
+- [x] 🔧 U71. Helper text password policy di bawah field
+- [x] 🔧 U72. Char counter pada field max-length
+- [x] 🔧 U73. Form draft auto-save (sessionStorage)
+- [x] 🔧 U74. A11y: error summary dengan anchor ke field
+- [x] 🔧 U75. Screen reader announcement async state changes
+- [x] 🔧 U76. Contrast audit semua teks auth (WCAG AA)
+- [x] 🔧 U77. Focus order audit (tab sequence logis)
+- [x] 🔧 U78. Mobile: tap = hover state (hilangkan hover-dependency)
+- [x] 🔧 U79. Footer: status sistem kecil (dari /healthz)
 - [ ] 🔧 U80. Remember device (skip 2FA 30 hari) — setelah MFA ada
 
 ---

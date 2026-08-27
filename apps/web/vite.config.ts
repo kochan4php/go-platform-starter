@@ -41,7 +41,9 @@ export default defineConfig({
         web_admin_users: { external: remoteEntry("web_admin_users", 5175), externalType: "promise" },
         web_admin_roles: { external: remoteEntry("web_admin_roles", 5176), externalType: "promise" },
       },
-      shared: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+      // Router is host-only; sharing it would ship the entire package instead
+      // of letting Rollup tree-shake the small subset used by the shell.
+      shared: ["react", "react-dom", "@tanstack/react-query"],
     }),
   ],
   ...(process.env.NODE_ENV === "development"
@@ -57,6 +59,7 @@ export default defineConfig({
     : {}),
   build: {
     target: "es2022",
+    modulePreload: { polyfill: false },
     minify: "terser",
     terserOptions: {
       compress: {

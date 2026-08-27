@@ -182,6 +182,21 @@ paths:
         "400": { description: invalid/expired/consumed token or weak password, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
       x-rate-limit-class: strict
 
+  /auth/reset/validate:
+    post:
+      operationId: validateResetToken
+      summary: validate a reset token without consuming its single-use grant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetTokenInput"
+      responses:
+        "200": { description: token valid, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "400": { description: invalid, expired, or consumed token, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+      x-rate-limit-class: strict
+
   /auth/users/{id}/password:
     post:
       operationId: adminSetUserPassword
@@ -331,3 +346,9 @@ components:
       properties:
         token: { type: string }
         newPassword: { type: string, minLength: 8, maxLength: 72 }
+
+    ResetTokenInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }

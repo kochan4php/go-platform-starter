@@ -1,6 +1,7 @@
 import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
+  type MouseEventHandler,
   type ReactNode,
   useEffect,
   useId,
@@ -82,8 +83,15 @@ export function Alert({ kind = "error", message }: { kind?: "error" | "info"; me
       ? "border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]"
       : "border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]";
   return (
-    <p role="alert" className={`rounded-xl border px-4 py-2.5 text-sm ${cls}`}>
-      {message}
+    <p
+      role={kind === "error" ? "alert" : "status"}
+      aria-live={kind === "error" ? "assertive" : "polite"}
+      className={`flex items-start gap-2 rounded-xl border px-4 py-2.5 text-sm ${cls}`}
+    >
+      <span aria-hidden className="font-bold">
+        {kind === "error" ? "!" : "✓"}
+      </span>
+      <span>{message}</span>
     </p>
   );
 }
@@ -306,17 +314,20 @@ export function BrandMark({
   collapsed = false,
   tooltip = "",
   busy = false,
+  onClick,
 }: {
   href?: string;
   collapsed?: boolean;
   tooltip?: string;
   busy?: boolean;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 }) {
   if (collapsed) {
     return (
       <a
         href={href}
         title={tooltip || "Platform Console"}
+        onClick={onClick}
         className="flex items-center gap-2 font-bold tracking-tight"
       >
         <span
@@ -326,7 +337,12 @@ export function BrandMark({
     );
   }
   return (
-    <a href={href} className="flex items-center gap-2 font-bold tracking-tight">
+    <a
+      href={href}
+      title={tooltip || undefined}
+      onClick={onClick}
+      className="flex min-h-11 items-center gap-2 font-bold tracking-tight"
+    >
       <span
         className={`block size-2 rounded-full bg-[var(--color-accent)] ${busy ? "animate-brand-dot" : ""}`}
       />

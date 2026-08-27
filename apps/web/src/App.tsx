@@ -1,7 +1,7 @@
 import { Button, Card, SkeletonBlock, SkeletonLine, usePreferences } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { RemoteErrorBoundary } from "./RemoteErrorBoundary";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
@@ -52,17 +52,19 @@ function AdminRoutes() {
   );
 }
 
-function AuthRoutes(onLoggedIn: (u: LoginResult) => void) {
+function AuthRoutes(onLoggedIn: (u: LoginResult) => void, resetKey: string) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <Routes>
-        <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot" element={<ForgotPage />} />
-        <Route path="/reset" element={<ResetPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Suspense>
+    <RemoteErrorBoundary resetKey={resetKey}>
+      <Suspense fallback={<PageSkeleton />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot" element={<ForgotPage />} />
+          <Route path="/reset" element={<ResetPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </RemoteErrorBoundary>
   );
 }
 
@@ -212,9 +214,21 @@ function IconShield({ className = "" }: { className?: string }) {
 }
 
 function Gate() {
-  const { user, login, booting } = useAuth();
+  const { user, login, logout, booting, sessionExpired } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const toast = useToast();
+  const isAuthPath = ["/login", "/register", "/forgot", "/reset"].includes(pathname);
+
+  useEffect(() => {
+    if (user) document.title = "Dashboard · Platform Console";
+  }, [user]);
+
+  useLayoutEffect(() => {
+    if (!booting && !user && !isAuthPath) {
+      sessionStorage.setItem("auth:return-to", pathname + search);
+    }
+  }, [booting, isAuthPath, pathname, search, user]);
 
   function handleLoggedIn(res: LoginResult) {
     login(res.accessToken, {
@@ -223,35 +237,61 @@ function Gate() {
       perms: res.user.perms ?? [],
       ver: res.user.ver ?? 0,
     });
-    navigate("/admin/users", { replace: true });
+    const intent = sessionStorage.getItem("auth:return-to");
+    sessionStorage.removeItem("auth:return-to");
+    toast("success", `Welcome back, ${res.user.email}.`);
+    navigate(intent?.startsWith("/admin/") ? intent : "/admin/users", { replace: true });
+  }
+
+  function handleReauthenticated(res: LoginResult) {
+    login(res.accessToken, {
+      id: String(res.user.id),
+      email: res.user.email,
+      perms: res.user.perms ?? [],
+      ver: res.user.ver ?? 0,
+    });
+    toast("success", "Session restored.");
   }
 
   if (booting && !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex items-center gap-3">
-          <span className="block size-2 animate-pulse rounded-full bg-[var(--color-accent)]" />
+      <output className="ui-stage flex min-h-screen items-center justify-center p-5" aria-live="polite">
+        <div className="w-full max-w-md space-y-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-muted)]">
             Restoring session…
           </p>
+          <SkeletonLine w="w-2/3" />
+          <SkeletonBlock h="h-14" />
+          <SkeletonBlock h="h-14" />
         </div>
-      </div>
+      </output>
     );
   }
 
-  return user ? (
-    <DashboardShell>
-      <RemoteErrorBoundary resetKey={pathname}>
-        <AdminRoutes />
-      </RemoteErrorBoundary>
-    </DashboardShell>
-  ) : (
-    AuthRoutes(handleLoggedIn)
-  );
-}
+  if (!user && !isAuthPath) return <Navigate to="/login" replace />;
+  if (!user) return AuthRoutes(handleLoggedIn, pathname);
 
-function GateWithLocation() {
-  return <Gate />;
+  return (
+    <>
+      <DashboardShell>
+        <RemoteErrorBoundary resetKey={pathname}>
+          <AdminRoutes />
+        </RemoteErrorBoundary>
+      </DashboardShell>
+      {sessionExpired ? (
+        <Suspense fallback={<PageSkeleton />}>
+          <LoginPage
+            onLoggedIn={handleReauthenticated}
+            mode="reauth"
+            onCancel={() => {
+              sessionStorage.setItem("auth:return-to", pathname + search);
+              logout().finally(() => navigate("/login", { replace: true }));
+            }}
+          />
+        </Suspense>
+      ) : null}
+    </>
+  );
 }
 
 function Root() {
@@ -261,10 +301,25 @@ function Root() {
   useEffect(() => {
     document.documentElement.dataset.density = density;
   }, [density]);
-  return <GateWithLocation />;
+  return <Gate />;
 }
 
 export default function App() {
+  if (window.self !== window.top) {
+    return (
+      <main className="grid min-h-screen place-items-center p-6 text-center">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-danger)]">
+            Embedding blocked
+          </p>
+          <h1 className="mt-3 text-2xl font-bold">Open Platform Console in its own tab.</h1>
+          <p className="mt-2 text-sm text-[var(--color-muted)]">
+            This visual guard prevents clickjacking in development.
+          </p>
+        </div>
+      </main>
+    );
+  }
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>

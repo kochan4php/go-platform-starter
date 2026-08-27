@@ -39,6 +39,13 @@ export class RemoteErrorBoundary extends Component<Props, State> {
         >
           Try again
         </button>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-3 block text-xs text-[var(--color-muted)] underline underline-offset-2"
+        >
+          Reload page
+        </button>
       </div>
     );
   }

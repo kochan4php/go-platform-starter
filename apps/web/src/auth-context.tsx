@@ -13,6 +13,7 @@ interface AuthState {
   user: SessionUser | null;
   /** True until the initial refresh-cookie bootstrap has settled. */
   booting: boolean;
+  sessionExpired: boolean;
   login(accessToken: string, user: SessionUser): void;
   logout(): Promise<void>;
 }
@@ -29,6 +30,7 @@ export function AuthProvider({
 }) {
   const [user, setUser] = useState<SessionUser | null>(initialUser ?? null);
   const [booting, setBooting] = useState(initialUser == null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const queryClient = useQueryClient();
 
   // Session restore (PLAN item 69): the access token lives in memory and dies
@@ -62,7 +64,7 @@ export function AuthProvider({
   useEffect(() => {
     const onExpired = () => {
       setAccessToken(undefined);
-      setUser(null);
+      setSessionExpired(true);
     };
     window.addEventListener("starter:session-expired", onExpired);
     return () => window.removeEventListener("starter:session-expired", onExpired);
@@ -71,6 +73,7 @@ export function AuthProvider({
   const login = useCallback((accessToken: string, u: SessionUser) => {
     setAccessToken(accessToken);
     setUser(u);
+    setSessionExpired(false);
   }, []);
 
   const logout = useCallback(async () => {
@@ -81,10 +84,14 @@ export function AuthProvider({
     }).catch(() => undefined);
     setAccessToken(undefined);
     setUser(null);
+    setSessionExpired(false);
     queryClient.clear();
   }, [queryClient]);
 
-  const value = useMemo(() => ({ user, booting, login, logout }), [user, booting, login, logout]);
+  const value = useMemo(
+    () => ({ user, booting, sessionExpired, login, logout }),
+    [user, booting, sessionExpired, login, logout],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

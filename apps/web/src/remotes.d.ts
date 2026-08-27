@@ -7,6 +7,8 @@ declare module "web_auth/LoginPage" {
       accessToken: string;
       user: { id: string; email: string; perms?: string[]; ver?: number };
     }): void;
+    mode?: "page" | "reauth";
+    onCancel?(): void;
   }>;
   export default LoginPage;
 }

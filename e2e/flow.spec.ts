@@ -27,7 +27,8 @@ test("register screen renders and creates an account", async ({ page }) => {
   const email = `smoke-${Date.now()}@example.local`;
   await page.goto("/register");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password (min 8 chars)").fill("smoke-password-1");
+  await page.getByLabel("Password", { exact: true }).fill("smoke-password-1");
+  await page.getByLabel("Confirm password").fill("smoke-password-1");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText(/Account created/i)).toBeVisible({ timeout: 15000 });
 });

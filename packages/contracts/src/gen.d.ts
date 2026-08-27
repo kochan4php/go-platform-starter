@@ -141,6 +141,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/reset/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** validate a reset token without consuming its single-use grant */
+        post: operations["validateResetToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/users/{id}/password": {
         parameters: {
             query?: never;
@@ -530,6 +547,9 @@ export interface components {
             token: string;
             newPassword: string;
         };
+        ResetTokenInput: {
+            token: string;
+        };
         RoleInput: {
             name: string;
             description?: string;
@@ -892,6 +912,39 @@ export interface operations {
                 };
             };
             /** @description invalid/expired/consumed token or weak password */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    validateResetToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetTokenInput"];
+            };
+        };
+        responses: {
+            /** @description token valid */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid */
             400: {
                 headers: {
                     [name: string]: unknown;
