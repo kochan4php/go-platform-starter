@@ -775,14 +775,14 @@
   },
   "services/_template/migrations/000001_init.down.sql": {
     "mtime": 1787794670.836034,
-    "seen": 1787798185.0258265,
-    "ast_hash": "",
+    "seen": 1787805625.242746,
+    "ast_hash": "a6033857380c9bbef7c21ad5f7f81d7f",
     "semantic_hash": ""
   },
   "services/_template/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8370342,
-    "seen": 1787798185.0258274,
-    "ast_hash": "",
+    "seen": 1787805625.2427485,
+    "ast_hash": "22c38d21532accb69284c5172f8377df",
     "semantic_hash": ""
   },
   "services/auth/gen/gen.go": {
@@ -871,14 +871,14 @@
   },
   "services/auth/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8452795,
-    "seen": 1787798185.025836,
-    "ast_hash": "",
+    "seen": 1787805625.2440941,
+    "ast_hash": "ea2d02fb2656f44018c9d81ea7c7f3f4",
     "semantic_hash": ""
   },
   "services/auth/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8452795,
-    "seen": 1787798185.0258367,
-    "ast_hash": "",
+    "seen": 1787805625.2440956,
+    "ast_hash": "bd874272eebf0226cf61413bba0426cd",
     "semantic_hash": ""
   },
   "services/auth/migrations/embed.go": {
@@ -967,14 +967,14 @@
   },
   "services/rbac/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8562818,
-    "seen": 1787798185.0258455,
-    "ast_hash": "",
+    "seen": 1787805625.2454216,
+    "ast_hash": "eb3a21fd560c3599f57822f49b787f22",
     "semantic_hash": ""
   },
   "services/rbac/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8562818,
-    "seen": 1787798185.025846,
-    "ast_hash": "",
+    "seen": 1787805625.2454233,
+    "ast_hash": "2afe10af80e66b1d1279e59203f6e120",
     "semantic_hash": ""
   },
   "services/rbac/migrations/embed.go": {
@@ -1093,14 +1093,14 @@
   },
   "services/users/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8675842,
-    "seen": 1787798185.025862,
-    "ast_hash": "",
+    "seen": 1787805625.2472498,
+    "ast_hash": "f4246f75d505d134bb6df14c248d7fa3",
     "semantic_hash": ""
   },
   "services/users/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8675842,
-    "seen": 1787798185.0258625,
-    "ast_hash": "",
+    "seen": 1787805625.2472513,
+    "ast_hash": "202169dc5d0a9178b49844723bde0d59",
     "semantic_hash": ""
   },
   "services/users/migrations/embed.go": {
@@ -1153,14 +1153,14 @@
   },
   "services/worker/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8735852,
-    "seen": 1787798185.0258677,
-    "ast_hash": "",
+    "seen": 1787805625.2480052,
+    "ast_hash": "7b103571efab1d94c5967b7437aa82b7",
     "semantic_hash": ""
   },
   "services/worker/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8735852,
-    "seen": 1787798185.0258682,
-    "ast_hash": "",
+    "seen": 1787805625.2480068,
+    "ast_hash": "d9d7e979bbdae46685197a3880a6c261",
     "semantic_hash": ""
   },
   "services/worker/migrations/embed.go": {
