@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -14,27 +15,33 @@ import (
 )
 
 type Role struct {
-	ID          int64    `gorm:"primaryKey" json:"id"`
-	Name        string   `gorm:"not null;uniqueIndex" json:"name"`
-	Description string   `gorm:"not null;default:''"  json:"description"`
-	Permissions []string `gorm:"-"                       json:"permissions"`
+	ID          int64     `gorm:"primaryKey" json:"id"`
+	Name        string    `gorm:"not null;uniqueIndex" json:"name"`
+	Description string    `gorm:"not null;default:''" json:"description"`
+	Color       string    `gorm:"not null;default:'#6366f1'" json:"color"`
+	Icon        string    `gorm:"not null;default:'shield'" json:"icon"`
+	Archived    bool      `gorm:"not null;default:false" json:"archived"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Permissions []string  `gorm:"-" json:"permissions"`
+	UserCount   int64     `gorm:"-" json:"userCount"`
+	System      bool      `gorm:"-" json:"system"`
 }
 
 func (Role) TableName() string { return "rbac.roles" }
 
+type PermissionInfo struct {
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
+	RoleCount int64     `json:"roleCount"`
+}
+
 type permissionRow struct {
-	ID   int64
-	Name string
+	ID        int64
+	Name      string
+	CreatedAt time.Time
 }
 
 func (permissionRow) TableName() string { return "rbac.permissions" }
-
-type rolePermission struct {
-	RoleID       int64 `gorm:"column:role_id"`
-	PermissionID int64 `gorm:"column:permission_id"`
-}
-
-func (rolePermission) TableName() string { return "rbac.role_permissions" }
 
 type userRole struct {
 	UserID int64 `gorm:"column:user_id"`
@@ -43,6 +50,15 @@ type userRole struct {
 }
 
 func (userRole) TableName() string { return "rbac.user_roles" }
+
+type RoleInput struct {
+	Name        string
+	Description string
+	Color       string
+	Icon        string
+	Archived    bool
+	Permissions []string
+}
 
 type Service struct {
 	db  *gorm.DB
@@ -64,190 +80,329 @@ func NewService(db *gorm.DB, log Loggerish, pub Publisher) *Service {
 	return &Service{db: db, log: log, pub: pub}
 }
 
-// Seed loads the compile-time catalog into rbac.permissions and assigns the
-// admin role (holding every permission) to the bootstrap subject.
 func (s *Service) Seed(ctx context.Context) error {
 	for _, p := range permissions.All() {
-		var pr permissionRow
-		s.db.WithContext(ctx).Where("name = ?", p).FirstOrCreate(&pr, permissionRow{Name: p})
+		var row permissionRow
+		if err := s.db.WithContext(ctx).Where("name = ?", p).FirstOrCreate(&row, permissionRow{Name: p}).Error; err != nil {
+			return err
+		}
 	}
-	admin := Role{Name: "admin", Description: "bootstrap super-role"}
+	admin := Role{Name: "admin", Description: "bootstrap super-role", Color: "#dc2626", Icon: "crown"}
 	if err := s.db.WithContext(ctx).Where("name = ?", "admin").FirstOrCreate(&admin).Error; err != nil {
 		return err
 	}
-	var perms []permissionRow
-	if err := s.db.WithContext(ctx).Find(&perms).Error; err != nil {
+	var permissionRows []permissionRow
+	if err := s.db.WithContext(ctx).Find(&permissionRows).Error; err != nil {
 		return err
 	}
-	for _, pr := range perms {
-		s.db.WithContext(ctx).Exec(
+	for _, row := range permissionRows {
+		if err := s.db.WithContext(ctx).Exec(
 			`INSERT INTO rbac.role_permissions (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING`,
-			admin.ID, pr.ID)
+			admin.ID, row.ID).Error; err != nil {
+			return err
+		}
 	}
-	s.db.WithContext(ctx).Exec(
-		`INSERT INTO rbac.user_roles (user_id, role_id) VALUES (?, ?) ON CONFLICT (user_id) DO NOTHING`,
-		platform.BootstrapSub, admin.ID)
-	s.log.Info("rbac seeded", "roles", 1, "permissions", len(perms))
+	if err := s.db.WithContext(ctx).Exec(
+		`INSERT INTO rbac.user_roles (user_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING`,
+		platform.BootstrapSub, admin.ID).Error; err != nil {
+		return err
+	}
+	s.log.Info("rbac seeded", "roles", 1, "permissions", len(permissionRows))
 	return nil
 }
 
-// CreatePermission adds a new permission to the catalog. Names follow the
-// compile-time convention <resource>:<action>:<scope>; duplicates are a no-op
-// so seeding and manual creation never conflict.
+var (
+	permNameRe = regexp.MustCompile(`^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$`)
+	roleNameRe = regexp.MustCompile(`^[a-z][a-z0-9_-]{1,59}$`)
+	colorRe    = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+)
+
+func validPermissionName(name string) bool { return permNameRe.MatchString(strings.TrimSpace(name)) }
+func validRoleName(name string) bool       { return roleNameRe.MatchString(strings.TrimSpace(name)) }
+
 func (s *Service) CreatePermission(ctx context.Context, name string) error {
 	if !validPermissionName(name) {
 		return platform.ErrBadRequest("permission must look like resource:action:scope (lowercase)")
 	}
-	res := s.db.WithContext(ctx).Exec(
+	result := s.db.WithContext(ctx).Exec(
 		`INSERT INTO rbac.permissions (name) VALUES (?) ON CONFLICT (name) DO NOTHING`, name)
-	if res.Error != nil {
-		return res.Error
+	if result.Error != nil {
+		return result.Error
 	}
-	s.audit(ctx, "create", "permission", name)
+	if result.RowsAffected == 0 {
+		return platform.ErrConflict("permission %s already exists", name)
+	}
+	s.audit(ctx, "create", "permission", name, map[string]any{"name": name})
 	return nil
 }
 
-var permNameRe = regexp.MustCompile(`^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$`)
-
-func validPermissionName(name string) bool {
-	return permNameRe.MatchString(strings.TrimSpace(name))
+func (s *Service) DeletePermission(ctx context.Context, name string) error {
+	var used int64
+	if err := s.db.WithContext(ctx).Table("rbac.role_permissions rp").
+		Joins("JOIN rbac.permissions p ON p.id = rp.permission_id").
+		Where("p.name = ?", name).Count(&used).Error; err != nil {
+		return err
+	}
+	if used > 0 {
+		return platform.ErrConflict("permission is assigned to %d role(s)", used)
+	}
+	result := s.db.WithContext(ctx).Where("name = ?", name).Delete(&permissionRow{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return platform.ErrNotFound("permission %s not found", name)
+	}
+	s.audit(ctx, "delete", "permission", name, map[string]any{"name": name})
+	return nil
 }
 
-func (s *Service) ListPermissions(ctx context.Context) ([]string, error) {
-	var rows []permissionRow
-	if err := s.db.WithContext(ctx).Order("id").Find(&rows).Error; err != nil {
-		return nil, err
-	}
-	out := make([]string, 0, len(rows))
-	for _, r := range rows {
-		out = append(out, r.Name)
-	}
-	return out, nil
+func (s *Service) ListPermissions(ctx context.Context) ([]PermissionInfo, error) {
+	items := []PermissionInfo{}
+	err := s.db.WithContext(ctx).Table("rbac.permissions p").
+		Select("p.name, p.created_at, COUNT(rp.role_id) AS role_count").
+		Joins("LEFT JOIN rbac.role_permissions rp ON rp.permission_id = p.id").
+		Group("p.id, p.name, p.created_at").Order("p.name ASC").Scan(&items).Error
+	return items, err
 }
 
-func (s *Service) CreateRole(ctx context.Context, name, description string) (*Role, error) {
-	var exists int64
-	s.db.WithContext(ctx).Model(&Role{}).Where("name = ?", name).Count(&exists)
-	if exists > 0 {
-		return nil, platform.ErrConflict("role %s already exists", name)
+func normalizeRoleInput(input RoleInput) (RoleInput, error) {
+	input.Name = strings.ToLower(strings.TrimSpace(input.Name))
+	input.Description = strings.TrimSpace(input.Description)
+	input.Color = strings.TrimSpace(input.Color)
+	input.Icon = strings.ToLower(strings.TrimSpace(input.Icon))
+	input.Permissions = uniqueStrings(input.Permissions)
+	if !validRoleName(input.Name) {
+		return input, platform.ErrBadRequest("name must be 2..60 lowercase letters, numbers, dashes, or underscores")
 	}
-	r := Role{Name: name, Description: description}
-	if err := s.db.WithContext(ctx).Create(&r).Error; err != nil {
+	if input.Name == "system" || input.Name == "root" || input.Name == "superuser" {
+		return input, platform.ErrBadRequest("reserved role name")
+	}
+	if len(input.Description) > 300 {
+		return input, platform.ErrBadRequest("description must be at most 300 characters")
+	}
+	if input.Color == "" {
+		input.Color = "#6366f1"
+	}
+	if !colorRe.MatchString(input.Color) {
+		return input, platform.ErrBadRequest("color must be a six-digit hex color")
+	}
+	if input.Icon == "" {
+		input.Icon = "shield"
+	}
+	return input, nil
+}
+
+func uniqueStrings(items []string) []string {
+	out := make([]string, 0, len(items))
+	seen := map[string]bool{}
+	for _, item := range items {
+		item = strings.TrimSpace(item)
+		if item != "" && !seen[item] {
+			seen[item] = true
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
+func (s *Service) CreateRole(ctx context.Context, input RoleInput) (*Role, error) {
+	normalized, err := normalizeRoleInput(input)
+	if err != nil {
 		return nil, err
 	}
-	s.audit(ctx, "create", "role", fmt.Sprintf("%d", r.ID))
-	return &r, nil
+	if normalized.Name == "admin" {
+		return nil, platform.ErrConflict("admin is a protected system role")
+	}
+	var created Role
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var exists int64
+		if err := tx.Model(&Role{}).Where("name = ?", normalized.Name).Count(&exists).Error; err != nil {
+			return err
+		}
+		if exists > 0 {
+			return platform.ErrConflict("role %s already exists", normalized.Name)
+		}
+		created = Role{
+			Name: normalized.Name, Description: normalized.Description, Color: normalized.Color,
+			Icon: normalized.Icon, Archived: normalized.Archived,
+		}
+		if err := tx.Create(&created).Error; err != nil {
+			return err
+		}
+		return syncPermissions(tx, created.ID, normalized.Permissions)
+	})
+	if err != nil {
+		return nil, err
+	}
+	created.Permissions = normalized.Permissions
+	s.audit(ctx, "create", "role", fmt.Sprintf("%d", created.ID), map[string]any{"after": created})
+	return &created, nil
 }
 
 func (s *Service) ListRoles(ctx context.Context) ([]Role, error) {
-	var roles []Role
-	if err := s.db.WithContext(ctx).Find(&roles).Error; err != nil {
+	roles := []Role{}
+	if err := s.db.WithContext(ctx).Order("archived ASC, name ASC").Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	for i := range roles {
 		roles[i].Permissions = s.permsForRole(ctx, roles[i].ID)
+		if err := s.db.WithContext(ctx).Table("rbac.user_roles").Where("role_id = ?", roles[i].ID).Count(&roles[i].UserCount).Error; err != nil {
+			return nil, err
+		}
+		roles[i].System = roles[i].Name == "admin"
 	}
 	return roles, nil
 }
 
 func (s *Service) GetRole(ctx context.Context, id int64) (*Role, error) {
-	var r Role
-	if err := s.db.WithContext(ctx).First(&r, "id = ?", id).Error; err != nil {
+	var role Role
+	if err := s.db.WithContext(ctx).First(&role, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
-	r.Permissions = s.permsForRole(ctx, r.ID)
-	return &r, nil
+	role.Permissions = s.permsForRole(ctx, role.ID)
+	if err := s.db.WithContext(ctx).Table("rbac.user_roles").Where("role_id = ?", role.ID).Count(&role.UserCount).Error; err != nil {
+		return nil, err
+	}
+	role.System = role.Name == "admin"
+	return &role, nil
 }
 
 func (s *Service) permsForRole(ctx context.Context, roleID int64) []string {
-	rows := s.db.WithContext(ctx).Raw(`
+	out := []string{}
+	if err := s.db.WithContext(ctx).Raw(`
 		SELECT p.name FROM rbac.permissions p
 		JOIN rbac.role_permissions rp ON rp.permission_id = p.id
-		WHERE rp.role_id = ? ORDER BY p.id`, roleID)
-	out := []string{}
-	if err := rows.Scan(&out).Error; err != nil {
+		WHERE rp.role_id = ? ORDER BY p.name`, roleID).Scan(&out).Error; err != nil {
 		return []string{}
-	}
-	if out == nil {
-		out = []string{}
 	}
 	return out
 }
 
-// UpdateRole renames/describes and — when permSet is non-nil — syncs the full
-// permission set, bumping ver for every user holding the role.
-func (s *Service) UpdateRole(ctx context.Context, id int64, name, description string, permSet *[]string) (*Role, error) {
-	var nameTaken int64
-	s.db.WithContext(ctx).Model(&Role{}).Where("name = ? AND id <> ?", name, id).Count(&nameTaken)
-	if nameTaken > 0 {
-		return nil, platform.ErrConflict("role %s already exists", name)
+func syncPermissions(tx *gorm.DB, roleID int64, names []string) error {
+	rows := []permissionRow{}
+	if len(names) > 0 {
+		if err := tx.Where("name IN ?", names).Find(&rows).Error; err != nil {
+			return err
+		}
+		if len(rows) != len(names) {
+			return platform.ErrBadRequest("unknown permission in set")
+		}
 	}
-	var r Role
-	if err := s.db.WithContext(ctx).First(&r, "id = ?", id).Error; err != nil {
-		return nil, platform.ErrNotFound("role %d not found", id)
+	if err := tx.Exec(`DELETE FROM rbac.role_permissions WHERE role_id = ?`, roleID).Error; err != nil {
+		return err
 	}
-	if name != "" {
-		r.Name = name
+	for _, row := range rows {
+		if err := tx.Exec(`INSERT INTO rbac.role_permissions (role_id, permission_id) VALUES (?, ?)`, roleID, row.ID).Error; err != nil {
+			return err
+		}
 	}
-	if description != "" {
-		r.Description = description
-	}
-	if err := s.db.Save(&r).Error; err != nil {
+	return nil
+}
+
+func (s *Service) UpdateRole(ctx context.Context, id int64, input RoleInput) (*Role, error) {
+	normalized, err := normalizeRoleInput(input)
+	if err != nil {
 		return nil, err
 	}
-
-	if permSet != nil {
-		for _, p := range *permSet {
-			permissions.MustValid(p)
-		}
-		var ids []permissionRow
-		if len(*permSet) > 0 {
-			if err := s.db.Where("name IN ?", *permSet).Find(&ids).Error; err != nil {
-				return nil, err
-			}
-			got := map[string]bool{}
-			for _, pr := range ids {
-				got[pr.Name] = true
-			}
-			for _, want := range *permSet {
-				if !got[want] {
-					return nil, platform.ErrBadRequest("unknown permission %q", want)
-				}
-			}
-		}
-		if err := s.db.Exec(`DELETE FROM rbac.role_permissions WHERE role_id = ?`, id).Error; err != nil {
-			return nil, err
-		}
-		for _, pr := range ids {
-			s.db.WithContext(ctx).Exec(
-				`INSERT INTO rbac.role_permissions (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING`,
-				id, pr.ID)
-		}
-		s.bumpVer(ctx, id)
+	before, err := s.GetRole(ctx, id)
+	if err != nil {
+		return nil, platform.ErrNotFound("role %d not found", id)
 	}
-
-	r.Permissions = s.permsForRole(ctx, r.ID)
-	s.audit(ctx, "update", "role", fmt.Sprintf("%d", r.ID))
-	return &r, nil
+	if before.System && normalized.Name != before.Name {
+		return nil, platform.ErrBadRequest("the admin system role cannot be renamed")
+	}
+	if before.System && normalized.Archived {
+		return nil, platform.ErrBadRequest("the admin system role cannot be archived")
+	}
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var taken int64
+		if err := tx.Model(&Role{}).Where("name = ? AND id <> ?", normalized.Name, id).Count(&taken).Error; err != nil {
+			return err
+		}
+		if taken > 0 {
+			return platform.ErrConflict("role %s already exists", normalized.Name)
+		}
+		if err := tx.Model(&Role{}).Where("id = ?", id).Updates(map[string]any{
+			"name": normalized.Name, "description": normalized.Description, "color": normalized.Color,
+			"icon": normalized.Icon, "archived": normalized.Archived,
+		}).Error; err != nil {
+			return err
+		}
+		if err := syncPermissions(tx, id, normalized.Permissions); err != nil {
+			return err
+		}
+		return bumpVerTx(tx, id)
+	})
+	if err != nil {
+		return nil, err
+	}
+	updated := Role{
+		ID: id, Name: normalized.Name, Description: normalized.Description, Color: normalized.Color,
+		Icon: normalized.Icon, Archived: normalized.Archived, CreatedAt: before.CreatedAt,
+		Permissions: normalized.Permissions, UserCount: before.UserCount, System: before.System,
+	}
+	s.audit(ctx, "update", "role", fmt.Sprintf("%d", id), map[string]any{"before": before, "after": updated})
+	return &updated, nil
 }
 
-func (s *Service) bumpVer(ctx context.Context, roleID int64) {
-	res := s.db.Exec(`UPDATE rbac.user_roles SET ver = ver + 1 WHERE role_id = ?`, roleID)
-	if res.Error == nil && res.RowsAffected > 0 {
-		s.log.Warn("ver bumped for affected users",
-			fmt.Sprintf("role=%d users=%d", roleID, res.RowsAffected))
+func bumpVerTx(tx *gorm.DB, roleID int64) error {
+	if err := tx.Exec(`
+		INSERT INTO rbac.user_versions (user_id, ver)
+		SELECT DISTINCT user_id, 1 FROM rbac.user_roles WHERE role_id = ?
+		ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1`, roleID).Error; err != nil {
+		return err
 	}
+	return tx.Exec(`
+		UPDATE rbac.user_roles ur SET ver = uv.ver
+		FROM rbac.user_versions uv
+		WHERE ur.user_id = uv.user_id
+		AND ur.user_id IN (SELECT user_id FROM rbac.user_roles WHERE role_id = ?)`, roleID).Error
 }
 
-func (s *Service) DeleteRole(ctx context.Context, id int64) error {
-	res := s.db.WithContext(ctx).Exec(`DELETE FROM rbac.roles WHERE id = ?`, id)
-	if res.Error != nil {
-		return res.Error
-	}
-	if res.RowsAffected == 0 {
+func (s *Service) DeleteRole(ctx context.Context, id int64, fallbackID *int64) error {
+	role, err := s.GetRole(ctx, id)
+	if err != nil {
 		return platform.ErrNotFound("role %d not found", id)
 	}
-	s.audit(ctx, "delete", "role", fmt.Sprintf("%d", id))
+	if role.System {
+		return platform.ErrBadRequest("the admin system role cannot be deleted")
+	}
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if role.UserCount > 0 {
+			if fallbackID == nil || *fallbackID == id {
+				return platform.ErrConflict("select a fallback role for %d affected user(s)", role.UserCount)
+			}
+			var exists int64
+			if err := tx.Model(&Role{}).Where("id = ? AND archived = false", *fallbackID).Count(&exists).Error; err != nil {
+				return err
+			}
+			if exists == 0 {
+				return platform.ErrBadRequest("fallback role is unknown or archived")
+			}
+			if err := tx.Exec(`
+				INSERT INTO rbac.user_roles (user_id, role_id, ver)
+				SELECT user_id, ?, ver FROM rbac.user_roles WHERE role_id = ?
+				ON CONFLICT (user_id, role_id) DO NOTHING`, *fallbackID, id).Error; err != nil {
+				return err
+			}
+			if err := bumpVerTx(tx, id); err != nil {
+				return err
+			}
+		}
+		result := tx.Delete(&Role{}, id)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return platform.ErrNotFound("role %d not found", id)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	s.audit(ctx, "delete", "role", fmt.Sprintf("%d", id), map[string]any{"before": role, "fallbackRoleId": fallbackID})
 	return nil
 }
 
@@ -256,37 +411,28 @@ type Claims struct {
 	Ver   int64    `json:"ver"`
 }
 
-// ResolveClaims returns the effective permission set + max ver of a subject.
-// SetUserRoles replaces the role set of a subject and bumps their claims
-// ver so already-issued tokens refresh on their next request.
 func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int64) error {
+	roleIDs = uniqueInt64s(roleIDs)
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if len(roleIDs) > 0 {
 			var known int64
-			if err := tx.Model(&Role{}).Where("id IN ?", roleIDs).Count(&known).Error; err != nil {
+			if err := tx.Model(&Role{}).Where("id IN ? AND archived = false", roleIDs).Count(&known).Error; err != nil {
 				return err
 			}
 			if int(known) != len(roleIDs) {
-				return platform.ErrBadRequest("unknown role in set")
+				return platform.ErrBadRequest("unknown or archived role in set")
 			}
 		}
 		var nextVersion int64
-		if err := tx.Raw(
-			`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
-			 ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1
-			 RETURNING ver`, userID,
-		).Scan(&nextVersion).Error; err != nil {
+		if err := tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
+			ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, userID).Scan(&nextVersion).Error; err != nil {
 			return err
 		}
 		if err := tx.Exec(`DELETE FROM rbac.user_roles WHERE user_id = ?`, userID).Error; err != nil {
 			return err
 		}
-		for _, rid := range roleIDs {
-			if err := tx.Exec(
-				`INSERT INTO rbac.user_roles (user_id, role_id, ver) VALUES (?, ?, ?)
-				 ON CONFLICT (user_id, role_id) DO UPDATE SET ver = EXCLUDED.ver`,
-				userID, rid, nextVersion,
-			).Error; err != nil {
+		for _, roleID := range roleIDs {
+			if err := tx.Exec(`INSERT INTO rbac.user_roles (user_id, role_id, ver) VALUES (?, ?, ?)`, userID, roleID, nextVersion).Error; err != nil {
 				return err
 			}
 		}
@@ -294,44 +440,61 @@ func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int6
 	})
 }
 
+func uniqueInt64s(items []int64) []int64 {
+	out := make([]int64, 0, len(items))
+	seen := map[int64]bool{}
+	for _, item := range items {
+		if item > 0 && !seen[item] {
+			seen[item] = true
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
 func (s *Service) GetUserRoles(ctx context.Context, userID int64) ([]Role, error) {
 	roles := []Role{}
 	err := s.db.WithContext(ctx).Table("rbac.roles r").
-		Select("r.id, r.name, r.description").
+		Select("r.id, r.name, r.description, r.color, r.icon, r.archived, r.created_at").
 		Joins("JOIN rbac.user_roles ur ON ur.role_id = r.id").
 		Where("ur.user_id = ?", userID).Order("r.name ASC").Scan(&roles).Error
+	for i := range roles {
+		roles[i].Permissions = s.permsForRole(ctx, roles[i].ID)
+		roles[i].System = roles[i].Name == "admin"
+	}
 	return roles, err
 }
 
 func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error) {
-	// sub arrives as the decimal-string JWT subject (users.id).
-	subID, perr := strconv.ParseInt(sub, 10, 64)
-	if perr != nil || subID <= 0 {
-		return &Claims{Perms: []string{}}, nil // unknown subject: no perms
+	subID, parseErr := strconv.ParseInt(sub, 10, 64)
+	if parseErr != nil || subID <= 0 {
+		return &Claims{Perms: []string{}}, nil
 	}
-	var urs []userRole
-	if err := s.db.WithContext(ctx).Where("user_id = ?", subID).Find(&urs).Error; err != nil {
+	var assigned []userRole
+	if err := s.db.WithContext(ctx).Table("rbac.user_roles ur").
+		Select("ur.user_id, ur.role_id, ur.ver").
+		Joins("JOIN rbac.roles r ON r.id = ur.role_id").
+		Where("ur.user_id = ? AND r.archived = false", subID).Scan(&assigned).Error; err != nil {
 		return nil, err
 	}
-	c := Claims{Perms: []string{}, Ver: 0}
-	if err := s.db.WithContext(ctx).Table("rbac.user_versions").
-		Select("ver").Where("user_id = ?", subID).Scan(&c.Ver).Error; err != nil {
+	claims := Claims{Perms: []string{}}
+	if err := s.db.WithContext(ctx).Table("rbac.user_versions").Select("ver").Where("user_id = ?", subID).Scan(&claims.Ver).Error; err != nil {
 		return nil, err
 	}
 	seen := map[string]bool{}
-	for _, ur := range urs {
-		for _, p := range s.permsForRole(ctx, ur.RoleID) {
-			if !seen[p] {
-				seen[p] = true
-				c.Perms = append(c.Perms, p)
+	for _, assignment := range assigned {
+		for _, permission := range s.permsForRole(ctx, assignment.RoleID) {
+			if !seen[permission] {
+				seen[permission] = true
+				claims.Perms = append(claims.Perms, permission)
 			}
 		}
 	}
-	return &c, nil
+	return &claims, nil
 }
 
-func (s *Service) audit(ctx context.Context, action, entity, entityID string) {
+func (s *Service) audit(ctx context.Context, action, entity, entityID string, meta map[string]any) {
 	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{
-		Action: action, Entity: entity, EntityID: entityID,
+		Action: action, Entity: entity, EntityID: entityID, Meta: meta,
 	})
 }

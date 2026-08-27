@@ -10,5 +10,7 @@ test("roles page shows accordion content after login", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Directory" })).toBeVisible({ timeout: 15_000 });
   await page.goto("/admin/roles");
   await expect(page.getByRole("heading", { name: "admin" })).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/\d+ assigned/)).toBeVisible();
+  await expect(page.getByText(/\d+ users? assigned/)).toBeVisible();
+  await page.getByRole("button", { name: "Matrix" }).click();
+  await expect(page.getByRole("columnheader", { name: "Permission" })).toBeVisible();
 });

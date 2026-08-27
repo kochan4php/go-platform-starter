@@ -707,7 +707,7 @@
     "/api/v1/rbac/permissions": {
       "post": {
         "operationId": "createPermission",
-        "summary": "add a permission to the catalog (idempotent)",
+        "summary": "add a unique permission to the catalog",
         "x-required-permission": "role:update:any",
         "requestBody": {
           "required": true,
@@ -748,6 +748,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "duplicate permission name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                }
+              }
+            }
           }
         }
       },
@@ -774,7 +784,7 @@
                             "items": {
                               "type": "array",
                               "items": {
-                                "type": "string"
+                                "$ref": "#/components/schemas/Permission"
                               }
                             }
                           }
@@ -782,6 +792,55 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rbac/permissions/{name}": {
+      "delete": {
+        "operationId": "deletePermission",
+        "summary": "delete an unused permission from the catalog",
+        "x-required-permission": "role:update:any",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "unknown permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "permission is in use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
                 }
               }
             }
@@ -973,6 +1032,14 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fallbackRoleId",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1864,6 +1931,41 @@
           "description": {
             "type": "string",
             "maxLength": 300
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "default": "#6366f1"
+          },
+          "icon": {
+            "type": "string",
+            "default": "shield"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Permission": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "roleCount": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -1879,6 +1981,26 @@
           },
           "description": {
             "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "system": {
+            "type": "boolean"
           },
           "permissions": {
             "type": "array",

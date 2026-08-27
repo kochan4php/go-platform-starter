@@ -467,76 +467,76 @@ by priority — baca seluruhnya lalu pilih.
 
 ## UI/UX — Roles & Permissions
 
-- [ ] 🔧 F1. Search/filter roles by name
-- [ ] 🔧 F2. Search permission dalam checkbox list
-- [ ] 🔧 F3. Permission grouped by resource (user:*, role:*, …)
-- [ ] 🔧 F4. Permission group collapse/expand
-- [ ] 🔧 F5. Permission description tooltip
-- [ ] 🔧 F6. Badge "baru saja dibuat" pada permission
-- [ ] 🔧 F7. Indicator permission tak terpakai
-- [ ] 🔧 F8. Permission delete (guard: tak terpakai role mana pun)
-- [ ] 🔧 F9. Role detail: jumlah user memegang role
-- [ ] 🔧 F10. Klik user count → daftar user dengan role itu
-- [ ] 🔧 F11. Role duplicate/clone button
+- [x] 🔧 F1. Search/filter roles by name
+- [x] 🔧 F2. Search permission dalam checkbox list
+- [x] 🔧 F3. Permission grouped by resource (user:*, role:*, …)
+- [x] 🔧 F4. Permission group collapse/expand
+- [x] 🔧 F5. Permission description tooltip
+- [x] 🔧 F6. Badge "baru saja dibuat" pada permission
+- [x] 🔧 F7. Indicator permission tak terpakai
+- [x] 🔧 F8. Permission delete (guard: tak terpakai role mana pun)
+- [x] 🔧 F9. Role detail: jumlah user memegang role
+- [x] 🔧 F10. Klik user count → daftar user dengan role itu
+- [x] 🔧 F11. Role duplicate/clone button
 - [ ] 🧭 F12. Default role untuk user baru (flag)
-- [ ] 🔧 F13. System role flag (admin tak terhapus, lock icon)
-- [ ] 🔧 F14. Role color/icon visual per role
-- [ ] 🔧 F15. Accordion animasi spring halus
-- [ ] 🔧 F16. Multi-open mode toggle
-- [ ] 🔧 F17. Keyboard arrow navigation antar slice
-- [ ] 🔧 F18. Accordion resize handle manual (drag)
-- [ ] 🔧 F19. Mobile: accordion → expandable cards
-- [ ] 🔧 F20. Permission diff preview sebelum save
-- [ ] 🔧 F21. Konfirmasi eksplisit saat mengurangi permission
-- [ ] 🔧 F22. Indicator "N user akan diminta login ulang"
-- [ ] 🔧 F23. Modal daftar user per role (assign dari sini)
-- [ ] 🔧 F24. Quick assign: search user + add
-- [ ] 🔧 F25. Quick remove user dari role
-- [ ] 🔧 F26. Permission matrix view (role × permission grid)
-- [ ] 🔧 F27. Matrix toggle langsung di grid
-- [ ] 🔧 F28. Matrix export PNG/CSV
-- [ ] 🔧 F29. Compare dua role side-by-side
+- [x] 🔧 F13. System role flag (admin tak terhapus, lock icon)
+- [x] 🔧 F14. Role color/icon visual per role
+- [x] 🔧 F15. Accordion animasi spring halus
+- [x] 🔧 F16. Multi-open mode toggle
+- [x] 🔧 F17. Keyboard arrow navigation antar slice
+- [x] 🔧 F18. Accordion resize handle manual (drag)
+- [x] 🔧 F19. Mobile: accordion → expandable cards
+- [x] 🔧 F20. Permission diff preview sebelum save
+- [x] 🔧 F21. Konfirmasi eksplisit saat mengurangi permission
+- [x] 🔧 F22. Indicator "N user akan diminta login ulang"
+- [x] 🔧 F23. Modal daftar user per role (assign dari sini)
+- [x] 🔧 F24. Quick assign: search user + add
+- [x] 🔧 F25. Quick remove user dari role
+- [x] 🔧 F26. Permission matrix view (role × permission grid)
+- [x] 🔧 F27. Matrix toggle langsung di grid
+- [x] 🔧 F28. Matrix export PNG/CSV
+- [x] 🔧 F29. Compare dua role side-by-side
 - [ ] 🧭 F30. Role template preset (Admin/Editor/Viewer)
-- [ ] 🔧 F31. Audit trail per role
-- [ ] 🔧 F32. Role usage map (halaman yang terkunci)
-- [ ] 🔧 F33. Simulasi permission (impersonate role)
-- [ ] 🔧 F34. Effective permissions calculator multi-role
-- [ ] 🔧 F35. Warning minimal 1 permission saat save kosong
-- [ ] 🔧 F36. Validasi format nama role + reserved words
-- [ ] 🔧 F37. Modal: unsaved changes warning saat close
-- [ ] 🔧 F38. Modal: ESC close + focus trap
-- [ ] 🔧 F39. Modal: full-screen di mobile
-- [ ] 🔧 F40. Modal: field error inline per-field
-- [ ] 🔧 F41. Toast sukses dengan nama role
-- [ ] 🔧 F42. Optimistic toggle permission
-- [ ] 🔧 F43. Skeleton accordion saat load
-- [ ] 🔧 F44. Empty search state + clear button
-- [ ] 🔧 F45. Sort roles by name/users/created
-- [ ] 🔧 F46. Role archived state (nonaktif tanpa hapus)
-- [ ] 🔧 F47. Bulk assign users ke role
-- [ ] 🔧 F48. Permission dependency hints
-- [ ] 🔧 F49. Permission usage map (route terkait)
-- [ ] 🔧 F50. Link permission → route registry
+- [x] 🔧 F31. Audit trail per role
+- [x] 🔧 F32. Role usage map (halaman yang terkunci)
+- [x] 🔧 F33. Simulasi permission (impersonate role)
+- [x] 🔧 F34. Effective permissions calculator multi-role
+- [x] 🔧 F35. Warning minimal 1 permission saat save kosong
+- [x] 🔧 F36. Validasi format nama role + reserved words
+- [x] 🔧 F37. Modal: unsaved changes warning saat close
+- [x] 🔧 F38. Modal: ESC close + focus trap
+- [x] 🔧 F39. Modal: full-screen di mobile
+- [x] 🔧 F40. Modal: field error inline per-field
+- [x] 🔧 F41. Toast sukses dengan nama role
+- [x] 🔧 F42. Optimistic toggle permission
+- [x] 🔧 F43. Skeleton accordion saat load
+- [x] 🔧 F44. Empty search state + clear button
+- [x] 🔧 F45. Sort roles by name/users/created
+- [x] 🔧 F46. Role archived state (nonaktif tanpa hapus)
+- [x] 🔧 F47. Bulk assign users ke role
+- [x] 🔧 F48. Permission dependency hints
+- [x] 🔧 F49. Permission usage map (route terkait)
+- [x] 🔧 F50. Link permission → route registry
 - [ ] 🧭 F51. Role hierarchy visual (inheritance)
-- [ ] 🔧 F52. Export/import role definition JSON
-- [ ] 🔧 F53. Role changelog (audit diff)
+- [x] 🔧 F52. Export/import role definition JSON
+- [x] 🔧 F53. Role changelog (audit diff)
 - [ ] 🧭 F54. Notifikasi ke user saat role-nya berubah
-- [ ] 🔧 F55. Sidebar badge jumlah role
-- [ ] 🔧 F56. Breadcrumb interaktif halaman roles
-- [ ] 🔧 F57. Indikator unsaved per slice
-- [ ] 🔧 F58. Panel sticky action bar saat scroll
-- [ ] 🔧 F59. Permission search highlight
-- [ ] 🔧 F60. Select all / none quick action
-- [ ] 🔧 F61. Group toggle per resource
-- [ ] 🔧 F62. Delete role: pindahkan user ke fallback role
-- [ ] 🔧 F63. Delete role: audit + konfirmasi ketik nama
-- [ ] 🔧 F64. Role icon picker
-- [ ] 🔧 F65. Role description markdown support
-- [ ] 🔧 F66. Permission name autocomplete dari sejarah
-- [ ] 🔧 F67. Real-time validasi format permission
-- [ ] 🔧 F68. Tooltip format di placeholder
-- [ ] 🔧 F69. Count badge update animasi
-- [ ] 🔧 F70. Empty roles ilustrasi + CTA
+- [x] 🔧 F55. Sidebar badge jumlah role
+- [x] 🔧 F56. Breadcrumb interaktif halaman roles
+- [x] 🔧 F57. Indikator unsaved per slice
+- [x] 🔧 F58. Panel sticky action bar saat scroll
+- [x] 🔧 F59. Permission search highlight
+- [x] 🔧 F60. Select all / none quick action
+- [x] 🔧 F61. Group toggle per resource
+- [x] 🔧 F62. Delete role: pindahkan user ke fallback role
+- [x] 🔧 F63. Delete role: audit + konfirmasi ketik nama
+- [x] 🔧 F64. Role icon picker
+- [x] 🔧 F65. Role description markdown support
+- [x] 🔧 F66. Permission name autocomplete dari sejarah
+- [x] 🔧 F67. Real-time validasi format permission
+- [x] 🔧 F68. Tooltip format di placeholder
+- [x] 🔧 F69. Count badge update animasi
+- [x] 🔧 F70. Empty roles ilustrasi + CTA
 
 ---
 

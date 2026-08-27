@@ -271,9 +271,26 @@ export interface paths {
         /** the compile-time catalog persisted in the db */
         get: operations["listPermissions"];
         put?: never;
-        /** add a permission to the catalog (idempotent) */
+        /** add a unique permission to the catalog */
         post: operations["createPermission"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rbac/permissions/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** delete an unused permission from the catalog */
+        delete: operations["deletePermission"];
         options?: never;
         head?: never;
         patch?: never;
@@ -516,12 +533,34 @@ export interface components {
         RoleInput: {
             name: string;
             description?: string;
+            /** @default #6366f1 */
+            color: string;
+            /** @default shield */
+            icon: string;
+            /** @default false */
+            archived: boolean;
+            permissions?: string[];
+        };
+        Permission: {
+            name?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            roleCount?: number;
         };
         Role: {
             /** Format: int64 */
             id?: number;
             name?: string;
             description?: string;
+            color?: string;
+            icon?: string;
+            archived?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            userCount?: number;
+            system?: boolean;
             permissions?: string[];
         };
         Profile: {
@@ -1105,7 +1144,7 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
-                            items?: string[];
+                            items?: components["schemas"]["Permission"][];
                         };
                     };
                 };
@@ -1139,6 +1178,55 @@ export interface operations {
             };
             /** @description invalid name */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            /** @description duplicate permission name */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    deletePermission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown permission */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            /** @description permission is in use */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1210,7 +1298,9 @@ export interface operations {
     };
     deleteRole: {
         parameters: {
-            query?: never;
+            query?: {
+                fallbackRoleId?: number;
+            };
             header?: never;
             path: {
                 id: number;

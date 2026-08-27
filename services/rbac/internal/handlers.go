@@ -90,25 +90,35 @@ func (h *Handlers) CreatePermission(w http.ResponseWriter, r *http.Request) {
 	platform.OK(w, http.StatusCreated, "created", map[string]string{"name": name})
 }
 
+func (h *Handlers) DeletePermission(w http.ResponseWriter, r *http.Request, name string) {
+	if err := h.svc.DeletePermission(r.Context(), strings.ToLower(strings.TrimSpace(name))); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "deleted", map[string]string{"name": name})
+}
+
 func (h *Handlers) CreateRole(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Color       string   `json:"color"`
+		Icon        string   `json:"icon"`
+		Archived    bool     `json:"archived"`
+		Permissions []string `json:"permissions"`
 	}
 	if err := h.decode(r, &in); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	if len(in.Name) < 2 || len(in.Name) > 60 {
-		platform.WriteError(w, h.log, platform.ErrBadRequest("name must be 2..60 chars"))
-		return
-	}
-	role, err := h.svc.CreateRole(r.Context(), in.Name, in.Description)
+	role, err := h.svc.CreateRole(r.Context(), RoleInput{
+		Name: in.Name, Description: in.Description, Color: in.Color, Icon: in.Icon,
+		Archived: in.Archived, Permissions: in.Permissions,
+	})
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	role.Permissions = []string{}
 	platform.OK(w, http.StatusCreated, "created", role)
 }
 
@@ -123,15 +133,21 @@ func (h *Handlers) ListRoles(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) {
 	var in struct {
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		Permissions *[]string `json:"permissions"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Color       string   `json:"color"`
+		Icon        string   `json:"icon"`
+		Archived    bool     `json:"archived"`
+		Permissions []string `json:"permissions"`
 	}
 	if err := h.decode(r, &in); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	role, err := h.svc.UpdateRole(r.Context(), id, in.Name, in.Description, in.Permissions)
+	role, err := h.svc.UpdateRole(r.Context(), id, RoleInput{
+		Name: in.Name, Description: in.Description, Color: in.Color, Icon: in.Icon,
+		Archived: in.Archived, Permissions: in.Permissions,
+	})
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -139,8 +155,12 @@ func (h *Handlers) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) 
 	platform.OK(w, http.StatusOK, "updated", role)
 }
 
-func (h *Handlers) DeleteRole(w http.ResponseWriter, r *http.Request, id int64) {
-	if err := h.svc.DeleteRole(r.Context(), id); err != nil {
+func (h *Handlers) DeleteRole(w http.ResponseWriter, r *http.Request, id int64, params gen.DeleteRoleParams) {
+	if params.FallbackRoleId != nil && *params.FallbackRoleId <= 0 {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("invalid fallback role"))
+		return
+	}
+	if err := h.svc.DeleteRole(r.Context(), id, params.FallbackRoleId); err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}

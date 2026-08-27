@@ -10,7 +10,7 @@ paths:
   /rbac/permissions:
     post:
       operationId: createPermission
-      summary: add a permission to the catalog (idempotent)
+      summary: add a unique permission to the catalog
       x-required-permission: "role:update:any"
       requestBody:
         required: true
@@ -28,6 +28,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/EnvelopeOK" }
         "400": { description: invalid name, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+        "409": { description: duplicate permission name, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
     get:
       operationId: listPermissions
@@ -48,7 +49,19 @@ paths:
                         properties:
                           items:
                             type: array
-                            items: { type: string }
+                            items: { $ref: "#/components/schemas/Permission" }
+
+  /rbac/permissions/{name}:
+    delete:
+      operationId: deletePermission
+      summary: delete an unused permission from the catalog
+      x-required-permission: "role:update:any"
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: unknown permission, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+        "409": { description: permission is in use, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
   /rbac/roles:
     post:
@@ -129,7 +142,9 @@ paths:
     delete:
       operationId: deleteRole
       x-required-permission: "role:delete:any"
-      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        - { name: fallbackRoleId, in: query, schema: { type: integer, format: int64 } }
       responses:
         "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: unknown role, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
@@ -218,6 +233,19 @@ components:
       properties:
         name: { type: string, minLength: 2, maxLength: 60 }
         description: { type: string, maxLength: 300 }
+        color: { type: string, pattern: "^#[0-9a-fA-F]{6}$", default: "#6366f1" }
+        icon: { type: string, default: shield }
+        archived: { type: boolean, default: false }
+        permissions:
+          type: array
+          items: { type: string }
+
+    Permission:
+      type: object
+      properties:
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        roleCount: { type: integer, format: int64 }
 
     Role:
       type: object
@@ -225,6 +253,12 @@ components:
         id: { type: integer, format: int64 }
         name: { type: string }
         description: { type: string }
+        color: { type: string }
+        icon: { type: string }
+        archived: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        userCount: { type: integer, format: int64 }
+        system: { type: boolean }
         permissions:
           type: array
           items: { type: string }

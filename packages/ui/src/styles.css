@@ -242,6 +242,11 @@ table {
 		@apply flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors;
 	}
 
+	.ui-count-pop {
+		display: inline-flex;
+		animation: ui-count-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
 	.ui-choice:hover {
 		background: var(--color-hover);
 	}
@@ -454,6 +459,17 @@ table {
 	}
 }
 
+@keyframes ui-count-pop {
+	0% {
+		transform: scale(0.72);
+		opacity: 0.45;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.animate-ui-marquee,
 	.animate-slide-in-right,
@@ -462,7 +478,8 @@ table {
 	.animate-brand-dot,
 	.sidebar-active-indicator,
 	.animate-navigation-progress,
-	.ui-skeleton {
+	.ui-skeleton,
+	.ui-count-pop {
 		animation: none !important;
 	}
 }

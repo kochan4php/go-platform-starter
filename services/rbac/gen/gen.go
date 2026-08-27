@@ -4,8 +4,10 @@
 package gen
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
@@ -32,18 +34,35 @@ type EnvelopeOK struct {
 	Success bool        `json:"success"`
 }
 
+// Permission defines model for Permission.
+type Permission struct {
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	Name      *string    `json:"name,omitempty"`
+	RoleCount *int64     `json:"roleCount,omitempty"`
+}
+
 // Role defines model for Role.
 type Role struct {
-	Description *string   `json:"description,omitempty"`
-	Id          *int64    `json:"id,omitempty"`
-	Name        *string   `json:"name,omitempty"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Archived    *bool      `json:"archived,omitempty"`
+	Color       *string    `json:"color,omitempty"`
+	CreatedAt   *time.Time `json:"createdAt,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Icon        *string    `json:"icon,omitempty"`
+	Id          *int64     `json:"id,omitempty"`
+	Name        *string    `json:"name,omitempty"`
+	Permissions *[]string  `json:"permissions,omitempty"`
+	System      *bool      `json:"system,omitempty"`
+	UserCount   *int64     `json:"userCount,omitempty"`
 }
 
 // RoleInput defines model for RoleInput.
 type RoleInput struct {
-	Description *string `json:"description,omitempty"`
-	Name        string  `json:"name"`
+	Archived    *bool     `json:"archived,omitempty"`
+	Color       *string   `json:"color,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Icon        *string   `json:"icon,omitempty"`
+	Name        string    `json:"name"`
+	Permissions *[]string `json:"permissions,omitempty"`
 }
 
 // CreatePermissionJSONBody defines parameters for CreatePermission.
@@ -52,9 +71,17 @@ type CreatePermissionJSONBody struct {
 	Name string `json:"name"`
 }
 
+// DeleteRoleParams defines parameters for DeleteRole.
+type DeleteRoleParams struct {
+	FallbackRoleId *int64 `form:"fallbackRoleId,omitempty" json:"fallbackRoleId,omitempty"`
+}
+
 // UpdateRoleJSONBody defines parameters for UpdateRole.
 type UpdateRoleJSONBody struct {
+	Archived    *bool   `json:"archived,omitempty"`
+	Color       *string `json:"color,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
 	Name        string  `json:"name"`
 
 	// Permissions full replacement set; unknown permission -> 400
@@ -86,9 +113,12 @@ type ServerInterface interface {
 	// ListPermissions the compile-time catalog persisted in the db
 	// (GET /rbac/permissions)
 	ListPermissions(w http.ResponseWriter, r *http.Request)
-	// CreatePermission add a permission to the catalog (idempotent)
+	// CreatePermission add a unique permission to the catalog
 	// (POST /rbac/permissions)
 	CreatePermission(w http.ResponseWriter, r *http.Request)
+	// DeletePermission delete an unused permission from the catalog
+	// (DELETE /rbac/permissions/{name})
+	DeletePermission(w http.ResponseWriter, r *http.Request, name string)
 
 	// (GET /rbac/roles)
 	ListRoles(w http.ResponseWriter, r *http.Request)
@@ -97,7 +127,7 @@ type ServerInterface interface {
 	CreateRole(w http.ResponseWriter, r *http.Request)
 
 	// (DELETE /rbac/roles/{id})
-	DeleteRole(w http.ResponseWriter, r *http.Request, id int64)
+	DeleteRole(w http.ResponseWriter, r *http.Request, id int64, params DeleteRoleParams)
 	// UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 	// (PATCH /rbac/roles/{id})
 	UpdateRole(w http.ResponseWriter, r *http.Request, id int64)
@@ -125,9 +155,15 @@ func (_ Unimplemented) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// CreatePermission add a permission to the catalog (idempotent)
+// CreatePermission add a unique permission to the catalog
 // (POST /rbac/permissions)
 func (_ Unimplemented) CreatePermission(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeletePermission delete an unused permission from the catalog
+// (DELETE /rbac/permissions/{name})
+func (_ Unimplemented) DeletePermission(w http.ResponseWriter, r *http.Request, name string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -142,7 +178,7 @@ func (_ Unimplemented) CreateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 // (DELETE /rbac/roles/{id})
-func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id int64) {
+func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id int64, params DeleteRoleParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -227,6 +263,32 @@ func (siw *ServerInterfaceWrapper) CreatePermission(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// DeletePermission operation middleware
+func (siw *ServerInterfaceWrapper) DeletePermission(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeletePermission(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRoles operation middleware
 func (siw *ServerInterfaceWrapper) ListRoles(w http.ResponseWriter, r *http.Request) {
 
@@ -270,8 +332,24 @@ func (siw *ServerInterfaceWrapper) DeleteRole(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteRoleParams
+
+	// ------------- Optional query parameter "fallbackRoleId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "fallbackRoleId", r.URL.Query(), &params.FallbackRoleId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "fallbackRoleId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "fallbackRoleId", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteRole(w, r, id)
+		siw.Handler.DeleteRole(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -477,6 +555,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/rbac/permissions", wrapper.CreatePermission)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/rbac/permissions/{name}", wrapper.DeletePermission)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/roles", wrapper.ListRoles)
