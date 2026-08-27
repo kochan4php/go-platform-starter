@@ -8,7 +8,7 @@ type Config struct {
 	SlowQueryThreshold time.Duration `env:"SLOW_QUERY_THRESHOLD" envDefault:"500ms"`
 
 	DatabaseURL       string `env:"DATABASE_URL,required"`
-	RedisAddr         string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
 	RBACInternalURL   string `env:"RBAC_INTERNAL_URL"`
 	InternalSecret    string `env:"INTERNAL_SECRET"`
@@ -18,7 +18,7 @@ type Config struct {
 	LoginMaxAttempts  int    `env:"LOGIN_MAX_ATTEMPTS" envDefault:"5"`
 	LoginLockMinutes  int    `env:"LOGIN_LOCK_MINUTES" envDefault:"15"`
 	ResetTTLMinutes   int    `env:"RESET_TTL_MINUTES" envDefault:"15"`
-	AppPublicURL      string `env:"APP_PUBLIC_URL" envDefault:"http://localhost:5173"`
+	AppPublicURL      string `env:"APP_PUBLIC_URL" envDefault:"http://127.0.0.1:5173"`
 	CookieSecure      bool   `env:"COOKIE_SECURE" envDefault:"false"`
 
 	RateGlobalPerMinute int `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"120"`

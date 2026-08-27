@@ -2,7 +2,7 @@
 // No external deps — the baseline tool referenced in docs/SCALING.md
 // (PLAN item 83).
 //
-//	Usage: go run ./scripts/perf-smoke -url http://localhost:8000/healthz \
+//	Usage: go run ./scripts/perf-smoke -url http://127.0.0.1:8000/healthz \
 //	         -n 2000 -c 20 [-token JWT] [-method POST] [-body '{"json":true}']
 package main
 
@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	url := flag.String("url", "http://localhost:8000/healthz", "target URL")
+	url := flag.String("url", "http://127.0.0.1:8000/healthz", "target URL")
 	total := flag.Int("n", 2000, "total requests")
 	conc := flag.Int("c", 20, "concurrent workers")
 	method := flag.String("method", http.MethodGet, "HTTP method")

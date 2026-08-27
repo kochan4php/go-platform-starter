@@ -22,9 +22,9 @@ var specFS embed.FS
 type config struct {
 	Port              string `env:"PORT" envDefault:"8080"`
 	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
-	RedisAddr         string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
-	PublicWSUrl       string `env:"PUBLIC_WS_URL" envDefault:"ws://localhost:8000/ws"`
+	PublicWSUrl       string `env:"PUBLIC_WS_URL" envDefault:"ws://127.0.0.1:8000/ws"`
 	Rooms             string `env:"ROOMS" envDefault:"lobby,general"`
 	MaxPerRoom        int    `env:"MAX_PER_ROOM" envDefault:"50"`
 }

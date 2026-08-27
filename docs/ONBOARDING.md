@@ -60,7 +60,7 @@ Admin login for seeded environments:
 ./scripts/deploy-lab.sh --down  # stop
 ```
 
-Shell at http://localhost:5173 (same-origin /api proxy), gateway docs at http://localhost:8010/docs.
+Shell at http://127.0.0.1:5173 (same-origin /api proxy), gateway docs at http://127.0.0.1:8010/docs.
 Every service port is published (8081-8085, 8000, 5173-5176) so you can hit
 components directly or attach profilers.
 
@@ -68,7 +68,7 @@ Observability on top of either environment:
 
 ```bash
 docker compose -f infra/compose.observability.yml --profile obs up
-# Grafana http://localhost:3000 · Prometheus http://localhost:9090
+# Grafana http://127.0.0.1:3000 · Prometheus http://127.0.0.1:9090
 ```
 
 ## 4. Make a PR (5 min)

@@ -103,7 +103,7 @@ func newFixture(t *testing.T) *fixture {
 		LoginMaxAttempts:    3,
 		LoginLockMinutes:    15,
 		ResetTTLMinutes:     15,
-		AppPublicURL:        "http://localhost:5173",
+		AppPublicURL:        "http://127.0.0.1:5173",
 		RateGlobalPerMinute: 1000,
 		RateStrictPerMinute: 1000,
 	}

@@ -3,7 +3,7 @@
 #
 #   docker compose -f infra/compose.base.yml -f infra/compose.lab.yml up --build
 # Seeded admin: admin@example.local / admin-bootstrap-pw
-# Shell: http://localhost:5173 · API docs: http://localhost:8000/docs
+# Shell: http://127.0.0.1:5173 · API docs: http://127.0.0.1:8010/docs
 name: go-platform-lab
 
 services:
@@ -38,7 +38,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8081"
-      APP_PUBLIC_URL: http://localhost:5173
+      APP_PUBLIC_URL: http://127.0.0.1:5173
       RBAC_INTERNAL_URL: http://rbac:8083
       # Interpolated from the caller so deploy-lab / CI can pin credentials.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
@@ -93,7 +93,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8000"
-      TRUSTED_DOMAINS: http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176
+      TRUSTED_DOMAINS: http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176
       UPSTREAMS: '{"auth":"http://auth:8081","users":"http://users:8082","rbac":"http://rbac:8083","worker":"http://worker:8084"}'
     # Host side shifts automatically when another project owns 8000.
     ports: ["${LAB_GATEWAY_PORT:-8010}:8000"]
@@ -107,9 +107,9 @@ services:
     build: { context: .., dockerfile: apps/web/Dockerfile }
     ports: ["5173:80"]
     environment:
-      REMOTE_AUTH_URL: http://localhost:5174/assets/remoteEntry.js
-      REMOTE_ADMIN_USERS_URL: http://localhost:5175/assets/remoteEntry.js
-      REMOTE_ADMIN_ROLES_URL: http://localhost:5176/assets/remoteEntry.js
+      REMOTE_AUTH_URL: http://127.0.0.1:5174/assets/remoteEntry.js
+      REMOTE_ADMIN_USERS_URL: http://127.0.0.1:5175/assets/remoteEntry.js
+      REMOTE_ADMIN_ROLES_URL: http://127.0.0.1:5176/assets/remoteEntry.js
 
   web-auth:
     build: { context: .., dockerfile: apps/web-auth/Dockerfile }

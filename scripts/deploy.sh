@@ -211,9 +211,9 @@ if [ "$TARGET" = "lab" ]; then
   # serving index.html would pass a bare /healthz check).
   HEALTHY=0
   for _ in $(seq 1 60); do
-    if curl -sf "http://localhost:${LAB_GATEWAY_PORT}/healthz" >/dev/null 2>&1 \
-       && curl -sf "http://localhost:${LAB_GATEWAY_PORT}/docs/openapi.json" >/dev/null 2>&1 \
-       && curl -sf "http://localhost:5173/" >/dev/null 2>&1; then HEALTHY=1; break; fi
+    if curl -sf "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" >/dev/null 2>&1 \
+       && curl -sf "http://127.0.0.1:${LAB_GATEWAY_PORT}/docs/openapi.json" >/dev/null 2>&1 \
+       && curl -sf "http://127.0.0.1:5173/" >/dev/null 2>&1; then HEALTHY=1; break; fi
     sleep 1
   done
   [ "$HEALTHY" = "1" ] || {
@@ -225,8 +225,8 @@ if [ "$TARGET" = "lab" ]; then
   log "lab ready"
   cat <<'SUMMARY'
 
-  Shell        http://localhost:5173
-  Gateway      http://localhost:${LAB_GATEWAY_PORT}  (docs at /docs, health at /healthz)
+  Shell        http://127.0.0.1:5173
+  Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}  (docs at /docs, health at /healthz)
   Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
   Remotes      web-auth :5174 · web-admin-users :5175 · web-admin-roles :5176
   Admin login  admin@example.local / admin-bootstrap-pw

@@ -210,9 +210,9 @@ starts the stack with all ports published.
 
 | URL | What |
 | --- | --- |
-| http://localhost:5173 | app shell (login → admin dashboard); same-origin `/api/…` proxy included |
-| http://localhost:8010/docs | aggregate API reference (Scalar) |
-| http://localhost:8010/healthz | gateway health |
+| http://127.0.0.1:5173 | app shell (login → admin dashboard); same-origin `/api/…` proxy included |
+| http://127.0.0.1:8010/docs | aggregate API reference (Scalar) |
+| http://127.0.0.1:8010/healthz | gateway health |
 | :8081–:8085 | auth/users/rbac/worker/realtime published for direct debugging |
 
 Seeded admin: `admin@example.local` / `admin-bootstrap-pw`.
@@ -225,7 +225,7 @@ Observability on top:
 
 ```bash
 docker compose -f infra/compose.observability.yml --profile obs up
-# Grafana http://localhost:3000 · Prometheus http://localhost:9090 · OTLP :4318
+# Grafana http://127.0.0.1:3000 · Prometheus http://127.0.0.1:9090 · OTLP :4318
 ```
 
 ## Daily development: native processes with hot reload
@@ -241,7 +241,7 @@ The script starts Postgres/Redis containers (auto-shifting to ports 55432 /
 56380 if another project owns the defaults), compiles and launches all six
 services, starts vite dev servers with hot reload, seeds once, and gates on
 every health endpoint before reporting ready. Frontend calls resolve to the
-gateway via `VITE_GATEWAY_URL` (default `http://localhost:8010`) automatically.
+gateway via `VITE_GATEWAY_URL` (default `http://127.0.0.1:8010`) automatically.
 
 Targeted workflows still work: `make run SVC=auth`, `make dev SVC=users`
 (air hot-reload), per-service compose files, `make contracts SVC=<name>`.
@@ -356,7 +356,7 @@ $C down                     # stop (named volume survives)
 $C down -v                  # WARNING: destroys data
 
 ./scripts/resilience-drill.sh   # kill-under-load drill with pass/fail asserts
-go run ./scripts/perf-smoke -url http://localhost:8010/healthz -n 2000 -c 20
+go run ./scripts/perf-smoke -url http://127.0.0.1:8010/healthz -n 2000 -c 20
 ```
 
 Scaling notes, measured performance baselines and shard triggers:

@@ -8,14 +8,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PG_PORT=55432 REDIS_PORT=56379
-export DATABASE_URL="postgres://app:app@localhost:${PG_PORT}/app?sslmode=disable"
-export REDIS_ADDR="localhost:${REDIS_PORT}"
+export DATABASE_URL="postgres://app:app@127.0.0.1:${PG_PORT}/app?sslmode=disable"
+export REDIS_ADDR="127.0.0.1:${REDIS_PORT}"
 export ACCESS_TOKEN_SECRET="${ACCESS_TOKEN_SECRET:-e2e-secret-change-me-16+}"
 export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
-export APP_PUBLIC_URL="http://localhost:5173"
-export RBAC_INTERNAL_URL="http://localhost:8083"
-export TRUSTED_DOMAINS="http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176"
-export UPSTREAMS='{"auth":"http://localhost:8081","users":"http://localhost:8082","rbac":"http://localhost:8083","worker":"http://localhost:8084"}'
+export APP_PUBLIC_URL="http://127.0.0.1:5173"
+export RBAC_INTERNAL_URL="http://127.0.0.1:8083"
+export TRUSTED_DOMAINS="http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176"
+export UPSTREAMS='{"auth":"http://127.0.0.1:8081","users":"http://127.0.0.1:8082","rbac":"http://127.0.0.1:8083","worker":"http://127.0.0.1:8084"}'
+export VITE_GATEWAY_URL="http://127.0.0.1:8000"
 export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-admin-password-1}"
 
 down() {
@@ -53,10 +54,10 @@ ci)
 
   for port in 8081 8082 8083 8084 8000; do
     for i in $(seq 1 40); do
-      curl -sf "http://localhost:${port}/healthz" >/dev/null && break
+      curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null && break
       sleep 0.5
     done
-    curl -sf "http://localhost:${port}/healthz" >/dev/null || { echo "service on :${port} never became healthy"; exit 1; }
+    curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null || { echo "service on :${port} never became healthy"; exit 1; }
   done
 
   pnpm build
@@ -66,7 +67,7 @@ ci)
   pnpm --filter web-admin-roles exec vite preview --port 5176 --strictPort &
   for port in 5173 5174 5175 5176; do
     for i in $(seq 1 40); do
-      curl -sf "http://localhost:${port}/" >/dev/null && break
+      curl -sf "http://127.0.0.1:${port}/" >/dev/null && break
       sleep 0.5
     done
   done
@@ -97,7 +98,7 @@ up)
   PORT=8084 tmp/e2e/worker.exe &
   PORT=8000 tmp/e2e/gateway.exe &
   for port in 8081 8082 8083 8084 8000; do
-    until curl -sf "http://localhost:${port}/healthz" >/dev/null; do sleep 0.5; done
+    until curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null; do sleep 0.5; done
   done
 
   pnpm build
@@ -106,7 +107,7 @@ up)
   pnpm --filter web-admin-users exec vite preview --port 5175 --strictPort &
   pnpm --filter web-admin-roles exec vite preview --port 5176 --strictPort &
   for port in 5173 5174 5175 5176; do
-    until curl -sf "http://localhost:${port}/" >/dev/null; do sleep 0.5; done
+    until curl -sf "http://127.0.0.1:${port}/" >/dev/null; do sleep 0.5; done
   done
 
   echo "mesh is up — run: E2E_ADMIN_EMAIL=admin@example.local E2E_ADMIN_PASSWORD=$E2E_ADMIN_PASSWORD pnpm e2e"

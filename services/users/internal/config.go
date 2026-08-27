@@ -7,7 +7,7 @@ type Config struct {
 	LogLevel           string        `env:"LOG_LEVEL" envDefault:"info"`
 	SlowQueryThreshold time.Duration `env:"SLOW_QUERY_THRESHOLD" envDefault:"500ms"`
 	DatabaseURL        string        `env:"DATABASE_URL,required"`
-	RedisAddr          string        `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	RedisAddr          string        `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
 	InternalSecret     string        `env:"INTERNAL_SECRET,required"`
 }
 

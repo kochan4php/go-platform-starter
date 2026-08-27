@@ -10,7 +10,7 @@ import { defineConfig } from "vite";
 // this expression as () => EXPR and calls .then() on the result — so EXPR
 // must resolve to the remoteEntry.js URL.
 const remoteEntry = (name: string, port: number) =>
-  `Promise.resolve((window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://localhost:${port}/assets/remoteEntry.js')`;
+  `Promise.resolve((window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://127.0.0.1:${port}/assets/remoteEntry.js')`;
 
 // Development runs WITHOUT federation: remote pages resolve straight to
 // workspace sources through aliases, giving instant HMR across apps. The
@@ -29,6 +29,8 @@ const devAliases = {
 };
 
 export default defineConfig({
+  server: { host: "127.0.0.1" },
+  preview: { host: "127.0.0.1" },
   plugins: [
     react(),
     tailwindcss(),

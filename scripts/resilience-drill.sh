@@ -31,8 +31,8 @@ mkdir -p tmp/drill
 for svc in auth gateway; do go build -o "tmp/drill/${svc}" "./services/${svc}"; done
 go build -o tmp/drill/perf-smoke ./scripts/perf-smoke
 
-export DRILL_DSN="postgres://app:app@localhost:55433/app?sslmode=disable"
-export DRILL_REDIS="localhost:55434"
+export DRILL_DSN="postgres://app:app@127.0.0.1:55433/app?sslmode=disable"
+export DRILL_REDIS="127.0.0.1:55434"
 DATABASE_URL="$DRILL_DSN" REDIS_ADDR="$DRILL_REDIS" \
   ACCESS_TOKEN_SECRET="drill-secret-change-me-16+" INTERNAL_SECRET="drill-internal" \
   ./tmp/drill/auth -migrate >/dev/null 2>&1
@@ -43,33 +43,33 @@ DATABASE_URL="$DRILL_DSN" REDIS_ADDR="$DRILL_REDIS" \
 start_auth() {
   DATABASE_URL="$DRILL_DSN" REDIS_ADDR="$DRILL_REDIS" \
     ACCESS_TOKEN_SECRET="drill-secret-change-me-16+" INTERNAL_SECRET="drill-internal" \
-    APP_PUBLIC_URL="http://localhost:5173" PORT="$AUTH_PORT" ./tmp/drill/auth >>tmp/drill/auth.log 2>&1 &
+    APP_PUBLIC_URL="http://127.0.0.1:5173" PORT="$AUTH_PORT" ./tmp/drill/auth >>tmp/drill/auth.log 2>&1 &
   AUTH_PID=$!
 }
 start_auth
 DATABASE_URL="$DRILL_DSN" REDIS_ADDR="$DRILL_REDIS" \
   ACCESS_TOKEN_SECRET="drill-secret-change-me-16+" INTERNAL_SECRET="drill-internal" \
-  PORT="$GW_PORT" UPSTREAMS="{\"auth\":\"http://localhost:${AUTH_PORT}\"}" \
+  PORT="$GW_PORT" UPSTREAMS="{\"auth\":\"http://127.0.0.1:${AUTH_PORT}\"}" \
   ./tmp/drill/gateway >tmp/drill/gw.log 2>&1 &
 GW_PID=$!
 
 for port in "$AUTH_PORT" "$GW_PORT"; do
   ok=0
   for i in $(seq 1 40); do
-    if curl -sf "http://localhost:${port}/healthz" >/dev/null; then ok=1; break; fi
+    if curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null; then ok=1; break; fi
     sleep 0.5
   done
   [ "$ok" = "1" ] || { echo "FAIL: service :${port} never healthy"; exit 1; }
 done
 
-TOKEN=$(curl -sf -X POST http://localhost:${GW_PORT}/api/v1/auth/login \
+TOKEN=$(curl -sf -X POST http://127.0.0.1:${GW_PORT}/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@example.local","password":"'"$E2E_ADMIN_PASSWORD"'"}' \
   | sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p')
 [ -n "$TOKEN" ] || { echo "FAIL: login failed"; exit 1; }
 
 echo "== steady authenticated load through gateway =="
-./tmp/drill/perf-smoke -url http://localhost:${GW_PORT}/api/v1/auth/sessions \
+./tmp/drill/perf-smoke -url http://127.0.0.1:${GW_PORT}/api/v1/auth/sessions \
   -token "$TOKEN" -n 2000 -c 5 > tmp/drill/load-before.log 2>&1 &
 LOAD_PID=$!
 sleep 2
@@ -78,7 +78,7 @@ echo "== killing auth mid-load =="
 kill -9 "$AUTH_PID" 2>/dev/null || true
 sleep 1
 DEGRADED_CODE=$(curl -s -o tmp/drill/degraded-body.json -w "%{http_code}" \
-  http://localhost:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || echo "curl-failed")
+  http://127.0.0.1:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || echo "curl-failed")
 kill "$LOAD_PID" 2>/dev/null || true
 echo "degraded response code: $DEGRADED_CODE"
 grep -q '"success":false' tmp/drill/degraded-body.json \
@@ -90,7 +90,7 @@ start_auth
 ok=0
 for i in $(seq 1 60); do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-    http://localhost:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || true)
+    http://127.0.0.1:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || true)
   if [ "$CODE" = "200" ]; then ok=1; break; fi
   sleep 0.5
 done

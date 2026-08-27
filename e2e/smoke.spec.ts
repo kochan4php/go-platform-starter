@@ -17,6 +17,11 @@ test("login → admin table → logout", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/users/);
   await expect(page.getByRole("heading", { name: /Users \(\d+\)/ })).toBeVisible({ timeout: 15_000 });
 
+  // The refresh cookie must restore the in-memory session on a direct route reload.
+  await page.reload();
+  await expect(page).toHaveURL(/\/admin\/users/);
+  await expect(page.getByRole("heading", { name: /Users \(\d+\)/ })).toBeVisible({ timeout: 15_000 });
+
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
 

@@ -15,9 +15,9 @@
 # with the lab stack) and seeds roles + a bootstrap admin idempotently.
 #
 # Access points once healthy:
-#   shell        http://localhost:5173      (vite dev, hot reload)
+#   shell        http://127.0.0.1:5173      (vite dev, hot reload)
 #   remotes      :5174 web-auth · :5175 admin-users · :5176 admin-roles
-#   gateway      http://localhost:8000      (/docs for the aggregate spec)
+#   gateway      http://127.0.0.1:8010      (/docs for the aggregate spec)
 #   services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
 #   admin login  admin@example.local / admin-bootstrap-pw
 #
@@ -129,8 +129,9 @@ export DATABASE_URL="postgres://app:app@127.0.0.1:${LAB_PG_PORT}/app?sslmode=dis
 export REDIS_ADDR="127.0.0.1:${LAB_REDIS_PORT}"
 export ACCESS_TOKEN_SECRET="${ACCESS_TOKEN_SECRET:-dev-secret-change-me-16+}"
 export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
-export APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://localhost:5173}"
+export APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://127.0.0.1:5173}"
 export RBAC_INTERNAL_URL="${RBAC_INTERNAL_URL:-http://127.0.0.1:8083}"
+export TRUSTED_DOMAINS="${TRUSTED_DOMAINS:-http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176}"
 export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}"
 # Vite reads this at request time; without it the apps would fall back to
 # same-origin and miss the gateway listening on its own dev port.
@@ -233,7 +234,7 @@ launch_gateway() {
 
 launch_web() {
   local name="$1" port="$2"
-  (cd "$ROOT/apps/$name" && $PNPM exec vite --port "$port" --strictPort > "$LOG_DIR/$name.log" 2>&1) &
+  (cd "$ROOT/apps/$name" && $PNPM exec vite --host 127.0.0.1 --port "$port" --strictPort > "$LOG_DIR/$name.log" 2>&1) &
   PIDS+=($!)
   log "web app $name -> :$port"
 }
@@ -254,7 +255,7 @@ log "waiting for every endpoint to report healthy"
 for url in \
   http://127.0.0.1:8081/healthz http://127.0.0.1:8082/healthz http://127.0.0.1:8083/healthz \
   http://127.0.0.1:8084/healthz http://127.0.0.1:8085/healthz "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" \
-  http://localhost:5173/ http://localhost:5174/; do
+  http://127.0.0.1:5173/ http://127.0.0.1:5174/; do
   ok=0
   for _ in $(seq 1 60); do
     curl -sf -o /dev/null "$url" && { ok=1; break; }
@@ -264,11 +265,11 @@ for url in \
 done
 
 log "everything is up"
-cat <<'SUMMARY'
+cat <<SUMMARY
 
-  Shell        http://localhost:5173        (hot reload)
+  Shell        http://127.0.0.1:5173        (hot reload)
   Remotes      :5174 auth · :5175 users · :5176 roles
-  Gateway      http://localhost:${LAB_GATEWAY_PORT}/docs   (aggregate API reference)
+  Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}/docs   (aggregate API reference)
   Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
   Admin login  admin@example.local / admin-bootstrap-pw
   Logs         tmp/dev/logs/<name>.log      (or: ./scripts/dev-all.sh logs [name])

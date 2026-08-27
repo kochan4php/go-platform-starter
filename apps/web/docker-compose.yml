@@ -5,6 +5,7 @@ services:
       dockerfile: apps/web/Dockerfile
     ports: ["5173:80"]
     environment:
-      REMOTE_AUTH_URL: http://localhost:5174/assets/remoteEntry.js
-      REMOTE_ADMIN_USERS_URL: http://localhost:5175/assets/remoteEntry.js
-      REMOTE_ADMIN_ROLES_URL: http://localhost:5176/assets/remoteEntry.js
+      GATEWAY_URL: http://127.0.0.1:8000
+      REMOTE_AUTH_URL: http://127.0.0.1:5174/assets/remoteEntry.js
+      REMOTE_ADMIN_USERS_URL: http://127.0.0.1:5175/assets/remoteEntry.js
+      REMOTE_ADMIN_ROLES_URL: http://127.0.0.1:5176/assets/remoteEntry.js

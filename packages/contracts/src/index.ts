@@ -50,7 +50,7 @@ export interface ApiClient {
 }
 
 export interface CreateClientOptions {
-  /** Gateway origin, e.g. http://localhost:8000 */
+  /** Gateway origin, e.g. http://127.0.0.1:8000 */
   baseUrl?: string;
   /** Called when silent refresh failed — the session is truly over. */
   onSessionExpired?: () => void;
@@ -62,8 +62,8 @@ export interface CreateClientOptions {
  *   2. window.__STARTER_GATEWAY_URL__ runtime override (rendered by the
  *      host's /config.js so one image serves every environment),
  *   3. same-origin (production edge serves shell + API on one domain),
- *   4. http://localhost:8000 bare dev fallback.
- * NEVER bake an absolute localhost URL into a production bundle — the
+ *   4. http://127.0.0.1:8000 bare dev fallback.
+ * NEVER bake an absolute loopback URL into a production bundle — the
  * browser would call the visitor's own machine.
  */
 declare global {
@@ -83,7 +83,7 @@ export const GATEWAY_URL = (() => {
     if (runtime) return runtime.replace(/\/$/, "");
     if (/^https?:$/.test(window.location?.protocol ?? "")) return window.location.origin;
   }
-  return "http://localhost:8000";
+  return "http://127.0.0.1:8000";
 })();
 
 /**

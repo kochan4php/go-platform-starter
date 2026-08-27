@@ -5,11 +5,11 @@ import ()
 type Config struct {
 	Port              string `env:"PORT" envDefault:"8080"`
 	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
-	RedisAddr         string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
 	InternalSecret    string `env:"INTERNAL_SECRET,required"`
-	TrustedDomains    string `env:"TRUSTED_DOMAINS" envDefault:"http://localhost:5173,http://localhost:5174"`
-	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://localhost:8081\",\"users\":\"http://localhost:8082\",\"rbac\":\"http://localhost:8083\",\"worker\":\"http://localhost:8084\"}"`
+	TrustedDomains    string `env:"TRUSTED_DOMAINS" envDefault:"http://127.0.0.1:5173,http://127.0.0.1:5174"`
+	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://127.0.0.1:8081\",\"users\":\"http://127.0.0.1:8082\",\"rbac\":\"http://127.0.0.1:8083\",\"worker\":\"http://127.0.0.1:8084\"}"`
 	RatePerMinute     int    `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"300"`
 	SlowRequestMs     int    `env:"SLOW_REQUEST_THRESHOLD_MS" envDefault:"500"`
 	// WebSocket upstream (realtime). When set, the gateway proxies /ws to it

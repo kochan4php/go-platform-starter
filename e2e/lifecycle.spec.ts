@@ -46,12 +46,12 @@ test("full admin user lifecycle", async ({ page }) => {
 
   // 3. old password must now be rejected by login
   await page.request
-    .post("http://localhost:8010/api/v1/auth/login", {
+    .post("http://127.0.0.1:8010/api/v1/auth/login", {
       data: { email, password: "lifecycle-pass-1" },
     })
     .then((r) => expect(r.status()).toBe(401));
   await page.request
-    .post("http://localhost:8010/api/v1/auth/login", {
+    .post("http://127.0.0.1:8010/api/v1/auth/login", {
       data: { email, password: "renovated-pass-9" },
     })
     .then((r) => expect(r.status()).toBe(200));
