@@ -57,7 +57,11 @@ WEB_APPS=(
 MANAGED_PORTS=(8000 8081 8082 8083 8084 8085 5173 5174 5175 5176)
 
 WIN=0
-command -v powershell.exe >/dev/null 2>&1 && WIN=1
+command -v powershell.exe > /dev/null 2>&1 && WIN=1
+
+# Resolve pnpm: use it directly if on PATH, otherwise fall back to npx pnpm.
+PNPM="pnpm"
+command -v pnpm > /dev/null 2>&1 || PNPM="npx --yes pnpm"
 
 log() { printf '\033[1;36m[dev]\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m[dev] FATAL: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -121,16 +125,16 @@ LAB_PG_PORT="${LAB_PG_PORT:-55432}"
 LAB_REDIS_PORT="${LAB_REDIS_PORT:-56380}"
 LAB_GATEWAY_PORT="${LAB_GATEWAY_PORT:-8010}"
 export LAB_PG_PORT LAB_REDIS_PORT LAB_GATEWAY_PORT
-export DATABASE_URL="postgres://app:app@localhost:${LAB_PG_PORT}/app?sslmode=disable"
-export REDIS_ADDR="localhost:${LAB_REDIS_PORT}"
+export DATABASE_URL="postgres://app:app@127.0.0.1:${LAB_PG_PORT}/app?sslmode=disable"
+export REDIS_ADDR="127.0.0.1:${LAB_REDIS_PORT}"
 export ACCESS_TOKEN_SECRET="${ACCESS_TOKEN_SECRET:-dev-secret-change-me-16+}"
 export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
 export APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://localhost:5173}"
-export RBAC_INTERNAL_URL="${RBAC_INTERNAL_URL:-http://localhost:8083}"
+export RBAC_INTERNAL_URL="${RBAC_INTERNAL_URL:-http://127.0.0.1:8083}"
 export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}"
 # Vite reads this at request time; without it the apps would fall back to
 # same-origin and miss the gateway listening on its own dev port.
-export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://localhost:$LAB_GATEWAY_PORT}"
+export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://127.0.0.1:$LAB_GATEWAY_PORT}"
 
 PIDS=()
 cleanup() {
@@ -180,28 +184,48 @@ done
 log "resolving lab container host ports (pg=$LAB_PG_PORT redis=$LAB_REDIS_PORT)"
 
 log "starting infrastructure containers"
-compose_infra up -d postgres redis >/dev/null
-until compose_infra exec -T postgres pg_isready -U app >/dev/null 2>&1; do sleep 1; done
+compose_infra up -d postgres redis > /dev/null
+until compose_infra exec -T postgres pg_isready -U app > /dev/null 2>&1; do sleep 1; done
 log "infrastructure ready"
 
 mkdir -p "$ROOT/tmp/dev/bin"
 
+# Build all service binaries first (parallel build, no race yet)
+log "building service binaries"
+build_pids=()
+for spec in "${SERVICES[@]}"; do IFS='|' read -r name port dir <<< "$spec"
+  (cd "$ROOT" && go build -o "tmp/dev/bin/$name" "$dir") & build_pids+=($!)
+done
+(cd "$ROOT" && go build -o tmp/dev/bin/gateway ./services/gateway) & build_pids+=($!)
+for pid in "${build_pids[@]}"; do wait "$pid" || die "build failed (see above)"; done
+log "all binaries built"
+
+# Run DB migrations sequentially BEFORE launching any service.
+# This avoids the race where services crash (os.Exit) on migrate failure
+# before ever binding to their port, causing /healthz to time out.
+log "running migrations (sequential)"
+for spec in "${SERVICES[@]}"; do IFS='|' read -r name port dir <<< "$spec"
+  case "$name" in realtime) continue ;; esac   # realtime has no DB
+  log "  migrate: $name"
+  (cd "$ROOT" && ./tmp/dev/bin/"$name" -migrate > "$LOG_DIR/$name-migrate.log" 2>&1) \
+    || die "migration failed for $name — check $LOG_DIR/$name-migrate.log"
+done
+log "migrations done"
+
 launch_service() {
-  local name="$1" port="$2" dir="$3"
-  (cd "$ROOT" && go build -o "tmp/dev/bin/$name" "$dir")
-  (cd "$ROOT" && PORT="$port" ./tmp/dev/bin/"$name" >"$LOG_DIR/$name.log" 2>&1) &
+  local name="$1" port="$2"
+  (cd "$ROOT" && PORT="$port" ./tmp/dev/bin/"$name" > "$LOG_DIR/$name.log" 2>&1) &
   PIDS+=($!)
   log "service $name -> :$port"
 }
 
 launch_gateway() {
-  (cd "$ROOT" && go build -o tmp/dev/bin/gateway ./services/gateway)
   (
     cd "$ROOT"
     PORT="$LAB_GATEWAY_PORT" \
-    UPSTREAMS='{"auth":"http://localhost:8081","users":"http://localhost:8082","rbac":"http://localhost:8083","worker":"http://localhost:8084"}' \
-    REALTIME_UPSTREAM=http://localhost:8085 \
-    ./tmp/dev/bin/gateway >"$LOG_DIR/gateway.log" 2>&1
+    UPSTREAMS='{"auth":"http://127.0.0.1:8081","users":"http://127.0.0.1:8082","rbac":"http://127.0.0.1:8083","worker":"http://127.0.0.1:8084"}' \
+    REALTIME_UPSTREAM=http://127.0.0.1:8085 \
+    ./tmp/dev/bin/gateway > "$LOG_DIR/gateway.log" 2>&1
   ) &
   PIDS+=($!)
   log "gateway -> :$LAB_GATEWAY_PORT"
@@ -209,12 +233,12 @@ launch_gateway() {
 
 launch_web() {
   local name="$1" port="$2"
-  (cd "$ROOT/apps/$name" && pnpm exec vite --port "$port" --strictPort >"$LOG_DIR/$name.log" 2>&1) &
+  (cd "$ROOT/apps/$name" && $PNPM exec vite --port "$port" --strictPort > "$LOG_DIR/$name.log" 2>&1) &
   PIDS+=($!)
   log "web app $name -> :$port"
 }
 
-for spec in "${SERVICES[@]}"; do IFS='|' read -r name port dir <<<"$spec"; launch_service "$name" "$port" "$dir"; done
+for spec in "${SERVICES[@]}"; do IFS='|' read -r name port dir <<< "$spec"; launch_service "$name" "$port"; done
 launch_gateway
 
 if [ "$NO_SEED" = "0" ]; then
@@ -228,8 +252,8 @@ for spec in "${WEB_APPS[@]}"; do IFS='|' read -r name port <<<"$spec"; launch_we
 
 log "waiting for every endpoint to report healthy"
 for url in \
-  http://localhost:8081/healthz http://localhost:8082/healthz http://localhost:8083/healthz \
-  http://localhost:8084/healthz http://localhost:8085/healthz "http://localhost:${LAB_GATEWAY_PORT}/healthz" \
+  http://127.0.0.1:8081/healthz http://127.0.0.1:8082/healthz http://127.0.0.1:8083/healthz \
+  http://127.0.0.1:8084/healthz http://127.0.0.1:8085/healthz "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" \
   http://localhost:5173/ http://localhost:5174/; do
   ok=0
   for _ in $(seq 1 60); do
