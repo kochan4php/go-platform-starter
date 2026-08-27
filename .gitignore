@@ -26,3 +26,8 @@ playwright-report/
 
 # Windows build artifacts
 *.exe
+
+# Graphify (machine-local paths, safe to regenerate)
+graphify-out/cache
+graphify-out/.graphify_python
+graphify-out/.graphify_root
