@@ -69,6 +69,13 @@ func main() {
 	}
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
+	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if err := platform.WaitForRedis(redisCtx, rdb); err != nil {
+		redisCancel()
+		log.Error("redis boot check failed", "err", err)
+		os.Exit(1)
+	}
+	redisCancel()
 	limiter := redis_rate.NewLimiter(rdb)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
@@ -148,8 +155,8 @@ func corsHandler(trustedCSV string) func(http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Request-ID", "X-Device-ID"},
-		ExposedHeaders:   []string{"X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Request-ID", "X-Device-ID", "Idempotency-Key"},
+		ExposedHeaders:   []string{"X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "Idempotency-Replayed"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	})
@@ -191,7 +198,12 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 			}
 			res, err := limiter.Allow(r.Context(), "rl:edge:"+class+":"+clientIP(r, trusted), redis_rate.PerMinute(limit))
 			if err != nil {
-				log.Warn("edge rate limiter unavailable (fail-open)", "err", err)
+				if class == "strict" {
+					log.Error("strict edge rate limiter unavailable (fail-closed)", "err", err)
+					platform.Fail(w, http.StatusServiceUnavailable, "rate_limit_unavailable", "request protection is temporarily unavailable")
+					return
+				}
+				log.Warn("edge rate limiter unavailable (fail-open)", "class", class, "err", err)
 				next.ServeHTTP(w, r)
 				return
 			}

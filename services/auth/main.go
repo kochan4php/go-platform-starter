@@ -69,7 +69,14 @@ func main() {
 	}
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
-	pub := internal.RedisPublisher{RDB: rdb}
+	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if err := platform.WaitForRedis(redisCtx, rdb); err != nil {
+		redisCancel()
+		log.Error("redis boot check failed", "err", err)
+		os.Exit(1)
+	}
+	redisCancel()
+	pub := internal.RedisPublisher{RDB: rdb, DB: db}
 	svc := internal.NewService(db, rdb, log, *cfg, pub)
 	if cfg.RBACInternalURL != "" && cfg.InternalSecret != "" {
 		svc.UseClaimsClient(internal.NewClaimsClient(
@@ -109,6 +116,7 @@ func main() {
 				return
 			}
 			if n > 0 {
+				platform.RecordHousekeeping("auth-session-sweep", n)
 				log.Info("sessions swept", "count", n)
 			}
 		}).Start(bgCtx)

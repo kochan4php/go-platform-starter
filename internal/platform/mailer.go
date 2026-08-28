@@ -18,6 +18,15 @@ type Mailer interface {
 	Send(ctx context.Context, mail Mail) error
 }
 
+type FallbackMailer struct{ Primary, Secondary Mailer }
+
+func (m FallbackMailer) Send(ctx context.Context, mail Mail) error {
+	if err := m.Primary.Send(ctx, mail); err == nil {
+		return nil
+	}
+	return m.Secondary.Send(ctx, mail)
+}
+
 type SMTPConfig struct {
 	Driver   string `env:"MAILER_DRIVER" envDefault:"console"`
 	Host     string `env:"SMTP_HOST"`

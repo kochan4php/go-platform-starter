@@ -1988,12 +1988,14 @@ function useRealtimeUsers(enabled: boolean, onInvalidate: () => void, onActivity
     if (!token) return;
     let disposed = false;
     let retry: number | undefined;
+    let attempts = 0;
     const connect = () => {
       const url = new URL("/ws", GATEWAY_URL || window.location.origin);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       const socket = new WebSocket(url, ["jwt", token]);
       socketRef.current = socket;
       socket.addEventListener("open", () => {
+        attempts = 0;
         setConnected(true);
         socket.send(JSON.stringify({ type: "room:join", room: "lobby" }));
       });
@@ -2017,7 +2019,10 @@ function useRealtimeUsers(enabled: boolean, onInvalidate: () => void, onActivity
       });
       socket.addEventListener("close", () => {
         setConnected(false);
-        if (!disposed) retry = window.setTimeout(connect, 3_000);
+        if (!disposed) {
+          const delay = Math.min(30_000, 1_000 * 2 ** Math.min(attempts++, 5)) + Math.random() * 500;
+          retry = window.setTimeout(connect, delay);
+        }
       });
       socket.addEventListener("error", () => socket.close());
     };

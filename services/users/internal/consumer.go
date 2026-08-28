@@ -63,7 +63,7 @@ func ConsumeUserEvents(ctx context.Context, rdb *redis.Client, db *gorm.DB, log 
 					log.Warn("invalid user event ignored", "err", decodeErr)
 					_ = rdb.XAdd(ctx, &redis.XAddArgs{Stream: stream + ":dlq", Values: map[string]any{
 						"reason": decodeErr.Error(), "orig_id": msg.ID,
-					}}).Err()
+					}, MaxLen: 10_000, Approx: true}).Err()
 					rdb.XAck(ctx, stream, group, msg.ID)
 					continue
 				}

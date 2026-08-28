@@ -57,7 +57,14 @@ func main() {
 	}
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
-	svc := internal.NewService(db, rdb, log, internal.RedisPublisher{RDB: rdb})
+	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if err := platform.WaitForRedis(redisCtx, rdb); err != nil {
+		redisCancel()
+		log.Error("redis boot check failed", "err", err)
+		os.Exit(1)
+	}
+	redisCancel()
+	svc := internal.NewService(db, rdb, log, internal.RedisPublisher{RDB: rdb, DB: db})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -71,6 +78,7 @@ func main() {
 				return
 			}
 			if n > 0 {
+				platform.RecordHousekeeping("users-profile-purge", n)
 				log.Info("profiles purged", "count", n)
 			}
 		}).Start(ctx)

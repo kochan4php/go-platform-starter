@@ -14,9 +14,13 @@ name: go-platform-${STACK_ENV:-prod}
 
 x-service-defaults: &svc
   restart: unless-stopped
+  stop_grace_period: 30s
   logging:
     driver: json-file
     options: { max-size: "10m", max-file: "3" }
+  deploy:
+    resources:
+      limits: { cpus: "1.0", memory: 512M }
 
 x-go-env: &go-env
   DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/app?sslmode=disable
@@ -26,6 +30,8 @@ x-go-env: &go-env
   STREAM_SIGNING_KEYS: ${STREAM_SIGNING_KEYS:?set STREAM_SIGNING_KEYS}
   STREAM_ENCRYPTION_KEYS: ${STREAM_ENCRYPTION_KEYS:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  APP_VERSION: ${APP_VERSION:-dev}
+  GIT_COMMIT: ${GIT_COMMIT:-unknown}
   GOMEMLIMIT: ${GOMEMLIMIT:-200MiB}
   GOGC: ${GOGC:-100}
   DB_PREPARE_STMT: ${DB_PREPARE_STMT:-true}
@@ -33,6 +39,10 @@ x-go-env: &go-env
   DB_MAX_IDLE_CONNS: ${DB_MAX_IDLE_CONNS:-8}
   DB_CONN_MAX_LIFETIME: ${DB_CONN_MAX_LIFETIME:-30m}
   DB_CONN_MAX_IDLE_TIME: ${DB_CONN_MAX_IDLE_TIME:-5m}
+  DB_BOOT_RETRY_TIMEOUT: ${DB_BOOT_RETRY_TIMEOUT:-30s}
+  DB_STATEMENT_TIMEOUT: ${DB_STATEMENT_TIMEOUT:-15s}
+  DB_IDLE_TX_TIMEOUT: ${DB_IDLE_TX_TIMEOUT:-30s}
+  STREAM_MAXLEN: ${STREAM_MAXLEN:-100000}
   SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-20s}
 
 services:
@@ -71,6 +81,7 @@ services:
       REDIS_REALTIME_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
       REDIS_GATEWAY_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
       REDIS_DLQ_ADMIN_PASSWORD: ${REDIS_DLQ_ADMIN_PASSWORD:?set REDIS_DLQ_ADMIN_PASSWORD}
+      REDIS_BACKUP_PASSWORD: ${REDIS_BACKUP_PASSWORD:?set REDIS_BACKUP_PASSWORD}
     command:
       - /bin/sh
       - -ec
@@ -78,13 +89,14 @@ services:
         umask 077
         printf '%s\n' \
           'user default off' \
-          "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* &force-logout +get +set +getdel +del +incr +expire +setnx +xadd +publish +eval +evalsha +time +ping" \
+          "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* ~webhook.jobs* &force-logout +get +set +getdel +del +incr +expire +setnx +xadd +publish +eval +evalsha +time +ping" \
           "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +set +setnx +publish +ping" \
           "user rbac on >$$REDIS_RBAC_PASSWORD resetkeys resetchannels ~claims:* ~audit.events* &force-logout +set +xadd +publish +ping" \
-          "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +setnx +del +incr +expire +ping" \
+          "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~webhook.jobs* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +setnx +del +incr +expire +ping" \
           "user realtime on >$$REDIS_REALTIME_PASSWORD resetkeys resetchannels &force-logout +subscribe +unsubscribe +psubscribe +punsubscribe +ping" \
           "user gateway on >$$REDIS_GATEWAY_PASSWORD resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping" \
           "user dlq-admin on >$$REDIS_DLQ_ADMIN_PASSWORD resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping" \
+          "user backup on >$$REDIS_BACKUP_PASSWORD resetkeys resetchannels ~* +sync +psync +replconf +ping" \
           > /data/users.acl
         exec redis-server --appendonly yes --aclfile /data/users.acl --io-threads 4 --io-threads-do-reads yes --lazyfree-lazy-eviction yes --lazyfree-lazy-expire yes
     healthcheck:
@@ -155,6 +167,13 @@ services:
       REDIS_PASSWORD: ${REDIS_WORKER_PASSWORD:?set REDIS_WORKER_PASSWORD}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
       WORKER_XREAD_COUNT: ${WORKER_XREAD_COUNT:-100}
+      WORKER_MIN_IDLE: ${WORKER_MIN_IDLE:-30s}
+      DLQ_MAX_DEPTH: ${DLQ_MAX_DEPTH:-10000}
+      MAIL_FALLBACK_HOST: ${MAIL_FALLBACK_HOST:-}
+      MAIL_FALLBACK_PORT: ${MAIL_FALLBACK_PORT:-587}
+      MAIL_FALLBACK_USER: ${MAIL_FALLBACK_USER:-}
+      MAIL_FALLBACK_PASS: ${MAIL_FALLBACK_PASS:-}
+      WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -187,11 +206,11 @@ services:
       REDIS_USERNAME: gateway
       REDIS_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
     depends_on:
-      - auth
-      - users
-      - rbac
-      - worker
-      - realtime
+      auth: { condition: service_healthy }
+      users: { condition: service_healthy }
+      rbac: { condition: service_healthy }
+      worker: { condition: service_healthy }
+      realtime: { condition: service_healthy }
 
   # ---- web ------------------------------------------------------------------
   web:
@@ -242,11 +261,41 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
-      - gateway
-      - web
-      - web-auth
-      - web-admin-users
-      - web-admin-roles
+      gateway: { condition: service_healthy }
+      web: { condition: service_healthy }
+      web-auth: { condition: service_healthy }
+      web-admin-users: { condition: service_healthy }
+      web-admin-roles: { condition: service_healthy }
+
+  postgres-backup:
+    image: postgres:17-alpine
+    <<: *svc
+    environment:
+      DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/app?sslmode=disable
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ../scripts:/scripts:ro
+      - backups:/backups
+    entrypoint: ["/bin/sh", "-ec"]
+    command: ["while true; do /scripts/backup.sh; sleep $${BACKUP_INTERVAL_SECONDS:-86400}; done"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  redis-backup:
+    image: redis:7-alpine
+    <<: *svc
+    environment:
+      REDISCLI_AUTH: ${REDIS_BACKUP_PASSWORD:?set REDIS_BACKUP_PASSWORD}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - backups:/backups
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - while true; do redis-cli -h redis --user backup --rdb "/backups/redis-$$(date -u +%Y%m%dT%H%M%SZ).rdb"; find /backups -name 'redis-*.rdb' -mtime +$${BACKUP_RETENTION_DAYS} -delete; sleep $${BACKUP_INTERVAL_SECONDS:-86400}; done
+    depends_on:
+      redis: { condition: service_healthy }
 
 volumes:
   pgdata:
+  backups:

@@ -6,8 +6,19 @@
 # Shell: http://127.0.0.1:5173 · API docs: http://127.0.0.1:8010/docs
 name: go-platform-lab
 
+x-runtime: &runtime
+  restart: unless-stopped
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+  deploy:
+    resources:
+      limits: { cpus: "1.0", memory: 512M }
+
 services:
   postgres:
+    <<: *runtime
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: app
@@ -25,6 +36,7 @@ services:
       start_interval: 1s
 
   redis:
+    <<: *runtime
     image: redis:7-alpine
     ports: ["${LAB_REDIS_PORT:-56380}:6379"]
     command: ["redis-server", "--appendonly", "yes", "--io-threads", "4", "--io-threads-do-reads", "yes", "--lazyfree-lazy-eviction", "yes", "--lazyfree-lazy-expire", "yes"]
@@ -36,6 +48,7 @@ services:
       start_interval: 1s
 
   auth:
+    <<: *runtime
     build: { context: .., dockerfile: services/auth/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -51,6 +64,7 @@ services:
       redis: { condition: service_healthy }
 
   users:
+    <<: *runtime
     build: { context: .., dockerfile: services/users/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -61,6 +75,7 @@ services:
       redis: { condition: service_healthy }
 
   rbac:
+    <<: *runtime
     build: { context: .., dockerfile: services/rbac/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -71,6 +86,7 @@ services:
       redis: { condition: service_healthy }
 
   worker:
+    <<: *runtime
     build: { context: .., dockerfile: services/worker/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -82,6 +98,7 @@ services:
       redis: { condition: service_healthy }
 
   realtime:
+    <<: *runtime
     build: { context: .., dockerfile: services/realtime/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -91,6 +108,7 @@ services:
       redis: { condition: service_healthy }
 
   gateway:
+    <<: *runtime
     build: { context: .., dockerfile: services/gateway/Dockerfile }
     env_file: [./go.env]
     environment:
@@ -100,12 +118,13 @@ services:
     # Host side shifts automatically when another project owns 8000.
     ports: ["${LAB_GATEWAY_PORT:-8010}:8000"]
     depends_on:
-      - auth
-      - users
-      - rbac
-      - worker
+      auth: { condition: service_healthy }
+      users: { condition: service_healthy }
+      rbac: { condition: service_healthy }
+      worker: { condition: service_healthy }
 
   web:
+    <<: *runtime
     build: { context: .., dockerfile: apps/web/Dockerfile }
     ports: ["5173:8080"]
     environment:
@@ -114,14 +133,17 @@ services:
       REMOTE_ADMIN_ROLES_URL: http://127.0.0.1:5176/assets/remoteEntry.js
 
   web-auth:
+    <<: *runtime
     build: { context: .., dockerfile: apps/web-auth/Dockerfile }
     ports: ["5174:8080"]
 
   web-admin-users:
+    <<: *runtime
     build: { context: .., dockerfile: apps/web-admin-users/Dockerfile }
     ports: ["5175:8080"]
 
   web-admin-roles:
+    <<: *runtime
     build: { context: .., dockerfile: apps/web-admin-roles/Dockerfile }
     ports: ["5176:8080"]
 

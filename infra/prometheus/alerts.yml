@@ -1,0 +1,31 @@
+groups:
+  - name: platform-reliability
+    rules:
+      - alert: PlatformErrorRateAnomaly
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 0.001))
+          > 3 * (sum(rate(http_requests_total{status=~"5.."}[1h])) / clamp_min(sum(rate(http_requests_total[1h])), 0.001))
+          and sum(rate(http_requests_total{status=~"5.."}[5m])) > 0.1
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "Platform 5xx rate is anomalous" }
+      - alert: WorkerDLQNotEmpty
+        expr: worker_dlq_depth > 0
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: "Worker dead-letter queue contains messages" }
+      - alert: MailQueueBacklog
+        expr: worker_stream_lag{stream="mail.jobs"} > 100
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "Mail queue is not draining" }
+      - alert: HostDiskSpaceLow
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 0.15
+        for: 15m
+        labels: { severity: critical }
+        annotations: { summary: "Host disk has less than 15% free" }
+      - alert: CertificateExpiresSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 14 * 24 * 3600
+        for: 1h
+        labels: { severity: warning }
+        annotations: { summary: "Public TLS certificate expires within 14 days" }

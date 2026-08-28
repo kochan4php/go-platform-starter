@@ -5,8 +5,21 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 )
+
+var housekeepingRows = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "housekeeping_rows_total", Help: "rows removed by retention and cleanup jobs",
+}, []string{"job"})
+
+func init() { prometheus.MustRegister(housekeepingRows) }
+
+func RecordHousekeeping(name string, rows int64) {
+	if rows > 0 {
+		housekeepingRows.WithLabelValues(name).Add(float64(rows))
+	}
+}
 
 // Scheduler runs named housekeeping jobs on a ticker. Across replicas only the
 // redis-lock holder executes each tick; the lock TTL covers two intervals so a

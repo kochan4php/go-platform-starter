@@ -546,76 +546,76 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Reliability & Resilience
 
-- [ ] 🔧 G1. Circuit breaker gateway→upstream (gobreaker)
-- [ ] 🔧 G2. Retry exponential backoff + jitter gateway→upstream (GET)
-- [ ] 🔧 G3. Health-based upstream ejection (outlier detection)
-- [ ] 🔧 G4. Multiple upstream per service (failover)
-- [ ] 🔧 G5. Request hedging GET kritis (duplicate setelah 200ms)
-- [ ] 🔧 G6. Timeout budget per-route di spec (x-timeout)
-- [ ] 🔧 G7. Deadline propagation context semua downstream
+- [x] 🔧 G1. Circuit breaker gateway→upstream (gobreaker)
+- [x] 🔧 G2. Retry exponential backoff + jitter gateway→upstream (GET)
+- [x] 🔧 G3. Health-based upstream ejection (outlier detection)
+- [x] 🔧 G4. Multiple upstream per service (failover)
+- [x] 🔧 G5. Request hedging GET kritis (duplicate setelah 200ms)
+- [x] 🔧 G6. Timeout budget per-route di spec (x-timeout)
+- [x] 🔧 G7. Deadline propagation context semua downstream
 - [ ] 🧭 G8. Redis Sentinel/Cluster mode
-- [ ] 🔧 G9. Redis read replica untuk cache get
-- [ ] 🔧 G10. Circuit breaker saat Redis down (fail static)
-- [ ] 🔧 G11. Postgres connection retry backoff di boot
-- [ ] 🔧 G12. Statement timeout global via config
-- [ ] 🔧 G13. Idle-in-transaction killer
-- [ ] 🔧 G14. Stream maxlen + approximate trimming
-- [ ] 🔧 G15. Consumer idle timeout → XAUTOCLAIM config
-- [ ] 🔧 G16. DLQ replay CLI (worker -replay)
-- [ ] 🔧 G17. DLQ alert metric saat ada isi
-- [ ] 🔧 G18. DLQ max depth + drop oldest policy
-- [ ] 🔧 G19. Poison pill handling (skip setelah N gagal)
-- [ ] 🔧 G20. Worker graceful drain mid-batch
-- [ ] 🔧 G21. Worker checkpoint progress per-batch
-- [ ] 🔧 G22. Idempotency table processed message IDs (persist)
-- [ ] 🔧 G23. Outbox pattern audit event
-- [ ] 🔧 G24. Event schema versioning (v field)
-- [ ] 🔧 G25. Realtime server ping/pong interval + dead connection cleanup
-- [ ] 🔧 G26. Realtime room capacity + overflow policy
-- [ ] 🔧 G27. FE realtime reconnect backoff + jitter
-- [ ] 🔧 G28. Realtime message ordering per-connection
-- [ ] 🔧 G29. Gateway graceful shutdown drain koneksi aktif
-- [ ] 🔧 G30. Gateway max conns per upstream (semaphore)
-- [ ] 🔧 G31. Compose restart policy + depends healthcheck semua
-- [ ] 🔧 G32. Compose resource limits semua container
-- [ ] 🔧 G33. Compose log rotation config semua
-- [ ] 🔧 G34. PodDisruptionBudget semua service
-- [ ] 🔧 G35. K8s topology spread constraints
-- [ ] 🔧 G36. K8s terminationGracePeriodSeconds tuning
-- [ ] 🔧 G37. K8s preStop hook sleep zero-downtime
-- [ ] 🔧 G38. K8s startupProbe service lambat
-- [ ] 🔧 G39. K8s priorityClassName gateway
-- [ ] 🔧 G40. pg_dump backup cron + retention + restore test
-- [ ] 🔧 G41. Redis RDB/AOF backup + restore docs
-- [ ] 🔧 G42. DR runbook (RTO/RPO target)
-- [ ] 🔧 G43. Infra-as-code full rebuild
-- [ ] 🔧 G44. Chaos: kill pod otomatis staging
-- [ ] 🔧 G45. Chaos: network latency injection
-- [ ] 🔧 G46. Circuit breaker per-dependency (redis/pg/mail)
-- [ ] 🔧 G47. Mail fallback provider kedua
-- [ ] 🔧 G48. Mail queue depth monitoring
-- [ ] 🔧 G49. Rate limit fail-open vs fail-close per-class
-- [ ] 🔧 G50. Gateway stale-while-error (cached GET saat upstream down)
-- [ ] 🔧 G51. Health endpoint: versi + commit info
-- [ ] 🔧 G52. Health: dependency latency breakdown
-- [ ] 🔧 G53. Startup fail-fast validation env + dependensi
-- [ ] 🔧 G54. Config hot reload subset (log level via SIGHUP)
-- [ ] 🔧 G55. Feature flag evaluator sederhana
-- [ ] 🔧 G56. Session cleanup job + metric rows deleted
-- [ ] 🔧 G57. Audit purge job retention config
-- [ ] 🔧 G58. Presence TTL cleanup stale session count
-- [ ] 🔧 G59. Rate limit counter repair setelah redis failover
-- [ ] 🔧 G60. Idempotency-Key middleware POST penting
-- [ ] 🔧 G61. Webhook delivery retry (infra worker siap)
-- [ ] 🔧 G62. Multi-region readiness checklist
-- [ ] 🔧 G63. Zero-downtime migration verification CI
-- [ ] 🔧 G64. Rollback migration otomatis saat health gate gagal
-- [ ] 🔧 G65. Deploy canary weight routing di edge
-- [ ] 🔧 G66. Deploy blue-green compose switch
-- [ ] 🔧 G67. Error rate anomaly detection
-- [ ] 🔧 G68. Auto-restart container OOM (compose policy)
-- [ ] 🔧 G69. Disk space monitoring + alert
-- [ ] 🔧 G70. Certificate expiry monitoring + alert
+- [x] 🔧 G9. Redis read replica untuk cache get
+- [x] 🔧 G10. Circuit breaker saat Redis down (fail static)
+- [x] 🔧 G11. Postgres connection retry backoff di boot
+- [x] 🔧 G12. Statement timeout global via config
+- [x] 🔧 G13. Idle-in-transaction killer
+- [x] 🔧 G14. Stream maxlen + approximate trimming
+- [x] 🔧 G15. Consumer idle timeout → XAUTOCLAIM config
+- [x] 🔧 G16. DLQ replay CLI (worker -replay)
+- [x] 🔧 G17. DLQ alert metric saat ada isi
+- [x] 🔧 G18. DLQ max depth + drop oldest policy
+- [x] 🔧 G19. Poison pill handling (skip setelah N gagal)
+- [x] 🔧 G20. Worker graceful drain mid-batch
+- [x] 🔧 G21. Worker checkpoint progress per-batch
+- [x] 🔧 G22. Idempotency table processed message IDs (persist)
+- [x] 🔧 G23. Outbox pattern audit event
+- [x] 🔧 G24. Event schema versioning (v field)
+- [x] 🔧 G25. Realtime server ping/pong interval + dead connection cleanup
+- [x] 🔧 G26. Realtime room capacity + overflow policy
+- [x] 🔧 G27. FE realtime reconnect backoff + jitter
+- [x] 🔧 G28. Realtime message ordering per-connection
+- [x] 🔧 G29. Gateway graceful shutdown drain koneksi aktif
+- [x] 🔧 G30. Gateway max conns per upstream (semaphore)
+- [x] 🔧 G31. Compose restart policy + depends healthcheck semua
+- [x] 🔧 G32. Compose resource limits semua container
+- [x] 🔧 G33. Compose log rotation config semua
+- [x] 🔧 G34. PodDisruptionBudget semua service
+- [x] 🔧 G35. K8s topology spread constraints
+- [x] 🔧 G36. K8s terminationGracePeriodSeconds tuning
+- [x] 🔧 G37. K8s preStop hook sleep zero-downtime
+- [x] 🔧 G38. K8s startupProbe service lambat
+- [x] 🔧 G39. K8s priorityClassName gateway
+- [x] 🔧 G40. pg_dump backup cron + retention + restore test
+- [x] 🔧 G41. Redis RDB/AOF backup + restore docs
+- [x] 🔧 G42. DR runbook (RTO/RPO target)
+- [x] 🔧 G43. Infra-as-code full rebuild
+- [x] 🔧 G44. Chaos: kill pod otomatis staging
+- [x] 🔧 G45. Chaos: network latency injection
+- [x] 🔧 G46. Circuit breaker per-dependency (redis/pg/mail)
+- [x] 🔧 G47. Mail fallback provider kedua
+- [x] 🔧 G48. Mail queue depth monitoring
+- [x] 🔧 G49. Rate limit fail-open vs fail-close per-class
+- [x] 🔧 G50. Gateway stale-while-error (cached GET saat upstream down)
+- [x] 🔧 G51. Health endpoint: versi + commit info
+- [x] 🔧 G52. Health: dependency latency breakdown
+- [x] 🔧 G53. Startup fail-fast validation env + dependensi
+- [x] 🔧 G54. Config hot reload subset (log level via SIGHUP)
+- [x] 🔧 G55. Feature flag evaluator sederhana
+- [x] 🔧 G56. Session cleanup job + metric rows deleted
+- [x] 🔧 G57. Audit purge job retention config
+- [x] 🔧 G58. Presence TTL cleanup stale session count
+- [x] 🔧 G59. Rate limit counter repair setelah redis failover
+- [x] 🔧 G60. Idempotency-Key middleware POST penting
+- [x] 🔧 G61. Webhook delivery retry (infra worker siap)
+- [x] 🔧 G62. Multi-region readiness checklist
+- [x] 🔧 G63. Zero-downtime migration verification CI
+- [x] 🔧 G64. Rollback migration otomatis saat health gate gagal
+- [x] 🔧 G65. Deploy canary weight routing di edge
+- [x] 🔧 G66. Deploy blue-green compose switch
+- [x] 🔧 G67. Error rate anomaly detection
+- [x] 🔧 G68. Auto-restart container OOM (compose policy)
+- [x] 🔧 G69. Disk space monitoring + alert
+- [x] 🔧 G70. Certificate expiry monitoring + alert
 
 ---
 

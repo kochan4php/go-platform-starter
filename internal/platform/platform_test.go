@@ -221,7 +221,7 @@ func TestReadyz(t *testing.T) {
 	if rec2.Code != http.StatusServiceUnavailable {
 		t.Fatalf("failing readyz status = %d", rec2.Code)
 	}
-	if !strings.Contains(rec2.Body.String(), `"redis":"fail: conn refused"`) {
+	if !strings.Contains(rec2.Body.String(), `"redis":{"error":"conn refused","latencyMs":`) {
 		t.Fatalf("body = %s", rec2.Body.String())
 	}
 }

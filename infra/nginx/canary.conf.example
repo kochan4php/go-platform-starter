@@ -1,0 +1,6 @@
+# Optional edge canary. Run a second gateway service named gateway-canary,
+# then include this file and proxy API traffic to $gateway_pool.
+split_clients "${remote_addr}${request_id}" $gateway_pool {
+    5%      gateway-canary:8000;
+    *       gateway:8000;
+}

@@ -14,6 +14,7 @@ spec:
       labels:
         app: auth
     spec:
+      terminationGracePeriodSeconds: 30
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: topology.kubernetes.io/zone
@@ -32,6 +33,9 @@ spec:
             capabilities:
               drop: ["ALL"]
           image: ghcr.io/kochan4php/auth:latest
+          lifecycle:
+            preStop:
+              httpGet: { path: /drainz, port: 8080 }
           ports:
             - containerPort: 8080
           envFrom:
@@ -55,6 +59,10 @@ spec:
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 10
+          startupProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 2
+            failureThreshold: 30
           volumeMounts:
             - name: tmp
               mountPath: /tmp

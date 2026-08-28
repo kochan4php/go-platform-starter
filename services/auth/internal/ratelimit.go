@@ -27,7 +27,12 @@ func RateLimit(rdb *redis.Client, log *slog.Logger, globalPerMinute, strictPerMi
 
 			res, err := limiter.Allow(r.Context(), "rl:"+class+":"+clientIP(r), redis_rate.PerMinute(perMinute))
 			if err != nil {
-				log.Warn("rate limiter unavailable (fail-open)", "err", err)
+				if class == "strict" {
+					log.Error("strict rate limiter unavailable (fail-closed)", "err", err)
+					platform.Fail(w, http.StatusServiceUnavailable, "rate_limit_unavailable", "request protection is temporarily unavailable")
+					return
+				}
+				log.Warn("rate limiter unavailable (fail-open)", "class", class, "err", err)
 				next.ServeHTTP(w, r)
 				return
 			}

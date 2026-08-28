@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
@@ -22,7 +23,7 @@ func Publish(ctx context.Context, rdb *redis.Client, stream, event string, paylo
 		return err
 	}
 	payloadText := string(raw)
-	values := map[string]any{"event": event}
+	values := map[string]any{"event": event, "v": 1}
 	if keyRing := strings.TrimSpace(os.Getenv("STREAM_ENCRYPTION_KEYS")); keyRing != "" {
 		payloadText, err = EncryptForSubject(ActiveSecret(keyRing), stream, event, payloadText)
 		if err != nil {
@@ -36,8 +37,17 @@ func Publish(ctx context.Context, rdb *redis.Client, stream, event string, paylo
 	}
 	return rdb.XAdd(ctx, &redis.XAddArgs{
 		Stream: stream,
+		MaxLen: streamMaxLen(), Approx: true,
 		Values: values,
 	}).Err()
+}
+
+func streamMaxLen() int64 {
+	n, err := strconv.ParseInt(os.Getenv("STREAM_MAXLEN"), 10, 64)
+	if err != nil || n < 100 {
+		return 100_000
+	}
+	return n
 }
 
 // DecodeStreamMessage verifies producer authenticity before optionally
@@ -49,6 +59,9 @@ func DecodeStreamMessage(stream string, values map[string]any) (string, string, 
 	payload := fmt.Sprint(payloadValue)
 	if !hasEvent || !hasPayload || eventValue == nil || payloadValue == nil || event == "" || payload == "" {
 		return "", "", fmt.Errorf("stream message is missing event or payload")
+	}
+	if version := fmt.Sprint(values["v"]); version != "<nil>" && version != "" && version != "1" {
+		return "", "", fmt.Errorf("unsupported stream schema version %s", version)
 	}
 	if keyRing := strings.TrimSpace(os.Getenv("STREAM_SIGNING_KEYS")); keyRing != "" {
 		signature := fmt.Sprint(values["signature"])

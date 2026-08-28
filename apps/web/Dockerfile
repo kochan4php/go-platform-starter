@@ -21,3 +21,4 @@ COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --chmod=755 apps/web/config-entrypoint.sh /docker-entrypoint.d/40-config.sh
 COPY --chown=101:101 --from=build /src/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=3s --retries=5 CMD wget -q -O /dev/null http://127.0.0.1:8080/

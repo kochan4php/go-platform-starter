@@ -26,6 +26,7 @@ func NewRouter(log *slog.Logger, ready map[string]Checker, extra ...func(http.Ha
 	r.Use(Recoverer)
 
 	r.Get("/healthz", Healthz)
+	r.Get("/drainz", Drain)
 	if len(ready) > 0 {
 		r.Get("/readyz", Readyz(ready))
 	} else {

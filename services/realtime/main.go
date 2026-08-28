@@ -50,6 +50,13 @@ func main() {
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
+	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if err := platform.WaitForRedis(redisCtx, rdb); err != nil {
+		redisCancel()
+		log.Error("redis boot check failed", "err", err)
+		os.Exit(1)
+	}
+	redisCancel()
 
 	connections := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "realtime_connections",

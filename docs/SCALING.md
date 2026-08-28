@@ -1,5 +1,8 @@
 # SCALING
 
+Reliability defaults, DR targets, backup/restore, DLQ replay, chaos experiments,
+and multi-region gates are documented in [RELIABILITY.md](RELIABILITY.md).
+
 Defaults are sized for ~100k users. This file records the knobs, the math
 behind the autoscaling triggers, and the signals that say "shard now".
 

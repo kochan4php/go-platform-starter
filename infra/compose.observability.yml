@@ -1,6 +1,15 @@
 # Observability stack (PLAN items 72–73). Run on top of the base mesh:
 #   docker compose -f infra/compose.base.yml up -d
 #   docker compose -f infra/compose.observability.yml --profile obs up
+x-observability: &observability
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+  deploy:
+    resources:
+      limits: { cpus: "1.0", memory: 512M }
+
 services:
   auth:
     environment: &pprof-env
@@ -23,6 +32,7 @@ services:
     environment: *pprof-env
 
   otel-collector:
+    <<: *observability
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel/config.yaml"]
     volumes:
@@ -30,12 +40,15 @@ services:
     ports: ["4318:4318"]
 
   prometheus:
+    <<: *observability
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
     ports: ["9090:9090"]
 
   postgres-exporter:
+    <<: *observability
     image: prometheuscommunity/postgres-exporter:v0.17.1
     environment:
       DATA_SOURCE_NAME: postgresql://app:app@postgres:5432/app?sslmode=disable
@@ -43,6 +56,7 @@ services:
       - postgres
 
   grafana:
+    <<: *observability
     image: grafana/grafana:latest
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -53,11 +67,13 @@ services:
     ports: ["3000:3000"]
 
   pyroscope:
+    <<: *observability
     image: grafana/pyroscope:latest
     command: ["server"]
     ports: ["4040:4040"]
 
   alloy:
+    <<: *observability
     image: grafana/alloy:latest
     command: ["run", "/etc/alloy/config.alloy"]
     volumes:
@@ -70,3 +86,16 @@ services:
       - worker
       - realtime
       - gateway
+
+  node-exporter:
+    <<: *observability
+    image: prom/node-exporter:latest
+    command: ["--path.rootfs=/host"]
+    volumes: ["/:/host:ro,rslave"]
+
+  blackbox-exporter:
+    <<: *observability
+    image: prom/blackbox-exporter:latest
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    volumes:
+      - ./prometheus/blackbox.yml:/etc/blackbox/blackbox.yml:ro

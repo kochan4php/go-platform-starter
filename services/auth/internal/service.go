@@ -33,10 +33,13 @@ type Publisher interface {
 	Publish(ctx context.Context, stream, event string, payload any) error
 }
 
-type RedisPublisher struct{ RDB *redis.Client }
+type RedisPublisher struct {
+	RDB *redis.Client
+	DB  *gorm.DB
+}
 
 func (p RedisPublisher) Publish(ctx context.Context, stream, event string, payload any) error {
-	return platform.Publish(ctx, p.RDB, stream, event, payload)
+	return platform.PublishWithAuditOutbox(ctx, p.DB, p.RDB, stream, event, payload)
 }
 
 func ErrBadCredentials() *platform.AppError {

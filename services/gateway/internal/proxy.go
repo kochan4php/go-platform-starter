@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -22,6 +23,7 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 	specs := make(map[string][]byte, len(upstreams))
 
 	for name, base := range upstreams {
+		base = primaryEndpoint(base)
 		var raw []byte
 		var lastErr error
 		// Siblings may start after the gateway (docker compose race); waiting
@@ -53,7 +55,12 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 				raw = buf
 				break
 			}
-			time.Sleep(time.Duration(attempt) * time.Second)
+			delay := min(250*time.Millisecond*time.Duration(1<<min(attempt-1, 4)), 4*time.Second) + time.Duration(rand.IntN(200))*time.Millisecond
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return nil, nil, fmt.Errorf("fetch spec of %s: %w", name, ctx.Err())
+			}
 		}
 		if raw == nil {
 			return nil, nil, fmt.Errorf("fetch spec of %s: %w", name, lastErr)
@@ -96,9 +103,14 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 		ExpectContinueTimeout: time.Second,
 	}
 	for name, base := range deps.Upstreams {
-		target := base
+		target := primaryEndpoint(base)
+		resilient, err := newResilientTransport(base, transport)
+		if err != nil {
+			deps.Log.Error("invalid upstream pool", "service", name, "err", err)
+			continue
+		}
 		p := &httputil.ReverseProxy{
-			Transport: transport,
+			Transport: resilient,
 			Rewrite: func(pr *httputil.ProxyRequest) {
 				out := pr.Out
 				out.URL.Scheme = "http"
@@ -161,8 +173,11 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				if deps.RDB != nil {
 					version, versionErr := deps.RDB.Get(r.Context(), "claims:ver:"+claims.Sub).Int64()
 					if versionErr != nil && !errors.Is(versionErr, redis.Nil) {
-						platform.Fail(w, http.StatusServiceUnavailable, "authorization_unavailable", "authorization state is unavailable")
-						return
+						if route.RateClass == "strict" {
+							platform.Fail(w, http.StatusServiceUnavailable, "authorization_unavailable", "authorization state is unavailable")
+							return
+						}
+						deps.Log.Warn("authorization version unavailable; using signed token claims", "err", versionErr)
 					}
 					if version > claims.Ver {
 						platform.Fail(w, http.StatusUnauthorized, "stale_token", "permissions changed; sign in again")
@@ -185,9 +200,30 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 			// the gateway's server span becomes the parent of theirs.
 			platform.InjectTraceHeaders(outReq.Context(), outReq.Header)
 			outReq.Header.Del("Authorization")
-			upstream.ServeHTTP(w, outReq)
+			timeout := route.Timeout
+			if timeout <= 0 {
+				timeout = 15 * time.Second
+			}
+			ctx, cancel := context.WithTimeout(outReq.Context(), timeout)
+			defer cancel()
+			ctx = context.WithValue(ctx, routePolicyKey{}, routePolicy{hedge: route.Hedge, stale: route.StaleIfError && !route.AuthRequired && route.Perm == ""})
+			proxied := outReq.WithContext(ctx)
+			if r.Method == http.MethodPost && deps.RDB != nil && r.Header.Get("Idempotency-Key") != "" {
+				serveIdempotent(w, proxied, deps.RDB, proxied.Header.Get("X-User-Id"), func(target http.ResponseWriter) {
+					upstream.ServeHTTP(target, proxied)
+				})
+				return
+			}
+			upstream.ServeHTTP(w, proxied)
 		})
 	}
+}
+
+func primaryEndpoint(raw string) string {
+	if index := strings.IndexByte(raw, ','); index >= 0 {
+		return raw[:index]
+	}
+	return raw
 }
 
 func clearIdentity(r *http.Request) {

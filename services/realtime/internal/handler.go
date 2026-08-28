@@ -102,7 +102,7 @@ func (h *Handlers) serve(reqCtx context.Context, c *Client) {
 		case "room:leave":
 			h.Leave(ctx, c, msg.Room)
 		case "message:send":
-			if !c.Rooms[msg.Room] {
+			if !c.InRoom(msg.Room) {
 				c.Send(ctx, map[string]any{"type": "error", "reason": "join the room first"})
 				continue
 			}

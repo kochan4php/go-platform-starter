@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"net/mail"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,9 +36,12 @@ var (
 	streamLag = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{Name: "worker_stream_lag"},
 		[]string{"stream"})
+	dlqDepth = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{Name: "worker_dlq_depth", Help: "messages waiting in dead-letter streams"},
+		[]string{"stream"})
 )
 
-func init() { prometheus.MustRegister(jobsProcessed, streamLag) }
+func init() { prometheus.MustRegister(jobsProcessed, streamLag, dlqDepth) }
 
 type Consumer struct {
 	rdb    *redis.Client
@@ -48,17 +54,19 @@ type Consumer struct {
 	reclaimEvery time.Duration // how often pending entries are reclaimed + lag reported
 	concurrency  int
 	readCount    int64
+	dlqMaxDepth  int64
 }
 
 func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *slog.Logger) *Consumer {
 	return &Consumer{
 		rdb: rdb, db: db, mailer: mailer,
 		log:          log.With("component", "consumer"),
-		stream:       []string{"mail.jobs", "audit.events"},
+		stream:       []string{"mail.jobs", "audit.events", "webhook.jobs"},
 		minIdle:      30 * time.Second,
 		reclaimEvery: 10 * time.Second,
 		concurrency:  1,
 		readCount:    10,
+		dlqMaxDepth:  10_000,
 	}
 }
 
@@ -68,6 +76,16 @@ func (c *Consumer) Configure(concurrency int, readCount int64) *Consumer {
 	}
 	if readCount > 0 {
 		c.readCount = readCount
+	}
+	return c
+}
+
+func (c *Consumer) ConfigureReliability(minIdle time.Duration, dlqDepth int64) *Consumer {
+	if minIdle > 0 {
+		c.minIdle = minIdle
+	}
+	if dlqDepth > 0 {
+		c.dlqMaxDepth = dlqDepth
 	}
 	return c
 }
@@ -108,7 +126,7 @@ func (c *Consumer) consume(ctx context.Context) {
 			Group:    group,
 			Consumer: hostnameConsumer(),
 			// [stream..., id...] shape: one fresh-delivery marker ">" per stream.
-			Streams: append(append([]string{}, c.stream...), ">", ">"),
+			Streams: append(append([]string{}, c.stream...), freshMarkers(len(c.stream))...),
 			Block:   3 * time.Second,
 			Count:   c.readCount,
 		}).Result()
@@ -159,6 +177,9 @@ func (c *Consumer) reportLag(ctx context.Context) {
 		if err == nil {
 			streamLag.WithLabelValues(s).Set(float64(lenv))
 		}
+		if depth, err := c.rdb.XLen(ctx, s+":dlq").Result(); err == nil {
+			dlqDepth.WithLabelValues(s).Set(float64(depth))
+		}
 	}
 }
 
@@ -166,6 +187,9 @@ func (c *Consumer) processMessages(ctx context.Context, stream string, messages 
 	acked := make([]string, 0, len(messages))
 	process := func(db *gorm.DB) {
 		for _, msg := range messages {
+			if ctx.Err() != nil {
+				return
+			}
 			event, payload, decodeErr := platform.DecodeStreamMessage(stream, msg.Values)
 			if decodeErr != nil {
 				event = "invalid:" + decodeErr.Error()
@@ -187,6 +211,11 @@ func (c *Consumer) processMessages(ctx context.Context, stream string, messages 
 }
 
 func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, payload, event string) bool {
+	messageID := stream + ":" + id
+	var processed bool
+	if err := db.WithContext(ctx).Raw(`SELECT EXISTS (SELECT 1 FROM audit.processed_messages WHERE message_id = ?)`, messageID).Scan(&processed).Error; err == nil && processed {
+		return true
+	}
 	attempts := c.bumpAttempts(ctx, stream, id)
 	dedupKey := "worker:sent:" + stream + ":" + id
 
@@ -196,13 +225,19 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 		err = c.handleEmail(ctx, dedupKey, payload)
 	case stream == "audit.events":
 		err = c.handleAuditWithDB(ctx, db, event, stream+":"+id, payload)
+	case stream == "webhook.jobs" && event == "webhook.deliver":
+		err = c.handleWebhook(ctx, id, payload)
 	default:
 		err = fmt.Errorf("no handler for %s/%s", stream, event)
 	}
 
 	if err == nil {
-		jobsProcessed.WithLabelValues(stream, event, "ok").Inc()
-		return true
+		if insertErr := db.WithContext(ctx).Exec(`INSERT INTO audit.processed_messages (message_id) VALUES (?) ON CONFLICT DO NOTHING`, messageID).Error; insertErr != nil {
+			err = fmt.Errorf("persist processing checkpoint: %w", insertErr)
+		} else {
+			jobsProcessed.WithLabelValues(stream, event, "ok").Inc()
+			return true
+		}
 	}
 
 	jobsProcessed.WithLabelValues(stream, event, "failed").Inc()
@@ -212,12 +247,83 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 	if attempts >= dlqMax {
 		_ = c.rdb.XAdd(ctx, &redis.XAddArgs{
 			Stream: stream + ":dlq",
+			MaxLen: c.dlqMaxDepth, Approx: true,
 			Values: map[string]any{"event": event, "payload": payload, "orig_id": id},
 		}).Err()
 		c.log.Error("job moved to DLQ", "stream", stream, "id", id)
 		return true
 	}
 	return false
+}
+
+func (c *Consumer) handleWebhook(ctx context.Context, id, payload string) error {
+	var job struct {
+		URL  string          `json:"url"`
+		Body json.RawMessage `json:"body"`
+	}
+	if err := json.Unmarshal([]byte(payload), &job); err != nil {
+		return fmt.Errorf("bad webhook payload: %w", err)
+	}
+	target, err := url.Parse(job.URL)
+	if err != nil || target.Scheme != "https" || !allowedWebhookHost(target.Hostname()) {
+		return fmt.Errorf("webhook target is not an allowlisted HTTPS host")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), strings.NewReader(string(job.Body)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Idempotency-Key", id)
+	response, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return fmt.Errorf("webhook returned %d", response.StatusCode)
+	}
+	return nil
+}
+
+func allowedWebhookHost(host string) bool {
+	for _, allowed := range strings.Split(os.Getenv("WEBHOOK_ALLOWED_HOSTS"), ",") {
+		if strings.EqualFold(strings.TrimSpace(allowed), host) && host != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func freshMarkers(count int) []string {
+	markers := make([]string, count)
+	for i := range markers {
+		markers[i] = ">"
+	}
+	return markers
+}
+
+func ReplayDLQ(ctx context.Context, rdb *redis.Client, stream string, limit int64) (int, error) {
+	if limit <= 0 || limit > 1_000 {
+		limit = 100
+	}
+	dlq := stream + ":dlq"
+	messages, err := rdb.XRangeN(ctx, dlq, "-", "+", limit).Result()
+	if err != nil {
+		return 0, err
+	}
+	replayed := 0
+	for _, message := range messages {
+		event := fmt.Sprint(message.Values["event"])
+		payload := json.RawMessage(fmt.Sprint(message.Values["payload"]))
+		if err := platform.Publish(ctx, rdb, stream, event, payload); err != nil {
+			return replayed, err
+		}
+		if err := rdb.XDel(ctx, dlq, message.ID).Err(); err != nil {
+			return replayed, err
+		}
+		replayed++
+	}
+	return replayed, nil
 }
 
 // handleEmail sends one transactional mail. At-least-once delivery means a
@@ -258,6 +364,7 @@ func (c *Consumer) handleAuditWithDB(ctx context.Context, db *gorm.DB, event, ms
 		return nil // unknown audit events are acked-and-ignored
 	}
 	var ev struct {
+		ID       string         `json:"id"`
 		ActorSub string         `json:"actorSub"`
 		Action   string         `json:"action"`
 		Entity   string         `json:"entity"`
@@ -266,6 +373,9 @@ func (c *Consumer) handleAuditWithDB(ctx context.Context, db *gorm.DB, event, ms
 	}
 	if err := json.Unmarshal([]byte(payload), &ev); err != nil {
 		return fmt.Errorf("bad audit payload: %w", err)
+	}
+	if ev.ID != "" {
+		msgID = ev.ID
 	}
 	if strings.TrimSpace(ev.Action) == "" || len(ev.Action) > 120 || strings.TrimSpace(ev.Entity) == "" || len(ev.Entity) > 120 || len(ev.EntityID) > 255 {
 		return fmt.Errorf("audit payload failed schema validation")
@@ -276,6 +386,26 @@ func (c *Consumer) handleAuditWithDB(ctx context.Context, db *gorm.DB, event, ms
 		 VALUES (?, ?, ?, ?, ?::jsonb, ?)
 		 ON CONFLICT (msg_id) DO NOTHING`,
 		ev.ActorSub, ev.Action, ev.Entity, ev.EntityID, string(metaJSON), msgID).Error
+}
+
+func FlushAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client) (int, error) {
+	var rows []struct{ ID, Stream, Event, Payload string }
+	if err := db.WithContext(ctx).Raw(
+		`SELECT id, stream, event, payload::text AS payload FROM audit.event_outbox ORDER BY created_at LIMIT 100`,
+	).Scan(&rows).Error; err != nil {
+		return 0, err
+	}
+	flushed := 0
+	for _, row := range rows {
+		if err := platform.Publish(ctx, rdb, row.Stream, row.Event, json.RawMessage(row.Payload)); err != nil {
+			return flushed, err
+		}
+		if err := db.WithContext(ctx).Exec(`DELETE FROM audit.event_outbox WHERE id = ?`, row.ID).Error; err != nil {
+			return flushed, err
+		}
+		flushed++
+	}
+	return flushed, nil
 }
 
 func (c *Consumer) bumpAttempts(ctx context.Context, stream, id string) int64 {

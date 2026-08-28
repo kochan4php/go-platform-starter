@@ -1,22 +1,22 @@
 # Graph Report - go-platform-starter  (2026-08-28)
 
 ## Corpus Check
-- 282 files · ~149,231 words
+- 295 files · ~155,039 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2256 nodes · 4165 edges · 196 communities (139 shown, 57 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 185 edges (avg confidence: 0.85)
+- 2332 nodes · 4365 edges · 199 communities (146 shown, 53 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 197 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2b04e2ae`
+- Built from commit: `ee4dcc0b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - newFixture
-- context.Context
+- Service
 - net/http.Request
 - GormLogger
 - devDependencies
@@ -26,30 +26,30 @@
 - auth service (base mesh)
 - ui/package.json
 - App.tsx
-- Config
-- RolesPage.test.tsx
+- main
+- resilientTransport
 - UsersPage.tsx
 - ignore
 - middleware.go
-- DashboardShell.tsx
+- nav-config.tsx
 - auth service API (OpenAPI doc)
-- Service
+- ErrBadRequest
 - Client
 - _template/gen/gen.go
 - What You Must Do When Invoked
 - auth/gen/gen.go
 - scripts
 - rbac/gen/gen.go
-- WriteError
+- OK
 - compilerOptions
 - compilerOptions
 - compilerOptions
 - compilerOptions
-- Consumer
-- secureRequest
+- context.Context
+- time.Time
 - dev-all.sh
 - ClaimsClient
-- users/gen/gen.go
+- ListUsersParams
 - users/internal/migrate.go
 - web (host shell) Docker Compose Service
 - contracts/package.json
@@ -66,7 +66,7 @@
 - RBAC permission/role catalog API
 - Contracts Pipeline (spec-first)
 - Security Posture
-- main
+- DashboardShell.tsx
 - index.tsx
 - /graphify Skill Command
 - Onboarding Guide
@@ -75,15 +75,15 @@
 - web-admin-users/package.json
 - renovate.json
 - deploy.sh
-- ErrBadRequest
+- .ListUsers
 - remotes.d.ts
-- useToast
-- InitTracer
-- ErrConflict
+- RemoteErrorBoundary.tsx
+- main
+- mailer.go
 - main.tsx
 - ADR-0001: Fresh-build Pivot
 - main
-- testing.T
+- e2e_test.go
 - Security policy
 - rbac Deployment
 - users Deployment
@@ -93,32 +93,32 @@
 - gen.d.ts
 - check-deps.mjs
 - template docker-compose app service
-- Profile
+- InitTracer
 - MockIntersectionObserver
 - MockIntersectionObserver
 - web/package.json
 - main
 - MockIntersectionObserver
-- NewRouter
+- health.go
 - time.Duration
 - compose-specs.mjs
 - golangci-lint Configuration
 - check-budget.mjs
 - realtime Deployment
-- time.Time
-- gorm.io/gorm.DB
+- .validatePasswordReplacement
+- startFixture
 - web/vite.config.ts
 - composespec/main.go
 - graphify reference: extra exports and benchmark
 - auth/internal/handlers.go
-- .Kick
+- RolesPage.test.tsx
 - TestRoomsBroadcastDenyAndForceLogoutKick
-- main
+- OpenDatabase
 - graphify reference: query, path, explain
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
-- index.ts
+- LoginPage.tsx
 - graphify reference: GitHub clone and cross-repo merge
 - @tailwindcss/vite
 - @types/react-dom
@@ -126,7 +126,7 @@
 - @vitejs/plugin-react
 - vitest
 - config-entrypoint.sh
-- Handlers
+- Reliability & Resilience
 - graphify reference: transcribe video and audio
 - @testing-library/react
 - @types/react
@@ -141,22 +141,22 @@
 - compose.prod.yml (Production Stack)
 - github.com/kochan4php/go-platform-starter
 - pnpm workspace config (apps/*, packages/*)
-- platform_test.go
+- testing.T
 - AGENTS.md
-- main
+- ResetPage.tsx
 - extraction-spec.md
-- RemoteErrorBoundary
+- PublishWithAuditOutbox
 - terser
-- Recoverer
-- KeyedDigest
-- NewGormLogger
+- useToast
+- Publish
+- StartRedis
 - Service
 - @tailwindcss/vite
 - rbac/internal/migrate.go
 - AUTH_UX.md
 - NewRequestValidator
-- UnescapedCookieParamError
-- useAuth
+- AuditViewer
+- SettingsPage
 - net/http.Handler
 - Handlers
 - BREAK_GLASS.md
@@ -167,37 +167,39 @@
 - PERFORMANCE.md
 - ParseAccessTokenRing
 - main
-- Gate
+- main
 - performance.js
 - InvalidParamFormatError
-- envelope.go
-- InvalidParamFormatError
-- UnmarshalingParamError
+- fail
+- NewScheduler
+- Audit
 - K6.md
+- TestDatabaseTimeoutsPreserveDSN
+- RequiredHeaderError
+- UnmarshalingParamError
 - RequiredHeaderError
 - UnescapedCookieParamError
-- UnmarshalingParamError
-- realtime/internal/helpers.go
+- InvalidParamFormatError
+- backup.sh
+- check-migration-safety.sh
+- Profile
+- restore-test.sh
 - Hub
-- Publisher
 - Loggerish
 - chi.Router
-- MiddlewareFunc
-- RoleSummary
-- Service
-- validator.Validate
+- Config
 
 ## God Nodes (most connected - your core abstractions)
-1. `WriteError()` - 46 edges
-2. `OK()` - 45 edges
+1. `OK()` - 46 edges
+2. `WriteError()` - 46 edges
 3. `Service` - 44 edges
 4. `Handlers` - 29 edges
-5. `ErrBadRequest()` - 25 edges
-6. `main()` - 24 edges
-7. `ServerInterfaceWrapper` - 24 edges
-8. `main()` - 23 edges
-9. `Service` - 21 edges
-10. `Consumer` - 21 edges
+5. `main()` - 25 edges
+6. `main()` - 25 edges
+7. `ErrBadRequest()` - 25 edges
+8. `ServerInterfaceWrapper` - 24 edges
+9. `Consumer` - 23 edges
+10. `main()` - 22 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `User Taste Profile` --semantically_similar_to--> `CI: web job (lint/test/build/budget)`  [INFERRED] [semantically similar]
@@ -208,8 +210,8 @@
   .commandcode/taste/taste.md → README.md
 - `Graphify Skill-Trigger Directive` --semantically_similar_to--> `Root CLAUDE.md graphify Project Instructions`  [INFERRED] [semantically similar]
   .claude/CLAUDE.md → CLAUDE.md
-- `Deprecation Mechanics (RFC-9745)` --references--> `Deprecation()`  [EXTRACTED]
-  docs/API_VERSIONING.md → internal/platform/security.go
+- `TestReadyz()` --calls--> `fail()`  [INFERRED]
+  internal/platform/platform_test.go → cmd/yamlcheck/main.go
 
 ## Import Cycles
 - None detected.
@@ -233,19 +235,23 @@
 - **Spec-first contract pipeline: spec, codegen/typed client, version freeze, and PR gate enforcing it together** — docs_contracts_openapi_spec_source_of_truth, docs_contracts_typed_client_pipeline, docs_api_versioning_v1_frozen_contract, docs_onboarding_pr_checklist [INFERRED 0.85]
 - **Template Service Kubernetes Deployment Stack** — services__template_deploy_k8s_deployment_template_service, services__template_deploy_k8s_hpa_template_service, services__template_deploy_k8s_service_template_service, services__template_deploy_k8s_migrate_job_template_service_migrate [INFERRED 0.85]
 
-## Communities (196 total, 57 thin omitted)
+## Communities (199 total, 53 thin omitted)
 
 ### Community 0 - "newFixture"
 Cohesion: 0.24
 Nodes (16): capturedEvent, capturedPublisher, fixture, redis.Client, indexOf(), mustRegister(), newFixture(), resetTokenFromMail() (+8 more)
 
-### Community 1 - "context.Context"
-Cohesion: 0.11
-Nodes (20): context.Context, github.com/lib/pq.StringArray, AuthResult, passwordRecord, Audit(), Loggerish, ErrNotFound(), ActiveSecret() (+12 more)
+### Community 1 - "Service"
+Cohesion: 0.12
+Nodes (16): ClaimsClient, Config, AuthResult, ActiveSecret(), Publisher, sessionView, findUserByEmail(), hashPassword() (+8 more)
 
 ### Community 2 - "net/http.Request"
 Cohesion: 0.06
-Nodes (13): ServerInterfaceWrapper, Unimplemented, net/http.Request, net/http.ResponseWriter, Healthz(), ServerInterfaceWrapper, Unimplemented, MiddlewareFunc (+5 more)
+Nodes (13): net/http.Request, net/http.ResponseWriter, ServerInterfaceWrapper, Unimplemented, MiddlewareFunc, ServerInterfaceWrapper, Unimplemented, MiddlewareFunc (+5 more)
+
+### Community 3 - "GormLogger"
+Cohesion: 0.24
+Nodes (3): gorm.io/gorm/logger.LogLevel, queryOperation(), GormLogger
 
 ### Community 4 - "devDependencies"
 Cohesion: 0.04
@@ -253,15 +259,15 @@ Nodes (47): dependencies, @phosphor-icons/react, react, react-dom, @starter/cont
 
 ### Community 5 - "ui.tsx"
 Cohesion: 0.08
-Nodes (32): el, qc, deleteMock, getMock, HealthState, Probe(), Theme, ConfirmCtx (+24 more)
+Nodes (31): el, qc, deleteMock, getMock, HealthState, Probe(), Theme, ConfirmCtx (+23 more)
 
 ### Community 6 - "devDependencies"
 Cohesion: 0.04
 Nodes (47): dependencies, react, react-dom, @starter/contracts, @starter/ui, devDependencies, jsdom, msw (+39 more)
 
 ### Community 7 - "auth-ui.tsx"
-Cohesion: 0.08
-Nodes (48): api, apiError(), AuthApiError, forgot(), login(), LoginResult, readMessage(), register() (+40 more)
+Cohesion: 0.15
+Nodes (25): AuthInput(), authNavigate(), EMAIL_MAX, ErrorSummary(), normalizeEmail(), PASSWORD_MAX, PasswordInput(), passwordStrength() (+17 more)
 
 ### Community 8 - "auth service (base mesh)"
 Cohesion: 0.10
@@ -273,43 +279,43 @@ Nodes (35): description, devDependencies, jsdom, react, react-dom, @testing-libr
 
 ### Community 10 - "App.tsx"
 Cohesion: 0.10
-Nodes (12): ForgotPage, LoginPage, LoginResult, queryClient, RegisterPage, ResetPage, RolesPage, Root() (+4 more)
+Nodes (28): ForgotPage, LoginPage, LoginResult, NotFoundPage(), queryClient, RegisterPage, ResetPage, RolesPage (+20 more)
 
-### Community 11 - "Config"
-Cohesion: 0.10
-Nodes (20): All(), IsValid(), MustValid(), ProxyDeps, Route, Upstreams, Matcher, RequestValidator (+12 more)
+### Community 11 - "main"
+Cohesion: 0.06
+Nodes (44): ctxKeyAuth, net/http.HandlerFunc, net/http.Header, net/netip.Prefix, bufferedWriter, idempotencyRecord, Fail(), InjectTraceHeaders() (+36 more)
 
-### Community 12 - "RolesPage.test.tsx"
-Cohesion: 0.10
-Nodes (15): el, qc, download(), exportMatrixPng(), roleBody(), RolesPage(), exportCsv(), exportJson() (+7 more)
+### Community 12 - "resilientTransport"
+Cohesion: 0.16
+Nodes (15): context.CancelFunc, io.ReadCloser, net/http.Response, net/http.Transport, net/url.URL, sync/atomic.Uint64, cachedResponse, cancelBody (+7 more)
 
 ### Community 13 - "UsersPage.tsx"
 Cohesion: 0.08
-Nodes (30): api, ActivityItem, ColumnKey, columnLabel(), copyText(), csvCell(), dateBoundary(), DEFAULT_COLUMNS (+22 more)
+Nodes (29): api, ActivityItem, ColumnKey, columnLabel(), copyText(), csvCell(), dateBoundary(), DEFAULT_COLUMNS (+21 more)
 
 ### Community 14 - "ignore"
 Cohesion: 0.06
 Nodes (34): files, ignore, enabled, indentStyle, indentWidth, lineWidth, semicolons, javascript (+26 more)
 
 ### Community 15 - "middleware.go"
-Cohesion: 0.15
-Nodes (15): net/http.Header, CorrelationID(), InjectTraceHeaders(), LoggerFromContext(), newRequestID(), readSlowRequestThreshold(), RequestIDFromContext(), RequestLogger() (+7 more)
+Cohesion: 0.09
+Nodes (24): chi.Context, InitErrorReporter(), ReportError(), toError(), chiRouteContext(), CorrelationID(), LoggerFromContext(), newRequestID() (+16 more)
 
-### Community 16 - "DashboardShell.tsx"
-Cohesion: 0.06
-Nodes (29): useGatewayHealth(), OfflineBanner(), SessionExpiringBanner(), CommandPalette(), CommandPaletteProps, fuzzy(), PaletteItem, NavItem (+21 more)
+### Community 16 - "nav-config.tsx"
+Cohesion: 0.10
+Nodes (15): CommandPalette(), CommandPaletteProps, fuzzy(), PaletteItem, MobileBottomNav(), mobileLabel(), ALL_NAV_ITEMS, APP_VERSION (+7 more)
 
 ### Community 17 - "auth service API (OpenAPI doc)"
 Cohesion: 0.11
 Nodes (30): _template codegen config (gen package), _template service API (OpenAPI doc), EnvelopeFail schema (template), EnvelopeMeta schema (template), EnvelopeOK schema (template), ping operation (template), auth codegen config (gen package), adminSetUserPassword operation (+22 more)
 
-### Community 18 - "Service"
-Cohesion: 0.11
-Nodes (19): Claims, Loggerish, PermissionInfo, Publisher, Role, RoleInput, userRole, bumpVerTx() (+11 more)
+### Community 18 - "ErrBadRequest"
+Cohesion: 0.09
+Nodes (29): Loggerish, PermissionInfo, ErrBadRequest(), ErrConflict(), ErrForbidden(), ErrInternal(), ErrNotFound(), ErrUnauthorized() (+21 more)
 
 ### Community 19 - "Client"
-Cohesion: 0.32
-Nodes (5): sync.RWMutex, Client, Hub, prometheusGauge, NewHub()
+Cohesion: 0.13
+Nodes (11): sync.RWMutex, Client, Handlers, Hub, prometheusGauge, contains(), NewHandlers(), NewHandlersWithKeyRing() (+3 more)
 
 ### Community 20 - "_template/gen/gen.go"
 Cohesion: 0.11
@@ -320,8 +326,8 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 22 - "auth/gen/gen.go"
-Cohesion: 0.09
-Nodes (26): AdminSetUserPasswordJSONBody, AdminSetUserPasswordJSONRequestBody, AdminSetUserStateJSONBody, AdminSetUserStateJSONBodyStatus, AdminSetUserStateJSONRequestBody, ChangePasswordJSONBody, ChangePasswordJSONRequestBody, ConfirmPasswordJSONBody (+18 more)
+Cohesion: 0.07
+Nodes (29): AdminSetUserPasswordJSONBody, AdminSetUserPasswordJSONRequestBody, AdminSetUserStateJSONBody, AdminSetUserStateJSONBodyStatus, AdminSetUserStateJSONRequestBody, ChangePasswordJSONBody, ChangePasswordJSONRequestBody, ConfirmPasswordJSONBody (+21 more)
 
 ### Community 23 - "scripts"
 Cohesion: 0.08
@@ -331,8 +337,8 @@ Nodes (23): @biomejs/biome, devDependencies, @biomejs/biome, js-yaml, @playwrigh
 Cohesion: 0.10
 Nodes (22): CreatePermissionJSONBody, CreatePermissionJSONRequestBody, RoleInput, SetUserRolesJSONBody, SetUserRolesJSONRequestBody, UpdateRoleJSONBody, UpdateRoleJSONRequestBody, chi.Router (+14 more)
 
-### Community 25 - "WriteError"
-Cohesion: 0.18
+### Community 25 - "OK"
+Cohesion: 0.16
 Nodes (10): OK(), WriteError(), currentRefreshHash(), deviceID(), Config, Handlers, Service, validator.Validate (+2 more)
 
 ### Community 26 - "compilerOptions"
@@ -351,29 +357,29 @@ Nodes (22): compilerOptions, esModuleInterop, isolatedModules, jsx, lib, module,
 Cohesion: 0.09
 Nodes (22): compilerOptions, esModuleInterop, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+14 more)
 
-### Community 30 - "Consumer"
-Cohesion: 0.09
-Nodes (16): net/smtp.Auth, Consumer, BuildMIME(), Mail, Mailer, NewMailer(), TestBuildMIME(), ConsoleMailer (+8 more)
+### Community 30 - "context.Context"
+Cohesion: 0.11
+Nodes (18): context.Context, gorm.io/gorm.DB, Consumer, All(), redis.XMessage, SweepSessions(), Hub, redis.Client (+10 more)
 
-### Community 31 - "secureRequest"
-Cohesion: 0.42
-Nodes (8): secureRequest(), SettingsPage(), beginMFA(), changePassword(), eraseAccount(), exportData(), revokeSession(), verifyMFA()
+### Community 31 - "time.Time"
+Cohesion: 0.12
+Nodes (11): Permission, Role, Session, time.Time, permissionRow, Profile, RoleSummary, Session (+3 more)
 
 ### Community 32 - "dev-all.sh"
 Cohesion: 0.15
 Nodes (22): ACCESS_TOKEN_SECRET, ADMIN_BOOTSTRAP_PASSWORD, APP_PUBLIC_URL, cleanup(), compose_infra(), DATABASE_URL, die(), docker_publishes() (+14 more)
 
 ### Community 33 - "ClaimsClient"
-Cohesion: 0.21
+Cohesion: 0.24
 Nodes (8): container/list.Element, container/list.List, net/http.Client, sync.Mutex, cachedClaims, claimEntry, ClaimsClient, NewClaimsClient()
 
-### Community 34 - "users/gen/gen.go"
-Cohesion: 0.07
-Nodes (25): ChiServerOptions, EnvelopeFail, EnvelopeMeta, EnvelopeOK, ForgotInput, ListUsersParamsCount, ListUsersParamsLimit, ListUsersParamsOrder (+17 more)
+### Community 34 - "ListUsersParams"
+Cohesion: 0.18
+Nodes (6): ListUsersParamsCount, ListUsersParamsLimit, ListUsersParamsOrder, ListUsersParamsPresence, ListUsersParamsSort, ListUsersParams
 
 ### Community 35 - "users/internal/migrate.go"
-Cohesion: 0.28
-Nodes (6): migrateUp(), migrationURL(), trimScheme(), RedisPublisher, redis.Client, MigrateUp()
+Cohesion: 0.83
+Nodes (3): migrateUp(), migrationURL(), trimScheme()
 
 ### Community 36 - "web (host shell) Docker Compose Service"
 Cohesion: 0.10
@@ -408,8 +414,8 @@ Cohesion: 0.13
 Nodes (15): devDependencies, jsdom, msw, @originjs/vite-plugin-federation, tailwindcss, typescript, vite, @vitejs/plugin-react (+7 more)
 
 ### Community 44 - "log/slog.Logger"
-Cohesion: 0.15
-Nodes (13): log/slog.Logger, redis.Client, NewScheduler(), Scheduler, Service, redis.Client, RateLimit(), Handlers (+5 more)
+Cohesion: 0.29
+Nodes (7): log/slog.Logger, StartPprof(), Handlers, NewHandlers(), ConsumeUserEvents(), redis.Client, handleEvent()
 
 ### Community 45 - "resilience-drill.sh"
 Cohesion: 0.22
@@ -435,13 +441,13 @@ Nodes (10): Spec-First Without a Behavioral Contract, API Versioning Policy, Del
 Cohesion: 0.24
 Nodes (11): Backlog: Security, Identity-Header Contract, Security Posture, CSRF Mitigation by Construction, Security Headers Policy, Security Scanning (gosec/Trivy/semgrep), Secrets Management, Token Storage Policy (+3 more)
 
-### Community 51 - "main"
-Cohesion: 0.18
-Nodes (18): ctxKeyAuth, net/http.HandlerFunc, net/netip.Prefix, Fail(), redis_rate.Limiter, AggregateDocs(), ScalarHandlers(), TestScalarPageHasExecutableCSPAndSRI() (+10 more)
+### Community 51 - "DashboardShell.tsx"
+Cohesion: 0.12
+Nodes (18): Root(), applyTheme(), useGatewayHealth(), useTheme(), OfflineBanner(), SessionExpiringBanner(), DashboardShellContent(), NavItem (+10 more)
 
 ### Community 52 - "index.tsx"
-Cohesion: 0.07
-Nodes (31): api, PermissionInfo, Role, AuditEntry, iconGlyphs, iconNames, loadUsers(), permissionDescription() (+23 more)
+Cohesion: 0.08
+Nodes (28): api, PermissionInfo, Role, AuditEntry, iconGlyphs, iconNames, loadUsers(), permissionDescription() (+20 more)
 
 ### Community 53 - "/graphify Skill Command"
 Cohesion: 0.20
@@ -471,25 +477,25 @@ Nodes (9): config:recommended, dependencies, :semanticCommits, :semanticCommitSc
 Cohesion: 0.40
 Nodes (8): compose(), die(), docker_publishes(), ensure_docker(), log(), pick(), resolve_lab_ports(), deploy.sh script
 
-### Community 60 - "ErrBadRequest"
-Cohesion: 0.18
-Nodes (14): testing.B, ListCursor, ListFilters, ErrBadRequest(), BenchmarkWriteJSON(), profileInput, decodeListCursor(), encodeListCursor() (+6 more)
+### Community 60 - ".ListUsers"
+Cohesion: 0.12
+Nodes (17): testing.B, WriteJSON(), ListOK(), BenchmarkWriteJSON(), profileInput, failEnvelope, listData, Meta (+9 more)
 
 ### Community 61 - "remotes.d.ts"
 Cohesion: 0.20
 Nodes (7): Document, web_admin_roles/RolesPage, web_admin_users/UsersPage, web_auth/ForgotPage, web_auth/LoginPage, web_auth/RegisterPage, web_auth/ResetPage
 
-### Community 62 - "useToast"
-Cohesion: 0.16
-Nodes (14): DeleteRoleModal(), CopyErrorButton(), Props, State, EnvBadge(), SessionMenu(), timezoneOptions(), Topbar() (+6 more)
+### Community 62 - "RemoteErrorBoundary.tsx"
+Cohesion: 0.25
+Nodes (5): CopyErrorButton(), Props, RemoteErrorBoundary, State, useCopy()
 
-### Community 63 - "InitTracer"
-Cohesion: 0.21
-Nodes (9): go.opentelemetry.io/otel/sdk/resource.Resource, GracefulRun(), shutdownTimeout(), InitTracer(), newResource(), TraceIDFromContext(), trimSchemeHTTP(), main() (+1 more)
+### Community 63 - "main"
+Cohesion: 0.15
+Nodes (14): chi.Router, LoadDotEnv(), loadSecretFiles(), MustParseEnv(), TestSecretFileEnvAdapterIgnoresOptionalAppEnvFile(), NewRouter(), GracefulRun(), shutdownTimeout() (+6 more)
 
-### Community 64 - "ErrConflict"
-Cohesion: 0.36
-Nodes (7): ErrConflict(), ErrForbidden(), ErrInternal(), ErrUnauthorized(), AppError, TestWriteErrorMapping(), ErrConflictEmail()
+### Community 64 - "mailer.go"
+Cohesion: 0.22
+Nodes (10): net/smtp.Auth, BuildMIME(), Mail, Mailer, NewMailer(), TestBuildMIME(), ConsoleMailer, FallbackMailer (+2 more)
 
 ### Community 65 - "main.tsx"
 Cohesion: 0.21
@@ -497,15 +503,15 @@ Nodes (8): App(), observeWebVitals(), rating(), report(), VitalName, el, worker,
 
 ### Community 66 - "ADR-0001: Fresh-build Pivot"
 Cohesion: 0.33
-Nodes (5): ADR-0001: Fresh-build Pivot, Backlog: Architecture & Scalability, Scaling Guide, Perf Smoke Baseline Through Gateway, Sharding/Splitting Triggers
+Nodes (6): ADR-0001: Fresh-build Pivot, Backlog: Architecture & Scalability, Scaling Guide, Perf Smoke Baseline Through Gateway, Sharding/Splitting Triggers, main()
 
 ### Community 67 - "main"
-Cohesion: 0.24
-Nodes (8): NewLogger(), redis.Client, NewRedisClient(), config, bearerGuard(), envFile(), main(), splitCSV()
+Cohesion: 0.31
+Nodes (8): redis.Client, NewRedisClient(), WaitForRedis(), config, bearerGuard(), envFile(), main(), splitCSV()
 
-### Community 68 - "testing.T"
-Cohesion: 0.26
-Nodes (15): envelope, proc, os/exec.Cmd, testing.T, buildBinaries(), call(), flattenEnv(), freePort() (+7 more)
+### Community 68 - "e2e_test.go"
+Cohesion: 0.31
+Nodes (12): envelope, proc, os/exec.Cmd, buildBinaries(), call(), flattenEnv(), freePort(), login() (+4 more)
 
 ### Community 69 - "Security policy"
 Cohesion: 0.50
@@ -524,7 +530,7 @@ Cohesion: 0.33
 Nodes (6): scripts, build, check:budget, dev, preview, test
 
 ### Community 73 - "Handlers"
-Cohesion: 0.17
+Cohesion: 0.19
 Nodes (4): DeleteRoleParams, Handlers, Service, NewHandlers()
 
 ### Community 74 - "DoD Evidence Checklist"
@@ -543,9 +549,9 @@ Nodes (4): exts, nodeBuiltins, root, violations
 Cohesion: 0.33
 Nodes (6): template docker-compose postgres service, template docker-compose redis service, template docker-compose app service, auth docker-compose app service, auth docker-compose postgres service, auth docker-compose redis service
 
-### Community 78 - "Profile"
-Cohesion: 0.33
-Nodes (4): Profile, RoleSummary, Config, RoleSummary
+### Community 78 - "InitTracer"
+Cohesion: 0.47
+Nodes (5): go.opentelemetry.io/otel/sdk/resource.Resource, InitTracer(), newResource(), TraceIDFromContext(), trimSchemeHTTP()
 
 ### Community 81 - "web/package.json"
 Cohesion: 0.40
@@ -553,15 +559,15 @@ Nodes (4): name, private, type, version
 
 ### Community 82 - "main"
 Cohesion: 0.26
-Nodes (9): SweepSessions(), MigrateUp(), migrationURL(), trimScheme(), lowerEnv(), main(), pingDB(), seedAdmin() (+1 more)
+Nodes (10): randomToken(), MigrateUp(), migrationURL(), trimScheme(), RandomPassword(), lowerEnv(), main(), pingDB() (+2 more)
 
-### Community 84 - "NewRouter"
-Cohesion: 0.24
-Nodes (8): chi.Context, chiRouteContext(), Readyz(), Observe(), TestReadyz(), chi.Router, NewRouter(), Checker
+### Community 84 - "health.go"
+Cohesion: 0.47
+Nodes (5): buildValue(), Drain(), Healthz(), Readyz(), Checker
 
 ### Community 85 - "time.Duration"
-Cohesion: 0.25
-Nodes (12): time.Duration, Config, Claims, jwt.RegisteredClaims, mint(), MintAccess(), MintAccessWithRing(), MintReset() (+4 more)
+Cohesion: 0.23
+Nodes (13): time.Duration, Config, Claims, jwt.RegisteredClaims, mint(), MintAccess(), MintAccessWithRing(), MintReset() (+5 more)
 
 ### Community 86 - "compose-specs.mjs"
 Cohesion: 0.40
@@ -579,29 +585,33 @@ Nodes (4): budget, chunks, dist, kb
 Cohesion: 0.50
 Nodes (4): realtime Deployment, realtime HorizontalPodAutoscaler, realtime PodDisruptionBudget, realtime Service
 
-### Community 90 - "time.Time"
-Cohesion: 0.11
-Nodes (20): Permission, Role, Session, time.Time, permissionRow, Session, sessionView, randomToken() (+12 more)
+### Community 90 - ".validatePasswordReplacement"
+Cohesion: 0.18
+Nodes (13): github.com/lib/pq.StringArray, passwordRecord, totpCode(), verifyTOTP(), CalibrateBcryptCost(), checkHIBP(), passwordHistoryContains(), passwordNeedsRehash() (+5 more)
 
-### Community 91 - "gorm.io/gorm.DB"
-Cohesion: 0.25
-Nodes (16): gorm.io/gorm.DB, recordingMailer, closeDB(), fixture, redis.Client, newSilentGormLogger(), openDB(), publish() (+8 more)
+### Community 91 - "startFixture"
+Cohesion: 0.26
+Nodes (15): fixture, recordingMailer, closeDB(), redis.Client, openDB(), publish(), retryUntil(), startFixture() (+7 more)
 
 ### Community 94 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 95 - "auth/internal/handlers.go"
-Cohesion: 0.14
-Nodes (11): ctxKeyHash, forgotInput, loginInput, SecretMatch(), registerInput, resetInput, RequireSessionIdentity(), clientIP() (+3 more)
+Cohesion: 0.13
+Nodes (12): ctxKeyHash, forgotInput, loginInput, SecretMatch(), registerInput, resetInput, RequireSessionIdentity(), clientIP() (+4 more)
+
+### Community 96 - "RolesPage.test.tsx"
+Cohesion: 0.09
+Nodes (16): el, qc, download(), exportMatrixPng(), roleBody(), RolesPage(), exportCsv(), exportJson() (+8 more)
 
 ### Community 97 - "TestRoomsBroadcastDenyAndForceLogoutKick"
-Cohesion: 0.23
-Nodes (12): github.com/coder/websocket.Conn, net/http/httptest.Server, net/http.Response, dialWS(), mint(), readMsg(), send(), TestRoomsBroadcastDenyAndForceLogoutKick() (+4 more)
-
-### Community 98 - "main"
 Cohesion: 0.26
-Nodes (10): envBool(), envDuration(), envInt(), OpenDatabase(), TestDatabaseEnvironmentDefaultsAndOverrides(), StartPprof(), config, closeDB() (+2 more)
+Nodes (11): github.com/coder/websocket.Conn, net/http/httptest.Server, dialWS(), mint(), readMsg(), send(), TestRoomsBroadcastDenyAndForceLogoutKick(), redis.Client (+3 more)
+
+### Community 98 - "OpenDatabase"
+Cohesion: 0.62
+Nodes (6): databaseTimeouts(), envBool(), envDuration(), envInt(), OpenDatabase(), TestDatabaseEnvironmentDefaultsAndOverrides()
 
 ### Community 99 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -619,57 +629,61 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 103 - "index.ts"
-Cohesion: 0.24
-Nodes (13): AuthContext, AuthProvider(), ApiClient, CreateClientOptions, decodeClaims(), getAccessToken(), getDeviceID(), GlobalWithToken (+5 more)
+### Community 103 - "LoginPage.tsx"
+Cohesion: 0.12
+Nodes (13): AuthFrame(), AuthPage, FEATURES, PAGE, Window, el, claimsOf(), formatCountdown() (+5 more)
 
-### Community 111 - "Handlers"
-Cohesion: 0.29
-Nodes (5): contains(), Handlers, NewHandlers(), NewHandlersWithKeyRing(), TokenFromHandshake()
+### Community 111 - "Reliability & Resilience"
+Cohesion: 0.25
+Nodes (7): Backup and disaster recovery, Deliberate non-mechanisms, Deployment safety, Multi-region readiness checklist, Reliability & Resilience, Runtime controls, Worker and DLQ operations
 
-### Community 142 - "platform_test.go"
-Cohesion: 0.17
-Nodes (13): ListOK(), ParsePagination(), discardLogger(), TestFailEnvelopeShape(), TestGormLoggerTrace(), TestListOKShape(), TestOKEnvelopeShape(), TestParsePagination() (+5 more)
+### Community 142 - "testing.T"
+Cohesion: 0.13
+Nodes (21): testing.T, discardLogger(), TestFailEnvelopeShape(), TestGormLoggerTrace(), TestListOKShape(), TestLoadDotEnv(), TestOKEnvelopeShape(), TestParsePagination() (+13 more)
 
-### Community 150 - "main"
-Cohesion: 0.17
-Nodes (12): LoadDotEnv(), loadSecretFiles(), MustParseEnv(), TestLoadDotEnv(), TestSecretFileEnvAdapterIgnoresOptionalAppEnvFile(), envGet(), writeFile(), PurgeDeletedProfiles() (+4 more)
+### Community 150 - "ResetPage.tsx"
+Cohesion: 0.18
+Nodes (14): api, apiError(), AuthApiError, forgot(), login(), LoginResult, readMessage(), register() (+6 more)
 
-### Community 154 - "Recoverer"
-Cohesion: 0.24
-Nodes (8): InitErrorReporter(), ReportError(), toError(), Recoverer(), TestRecoverer(), ErrorReporter, noopReporter, sentryReporter
+### Community 152 - "PublishWithAuditOutbox"
+Cohesion: 0.15
+Nodes (8): redis.Client, PublishWithAuditOutbox(), RedisPublisher, redis.Client, MigrateUp(), RedisPublisher, redis.Client, MigrateUp()
 
-### Community 155 - "KeyedDigest"
-Cohesion: 0.17
-Nodes (14): MFAEnrollment, DecryptForSubject(), DeriveKey(), EncryptForSubject(), KeyedDigest(), VerifyDigest(), TestSecurityPrimitives(), TestStreamMessageSigningAndEncryption() (+6 more)
+### Community 154 - "useToast"
+Cohesion: 0.20
+Nodes (11): DeleteRoleModal(), ForbiddenPage(), EnvBadge(), ENV, SessionMenu(), timezoneOptions(), Topbar(), TopbarProps (+3 more)
 
-### Community 156 - "NewGormLogger"
-Cohesion: 0.19
-Nodes (10): gorm.io/gorm/logger.Interface, gorm.io/gorm/logger.LogLevel, NewGormLogger(), TestSchedulerSingleRunnerAndPanicSafety(), dockerAvailable(), requireDocker(), StartPostgres(), StartRedis() (+2 more)
+### Community 155 - "Publish"
+Cohesion: 0.21
+Nodes (13): MFAEnrollment, DecryptForSubject(), DeriveKey(), EncryptForSubject(), KeyedDigest(), VerifyDigest(), TestSecurityPrimitives(), TestStreamMessageSigningAndEncryption() (+5 more)
+
+### Community 156 - "StartRedis"
+Cohesion: 0.22
+Nodes (10): gorm.io/gorm/logger.Interface, NewGormLogger(), TestSchedulerSingleRunnerAndPanicSafety(), dockerAvailable(), requireDocker(), StartPostgres(), StartRedis(), TestPostgresHarnessBootsAndServesQueries() (+2 more)
 
 ### Community 157 - "Service"
-Cohesion: 0.10
-Nodes (20): testing.F, StreamPublisher, ValidatePublicHTTPSURL(), RegistrationDay, UserStats, AuditEvent, Loggerish, FuzzUserOrderClauseNeverIncludesInput() (+12 more)
+Cohesion: 0.13
+Nodes (17): testing.F, ListCursor, ListFilters, ValidatePublicHTTPSURL(), RegistrationDay, UserStats, FuzzUserOrderClauseNeverIncludesInput(), FuzzValidateProfileFields() (+9 more)
 
 ### Community 159 - "rbac/internal/migrate.go"
-Cohesion: 0.47
-Nodes (4): migrateUp(), migrationURL(), trimScheme(), MigrateUp()
+Cohesion: 0.83
+Nodes (3): migrateUp(), migrationURL(), trimScheme()
 
 ### Community 162 - "NewRequestValidator"
 Cohesion: 0.31
 Nodes (6): github.com/getkin/kin-openapi/routers.Router, RequestValidator, NewRequestValidator(), TestRequestValidatorAcceptsRegisterBody(), TestRequestValidatorPreservesBodyLimitError(), TestRequestValidatorRejectsUndeclaredBody()
 
-### Community 165 - "useAuth"
-Cohesion: 0.24
-Nodes (7): ForbiddenPage(), NotFoundPage(), SessionUser, Probe(), useAuth(), RequirePermission(), DashboardShell()
+### Community 165 - "SettingsPage"
+Cohesion: 0.22
+Nodes (13): AuthRoutes(), Gate(), handleLoggedIn(), handleReauthenticated(), secureRequest(), SettingsPage(), beginMFA(), changePassword() (+5 more)
 
 ### Community 166 - "net/http.Handler"
-Cohesion: 0.62
-Nodes (7): chi.Router, ServerInterface, net/http.Handler, Handler(), HandlerFromMux(), HandlerFromMuxWithBaseURL(), HandlerWithOptions()
+Cohesion: 0.14
+Nodes (18): RoleSummary, UserStats, github.com/oapi-codegen/runtime/types.Date, net/http.Handler, chi.Router, ChiServerOptions, EnvelopeFail, EnvelopeMeta (+10 more)
 
 ### Community 167 - "Handlers"
-Cohesion: 0.13
-Nodes (10): ctxKeyEmail, ctxKeyPerms, AuthorizeResource(), Handlers, EmailFromContext(), ctxKeySub, IdentityMiddleware(), PermissionsFromContext() (+2 more)
+Cohesion: 0.15
+Nodes (11): ctxKeyEmail, ctxKeyPerms, AuthorizeResource(), Handlers, Service, validator.Validate, NewHandlers(), EmailFromContext() (+3 more)
 
 ### Community 173 - "WebVitals"
 Cohesion: 0.40
@@ -680,36 +694,48 @@ Cohesion: 0.29
 Nodes (7): jwt.RegisteredClaims, ParseAccessToken(), ParseAccessTokenRing(), ParseSigningKeys(), AccessClaims, SigningKeys, ParseAccess()
 
 ### Community 176 - "main"
+Cohesion: 0.36
+Nodes (7): MigrateUp(), migrationURL(), trimScheme(), closeDB(), envFile(), main(), pingDB()
+
+### Community 177 - "main"
 Cohesion: 0.31
-Nodes (8): MigrateUp(), migrationURL(), trimScheme(), closeDB(), envFile(), main(), pingDB(), config
+Nodes (7): log/slog.Level, NewLogger(), parseLogLevel(), config, closeDB(), main(), pingDB()
 
-### Community 177 - "Gate"
+### Community 181 - "NewScheduler"
+Cohesion: 0.36
+Nodes (4): redis.Client, NewScheduler(), RecordHousekeeping(), Scheduler
+
+### Community 182 - "Audit"
+Cohesion: 0.70
+Nodes (4): Audit(), AuditEvent, Loggerish, StreamPublisher
+
+### Community 184 - "TestDatabaseTimeoutsPreserveDSN"
 Cohesion: 0.40
-Nodes (5): AuthRoutes(), Gate(), handleLoggedIn(), handleReauthenticated(), AuthState
+Nodes (3): FeatureEnabled(), TestDatabaseTimeoutsPreserveDSN(), TestFeatureEnabled()
 
-### Community 180 - "envelope.go"
-Cohesion: 0.50
-Nodes (3): WriteJSON(), failEnvelope, okEnvelope
+### Community 193 - "Profile"
+Cohesion: 0.22
+Nodes (8): ForgotInput, LoginInput, Profile, ProfileInput, ProfileStatus, RegisterInput, github.com/oapi-codegen/runtime/types.Email, RoleSummary
 
 ## Knowledge Gaps
-- **584 isolated node(s):** `cdnOrigin`, `Profile`, `ListMeta`, `PAGE_SIZES`, `SortField` (+579 more)
+- **594 isolated node(s):** `Profile`, `ListMeta`, `PAGE_SIZES`, `SortField`, `SortDirection` (+589 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **57 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **53 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Deprecation()` connect `Contracts Pipeline (spec-first)` to `net/http.Request`, `Service`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Why does `Contracts Pipeline (spec-first)` connect `Contracts Pipeline (spec-first)` to `ARCHITECTURE overview`, `Security Posture`, `DoD Evidence Checklist`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **What connects `cdnOrigin`, `Profile`, `ListMeta` to the rest of the system?**
-  _584 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `context.Context` be split into smaller, more focused modules?**
-  _Cohesion score 0.10790960451977401 - nodes in this community are weakly interconnected._
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Are the 4 inferred relationships involving `OK()` (e.g. with `Drain()` and `Healthz()`) actually correct?**
+  _`OK()` has 4 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `Profile`, `ListMeta`, `PAGE_SIZES` to the rest of the system?**
+  _594 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Service` be split into smaller, more focused modules?**
+  _Cohesion score 0.12025901942645699 - nodes in this community are weakly interconnected._
 - **Should `net/http.Request` be split into smaller, more focused modules?**
-  _Cohesion score 0.05982905982905983 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05958485958485959 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.041666666666666664 - nodes in this community are weakly interconnected._
-- **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07822410147991543 - nodes in this community are weakly interconnected._

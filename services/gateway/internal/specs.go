@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform/permissions"
 	"gopkg.in/yaml.v3"
@@ -20,10 +21,14 @@ func ParseUpstreams(raw string) (Upstreams, error) {
 		return nil, fmt.Errorf("UPSTREAMS must be JSON {\"name\":\"url\"}: %w", err)
 	}
 	for name, url := range u {
-		if !strings.HasPrefix(url, "http") {
-			return nil, fmt.Errorf("upstream %s url must start with http(s)", name)
+		endpoints := strings.Split(url, ",")
+		for i := range endpoints {
+			endpoints[i] = strings.TrimRight(strings.TrimSpace(endpoints[i]), "/")
+			if !strings.HasPrefix(endpoints[i], "http://") && !strings.HasPrefix(endpoints[i], "https://") {
+				return nil, fmt.Errorf("upstream %s url must start with http(s)", name)
+			}
 		}
-		u[name] = strings.TrimRight(url, "/")
+		u[name] = strings.Join(endpoints, ",")
 	}
 	return u, nil
 }
@@ -36,6 +41,9 @@ type Route struct {
 	AuthRequired bool   // x-auth: required
 	RateClass    string
 	BodyLimit    int64
+	Timeout      time.Duration
+	Hedge        bool
+	StaleIfError bool
 }
 
 // SpecRouteTable parses an upstream's OpenAPI YAML and produces the gateway-
@@ -64,6 +72,7 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				Service:   service,
 				RateClass: "standard",
 				BodyLimit: 1 << 20,
+				Timeout:   15 * time.Second,
 			}
 			if op != nil {
 				if p, ok := op["x-required-permission"].(string); ok {
@@ -78,6 +87,13 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				if v, ok := op["x-request-body-limit"].(int); ok && v > 0 {
 					route.BodyLimit = int64(v)
 				}
+				if v, ok := op["x-timeout"].(string); ok {
+					if timeout, err := time.ParseDuration(v); err == nil && timeout > 0 {
+						route.Timeout = timeout
+					}
+				}
+				route.Hedge, _ = op["x-hedge"].(bool)
+				route.StaleIfError, _ = op["x-stale-if-error"].(bool)
 				if _, internalOnly := op["x-internal"]; internalOnly {
 					continue // internal APIs are never exposed through the gateway
 				}

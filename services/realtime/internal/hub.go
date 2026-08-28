@@ -42,6 +42,12 @@ func (c *Client) Ping(ctx context.Context) error {
 	return c.Conn.Ping(pingCtx)
 }
 
+func (c *Client) InRoom(room string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Rooms[room]
+}
+
 type Hub struct {
 	log         *slog.Logger
 	mu          sync.RWMutex
@@ -121,18 +127,26 @@ func (h *Hub) Broadcast(ctx context.Context, room string, msg map[string]any, ex
 
 func (h *Hub) Disconnect(ctx context.Context, c *Client) {
 	h.mu.Lock()
+	c.mu.Lock()
 	for room := range c.Rooms {
 		if set := h.rooms[room]; set != nil {
 			delete(set, c)
 		}
 	}
-	total := h.totalConns()
+	c.mu.Unlock()
+	total := h.totalConnsLocked()
 	h.mu.Unlock()
 	h.connections.Set(float64(total))
 	_ = c.Conn.Close(websocket.StatusNormalClosure, "")
 }
 
 func (h *Hub) totalConns() int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.totalConnsLocked()
+}
+
+func (h *Hub) totalConnsLocked() int {
 	seen := map[*Client]bool{}
 	for _, set := range h.rooms {
 		for m := range set {

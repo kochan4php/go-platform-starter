@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -32,6 +34,9 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Validate YAML manifests
+        run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
+
       - name: Test (container tests included; Docker is available on runners)
         run: make test
 
@@ -42,6 +47,9 @@ jobs:
         run: |
           make contracts SVC=_template
           git diff --exit-code
+
+      - name: Zero-downtime migration policy
+        run: scripts/check-migration-safety.sh "${{ github.event.pull_request.base.sha || github.event.before }}"
 
   web:
     runs-on: ubuntu-latest

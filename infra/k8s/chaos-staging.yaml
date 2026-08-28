@@ -1,0 +1,28 @@
+# Apply only to a staging namespace with Chaos Mesh installed.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: kill-random-platform-pod
+  namespace: staging
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [staging]
+    labelSelectors: { resilience-test: "true" }
+  duration: 30s
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: platform-upstream-latency
+  namespace: staging
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [staging]
+    labelSelectors: { resilience-test: "true" }
+  delay: { latency: 250ms, correlation: "50", jitter: 50ms }
+  duration: 2m
+  direction: both

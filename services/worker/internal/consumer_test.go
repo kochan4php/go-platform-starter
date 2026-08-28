@@ -89,6 +89,32 @@ func waitFor(t *testing.T, timeout time.Duration, cond func() bool, msg string) 
 	t.Fatal(msg)
 }
 
+func TestFlushAuditOutboxPublishesAndDeletes(t *testing.T) {
+	f := startFixture(t, nil)
+	payload := `{"id":"audit-test-1","actorSub":"1","action":"test","entity":"test"}`
+	if err := f.db.Exec(`INSERT INTO audit.event_outbox (id, stream, event, payload) VALUES (?, ?, ?, ?::jsonb)`,
+		"audit-test-1", "audit.events", "audit.entry", payload).Error; err != nil {
+		t.Fatal(err)
+	}
+	n, err := FlushAuditOutbox(context.Background(), f.db, f.rdb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("flushed = %d", n)
+	}
+	if length, _ := f.rdb.XLen(context.Background(), "audit.events").Result(); length != 1 {
+		t.Fatalf("stream length = %d", length)
+	}
+	var remaining int64
+	if err := f.db.Raw(`SELECT count(*) FROM audit.event_outbox`).Scan(&remaining).Error; err != nil {
+		t.Fatal(err)
+	}
+	if remaining != 0 {
+		t.Fatalf("outbox rows = %d", remaining)
+	}
+}
+
 // Postgres containers report ready before they accept every connection
 // reliably; the first open can transiently EOF (same pattern as auth's suite).
 func retryUntil(fn func() error, within time.Duration) error {
