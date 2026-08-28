@@ -277,6 +277,7 @@ export default function UsersPage() {
       if (error) throw new Error("failed to load roles");
       return (data?.data as { items?: { id: number; name: string }[] })?.items ?? [];
     },
+    staleTime: Number.POSITIVE_INFINITY,
   });
   const stats = useQuery({
     queryKey: ["user-stats"],
@@ -307,8 +308,9 @@ export default function UsersPage() {
         order: sortDirection,
       },
     ],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const { data, error } = await api.GET("/api/v1/users", {
+        signal,
         params: {
           query: {
             limit: pageSize,
@@ -421,6 +423,23 @@ export default function UsersPage() {
       );
       return ids;
     },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ["users"] });
+      const previous = queryClient.getQueriesData<{ items: Profile[]; meta: ListMeta }>({
+        queryKey: ["users"],
+      });
+      const removed = new Set(ids);
+      queryClient.setQueriesData<{ items: Profile[]; meta: ListMeta }>(
+        { queryKey: ["users"] },
+        (current) =>
+          current && {
+            ...current,
+            items: current.items.filter((profile) => !removed.has(profile.id)),
+            meta: { ...current.meta, total: Math.max(0, current.meta.total - ids.length) },
+          },
+      );
+      return { previous };
+    },
     onSuccess: (ids) => {
       setPendingDeleteIds((current) => {
         const next = new Set(current);
@@ -433,7 +452,8 @@ export default function UsersPage() {
       realtime.broadcast("delete");
       toast("success", `${formatNumber(ids.length)} user${ids.length === 1 ? "" : "s"} deleted`);
     },
-    onError: (err) => {
+    onError: (err, _ids, context) => {
+      for (const [key, data] of context?.previous ?? []) queryClient.setQueryData(key, data);
       setPendingDeleteIds(new Set<number>());
       toast("error", (err as Error).message);
     },
@@ -698,6 +718,7 @@ export default function UsersPage() {
       {/* Responsive directory summary: stacked, paired, then six-column bento. */}
       <div
         data-testid="profiles-summary"
+        data-performance-region="bento"
         className="grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-line)] sm:grid-cols-2 lg:auto-flow-dense lg:grid-cols-6"
       >
         <button
@@ -719,6 +740,8 @@ export default function UsersPage() {
           <img
             data-art
             src="https://picsum.photos/seed/directory-noir/900/900"
+            width="900"
+            height="900"
             alt=""
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover opacity-80 grayscale contrast-125"
@@ -2508,6 +2531,8 @@ function AvatarEditor({
       {avatarUrl && !avatarBroken ? (
         <img
           src={avatarUrl}
+          width="64"
+          height="64"
           alt="Avatar preview"
           onError={() => onBroken(true)}
           className="size-16 shrink-0 rounded-2xl border border-[var(--color-line)] object-cover grayscale"

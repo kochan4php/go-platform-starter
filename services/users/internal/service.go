@@ -26,6 +26,14 @@ type ListFilters struct {
 	RoleID         int64
 	RegisteredFrom *time.Time
 	RegisteredTo   *time.Time
+	IDs            []int64
+	Cursor         *ListCursor
+	CountMode      string
+}
+
+type ListCursor struct {
+	CreatedAt time.Time
+	ID        int64
 }
 
 type UserStats struct {
@@ -150,14 +158,43 @@ func (s *Service) List(ctx context.Context, limit, offset int, sort, order strin
 	if filters.RegisteredTo != nil {
 		db = db.Where("created_at <= ?", *filters.RegisteredTo)
 	}
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
+	if len(filters.IDs) > 0 {
+		db = db.Where("id IN ?", filters.IDs)
 	}
-	if err := db.Order(userOrderClause(sort, order)).Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+	if filters.CountMode != "none" {
+		if filters.CountMode == "estimate" && filters.Query == "" && filters.Presence == "" && filters.RoleID == 0 && filters.RegisteredFrom == nil && filters.RegisteredTo == nil && len(filters.IDs) == 0 {
+			if err := s.db.WithContext(ctx).Raw(`SELECT reltuples::bigint FROM pg_class WHERE oid = 'users.users'::regclass`).Scan(&total).Error; err != nil {
+				return nil, 0, err
+			}
+		} else if err := db.Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
+	} else {
+		total = -1
+	}
+	if filters.Cursor != nil {
+		operator := "<"
+		if strings.EqualFold(order, "asc") {
+			operator = ">"
+		}
+		db = db.Where("(created_at, id) "+operator+" (?, ?)", filters.Cursor.CreatedAt, filters.Cursor.ID)
+	}
+	query := db.Order(userOrderClause(sort, order) + ", id " + orderDirection(order)).Limit(limit)
+	if filters.Cursor == nil {
+		query = query.Offset(offset)
+	}
+	if err := query.Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	s.attachManagementData(ctx, items)
 	return items, total, nil
+}
+
+func orderDirection(order string) string {
+	if strings.EqualFold(order, "asc") {
+		return "ASC"
+	}
+	return "DESC"
 }
 
 func (s *Service) Stats(ctx context.Context) (*UserStats, error) {

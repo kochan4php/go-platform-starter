@@ -19,6 +19,7 @@ ENV REMOTE_BASE=${REMOTE_BASE}
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-auth build
 
 FROM nginxinc/nginx-unprivileged:alpine
-COPY apps/web-auth/nginx.conf /etc/nginx/conf.d/default.conf
+ENV NGINX_GZIP_LEVEL=5
+COPY apps/web-auth/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /src/apps/web-auth/dist /usr/share/nginx/html
 EXPOSE 8080

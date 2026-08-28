@@ -13,3 +13,7 @@ scrape_configs:
           - realtime:8085
         labels:
           mesh: local
+
+  - job_name: postgres
+    static_configs:
+      - targets: [postgres-exporter:9187]

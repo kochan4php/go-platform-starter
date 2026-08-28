@@ -12,9 +12,11 @@ const (
 )
 
 type Meta struct {
-	Limit  int   `json:"limit"`
-	Offset int   `json:"offset"`
-	Total  int64 `json:"total"`
+	Limit      int    `json:"limit"`
+	Offset     int    `json:"offset"`
+	Total      int64  `json:"total"`
+	NextCursor string `json:"nextCursor,omitempty"`
+	Estimated  bool   `json:"estimated,omitempty"`
 }
 
 type listData struct {

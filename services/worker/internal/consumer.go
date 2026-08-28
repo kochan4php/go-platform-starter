@@ -9,6 +9,7 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,6 +46,8 @@ type Consumer struct {
 
 	minIdle      time.Duration // PEL for XAUTOCLAIM reclaim
 	reclaimEvery time.Duration // how often pending entries are reclaimed + lag reported
+	concurrency  int
+	readCount    int64
 }
 
 func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *slog.Logger) *Consumer {
@@ -54,7 +57,19 @@ func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *sl
 		stream:       []string{"mail.jobs", "audit.events"},
 		minIdle:      30 * time.Second,
 		reclaimEvery: 10 * time.Second,
+		concurrency:  1,
+		readCount:    10,
 	}
+}
+
+func (c *Consumer) Configure(concurrency int, readCount int64) *Consumer {
+	if concurrency > 0 {
+		c.concurrency = concurrency
+	}
+	if readCount > 0 {
+		c.readCount = readCount
+	}
+	return c
 }
 
 // Run consumes all streams until ctx is done. Groups read from the stream
@@ -64,10 +79,30 @@ func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *sl
 // <stream>:dlq (PLAN item 55).
 func (c *Consumer) Run(ctx context.Context) {
 	c.ensureGroups(ctx)
+	var workers sync.WaitGroup
+	for range c.concurrency {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			c.consume(ctx)
+		}()
+	}
 
 	ticker := time.NewTicker(c.reclaimEvery)
 	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			workers.Wait()
+			return
+		case <-ticker.C:
+			c.reclaimPending(ctx)
+			c.reportLag(ctx)
+		}
+	}
+}
 
+func (c *Consumer) consume(ctx context.Context) {
 	for ctx.Err() == nil {
 		res, err := c.rdb.XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group:    group,
@@ -75,19 +110,12 @@ func (c *Consumer) Run(ctx context.Context) {
 			// [stream..., id...] shape: one fresh-delivery marker ">" per stream.
 			Streams: append(append([]string{}, c.stream...), ">", ">"),
 			Block:   3 * time.Second,
-			Count:   10,
+			Count:   c.readCount,
 		}).Result()
 		switch {
 		case err == nil:
 			for _, s := range res {
-				for _, msg := range s.Messages {
-					event, payload, decodeErr := platform.DecodeStreamMessage(s.Stream, msg.Values)
-					if decodeErr != nil {
-						c.process(ctx, s.Stream, msg.ID, "", "invalid:"+decodeErr.Error())
-						continue
-					}
-					c.process(ctx, s.Stream, msg.ID, payload, event)
-				}
+				c.processMessages(ctx, s.Stream, s.Messages)
 			}
 		case strings.Contains(err.Error(), "NOGROUP"):
 			c.ensureGroups(ctx) // stream recreated after a flush/restart
@@ -95,14 +123,6 @@ func (c *Consumer) Run(ctx context.Context) {
 			// idle window elapsed or shutdown — nothing to do
 		default:
 			c.log.Error("xreadgroup failed", "err", err)
-		}
-
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			c.reclaimPending(ctx)
-			c.reportLag(ctx)
 		}
 	}
 }
@@ -129,14 +149,7 @@ func (c *Consumer) reclaimPending(ctx context.Context) {
 			c.log.Warn("xautoclaim failed", "stream", s, "err", err)
 			continue
 		}
-		for _, msg := range res {
-			event, payload, decodeErr := platform.DecodeStreamMessage(s, msg.Values)
-			if decodeErr != nil {
-				c.process(ctx, s, msg.ID, "", "invalid:"+decodeErr.Error())
-				continue
-			}
-			c.process(ctx, s, msg.ID, payload, event)
-		}
+		c.processMessages(ctx, s, res)
 	}
 }
 
@@ -149,7 +162,31 @@ func (c *Consumer) reportLag(ctx context.Context) {
 	}
 }
 
-func (c *Consumer) process(ctx context.Context, stream, id, payload, event string) {
+func (c *Consumer) processMessages(ctx context.Context, stream string, messages []redis.XMessage) {
+	acked := make([]string, 0, len(messages))
+	process := func(db *gorm.DB) {
+		for _, msg := range messages {
+			event, payload, decodeErr := platform.DecodeStreamMessage(stream, msg.Values)
+			if decodeErr != nil {
+				event = "invalid:" + decodeErr.Error()
+			}
+			if c.processWithDB(ctx, db, stream, msg.ID, payload, event) {
+				acked = append(acked, msg.ID)
+			}
+		}
+	}
+	if stream == "audit.events" {
+		if err := c.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error { process(tx); return nil }); err != nil {
+			c.log.Warn("audit batch transaction failed", "count", len(messages), "err", err)
+			return
+		}
+	} else {
+		process(c.db)
+	}
+	c.ackBatch(ctx, stream, acked)
+}
+
+func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, payload, event string) bool {
 	attempts := c.bumpAttempts(ctx, stream, id)
 	dedupKey := "worker:sent:" + stream + ":" + id
 
@@ -158,15 +195,14 @@ func (c *Consumer) process(ctx context.Context, stream, id, payload, event strin
 	case stream == "mail.jobs" && event == "email.send":
 		err = c.handleEmail(ctx, dedupKey, payload)
 	case stream == "audit.events":
-		err = c.handleAudit(ctx, event, stream+":"+id, payload)
+		err = c.handleAuditWithDB(ctx, db, event, stream+":"+id, payload)
 	default:
 		err = fmt.Errorf("no handler for %s/%s", stream, event)
 	}
 
 	if err == nil {
 		jobsProcessed.WithLabelValues(stream, event, "ok").Inc()
-		c.ack(ctx, stream, id)
-		return
+		return true
 	}
 
 	jobsProcessed.WithLabelValues(stream, event, "failed").Inc()
@@ -178,9 +214,10 @@ func (c *Consumer) process(ctx context.Context, stream, id, payload, event strin
 			Stream: stream + ":dlq",
 			Values: map[string]any{"event": event, "payload": payload, "orig_id": id},
 		}).Err()
-		c.ack(ctx, stream, id)
 		c.log.Error("job moved to DLQ", "stream", stream, "id", id)
+		return true
 	}
+	return false
 }
 
 // handleEmail sends one transactional mail. At-least-once delivery means a
@@ -213,6 +250,10 @@ func (c *Consumer) handleEmail(ctx context.Context, dedupKey, payload string) er
 // writer of that schema. msg_id carries the originating stream+message ID;
 // the unique index turns a redelivery into ON CONFLICT DO NOTHING.
 func (c *Consumer) handleAudit(ctx context.Context, event, msgID, payload string) error {
+	return c.handleAuditWithDB(ctx, c.db, event, msgID, payload)
+}
+
+func (c *Consumer) handleAuditWithDB(ctx context.Context, db *gorm.DB, event, msgID, payload string) error {
 	if event != "audit.entry" {
 		return nil // unknown audit events are acked-and-ignored
 	}
@@ -230,7 +271,7 @@ func (c *Consumer) handleAudit(ctx context.Context, event, msgID, payload string
 		return fmt.Errorf("audit payload failed schema validation")
 	}
 	metaJSON, _ := json.Marshal(ev.Meta)
-	return c.db.WithContext(ctx).Exec(
+	return db.WithContext(ctx).Exec(
 		`INSERT INTO audit.audit_logs (actor_sub, action, entity, entity_id, meta, msg_id)
 		 VALUES (?, ?, ?, ?, ?::jsonb, ?)
 		 ON CONFLICT (msg_id) DO NOTHING`,
@@ -252,9 +293,22 @@ func (c *Consumer) bumpAttempts(ctx context.Context, stream, id string) int64 {
 	return n
 }
 
-func (c *Consumer) ack(ctx context.Context, stream, id string) {
-	c.rdb.XAck(ctx, stream, group, id)
-	c.rdb.Del(ctx, "worker:attempts:"+stream+":"+id)
+func (c *Consumer) ackBatch(ctx context.Context, stream string, ids []string) {
+	if len(ids) == 0 {
+		return
+	}
+	_, err := c.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		pipe.XAck(ctx, stream, group, ids...)
+		keys := make([]string, len(ids))
+		for i, id := range ids {
+			keys[i] = "worker:attempts:" + stream + ":" + id
+		}
+		pipe.Del(ctx, keys...)
+		return nil
+	})
+	if err != nil {
+		c.log.Warn("ack pipeline failed", "stream", stream, "count", len(ids), "err", err)
+	}
 }
 
 func hostnameConsumer() string {

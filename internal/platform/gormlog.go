@@ -5,11 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )
+
+var dbQueryDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name:    "db_query_duration_seconds",
+	Help:    "Database query latency grouped by stable operation name.",
+	Buckets: prometheus.DefBuckets,
+}, []string{"query_name"})
+
+func init() { prometheus.MustRegister(dbQueryDuration) }
 
 type GormLogger struct {
 	Log           *slog.Logger
@@ -37,6 +47,7 @@ func (l *GormLogger) Error(_ context.Context, format string, a ...any) {
 func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
+	dbQueryDuration.WithLabelValues(queryOperation(sql)).Observe(elapsed.Seconds())
 	log := l.Log.With("elapsed_ms", elapsed.Milliseconds(), "rows", rows)
 
 	switch {
@@ -46,5 +57,32 @@ func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string
 		log.Warn("slow query", "threshold_ms", l.SlowThreshold.Milliseconds(), "sql", sql)
 	default:
 		log.Debug("query", "sql", sql)
+	}
+}
+
+// queryOperation intentionally keeps cardinality bounded. SQL text, table
+// names, and user values must never become metric labels.
+func queryOperation(sql string) string {
+	lower := strings.ToLower(sql)
+	fields := strings.Fields(lower)
+	if len(fields) == 0 {
+		return "other"
+	}
+	operation := strings.ToLower(fields[0])
+	switch operation {
+	case "select", "insert", "update", "delete":
+		for _, table := range []struct{ match, name string }{
+			{"users.users", "users"}, {"auth.sessions", "sessions"},
+			{"rbac.roles", "roles"}, {"rbac.permissions", "permissions"},
+			{"rbac.user_roles", "user_roles"}, {"rbac.role_permissions", "role_permissions"},
+			{"audit.audit_logs", "audit_logs"},
+		} {
+			if strings.Contains(lower, table.match) {
+				return operation + "." + table.name
+			}
+		}
+		return operation + ".other"
+	default:
+		return "other"
 	}
 }

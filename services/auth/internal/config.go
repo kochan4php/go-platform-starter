@@ -16,7 +16,8 @@ type Config struct {
 	InternalSecret    string        `env:"INTERNAL_SECRET"`
 	AccessTTLMinutes  int           `env:"ACCESS_TTL_MINUTES" envDefault:"30"`
 	RefreshTTLDays    int           `env:"REFRESH_TTL_DAYS" envDefault:"7"`
-	BcryptCost        int           `env:"BCRYPT_COST" envDefault:"10"`
+	BcryptCost        int           `env:"BCRYPT_COST" envDefault:"0"`
+	BcryptTarget      time.Duration `env:"BCRYPT_TARGET_DURATION" envDefault:"250ms"`
 	PasswordAlgorithm string        `env:"PASSWORD_HASH_ALGORITHM" envDefault:"bcrypt"`
 	PasswordHistory   int           `env:"PASSWORD_HISTORY_COUNT" envDefault:"5"`
 	HIBPAPIURL        string        `env:"HIBP_API_URL" envDefault:""`

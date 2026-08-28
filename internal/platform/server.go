@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -24,7 +25,7 @@ func GracefulRun(addr string, handler http.Handler, cleanup ...func()) error {
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		defer signal.Stop(sig)
 		<-sig
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout())
 		defer cancel()
 		_ = srv.Shutdown(ctx)
 		close(done)
@@ -46,4 +47,14 @@ func GracefulRun(addr string, handler http.Handler, cleanup ...func()) error {
 		fn()
 	}
 	return nil
+}
+
+func shutdownTimeout() time.Duration {
+	if value, err := time.ParseDuration(os.Getenv("SHUTDOWN_TIMEOUT")); err == nil && value > 0 {
+		return value
+	}
+	if seconds, err := strconv.Atoi(os.Getenv("SHUTDOWN_TIMEOUT_SECONDS")); err == nil && seconds > 0 {
+		return time.Duration(seconds) * time.Second
+	}
+	return 10 * time.Second
 }

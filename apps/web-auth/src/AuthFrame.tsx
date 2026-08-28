@@ -69,6 +69,8 @@ export default function AuthFrame({ page, children }: { page: AuthPage; children
       {!artLoaded ? <div className="ui-skeleton absolute inset-0 bg-[var(--color-skeleton)]" /> : null}
       <img
         src={`https://picsum.photos/seed/${meta.seed}/1200/1600`}
+        width="1200"
+        height="1600"
         alt=""
         onLoad={() => setArtLoaded(true)}
         className={`ui-auth-art-image ${artLoaded ? "opacity-80" : "opacity-0"}`}

@@ -122,102 +122,102 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Performance
 
-- [ ] 🔧 P1. Composite index list users (`created_at DESC, id`)
-- [ ] 🔧 P2. Covering index sessions lookup (`user_id, revoked_at, expires_at`)
-- [ ] 🔧 P3. Partial index sessions aktif (`WHERE revoked_at IS NULL`)
-- [ ] 🔧 P4. EXPLAIN ANALYZE semua query panas + simpan hasil di docs/SCALING
-- [ ] 🔧 P5. GORM PreparedStmtCache via config
-- [ ] 🔧 P6. Connection pool tuning via env (MaxOpen/MaxIdle/ConnMaxLifetime)
+- [x] 🔧 P1. Composite index list users (`created_at DESC, id`)
+- [x] 🔧 P2. Covering index sessions lookup (`user_id, revoked_at, expires_at`)
+- [x] 🔧 P3. Partial index sessions aktif (`WHERE revoked_at IS NULL`)
+- [x] 🔧 P4. EXPLAIN ANALYZE semua query panas + simpan hasil di docs/SCALING
+- [x] 🔧 P5. GORM PreparedStmtCache via config
+- [x] 🔧 P6. Connection pool tuning via env (MaxOpen/MaxIdle/ConnMaxLifetime)
 - [ ] 🧭 P7. PgBouncer integration (spike + docs dulu)
 - [ ] 🧭 P8. Read replica routing untuk query list (optional DSN)
-- [ ] 🔧 P9. Partitioning audit_logs per bulan (pg_partman)
-- [ ] 🔧 P10. VACUUM/ANALYZE tuning + monitoring bloat
-- [ ] 🔧 P11. Audit: verifikasi semua unique index benar-benar terpakai query
-- [ ] 🔧 P12. Cursor pagination users list (keyset: `WHERE (created_at, id) < ...`)
-- [ ] 🔧 P13. pprof endpoint (net/http/pprof) internal-only di semua service
-- [ ] 🔧 P14. GOMEMLIMIT env tuning
-- [ ] 🔧 P15. GOGC tuning via env
-- [ ] 🔧 P16. Benchmark JSON encoding (encoding/json vs alternatif) — ukur dulu
-- [ ] 🔧 P17. Response writer pooling (sync.Pool)
-- [ ] 🔧 P18. Sampling debug log di production (log rate limit)
-- [ ] 🔧 P19. Worker: concurrency pool via env (jumlah goroutine handler)
-- [ ] 🔧 P20. Worker: XACK batch pipeline
-- [ ] 🔧 P21. Worker: XREADGROUP count tuning via env
-- [ ] 🔧 P22. Gateway: Transport MaxIdleConnsPerHost tuning ke upstream
-- [ ] 🔧 P23. Gateway: HTTP/2 ke upstream
-- [ ] 🔧 P24. Gateway: response streaming tanpa buffer penuh
-- [ ] 🔧 P25. Gateway: hot-reload spec table tanpa restart (atomic swap)
-- [ ] 🔧 P26. Auth: bcrypt cost benchmark otomatis (target ~250 ms/hashing)
-- [ ] 🔧 P27. Auth: LRU cache user lookup by id (TTL 30 dtk, invalidate on write)
-- [ ] 🔧 P28. Realtime: hub ring buffer per room (hindari slice growth)
-- [ ] 🔧 P29. Realtime: write batching per connection
-- [ ] 🔧 P30. Realtime: permessage-deflate compression
-- [ ] 🔧 P31. Readiness probe critical-dependency-only per service
-- [ ] 🔧 P32. Graceful shutdown drain timeout configurable
-- [ ] 🔧 P33. Route-level code splitting audit (chunk overlap check)
-- [ ] 🔧 P34. Modulepreload untuk chunk roles/users on sidebar hover
-- [ ] 🔧 P35. width/height attribute semua img (anti-CLS)
-- [ ] 🔧 P36. Font self-host WOFF2 subset + font-display swap
-- [ ] 🔧 P37. Critical CSS inline di index.html
-- [ ] 🔧 P38. Ukur build target es2020 vs es2022 (size vs compat)
-- [ ] 🔧 P39. Phosphor import size audit (individual icon files)
-- [ ] 🔧 P40. React re-render audit UsersPage (modal typing)
-- [ ] 🔧 P41. Virtualized table untuk 1000+ rows (tanstack-virtual)
-- [ ] 🔧 P42. Debounce search input
-- [ ] 🔧 P43. Service worker cache static assets (Workbox)
-- [ ] 🔧 P44. Brotli compression di nginx (selain gzip)
-- [ ] 🔧 P45. Cache-Control stale-while-revalidate untuk hashed assets
-- [ ] 🔧 P46. dns-prefetch/preconnect ke fontshare CDN
-- [ ] 🔧 P47. content-visibility: auto pada marquee + bento
-- [ ] 🔧 P48. content-visibility: auto pada section bento cards
-- [ ] 🔧 P49. Skeleton dengan dimensi fixed (anti layout shift)
-- [ ] 🔧 P50. Lighthouse CI (LCP/INP/CLS budget gate)
-- [ ] 🔧 P51. Nginx: open_file_cache
-- [ ] 🔧 P52. Nginx: worker_processes auto + sendfile + tcp_nopush
-- [ ] 🔧 P53. Redis: io-threads 4 + lazyfree-lazy-eviction
-- [ ] 🔧 P54. Postgres: shared_buffers/work_mem tuning per environment
-- [ ] 🔧 P55. Postgres: pg_stat_activity dashboard panel
-- [ ] 🔧 P56. Docker: GOCACHE buildkit mount untuk go build layer
-- [ ] 🔧 P57. Evaluasi UPX compress binary (ukur startup time impact)
-- [ ] 🔧 P58. Compose: healthcheck start_interval untuk faster-ready
-- [ ] 🔧 P59. Edge: microcache /docs/openapi.json (proxy_cache 5s)
-- [ ] 🔧 P60. K8s: topologySpreadConstraints antar zone
-- [ ] 🔧 P61. ETag/If-None-Match pada GET /users list
-- [ ] 🔧 P62. Sparse fieldsets (?fields=id,email)
-- [ ] 🔧 P63. Batch endpoint GET /users?ids=1,2,3
-- [ ] 🔧 P64. Response compression level config
+- [x] 🔧 P9. Partitioning audit_logs per bulan (pg_partman)
+- [x] 🔧 P10. VACUUM/ANALYZE tuning + monitoring bloat
+- [x] 🔧 P11. Audit: verifikasi semua unique index benar-benar terpakai query
+- [x] 🔧 P12. Cursor pagination users list (keyset: `WHERE (created_at, id) < ...`)
+- [x] 🔧 P13. pprof endpoint (net/http/pprof) internal-only di semua service
+- [x] 🔧 P14. GOMEMLIMIT env tuning
+- [x] 🔧 P15. GOGC tuning via env
+- [x] 🔧 P16. Benchmark JSON encoding (encoding/json vs alternatif) — ukur dulu
+- [x] 🔧 P17. Response writer pooling (sync.Pool)
+- [x] 🔧 P18. Sampling debug log di production (log rate limit)
+- [x] 🔧 P19. Worker: concurrency pool via env (jumlah goroutine handler)
+- [x] 🔧 P20. Worker: XACK batch pipeline
+- [x] 🔧 P21. Worker: XREADGROUP count tuning via env
+- [x] 🔧 P22. Gateway: Transport MaxIdleConnsPerHost tuning ke upstream
+- [x] 🔧 P23. Gateway: HTTP/2 ke upstream
+- [x] 🔧 P24. Gateway: response streaming tanpa buffer penuh
+- [x] 🔧 P25. Gateway: hot-reload spec table tanpa restart (atomic swap)
+- [x] 🔧 P26. Auth: bcrypt cost benchmark otomatis (target ~250 ms/hashing)
+- [x] 🔧 P27. Auth: LRU cache user lookup by id (TTL 30 dtk, invalidate on write)
+- [x] 🔧 P28. Realtime: hub ring buffer per room (hindari slice growth)
+- [x] 🔧 P29. Realtime: write batching per connection
+- [x] 🔧 P30. Realtime: permessage-deflate compression
+- [x] 🔧 P31. Readiness probe critical-dependency-only per service
+- [x] 🔧 P32. Graceful shutdown drain timeout configurable
+- [x] 🔧 P33. Route-level code splitting audit (chunk overlap check)
+- [x] 🔧 P34. Modulepreload untuk chunk roles/users on sidebar hover
+- [x] 🔧 P35. width/height attribute semua img (anti-CLS)
+- [x] 🔧 P36. Font self-host WOFF2 subset + font-display swap
+- [x] 🔧 P37. Critical CSS inline di index.html
+- [x] 🔧 P38. Ukur build target es2020 vs es2022 (size vs compat)
+- [x] 🔧 P39. Phosphor import size audit (individual icon files)
+- [x] 🔧 P40. React re-render audit UsersPage (modal typing)
+- [x] 🔧 P41. Virtualized table untuk 1000+ rows (tanstack-virtual)
+- [x] 🔧 P42. Debounce search input
+- [x] 🔧 P43. Service worker cache static assets (Workbox)
+- [x] 🔧 P44. Brotli compression di nginx (selain gzip)
+- [x] 🔧 P45. Cache-Control stale-while-revalidate untuk hashed assets
+- [x] 🔧 P46. dns-prefetch/preconnect ke fontshare CDN
+- [x] 🔧 P47. content-visibility: auto pada marquee + bento
+- [x] 🔧 P48. content-visibility: auto pada section bento cards
+- [x] 🔧 P49. Skeleton dengan dimensi fixed (anti layout shift)
+- [x] 🔧 P50. Lighthouse CI (LCP/INP/CLS budget gate)
+- [x] 🔧 P51. Nginx: open_file_cache
+- [x] 🔧 P52. Nginx: worker_processes auto + sendfile + tcp_nopush
+- [x] 🔧 P53. Redis: io-threads 4 + lazyfree-lazy-eviction
+- [x] 🔧 P54. Postgres: shared_buffers/work_mem tuning per environment
+- [x] 🔧 P55. Postgres: pg_stat_activity dashboard panel
+- [x] 🔧 P56. Docker: GOCACHE buildkit mount untuk go build layer
+- [x] 🔧 P57. Evaluasi UPX compress binary (ukur startup time impact)
+- [x] 🔧 P58. Compose: healthcheck start_interval untuk faster-ready
+- [x] 🔧 P59. Edge: microcache /docs/openapi.json (proxy_cache 5s)
+- [x] 🔧 P60. K8s: topologySpreadConstraints antar zone
+- [x] 🔧 P61. ETag/If-None-Match pada GET /users list
+- [x] 🔧 P62. Sparse fieldsets (?fields=id,email)
+- [x] 🔧 P63. Batch endpoint GET /users?ids=1,2,3
+- [x] 🔧 P64. Response compression level config
 - [ ] 🧭 P65. GraphQL gateway (evaluasi — kemungkinan tidak sekarang)
-- [ ] 🔧 P66. Fix N+1: permsForRole per-role → satu query IN + group in Go
-- [ ] 🔧 P67. attachPresence: prepared statement caching
-- [ ] 🔧 P68. Total count estimation mode untuk list besar (?count=estimate)
-- [ ] 🔧 P69. Stream claim: XAUTOCLAIM dengan JUSTID option
-- [ ] 🔧 P70. Worker audit insert: batching 100 per transaction
-- [ ] 🔧 P71. TanStack Query: placeholderData keepPreviousData (paginasi halus)
-- [ ] 🔧 P72. Optimistic update untuk delete/rename
-- [ ] 🔧 P73. Query persistence localStorage (instant back-navigation)
-- [ ] 🔧 P74. staleTime per-resource (permissions → Infinity)
-- [ ] 🔧 P75. gcTime tuning
-- [ ] 🔧 P76. Prefetch users list saat hover sidebar link
-- [ ] 🔧 P77. Verify query cancellation on unmount (AbortController)
-- [ ] 🔧 P78. rollup-plugin-visualizer + commit laporan bundle
-- [ ] 🔧 P79. esbuild drop console.log di production build
-- [ ] 🔧 P80. Tailwind purge audit + safelist review
-- [ ] 🔧 P81. Realtime presence heartbeat interval config
-- [ ] 🔧 P82. Realtime: per-connection write goroutine pool
-- [ ] 🔧 P83. Redis sharded pub/sub (SSPUBSUB) untuk skala besar
-- [ ] 🔧 P84. Build cache antar workspace (pnpm --filter shared deps)
-- [ ] 🔧 P85. Dockerfile: split COPY go.mod per-service untuk cache granular
-- [ ] 🔧 P86. CI build matrix paralel per-app
-- [ ] 🔧 P87. BuildKit remote cache (registry cache backend)
-- [ ] 🔧 P88. Pre-commit: warm go build cache
-- [ ] 🔧 P89. Vite: renderBuiltUrl untuk CDN asset path
-- [ ] 🔧 P90. SVG sprite generator untuk inline icons (dedup)
-- [ ] 🔧 P91. Go benchmark test handler panas + CI tracking
-- [ ] 🔧 P92. k6 load test script committed + hasil di SCALING.md
-- [ ] 🔧 P93. Continuous profiling (Pyroscope/Parca agent)
-- [ ] 🔧 P94. DB query duration histogram dengan label query-name
-- [ ] 🔧 P95. FE Web Vitals → kirim ke telemetry endpoint
-- [ ] 🔧 P96. OTel metrics p95 per route di Grafana
+- [x] 🔧 P66. Fix N+1: permsForRole per-role → satu query IN + group in Go
+- [x] 🔧 P67. attachPresence: prepared statement caching
+- [x] 🔧 P68. Total count estimation mode untuk list besar (?count=estimate)
+- [x] 🔧 P69. Stream claim: XAUTOCLAIM dengan JUSTID option
+- [x] 🔧 P70. Worker audit insert: batching 100 per transaction
+- [x] 🔧 P71. TanStack Query: placeholderData keepPreviousData (paginasi halus)
+- [x] 🔧 P72. Optimistic update untuk delete/rename
+- [x] 🔧 P73. Query persistence localStorage (instant back-navigation)
+- [x] 🔧 P74. staleTime per-resource (permissions → Infinity)
+- [x] 🔧 P75. gcTime tuning
+- [x] 🔧 P76. Prefetch users list saat hover sidebar link
+- [x] 🔧 P77. Verify query cancellation on unmount (AbortController)
+- [x] 🔧 P78. rollup-plugin-visualizer + commit laporan bundle
+- [x] 🔧 P79. esbuild drop console.log di production build
+- [x] 🔧 P80. Tailwind purge audit + safelist review
+- [x] 🔧 P81. Realtime presence heartbeat interval config
+- [x] 🔧 P82. Realtime: per-connection write goroutine pool
+- [x] 🔧 P83. Redis sharded pub/sub (SSPUBSUB) untuk skala besar
+- [x] 🔧 P84. Build cache antar workspace (pnpm --filter shared deps)
+- [x] 🔧 P85. Dockerfile: split COPY go.mod per-service untuk cache granular
+- [x] 🔧 P86. CI build matrix paralel per-app
+- [x] 🔧 P87. BuildKit remote cache (registry cache backend)
+- [x] 🔧 P88. Pre-commit: warm go build cache
+- [x] 🔧 P89. Vite: renderBuiltUrl untuk CDN asset path
+- [x] 🔧 P90. SVG sprite generator untuk inline icons (dedup)
+- [x] 🔧 P91. Go benchmark test handler panas + CI tracking
+- [x] 🔧 P92. k6 load test script committed + hasil di SCALING.md
+- [x] 🔧 P93. Continuous profiling (Pyroscope/Parca agent)
+- [x] 🔧 P94. DB query duration histogram dengan label query-name
+- [x] 🔧 P95. FE Web Vitals → kirim ke telemetry endpoint
+- [x] 🔧 P96. OTel metrics p95 per route di Grafana
 
 ---
 

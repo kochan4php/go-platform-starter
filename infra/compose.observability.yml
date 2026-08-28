@@ -2,6 +2,26 @@
 #   docker compose -f infra/compose.base.yml up -d
 #   docker compose -f infra/compose.observability.yml --profile obs up
 services:
+  auth:
+    environment: &pprof-env
+      PPROF_ADDR: 0.0.0.0:6060
+      PPROF_ALLOW_NETWORK: "true"
+
+  users:
+    environment: *pprof-env
+
+  rbac:
+    environment: *pprof-env
+
+  worker:
+    environment: *pprof-env
+
+  realtime:
+    environment: *pprof-env
+
+  gateway:
+    environment: *pprof-env
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel/config.yaml"]
@@ -15,6 +35,13 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports: ["9090:9090"]
 
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_NAME: postgresql://app:app@postgres:5432/app?sslmode=disable
+    depends_on:
+      - postgres
+
   grafana:
     image: grafana/grafana:latest
     environment:
@@ -24,3 +51,22 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports: ["3000:3000"]
+
+  pyroscope:
+    image: grafana/pyroscope:latest
+    command: ["server"]
+    ports: ["4040:4040"]
+
+  alloy:
+    image: grafana/alloy:latest
+    command: ["run", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+    depends_on:
+      - pyroscope
+      - auth
+      - users
+      - rbac
+      - worker
+      - realtime
+      - gateway

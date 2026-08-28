@@ -16,6 +16,11 @@ spec:
       labels:
         app: worker
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          matchLabelKeys: [pod-template-hash]
       securityContext:
         runAsNonRoot: true
         seccompProfile:

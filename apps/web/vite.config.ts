@@ -12,6 +12,8 @@ import { defineConfig } from "vite";
 const remoteEntry = (name: string, port: number) =>
   `Promise.resolve((window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://127.0.0.1:${port}/assets/remoteEntry.js')`;
 
+const cdnOrigin = process.env.VITE_CDN_ORIGIN?.replace(/\/$/, "");
+
 // Development runs WITHOUT federation: remote pages resolve straight to
 // workspace sources through aliases, giving instant HMR across apps. The
 // federation plugin is production-only.
@@ -29,6 +31,9 @@ const devAliases = {
 };
 
 export default defineConfig({
+  experimental: {
+    renderBuiltUrl: (filename) => (cdnOrigin ? `${cdnOrigin}/${filename}` : { relative: true }),
+  },
   server: { host: "127.0.0.1" },
   preview: { host: "127.0.0.1" },
   plugins: [
@@ -58,6 +63,7 @@ export default defineConfig({
       }
     : {}),
   build: {
+    manifest: true,
     target: "es2022",
     modulePreload: { polyfill: false },
     minify: "terser",

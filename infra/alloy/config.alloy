@@ -1,0 +1,19 @@
+pyroscope.scrape "platform" {
+  targets = [
+    {"__address__" = "gateway:6060", "service_name" = "gateway"},
+    {"__address__" = "auth:6060", "service_name" = "auth"},
+    {"__address__" = "users:6060", "service_name" = "users"},
+    {"__address__" = "rbac:6060", "service_name" = "rbac"},
+    {"__address__" = "worker:6060", "service_name" = "worker"},
+    {"__address__" = "realtime:6060", "service_name" = "realtime"},
+  ]
+  scrape_interval = "15s"
+  scrape_timeout  = "18s"
+  forward_to      = [pyroscope.write.local.receiver]
+}
+
+pyroscope.write "local" {
+  endpoint {
+    url = "http://pyroscope:4040"
+  }
+}

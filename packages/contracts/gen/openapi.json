@@ -1625,6 +1625,47 @@
             }
           },
           {
+            "name": "cursor",
+            "in": "query",
+            "description": "opaque keyset cursor for createdAt sorting",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "comma-separated batch of at most 100 user IDs",
+            "schema": {
+              "type": "string",
+              "maxLength": 2200
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "comma-separated sparse fields",
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "total-count strategy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "exact",
+                "estimate",
+                "none"
+              ],
+              "default": "exact"
+            }
+          },
+          {
             "name": "q",
             "in": "query",
             "description": "case-insensitive email/display-name search",

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,15 +20,16 @@ import (
 var specFS embed.FS
 
 type config struct {
-	Port              string `env:"PORT" envDefault:"8080"`
-	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
-	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
-	RedisUsername     string `env:"REDIS_USERNAME" envDefault:""`
-	RedisPassword     string `env:"REDIS_PASSWORD" envDefault:""`
-	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
-	PublicWSUrl       string `env:"PUBLIC_WS_URL" envDefault:"ws://127.0.0.1:8000/ws"`
-	Rooms             string `env:"ROOMS" envDefault:"lobby,general"`
-	MaxPerRoom        int    `env:"MAX_PER_ROOM" envDefault:"50"`
+	Port              string        `env:"PORT" envDefault:"8080"`
+	LogLevel          string        `env:"LOG_LEVEL" envDefault:"info"`
+	RedisAddr         string        `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername     string        `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword     string        `env:"REDIS_PASSWORD" envDefault:""`
+	AccessTokenSecret string        `env:"ACCESS_TOKEN_SECRET,required"`
+	PublicWSUrl       string        `env:"PUBLIC_WS_URL" envDefault:"ws://127.0.0.1:8000/ws"`
+	Rooms             string        `env:"ROOMS" envDefault:"lobby,general"`
+	MaxPerRoom        int           `env:"MAX_PER_ROOM" envDefault:"50"`
+	HeartbeatInterval time.Duration `env:"WS_HEARTBEAT_INTERVAL" envDefault:"30s"`
 }
 
 func main() {
@@ -38,6 +40,7 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "realtime")
+	platform.StartPprof(os.Getenv("PPROF_ADDR"), log)
 
 	shutdownTracer, err := platform.InitTracer(context.Background(), "realtime", log)
 	if err != nil {
@@ -61,7 +64,7 @@ func main() {
 		"redis": func(ctx context.Context) error { return rdb.Ping(ctx).Err() },
 	})
 
-	router.Get("/ws", internal.NewHandlersWithKeyRing(hub, cfg.AccessTokenSecret, log).WS)
+	router.Get("/ws", internal.NewHandlersWithKeyRing(hub, cfg.AccessTokenSecret, log).WithHeartbeat(cfg.HeartbeatInterval).WS)
 
 	router.Get("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
 		raw, _ := specFS.ReadFile("openapi.yaml")

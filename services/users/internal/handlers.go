@@ -1,12 +1,15 @@
 package internal
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -134,12 +137,135 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.
 	if params.RegisteredTo != nil {
 		filters.RegisteredTo = (*time.Time)(params.RegisteredTo)
 	}
+	countMode := r.URL.Query().Get("count")
+	if countMode == "" {
+		countMode = "exact"
+	}
+	if countMode != "exact" && countMode != "estimate" && countMode != "none" {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("count must be exact, estimate, or none"))
+		return
+	}
+	filters.CountMode = countMode
+	ids, err := parseIDs(r.URL.Query().Get("ids"))
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	filters.IDs = ids
+	if rawCursor := r.URL.Query().Get("cursor"); rawCursor != "" {
+		if sort != "createdAt" || offset != 0 {
+			platform.WriteError(w, h.log, platform.ErrBadRequest("cursor requires createdAt sorting and offset 0"))
+			return
+		}
+		cursor, cursorErr := decodeListCursor(rawCursor)
+		if cursorErr != nil {
+			platform.WriteError(w, h.log, platform.ErrBadRequest("invalid cursor"))
+			return
+		}
+		filters.Cursor = cursor
+	}
 	items, total, err := h.svc.List(r.Context(), limit, offset, sort, order, filters)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	platform.ListOK(w, "ok", items, platform.Meta{Limit: limit, Offset: offset, Total: total})
+	meta := platform.Meta{Limit: limit, Offset: offset, Total: total, Estimated: countMode == "estimate" && estimateEligible(filters)}
+	if len(items) == limit && sort == "createdAt" {
+		last := items[len(items)-1]
+		meta.NextCursor = encodeListCursor(last.CreatedAt, last.ID)
+	}
+	projected, projectErr := sparseProfiles(items, r.URL.Query().Get("fields"))
+	if projectErr != nil {
+		platform.WriteError(w, h.log, projectErr)
+		return
+	}
+	etagBytes, _ := json.Marshal(struct {
+		Items any
+		Meta  platform.Meta
+	}{projected, meta})
+	etag := fmt.Sprintf(`W/"%x"`, sha256.Sum256(etagBytes))
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "private, no-cache")
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	platform.ListOK(w, "ok", projected, meta)
+}
+
+func estimateEligible(filters ListFilters) bool {
+	return filters.Query == "" && filters.Presence == "" && filters.RoleID == 0 && filters.RegisteredFrom == nil && filters.RegisteredTo == nil && len(filters.IDs) == 0
+}
+
+func parseIDs(raw string) ([]int64, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
+	}
+	parts := strings.Split(raw, ",")
+	if len(parts) > 100 {
+		return nil, platform.ErrBadRequest("ids accepts at most 100 values")
+	}
+	ids := make([]int64, 0, len(parts))
+	for _, part := range parts {
+		id, err := strconv.ParseInt(strings.TrimSpace(part), 10, 64)
+		if err != nil || id < 1 {
+			return nil, platform.ErrBadRequest("ids must contain positive integers")
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+func encodeListCursor(createdAt time.Time, id int64) string {
+	return base64.RawURLEncoding.EncodeToString([]byte(createdAt.UTC().Format(time.RFC3339Nano) + "|" + strconv.FormatInt(id, 10)))
+}
+
+func decodeListCursor(raw string) (*ListCursor, error) {
+	decoded, err := base64.RawURLEncoding.DecodeString(raw)
+	if err != nil {
+		return nil, err
+	}
+	parts := strings.Split(string(decoded), "|")
+	if len(parts) != 2 {
+		return nil, errors.New("bad cursor")
+	}
+	createdAt, err := time.Parse(time.RFC3339Nano, parts[0])
+	if err != nil {
+		return nil, err
+	}
+	id, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil || id < 1 {
+		return nil, errors.New("bad cursor")
+	}
+	return &ListCursor{CreatedAt: createdAt, ID: id}, nil
+}
+
+func sparseProfiles(items []Profile, raw string) (any, error) {
+	if strings.TrimSpace(raw) == "" {
+		return items, nil
+	}
+	allowed := map[string]func(Profile) any{
+		"id": func(p Profile) any { return p.ID }, "email": func(p Profile) any { return p.Email },
+		"status": func(p Profile) any { return p.Status }, "displayName": func(p Profile) any { return p.DisplayName },
+		"avatarUrl": func(p Profile) any { return p.AvatarUrl }, "lastLoginAt": func(p Profile) any { return p.LastLoginAt },
+		"createdAt": func(p Profile) any { return p.CreatedAt }, "updatedAt": func(p Profile) any { return p.UpdatedAt },
+		"online": func(p Profile) any { return p.Online }, "activeSessions": func(p Profile) any { return p.ActiveSessions },
+		"roles": func(p Profile) any { return p.Roles },
+	}
+	fields := strings.Split(raw, ",")
+	rows := make([]map[string]any, len(items))
+	for i, profile := range items {
+		rows[i] = make(map[string]any, len(fields))
+		for _, rawField := range fields {
+			field := strings.TrimSpace(rawField)
+			getter, ok := allowed[field]
+			if !ok {
+				return nil, platform.ErrBadRequest("unknown sparse field %s", field)
+			}
+			rows[i][field] = getter(profile)
+		}
+	}
+	return rows, nil
 }
 
 func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request, id int64) {

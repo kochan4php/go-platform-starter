@@ -22,16 +22,18 @@ services:
       interval: 3s
       timeout: 3s
       retries: 15
+      start_interval: 1s
 
   redis:
     image: redis:7-alpine
     ports: ["${LAB_REDIS_PORT:-56380}:6379"]
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes", "--io-threads", "4", "--io-threads-do-reads", "yes", "--lazyfree-lazy-eviction", "yes", "--lazyfree-lazy-expire", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       timeout: 3s
       retries: 10
+      start_interval: 1s
 
   auth:
     build: { context: .., dockerfile: services/auth/Dockerfile }

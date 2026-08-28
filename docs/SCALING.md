@@ -3,11 +3,18 @@
 Defaults are sized for ~100k users. This file records the knobs, the math
 behind the autoscaling triggers, and the signals that say "shard now".
 
+The implemented performance controls, hot-query EXPLAIN runbook, and rejected
+alternatives are recorded in [PERFORMANCE.md](PERFORMANCE.md).
+
+The committed k6 release gate and results ledger are in
+[performance/K6.md](performance/K6.md): 50 VUs, p95 <= 250 ms, p99 <= 500 ms,
+and error rate below 1%.
+
 ## Sizing baseline
 
 | Component | Default | Rationale |
 | --- | --- | --- |
-| Postgres (single cluster) | schema-per-service, pool 4–8/service | one box comfortably holds 100k-user workloads; schemas keep extraction cheap |
+| Postgres (single cluster) | schema-per-service, pool 16 open / 8 idle per service | bounded and environment-tunable; schemas keep extraction cheap |
 | Redis (single) | AOF on, `maxmemory` unset until metrics demand it | cache + lockout + streams + pub/sub share it; see SPoF note in PLAN |
 | api services | HPA 2→10 @ CPU 70% / mem 80% | stateless, scale horizontally |
 | realtime | HPA 2→10, connections metric available (`realtime_connections`) | see connection math below |
@@ -15,7 +22,9 @@ behind the autoscaling triggers, and the signals that say "shard now".
 
 ## Pool sizing
 
-GORM pools per service (set in each service's DSN or via GORM defaults):
+GORM pools use prepared statements and the shared defaults
+`DB_MAX_OPEN_CONNS=16`, `DB_MAX_IDLE_CONNS=8`,
+`DB_CONN_MAX_LIFETIME=30m`, and `DB_CONN_MAX_IDLE_TIME=5m`:
 
 - start at `pool = 4 × vCPU` of the Postgres host **divided by service count**
 - watch `db_wait_count` style waits via slow-query logs; raise only when

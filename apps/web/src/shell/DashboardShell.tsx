@@ -1,3 +1,4 @@
+import { createApiClient } from "@starter/contracts";
 import { BrandMark, PreferencesProvider, Tooltip } from "@starter/ui";
 import { useIsFetching, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import {
@@ -345,6 +346,28 @@ interface NavItem {
   badge?: string;
 }
 
+const remoteForRoute: Record<string, [string, string]> = {
+  "/admin/users": ["web_admin_users", "http://127.0.0.1:5175/assets/remoteEntry.js"],
+  "/admin/roles": ["web_admin_roles", "http://127.0.0.1:5176/assets/remoteEntry.js"],
+};
+const shellAPI = createApiClient();
+
+function preloadRemote(to: string) {
+  if (import.meta.env.DEV) return;
+  const remote = remoteForRoute[to];
+  if (!remote) return;
+  const [name, fallback] = remote;
+  const configured = (window as Window & { __REMOTE_URLS__?: Record<string, string> }).__REMOTE_URLS__;
+  const href = configured?.[name] ?? fallback;
+  if (document.querySelector(`link[data-remote-preload="${name}"]`)) return;
+  const link = document.createElement("link");
+  link.rel = "modulepreload";
+  link.href = href;
+  link.crossOrigin = "anonymous";
+  link.dataset.remotePreload = name;
+  document.head.append(link);
+}
+
 function useNavBadge(to: string): string | undefined {
   const queryClient = useQueryClient();
   const subscribe = useCallback(
@@ -376,11 +399,43 @@ function SidebarLink({
   onNavigate(): void;
 }) {
   const active = useIsActive(item.to);
+  const queryClient = useQueryClient();
   const liveBadge = useNavBadge(item.to) ?? item.badge;
+  const warmRoute = () => {
+    preloadRemote(item.to);
+    if (item.to !== "/admin/users") return;
+    void queryClient.prefetchQuery({
+      queryKey: [
+        "users",
+        {
+          limit: 20,
+          offset: 0,
+          q: "",
+          presence: "all",
+          roleId: 0,
+          registeredFrom: "",
+          registeredTo: "",
+          sort: "createdAt",
+          order: "desc",
+        },
+      ],
+      queryFn: async ({ signal }) => {
+        const { data, error } = await shellAPI.GET("/api/v1/users", {
+          signal,
+          params: { query: { limit: 20, offset: 0, sort: "createdAt", order: "desc" } },
+        });
+        if (error) throw new Error("failed to prefetch users");
+        return data?.data;
+      },
+      staleTime: 30_000,
+    });
+  };
   return (
     <Link
       to={item.to}
       viewTransition
+      onMouseEnter={warmRoute}
+      onFocus={warmRoute}
       onClick={() => {
         window.dispatchEvent(new Event("starter:navigation-start"));
         onNavigate();

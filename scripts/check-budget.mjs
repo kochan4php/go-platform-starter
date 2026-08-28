@@ -11,13 +11,24 @@ const budget = JSON.parse(
 );
 
 let totalJs = 0;
+const chunks = [];
 for (const f of readdirSync(dist)) {
   const p = join(dist, f);
-  if (f.endsWith(".js")) totalJs += statSync(p).size;
+  if (f.endsWith(".js")) {
+    const bytes = statSync(p).size;
+    totalJs += bytes;
+    chunks.push({ file: f, kb: Math.round(bytes / 1024) });
+  }
 }
 const kb = Math.round(totalJs / 1024);
 
 console.log(`host JS payload: ${kb} KB (budget ${budget.totalJsKb} KB)`);
+console.log(
+  `chunks: ${chunks
+    .sort((a, b) => b.kb - a.kb)
+    .map(({ file, kb: size }) => `${file}=${size}KB`)
+    .join(", ")}`,
+);
 if (kb > budget.totalJsKb) {
   console.error(`BUNDLE BUDGET EXCEEDED: ${kb} KB > ${budget.totalJsKb} KB`);
   process.exit(1);

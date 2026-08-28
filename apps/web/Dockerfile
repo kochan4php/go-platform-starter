@@ -10,12 +10,14 @@ COPY apps/web ./apps/web
 # aggregate spec composes from every service's openapi.yaml
 COPY services ./services
 
-RUN pnpm install --frozen-lockfile \
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile \
  && pnpm contracts \
  && pnpm --filter web build
 
 FROM nginxinc/nginx-unprivileged:alpine
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+ENV NGINX_GZIP_LEVEL=5
+COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --chmod=755 apps/web/config-entrypoint.sh /docker-entrypoint.d/40-config.sh
 COPY --chown=101:101 --from=build /src/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080

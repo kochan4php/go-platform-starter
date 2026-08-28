@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"container/list"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -22,9 +23,16 @@ type ClaimsClient struct {
 	TTL     time.Duration
 	log     *slog.Logger
 
-	mu    sync.RWMutex
-	cache map[string]cachedClaims
-	hc    *http.Client
+	mu       sync.Mutex
+	cache    map[string]*list.Element
+	recency  *list.List
+	maxCache int
+	hc       *http.Client
+}
+
+type claimEntry struct {
+	sub string
+	cachedClaims
 }
 
 type cachedClaims struct {
@@ -36,17 +44,24 @@ type cachedClaims struct {
 func NewClaimsClient(baseURL, secret string, ttl time.Duration, log *slog.Logger) *ClaimsClient {
 	return &ClaimsClient{
 		BaseURL: baseURL, Secret: secret, TTL: ttl, log: log.With("component", "claims"),
-		cache: map[string]cachedClaims{},
-		hc:    &http.Client{Timeout: 3 * time.Second},
+		cache:    map[string]*list.Element{},
+		recency:  list.New(),
+		maxCache: 2048,
+		hc:       &http.Client{Timeout: 3 * time.Second},
 	}
 }
 
 func (c *ClaimsClient) Resolve(ctx context.Context, sub string) ([]string, int64) {
-	c.mu.RLock()
-	hit, ok := c.cache[sub]
+	c.mu.Lock()
+	element, ok := c.cache[sub]
+	var hit cachedClaims
+	if ok {
+		c.recency.MoveToFront(element)
+		hit = element.Value.(claimEntry).cachedClaims
+	}
 	valid := ok && time.Now().Before(hit.Expires)
 	stale := hit
-	c.mu.RUnlock()
+	c.mu.Unlock()
 	if valid {
 		return hit.Perms, hit.Ver
 	}
@@ -62,7 +77,18 @@ func (c *ClaimsClient) Resolve(ctx context.Context, sub string) ([]string, int64
 	}
 
 	c.mu.Lock()
-	c.cache[sub] = cachedClaims{Perms: perms, Ver: ver, Expires: time.Now().Add(c.TTL)}
+	entry := claimEntry{sub: sub, cachedClaims: cachedClaims{Perms: perms, Ver: ver, Expires: time.Now().Add(c.TTL)}}
+	if element, exists := c.cache[sub]; exists {
+		element.Value = entry
+		c.recency.MoveToFront(element)
+	} else {
+		c.cache[sub] = c.recency.PushFront(entry)
+	}
+	if c.recency.Len() > c.maxCache {
+		oldest := c.recency.Back()
+		delete(c.cache, oldest.Value.(claimEntry).sub)
+		c.recency.Remove(oldest)
+	}
 	c.mu.Unlock()
 	return perms, ver
 }

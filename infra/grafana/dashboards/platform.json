@@ -22,13 +22,13 @@
 		{
 			"id": 2,
 			"type": "timeseries",
-			"title": "p95 latency (s) by service",
+			"title": "p95 latency (s) by service + route",
 			"gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "histogram_quantile(0.95, sum by (instance, le) (rate(http_request_duration_seconds_bucket[5m])))",
-					"legendFormat": "{{instance}}"
+					"expr": "histogram_quantile(0.95, sum by (instance, route, le) (rate(http_request_duration_seconds_bucket[5m])))",
+					"legendFormat": "{{instance}} {{route}}"
 				}
 			]
 		},
@@ -71,6 +71,45 @@
 				{
 					"expr": "sum by (stream, status) (rate(worker_jobs_processed_total[5m]))",
 					"legendFormat": "{{stream}} {{status}}"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"type": "timeseries",
+			"title": "Database query p95 by operation",
+			"gridPos": { "x": 0, "y": 14, "w": 12, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, sum by (instance, query_name, le) (rate(db_query_duration_seconds_bucket[5m])))",
+					"legendFormat": "{{instance}} {{query_name}}"
+				}
+			]
+		},
+		{
+			"id": 8,
+			"type": "timeseries",
+			"title": "Postgres active connections",
+			"gridPos": { "x": 12, "y": 14, "w": 6, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "pg_stat_activity_count{state=\"active\"}",
+					"legendFormat": "active"
+				}
+			]
+		},
+		{
+			"id": 9,
+			"type": "timeseries",
+			"title": "Postgres cache hit ratio",
+			"gridPos": { "x": 18, "y": 14, "w": 6, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "sum(rate(pg_stat_database_blks_hit[5m])) / clamp_min(sum(rate(pg_stat_database_blks_hit[5m]) + rate(pg_stat_database_blks_read[5m])), 1)",
+					"legendFormat": "hit ratio"
 				}
 			]
 		}

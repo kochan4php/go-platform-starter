@@ -56,6 +56,27 @@ func (e ListUsersParamsLimit) Valid() bool {
 	}
 }
 
+// Defines values for ListUsersParamsCount.
+const (
+	Estimate ListUsersParamsCount = "estimate"
+	Exact    ListUsersParamsCount = "exact"
+	None     ListUsersParamsCount = "none"
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsCount enum.
+func (e ListUsersParamsCount) Valid() bool {
+	switch e {
+	case Estimate:
+		return true
+	case Exact:
+		return true
+	case None:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListUsersParamsPresence.
 const (
 	Offline ListUsersParamsPresence = "offline"
@@ -189,6 +210,18 @@ type ListUsersParams struct {
 	Limit  *ListUsersParamsLimit `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
+	// Cursor opaque keyset cursor for createdAt sorting
+	Cursor *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+
+	// Ids comma-separated batch of at most 100 user IDs
+	Ids *string `form:"ids,omitempty" json:"ids,omitempty"`
+
+	// Fields comma-separated sparse fields
+	Fields *string `form:"fields,omitempty" json:"fields,omitempty"`
+
+	// Count total-count strategy
+	Count *ListUsersParamsCount `form:"count,omitempty" json:"count,omitempty"`
+
 	// Q case-insensitive email/display-name search
 	Q              *string                  `form:"q,omitempty" json:"q,omitempty"`
 	Presence       *ListUsersParamsPresence `form:"presence,omitempty" json:"presence,omitempty"`
@@ -201,6 +234,9 @@ type ListUsersParams struct {
 
 // ListUsersParamsLimit defines parameters for ListUsers.
 type ListUsersParamsLimit int
+
+// ListUsersParamsCount defines parameters for ListUsers.
+type ListUsersParamsCount string
 
 // ListUsersParamsPresence defines parameters for ListUsers.
 type ListUsersParamsPresence string
@@ -344,6 +380,58 @@ func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "offset"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "ids" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "ids", r.URL.Query(), &params.Ids, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ids"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ids", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "fields" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "fields", r.URL.Query(), &params.Fields, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "fields"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "fields", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "count", r.URL.Query(), &params.Count, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "count"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "count", Err: err})
 		}
 		return
 	}

@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -34,6 +33,7 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[internal.Config]()
 	log := platform.NewLogger(cfg.LogLevel, "users")
+	platform.StartPprof(os.Getenv("PPROF_ADDR"), log)
 
 	shutdownTracer, err := platform.InitTracer(context.Background(), "users", log)
 	if err != nil {
@@ -42,9 +42,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
-		Logger: platform.NewGormLogger(log, cfg.SlowQueryThreshold),
-	})
+	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, cfg.SlowQueryThreshold)
 	if err != nil {
 		log.Error("connect db failed", "err", err)
 		os.Exit(1)

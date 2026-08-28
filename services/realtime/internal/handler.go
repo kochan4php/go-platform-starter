@@ -18,6 +18,7 @@ type Handlers struct {
 	Hub        *Hub
 	SecretRing string
 	Log        *slog.Logger
+	Heartbeat  time.Duration
 }
 
 // WS handles the upgrade: token via Sec-WebSocket-Protocol "jwt,<token>"
@@ -37,7 +38,11 @@ func (h *Handlers) WS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info("handshake ok")
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify:   true,
+		CompressionMode:      websocket.CompressionNoContextTakeover,
+		CompressionThreshold: 1024,
+	})
 	if err != nil {
 		log.Warn("accept failed", "err", err)
 		return
@@ -55,6 +60,23 @@ func (h *Handlers) WS(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) serve(reqCtx context.Context, c *Client) {
 	ctx, cancel := context.WithCancel(reqCtx)
 	defer cancel()
+	if h.Heartbeat > 0 {
+		go func() {
+			ticker := time.NewTicker(h.Heartbeat)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					if c.Ping(ctx) != nil {
+						cancel()
+						return
+					}
+				}
+			}
+		}()
+	}
 
 	for {
 		_, raw, err := c.Conn.Read(ctx)
@@ -127,5 +149,12 @@ func NewHandlers(hub *Hub, secret []byte, log *slog.Logger) *Handlers {
 }
 
 func NewHandlersWithKeyRing(hub *Hub, secretRing string, log *slog.Logger) *Handlers {
-	return &Handlers{Hub: hub, SecretRing: secretRing, Log: log.With("service", "realtime")}
+	return &Handlers{Hub: hub, SecretRing: secretRing, Log: log.With("service", "realtime"), Heartbeat: 30 * time.Second}
+}
+
+func (h *Handlers) WithHeartbeat(interval time.Duration) *Handlers {
+	if interval > 0 {
+		h.Heartbeat = interval
+	}
+	return h
 }

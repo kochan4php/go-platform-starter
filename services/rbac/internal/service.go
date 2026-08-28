@@ -245,11 +245,37 @@ func (s *Service) ListRoles(ctx context.Context) ([]Role, error) {
 	if err := s.db.WithContext(ctx).Order("archived ASC, name ASC").Find(&roles).Error; err != nil {
 		return nil, err
 	}
+	type permissionAssignment struct {
+		RoleID int64
+		Name   string
+	}
+	assignments := []permissionAssignment{}
+	if err := s.db.WithContext(ctx).Raw(`
+		SELECT rp.role_id, p.name FROM rbac.role_permissions rp
+		JOIN rbac.permissions p ON p.id = rp.permission_id
+		ORDER BY rp.role_id, p.name`).Scan(&assignments).Error; err != nil {
+		return nil, err
+	}
+	permissions := make(map[int64][]string, len(roles))
+	for _, assignment := range assignments {
+		permissions[assignment.RoleID] = append(permissions[assignment.RoleID], assignment.Name)
+	}
+	type roleCount struct {
+		RoleID int64
+		Count  int64
+	}
+	counts := []roleCount{}
+	if err := s.db.WithContext(ctx).Raw(`
+		SELECT role_id, COUNT(*) AS count FROM rbac.user_roles GROUP BY role_id`).Scan(&counts).Error; err != nil {
+		return nil, err
+	}
+	userCounts := make(map[int64]int64, len(counts))
+	for _, count := range counts {
+		userCounts[count.RoleID] = count.Count
+	}
 	for i := range roles {
-		roles[i].Permissions = s.permsForRole(ctx, roles[i].ID)
-		if err := s.db.WithContext(ctx).Table("rbac.user_roles").Where("role_id = ?", roles[i].ID).Count(&roles[i].UserCount).Error; err != nil {
-			return nil, err
-		}
+		roles[i].Permissions = permissions[roles[i].ID]
+		roles[i].UserCount = userCounts[roles[i].ID]
 		roles[i].System = roles[i].Name == "admin"
 	}
 	return roles, nil

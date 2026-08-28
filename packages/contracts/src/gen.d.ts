@@ -1787,6 +1787,14 @@ export interface operations {
             query?: {
                 limit?: 10 | 20 | 50;
                 offset?: number;
+                /** @description opaque keyset cursor for createdAt sorting */
+                cursor?: string;
+                /** @description comma-separated batch of at most 100 user IDs */
+                ids?: string;
+                /** @description comma-separated sparse fields */
+                fields?: string;
+                /** @description total-count strategy */
+                count?: "exact" | "estimate" | "none";
                 /** @description case-insensitive email/display-name search */
                 q?: string;
                 presence?: "online" | "offline";

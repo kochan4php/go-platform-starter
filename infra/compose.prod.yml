@@ -26,6 +26,14 @@ x-go-env: &go-env
   STREAM_SIGNING_KEYS: ${STREAM_SIGNING_KEYS:?set STREAM_SIGNING_KEYS}
   STREAM_ENCRYPTION_KEYS: ${STREAM_ENCRYPTION_KEYS:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  GOMEMLIMIT: ${GOMEMLIMIT:-200MiB}
+  GOGC: ${GOGC:-100}
+  DB_PREPARE_STMT: ${DB_PREPARE_STMT:-true}
+  DB_MAX_OPEN_CONNS: ${DB_MAX_OPEN_CONNS:-16}
+  DB_MAX_IDLE_CONNS: ${DB_MAX_IDLE_CONNS:-8}
+  DB_CONN_MAX_LIFETIME: ${DB_CONN_MAX_LIFETIME:-30m}
+  DB_CONN_MAX_IDLE_TIME: ${DB_CONN_MAX_IDLE_TIME:-5m}
+  SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-20s}
 
 services:
   postgres:
@@ -37,11 +45,20 @@ services:
       POSTGRES_DB: app
     volumes:
       - pgdata:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
+      - -c
+      - work_mem=${PG_WORK_MEM:-8MB}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-64MB}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app"]
       interval: 5s
       timeout: 3s
       retries: 20
+      start_interval: 1s
 
   redis:
     image: redis:7-alpine
@@ -69,12 +86,13 @@ services:
           "user gateway on >$$REDIS_GATEWAY_PASSWORD resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping" \
           "user dlq-admin on >$$REDIS_DLQ_ADMIN_PASSWORD resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping" \
           > /data/users.acl
-        exec redis-server --appendonly yes --aclfile /data/users.acl
+        exec redis-server --appendonly yes --aclfile /data/users.acl --io-threads 4 --io-threads-do-reads yes --lazyfree-lazy-eviction yes --lazyfree-lazy-expire yes
     healthcheck:
       test: ["CMD-SHELL", "redis-cli --user gateway --pass \"$$REDIS_GATEWAY_PASSWORD\" ping 2>/dev/null | grep -q PONG"]
       interval: 5s
       timeout: 3s
       retries: 10
+      start_interval: 1s
 
   auth:
     build: { context: .., dockerfile: services/auth/Dockerfile }
@@ -135,6 +153,8 @@ services:
       MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
       REDIS_USERNAME: worker
       REDIS_PASSWORD: ${REDIS_WORKER_PASSWORD:?set REDIS_WORKER_PASSWORD}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      WORKER_XREAD_COUNT: ${WORKER_XREAD_COUNT:-100}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -148,6 +168,7 @@ services:
       PUBLIC_WS_URL: ${PUBLIC_WS_URL:?set PUBLIC_WS_URL e.g. wss://domain/ws}
       REDIS_USERNAME: realtime
       REDIS_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
+      WS_HEARTBEAT_INTERVAL: ${WS_HEARTBEAT_INTERVAL:-30s}
     depends_on:
       redis: { condition: service_healthy }
 
@@ -177,6 +198,7 @@ services:
     build: { context: .., dockerfile: apps/web/Dockerfile }
     <<: *svc
     environment:
+      NGINX_GZIP_LEVEL: ${NGINX_GZIP_LEVEL:-5}
       REMOTE_AUTH_URL: /remote/auth/assets/remoteEntry.js
       REMOTE_ADMIN_USERS_URL: /remote/admin-users/assets/remoteEntry.js
       REMOTE_ADMIN_ROLES_URL: /remote/admin-roles/assets/remoteEntry.js
@@ -187,6 +209,8 @@ services:
       dockerfile: apps/web-auth/Dockerfile
       args: { REMOTE_BASE: /remote/auth/ }
     <<: *svc
+    environment:
+      NGINX_GZIP_LEVEL: ${NGINX_GZIP_LEVEL:-5}
 
   web-admin-users:
     build:
@@ -194,6 +218,8 @@ services:
       dockerfile: apps/web-admin-users/Dockerfile
       args: { REMOTE_BASE: /remote/admin-users/ }
     <<: *svc
+    environment:
+      NGINX_GZIP_LEVEL: ${NGINX_GZIP_LEVEL:-5}
 
   web-admin-roles:
     build:
@@ -201,6 +227,8 @@ services:
       dockerfile: apps/web-admin-roles/Dockerfile
       args: { REMOTE_BASE: /remote/admin-roles/ }
     <<: *svc
+    environment:
+      NGINX_GZIP_LEVEL: ${NGINX_GZIP_LEVEL:-5}
 
   # ---- single public entry ---------------------------------------------------
   edge:

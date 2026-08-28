@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -42,6 +41,14 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[internal.Config]()
 	log := platform.NewLogger(cfg.LogLevel, "auth")
+	platform.StartPprof(os.Getenv("PPROF_ADDR"), log)
+	if cfg.BcryptCost == 0 {
+		cfg.BcryptCost = 10
+		if strings.EqualFold(cfg.PasswordAlgorithm, "bcrypt") {
+			cfg.BcryptCost = internal.CalibrateBcryptCost(cfg.BcryptTarget)
+			log.Info("bcrypt cost calibrated", "cost", cfg.BcryptCost, "target", cfg.BcryptTarget)
+		}
+	}
 
 	shutdownTracer, err := platform.InitTracer(context.Background(), "auth", log)
 	if err != nil {
@@ -50,9 +57,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
-		Logger: platform.NewGormLogger(log, cfg.SlowQueryThreshold),
-	})
+	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, cfg.SlowQueryThreshold)
 	if err != nil {
 		log.Error("connect db failed", "err", err)
 		os.Exit(1)
@@ -68,7 +73,7 @@ func main() {
 	svc := internal.NewService(db, rdb, log, *cfg, pub)
 	if cfg.RBACInternalURL != "" && cfg.InternalSecret != "" {
 		svc.UseClaimsClient(internal.NewClaimsClient(
-			cfg.RBACInternalURL, cfg.InternalSecret, 5*time.Minute, log,
+			cfg.RBACInternalURL, cfg.InternalSecret, 30*time.Second, log,
 		))
 	} else {
 		log.Warn("claims client disabled — tokens will carry no perms",

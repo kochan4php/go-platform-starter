@@ -17,7 +17,7 @@ const UsersPage = lazy(() => import("web_admin_users/UsersPage"));
 const RolesPage = lazy(() => import("web_admin_roles/RolesPage"));
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+  defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 10 * 60_000 } },
 });
 
 interface LoginResult {

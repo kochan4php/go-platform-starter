@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 
 	"golang.org/x/crypto/argon2"
@@ -106,6 +107,21 @@ func hashPassword(password, algorithm string, bcryptCost int) (string, error) {
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	return string(hash), err
+}
+
+func CalibrateBcryptCost(target time.Duration) int {
+	if target <= 0 {
+		target = 250 * time.Millisecond
+	}
+	password := []byte("startup-calibration-only")
+	for cost := bcrypt.MinCost; cost <= 14; cost++ {
+		started := time.Now()
+		_, _ = bcrypt.GenerateFromPassword(password, cost)
+		if time.Since(started) >= target {
+			return cost
+		}
+	}
+	return 14
 }
 
 func verifyPassword(encoded, password string) bool {

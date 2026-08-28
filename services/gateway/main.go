@@ -34,6 +34,7 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[internal.Config]()
 	log := platform.NewLogger(cfg.LogLevel, "gateway")
+	platform.StartPprof(os.Getenv("PPROF_ADDR"), log)
 
 	shutdownTracer, err := platform.InitTracer(context.Background(), "gateway", log)
 	if err != nil {
@@ -87,6 +88,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/yaml")
 		_, _ = w.Write(raw)
 	})
+	router.Post("/telemetry/vitals", internal.WebVitals)
 
 	// WebSocket passthrough to the realtime service (PLAN item 41/47): the
 	// upgrade request cannot be a registry route, so it gets its own proxy.

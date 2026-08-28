@@ -669,6 +669,14 @@ table {
 
 .animate-ui-marquee {
 	animation: ui-marquee 28s linear infinite;
+	content-visibility: auto;
+	contain-intrinsic-size: auto 3rem;
+}
+
+/* Large below-the-fold bento regions skip layout/paint work until needed. */
+[data-performance-region="bento"] {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 36rem;
 }
 
 @keyframes ui-slide-in-right {

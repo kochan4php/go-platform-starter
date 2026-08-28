@@ -34,6 +34,14 @@ func (c *Client) Send(ctx context.Context, msg map[string]any) {
 	_ = c.Conn.Write(writeCtx, websocket.MessageText, raw)
 }
 
+func (c *Client) Ping(ctx context.Context) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return c.Conn.Ping(pingCtx)
+}
+
 type Hub struct {
 	log         *slog.Logger
 	mu          sync.RWMutex

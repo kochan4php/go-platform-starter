@@ -31,8 +31,13 @@ server {
     #   - /etc/letsencrypt:/etc/letsencrypt:ro
 
     client_max_body_size 1m;
+	sendfile on;
+	tcp_nopush on;
+	open_file_cache max=2000 inactive=60s;
+	open_file_cache_valid 120s;
 
     gzip on;
+	gzip_comp_level 5;
     gzip_types text/plain text/css application/javascript application/json image/svg+xml;
 
     add_header X-Content-Type-Options nosniff always;
@@ -55,7 +60,16 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    location ~ ^/(api|docs|healthz|readyz|metrics)(/|$) {
+	location = /docs/openapi.json {
+		set $docs_tls_up http://gateway:8000;
+		proxy_pass $docs_tls_up;
+		proxy_cache openapi;
+		proxy_cache_valid 200 5s;
+		proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+		add_header X-OpenAPI-Cache $upstream_cache_status always;
+	}
+
+    location ~ ^/(api|docs|healthz|readyz|metrics|telemetry)(/|$) {
         set $up_gw http://gateway:8000;
         proxy_pass $up_gw;
         proxy_http_version 1.1;

@@ -86,13 +86,27 @@ type ProxyDeps struct {
 // the /api/v1/<svc> prefix stripped.
 func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 	proxies := map[string]*httputil.ReverseProxy{}
+	transport := &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          256,
+		MaxIdleConnsPerHost:   64,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		ExpectContinueTimeout: time.Second,
+	}
 	for name, base := range deps.Upstreams {
 		target := base
 		p := &httputil.ReverseProxy{
+			Transport: transport,
 			Rewrite: func(pr *httputil.ProxyRequest) {
 				out := pr.Out
 				out.URL.Scheme = "http"
 				out.URL.Host = strings.TrimPrefix(target, "http://")
+				if strings.HasPrefix(target, "https://") {
+					out.URL.Scheme = "https"
+					out.URL.Host = strings.TrimPrefix(target, "https://")
+				}
 				if deps.ClientIP != nil {
 					out.Header.Set("X-Forwarded-For", deps.ClientIP(pr.In))
 				}

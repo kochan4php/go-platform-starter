@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -35,6 +34,8 @@ type config struct {
 	MailFrom           string `env:"MAIL_FROM" envDefault:"noreply@example.local"`
 	MailFromName       string `env:"MAIL_FROM_NAME" envDefault:"Platform"`
 	AuditRetentionDays int    `env:"AUDIT_RETENTION_DAYS" envDefault:"365"`
+	WorkerConcurrency  int    `env:"WORKER_CONCURRENCY" envDefault:"4"`
+	WorkerReadCount    int64  `env:"WORKER_XREAD_COUNT" envDefault:"100"`
 }
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 	}
 	cfg := platform.MustParseEnv[config]()
 	log := platform.NewLogger(cfg.LogLevel, "worker")
+	platform.StartPprof(os.Getenv("PPROF_ADDR"), log)
 
 	shutdownTracer, err := platform.InitTracer(context.Background(), "worker", log)
 	if err != nil {
@@ -54,9 +56,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{
-		Logger: platform.NewGormLogger(log, 0),
-	})
+	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, 500*time.Millisecond)
 	if err != nil {
 		log.Error("connect db failed", "err", err)
 		os.Exit(1)
@@ -82,7 +82,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	consumer := internal.NewConsumer(rdb, db, mailer, log)
+	consumer := internal.NewConsumer(rdb, db, mailer, log).Configure(cfg.WorkerConcurrency, cfg.WorkerReadCount)
 	go consumer.Run(ctx)
 	retentionDone := platform.NewScheduler(rdb, log, 24*time.Hour, "audit-retention", func(ctx context.Context) {
 		if cfg.AuditRetentionDays <= 0 {
