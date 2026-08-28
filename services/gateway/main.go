@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-redis/redis_rate/v10"
-	"github.com/redis/go-redis/v9"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 	internal "github.com/kochan4php/go-platform-starter/services/gateway/internal"
@@ -61,8 +61,13 @@ func main() {
 		os.Exit(1)
 	}
 	cfg.SetRuntime(upstreams, routes, specs)
+	validator, err := internal.NewRequestValidator(specs)
+	if err != nil {
+		log.Error("request validator build failed", "err", err)
+		os.Exit(1)
+	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	limiter := redis_rate.NewLimiter(rdb)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
@@ -99,15 +104,19 @@ func main() {
 		router.Get("/ws", wsProxy.ServeHTTP)
 	}
 
+	trustedProxies := parsePrefixes(cfg.TrustedProxyCIDRs)
 	router.Group(func(api chi.Router) {
-		api.Use(edgeRateLimit(limiter, log, cfg.RatePerMinute))
-		api.Use(bodyLimit(1 << 20))
+		api.Use(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies))
+		api.Use(routeBodyGuard(cfg.Matcher()))
 		api.Use(internal.ProxyHandler(internal.ProxyDeps{
-			Secret:         []byte(cfg.AccessTokenSecret),
-			InternalSecret: cfg.InternalSecret,
+			Secret:         cfg.AccessTokenSecret,
+			InternalSecret: platform.ActiveSecret(cfg.InternalSecret),
 			Log:            log,
 			Matcher:        cfg.Matcher(),
 			Upstreams:      upstreams,
+			RDB:            rdb,
+			Validator:      validator,
+			ClientIP:       func(r *http.Request) string { return clientIP(r, trustedProxies) },
 		}))
 		api.HandleFunc("/*", func(w http.ResponseWriter, _ *http.Request) {
 			platform.Fail(w, http.StatusNotFound, "not_found", "no route")
@@ -137,7 +146,7 @@ func corsHandler(trustedCSV string) func(http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Request-ID"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Request-ID", "X-Device-ID"},
 		ExposedHeaders:   []string{"X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -164,16 +173,27 @@ func trimSpace(s string) string {
 	return s
 }
 
-func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int) func(http.Handler) http.Handler {
+func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int, matcher *internal.Matcher, trusted []netip.Prefix) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			res, err := limiter.Allow(r.Context(), "rl:edge:"+clientIP(r), redis_rate.PerMinute(perMinute))
+			limit := perMinute
+			class := "standard"
+			if route := matcher.Match(r.Method, r.URL.Path); route != nil {
+				class = route.RateClass
+				switch class {
+				case "strict":
+					limit = min(perMinute, 20)
+				case "relaxed":
+					limit = perMinute * 2
+				}
+			}
+			res, err := limiter.Allow(r.Context(), "rl:edge:"+class+":"+clientIP(r, trusted), redis_rate.PerMinute(limit))
 			if err != nil {
 				log.Warn("edge rate limiter unavailable (fail-open)", "err", err)
 				next.ServeHTTP(w, r)
 				return
 			}
-			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(perMinute))
+			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(limit))
 			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(res.Remaining))
 			if res.Allowed == 0 {
 				platform.Fail(w, http.StatusTooManyRequests, "rate_limited", "too many requests")
@@ -184,29 +204,64 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int)
 	}
 }
 
-func bodyLimit(n int64) func(http.Handler) http.Handler {
+func routeBodyGuard(matcher *internal.Matcher) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.Body = http.MaxBytesReader(w, r.Body, n)
+			limit := int64(1 << 20)
+			if route := matcher.Match(r.Method, r.URL.Path); route != nil {
+				limit = route.BodyLimit
+			}
+			if r.ContentLength > limit {
+				platform.Fail(w, http.StatusRequestEntityTooLarge, "body_too_large", "request body exceeds the route limit")
+				return
+			}
+			if r.ContentLength > 0 && r.Method != http.MethodGet && !strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "application/json") {
+				platform.Fail(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "Content-Type must be application/json")
+				return
+			}
+			r.Body = http.MaxBytesReader(w, r.Body, limit)
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-func clientIP(r *http.Request) string {
-	if xf := r.Header.Get("X-Forwarded-For"); xf != "" {
-		for i := 0; i < len(xf); i++ {
-			if xf[i] == ',' {
-				return trimSpace(xf[:i])
-			}
+func clientIP(r *http.Request, trusted []netip.Prefix) string {
+	remote := remoteIP(r.RemoteAddr)
+	trustedProxy := false
+	if address, err := netip.ParseAddr(remote); err == nil {
+		for _, prefix := range trusted {
+			trustedProxy = trustedProxy || prefix.Contains(address)
 		}
-		return trimSpace(xf)
 	}
-	host := r.RemoteAddr
+	if trustedProxy {
+		if xf := r.Header.Get("X-Forwarded-For"); xf != "" {
+			for i := 0; i < len(xf); i++ {
+				if xf[i] == ',' {
+					return trimSpace(xf[:i])
+				}
+			}
+			return trimSpace(xf)
+		}
+	}
+	return remote
+}
+
+func remoteIP(remoteAddr string) string {
+	host := remoteAddr
 	for i := len(host) - 1; i >= 0; i-- {
 		if host[i] == ':' {
 			return host[:i]
 		}
 	}
 	return host
+}
+
+func parsePrefixes(raw string) []netip.Prefix {
+	prefixes := make([]netip.Prefix, 0)
+	for _, item := range splitCSV(raw) {
+		if prefix, err := netip.ParsePrefix(item); err == nil {
+			prefixes = append(prefixes, prefix)
+		}
+	}
+	return prefixes
 }

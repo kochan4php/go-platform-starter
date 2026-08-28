@@ -15,6 +15,11 @@ type User struct {
 	LockedUntil         *time.Time `                                      json:"-"`
 	DisplayName         string     `gorm:"not null;default:"           json:"displayName"`
 	AvatarUrl           string     `gorm:"not null;default:"           json:"avatarUrl"`
+	LastLoginAt         *time.Time `                                      json:"lastLoginAt,omitempty"`
+	LastLoginIP         string     `gorm:"not null;default:"           json:"-"`
+	LastLoginUserAgent  string     `gorm:"not null;default:"           json:"-"`
+	MFASecretEnc        string     `gorm:"not null;default:"           json:"-"`
+	MFAEnabled          bool       `gorm:"not null;default:false"       json:"mfaEnabled"`
 	CreatedAt           time.Time  `                                      json:"createdAt"`
 	UpdatedAt           time.Time  `                                      json:"updatedAt"`
 }
@@ -28,6 +33,7 @@ type Session struct {
 	FamilyID         string    `gorm:"not null;index"`
 	UserAgent        string    `gorm:"not null;default:''"`
 	IP               string    `gorm:"not null;default:''"`
+	DeviceID         string    `gorm:"not null;default:'';index"`
 	ExpiresAt        time.Time `gorm:"not null"`
 	RevokedAt        *time.Time
 	CreatedAt        time.Time

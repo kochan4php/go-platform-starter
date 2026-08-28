@@ -105,7 +105,7 @@ jobs:
       - name: Boot the mesh and run the smoke journey
         env:
           E2E_ADMIN_EMAIL: admin@example.local
-          E2E_ADMIN_PASSWORD: e2e-admin-password-1
+          E2E_ADMIN_PASSWORD: e2e-root-access-2026!
         run: |
           chmod +x scripts/e2e-mesh.sh
           scripts/e2e-mesh.sh ci
@@ -130,7 +130,34 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
 
-      - name: Semgrep (p/default)
+      - name: Trivy Kubernetes manifest scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Semgrep (default + project rules)
         run: |
           docker run --rm -v "$PWD:/src" semgrep/semgrep:latest \
-            semgrep scan --config p/default --error --exclude-rule generic.secrets.security.detected-generic-secret
+            semgrep scan --config p/default --config /src/.semgrep.yml --error --exclude-rule generic.secrets.security.detected-generic-secret
+
+      - name: Generate repository SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Dependency license policy
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-1.0, AGPL-3.0, GPL-2.0, GPL-3.0, SSPL-1.0

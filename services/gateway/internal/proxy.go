@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
+	"github.com/redis/go-redis/v9"
 )
 
 // LoadSpecs fetches every upstream's /openapi.json, builds the route table
@@ -69,11 +71,14 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 }
 
 type ProxyDeps struct {
-	Secret         []byte
+	Secret         string
 	InternalSecret string
 	Log            *slog.Logger
 	Matcher        *Matcher
 	Upstreams      Upstreams
+	RDB            *redis.Client
+	Validator      *RequestValidator
+	ClientIP       func(*http.Request) string
 }
 
 // ProxyHandler verifies JWTs for annotated routes once at the edge, stamps the
@@ -88,6 +93,9 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				out := pr.Out
 				out.URL.Scheme = "http"
 				out.URL.Host = strings.TrimPrefix(target, "http://")
+				if deps.ClientIP != nil {
+					out.Header.Set("X-Forwarded-For", deps.ClientIP(pr.In))
+				}
 			},
 			ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 				deps.Log.Error("upstream failed", "err", err, "path", r.URL.Path)
@@ -115,6 +123,16 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				platform.Fail(w, http.StatusNotFound, "not_found", fmt.Sprintf("no upstream %q", route.Service))
 				return
 			}
+			if err := deps.Validator.Validate(route.Service, r); err != nil {
+				deps.Log.Warn("request schema rejected", "method", r.Method, "path", r.URL.Path, "err", err)
+				var maxBytesErr *http.MaxBytesError
+				if errors.As(err, &maxBytesErr) {
+					platform.Fail(w, http.StatusRequestEntityTooLarge, "body_too_large", "request body exceeds the route limit")
+					return
+				}
+				platform.Fail(w, http.StatusBadRequest, "invalid_request", "request does not match the API contract")
+				return
+			}
 
 			outReq := r.Clone(r.Context())
 			clearIdentity(outReq)
@@ -126,6 +144,17 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 					platform.Fail(w, http.StatusUnauthorized, "unauthorized", "missing or invalid access token")
 					return
 				}
+				if deps.RDB != nil {
+					version, versionErr := deps.RDB.Get(r.Context(), "claims:ver:"+claims.Sub).Int64()
+					if versionErr != nil && !errors.Is(versionErr, redis.Nil) {
+						platform.Fail(w, http.StatusServiceUnavailable, "authorization_unavailable", "authorization state is unavailable")
+						return
+					}
+					if version > claims.Ver {
+						platform.Fail(w, http.StatusUnauthorized, "stale_token", "permissions changed; sign in again")
+						return
+					}
+				}
 				if route.Perm != "" && !HasPerm(claims.Perms, route.Perm) {
 					deps.Log.Warn("permission denied",
 						"sub", claims.Sub, "perm", route.Perm, "path", r.URL.Path)
@@ -134,6 +163,7 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				}
 				outReq.Header.Set("X-User-Id", claims.Sub)
 				outReq.Header.Set("X-Email", claims.Email)
+				outReq.Header.Set("X-Permissions", strings.Join(claims.Perms, " "))
 			}
 			outReq.Header.Set("X-Internal-Secret", deps.InternalSecret)
 
@@ -149,5 +179,6 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 func clearIdentity(r *http.Request) {
 	r.Header.Del("X-User-Id")
 	r.Header.Del("X-Email")
+	r.Header.Del("X-Permissions")
 	r.Header.Del("X-Internal-Secret")
 }

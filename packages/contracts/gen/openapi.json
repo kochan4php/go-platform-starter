@@ -12,6 +12,7 @@
   "paths": {
     "/api/v1/auth/register": {
       "post": {
+        "x-request-body-limit": 16384,
         "operationId": "register",
         "summary": "create credentials; emits user.created onto users.events",
         "requestBody": {
@@ -45,7 +46,8 @@
                               "format": "int64"
                             },
                             "email": {
-                              "type": "string"
+                              "type": "string",
+                              "maxLength": 254
                             }
                           }
                         }
@@ -72,6 +74,7 @@
     },
     "/api/v1/auth/login": {
       "post": {
+        "x-request-body-limit": 16384,
         "operationId": "login",
         "summary": "uniform-401 login with lockout; mints access token + sets refresh cookie",
         "requestBody": {
@@ -109,7 +112,8 @@
                           "type": "object",
                           "properties": {
                             "accessToken": {
-                              "type": "string"
+                              "type": "string",
+                              "maxLength": 4096
                             },
                             "user": {
                               "type": "object",
@@ -119,7 +123,8 @@
                                   "format": "int64"
                                 },
                                 "email": {
-                                  "type": "string"
+                                  "type": "string",
+                                  "maxLength": 254
                                 }
                               }
                             }
@@ -167,7 +172,8 @@
                           "type": "object",
                           "properties": {
                             "accessToken": {
-                              "type": "string"
+                              "type": "string",
+                              "maxLength": 4096
                             }
                           }
                         }
@@ -199,6 +205,75 @@
         "responses": {
           "200": {
             "description": "logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/enroll": {
+      "post": {
+        "operationId": "beginMFA",
+        "summary": "create a time-limited TOTP enrollment and QR code",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-auth": "required",
+        "responses": {
+          "200": {
+            "description": "enrollment started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "x-request-body-limit": 4096,
+        "operationId": "verifyMFA",
+        "summary": "verify TOTP and enable MFA for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-auth": "required",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "maxLength": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MFA enabled",
             "content": {
               "application/json": {
                 "schema": {
@@ -326,6 +401,7 @@
     },
     "/api/v1/auth/forgot": {
       "post": {
+        "x-request-body-limit": 4096,
         "operationId": "forgotPassword",
         "summary": "always-200 password reset request (anti-enumeration)",
         "requestBody": {
@@ -355,6 +431,7 @@
     },
     "/api/v1/auth/reset": {
       "post": {
+        "x-request-body-limit": 16384,
         "operationId": "resetPassword",
         "summary": "consume a single-use reset token, set new password, wipe all sessions",
         "requestBody": {
@@ -394,6 +471,7 @@
     },
     "/api/v1/auth/reset/validate": {
       "post": {
+        "x-request-body-limit": 4096,
         "operationId": "validateResetToken",
         "summary": "validate a reset token without consuming its single-use grant",
         "requestBody": {
@@ -418,9 +496,7 @@
             }
           },
           "400": {
-            "description": "invalid",
-            "expired": null,
-            "or consumed token": null,
+            "description": "invalid, expired, or consumed token",
             "content": {
               "application/json": {
                 "schema": {
@@ -435,6 +511,7 @@
     },
     "/api/v1/auth/users/{id}/password": {
       "post": {
+        "x-request-body-limit": 16384,
         "operationId": "adminSetUserPassword",
         "summary": "admin sets a new password for a user (revokes their sessions)",
         "x-required-permission": "user:update:any",
@@ -461,7 +538,7 @@
                 "properties": {
                   "newPassword": {
                     "type": "string",
-                    "minLength": 8,
+                    "minLength": 12,
                     "maxLength": 72
                   }
                 }
@@ -495,6 +572,7 @@
     },
     "/api/v1/auth/confirm-password": {
       "post": {
+        "x-request-body-limit": 4096,
         "operationId": "confirmPassword",
         "summary": "re-authenticate the current user before a sensitive admin action",
         "security": [
@@ -536,6 +614,68 @@
           },
           "401": {
             "description": "invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "operationId": "changePassword",
+        "summary": "change the authenticated user's password after verifying the old password",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-auth": "required",
+        "x-rate-limit-class": "strict",
+        "x-request-body-limit": 1024,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "oldPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 72
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 72
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "changed and all sessions revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "old password invalid",
             "content": {
               "application/json": {
                 "schema": {
@@ -656,6 +796,7 @@
     },
     "/api/v1/auth/users/{id}/state": {
       "patch": {
+        "x-request-body-limit": 4096,
         "operationId": "adminSetUserState",
         "summary": "activate/deactivate and lock/unlock a managed user",
         "x-required-permission": "user:update:any",
@@ -747,6 +888,7 @@
     },
     "/api/v1/rbac/permissions": {
       "post": {
+        "x-request-body-limit": 4096,
         "operationId": "createPermission",
         "summary": "add a unique permission to the catalog",
         "x-required-permission": "role:update:any",
@@ -762,6 +904,9 @@
                 "properties": {
                   "name": {
                     "type": "string",
+                    "minLength": 5,
+                    "maxLength": 120,
+                    "pattern": "^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$",
                     "example": "report:export:any"
                   }
                 }
@@ -851,7 +996,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 120
             }
           }
         ],
@@ -891,6 +1037,7 @@
     },
     "/api/v1/rbac/roles": {
       "post": {
+        "x-request-body-limit": 32768,
         "operationId": "createRole",
         "x-required-permission": "role:create:any",
         "requestBody": {
@@ -980,6 +1127,7 @@
     },
     "/api/v1/rbac/roles/{id}": {
       "patch": {
+        "x-request-body-limit": 32768,
         "operationId": "updateRole",
         "summary": "rename/describe and/or sync the permission set; bumps affected users' ver",
         "x-required-permission": "role:update:any",
@@ -1008,9 +1156,12 @@
                     "properties": {
                       "permissions": {
                         "type": "array",
+                        "maxItems": 200,
+                        "uniqueItems": true,
                         "description": "full replacement set; unknown permission -> 400",
                         "items": {
-                          "type": "string"
+                          "type": "string",
+                          "maxLength": 120
                         }
                       }
                     }
@@ -1141,6 +1292,7 @@
         }
       },
       "put": {
+        "x-request-body-limit": 16384,
         "operationId": "setUserRoles",
         "summary": "replace the role set assigned to a user (bumps their ver)",
         "x-required-permission": "role:update:any",
@@ -1167,6 +1319,8 @@
                 "properties": {
                   "roleIds": {
                     "type": "array",
+                    "maxItems": 100,
+                    "uniqueItems": true,
                     "items": {
                       "type": "integer",
                       "format": "int64"
@@ -1237,7 +1391,8 @@
                             "perms": {
                               "type": "array",
                               "items": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 120
                               }
                             },
                             "ver": {
@@ -1288,10 +1443,12 @@
                           "type": "object",
                           "properties": {
                             "wsUrl": {
-                              "type": "string"
+                              "type": "string",
+                              "maxLength": 2048
                             },
                             "protocol": {
-                              "type": "string"
+                              "type": "string",
+                              "maxLength": 64
                             }
                           }
                         }
@@ -1344,10 +1501,54 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "eraseMe",
+        "summary": "irreversibly erase the caller's personal data and revoke access",
+        "x-auth": "required",
+        "responses": {
+          "200": {
+            "description": "erased",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me/export": {
+      "get": {
+        "operationId": "exportMyData",
+        "summary": "download all personal data held by the platform",
+        "x-auth": "required",
+        "responses": {
+          "200": {
+            "description": "JSON data export",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/users": {
       "post": {
+        "x-request-body-limit": 16384,
         "operationId": "createUserProfile",
         "summary": "provision a profile row for an existing sub",
         "x-required-permission": "user:create:any",
@@ -1614,8 +1815,9 @@
         }
       },
       "patch": {
+        "x-request-body-limit": 16384,
         "operationId": "updateUser",
-        "x-required-permission": "user:update:any",
+        "x-auth": "required",
         "parameters": [
           {
             "name": "id",
@@ -1674,7 +1876,7 @@
       },
       "delete": {
         "operationId": "deleteUser",
-        "summary": "hard-delete the profile row and emit user.deleted",
+        "summary": "soft-delete the profile row and emit user.deleted",
         "x-required-permission": "user:delete:any",
         "parameters": [
           {
@@ -1721,28 +1923,35 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
             }
           },
           {
             "name": "offset",
             "in": "query",
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
             }
           },
           {
             "name": "entity",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 120
             }
           },
           {
             "name": "entityId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 255
             }
           }
         ],
@@ -1849,7 +2058,8 @@
             "type": "boolean"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "data": {
             "description": "endpoint-specific payload"
@@ -1868,10 +2078,12 @@
             "type": "boolean"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "error": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           }
         }
       },
@@ -1883,10 +2095,16 @@
             "format": "int64"
           },
           "userAgent": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 512
           },
           "ip": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64
+          },
+          "deviceId": {
+            "type": "string",
+            "maxLength": 128
           },
           "createdAt": {
             "type": "string",
@@ -1906,11 +2124,12 @@
         "properties": {
           "email": {
             "type": "string",
-            "format": "email"
+            "format": "email",
+            "maxLength": 254
           },
           "password": {
             "type": "string",
-            "minLength": 8,
+            "minLength": 12,
             "maxLength": 72
           }
         }
@@ -1923,10 +2142,18 @@
         ],
         "properties": {
           "email": {
-            "type": "string"
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
           },
           "password": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 72
+          },
+          "otp": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "maxLength": 6
           }
         }
       },
@@ -1937,7 +2164,9 @@
         ],
         "properties": {
           "email": {
-            "type": "string"
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
           }
         }
       },
@@ -1949,11 +2178,12 @@
         ],
         "properties": {
           "token": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 4096
           },
           "newPassword": {
             "type": "string",
-            "minLength": 8,
+            "minLength": 12,
             "maxLength": 72
           }
         }
@@ -1965,7 +2195,8 @@
         ],
         "properties": {
           "token": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 4096
           }
         }
       },
@@ -1986,11 +2217,13 @@
           },
           "color": {
             "type": "string",
+            "maxLength": 7,
             "pattern": "^#[0-9a-fA-F]{6}$",
             "default": "#6366f1"
           },
           "icon": {
             "type": "string",
+            "maxLength": 60,
             "default": "shield"
           },
           "archived": {
@@ -1999,8 +2232,11 @@
           },
           "permissions": {
             "type": "array",
+            "maxItems": 200,
+            "uniqueItems": true,
             "items": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 120
             }
           }
         }
@@ -2009,7 +2245,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           },
           "createdAt": {
             "type": "string",
@@ -2029,16 +2266,20 @@
             "format": "int64"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 60
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 300
           },
           "color": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 7
           },
           "icon": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 60
           },
           "archived": {
             "type": "boolean"
@@ -2057,7 +2298,8 @@
           "permissions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 120
             }
           }
         }
@@ -2070,19 +2312,26 @@
             "format": "int64"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           },
           "avatarUrl": {
-            "type": "string"
+            "type": "string",
+            "format": "uri",
+            "maxLength": 400,
+            "pattern": "^https://"
           },
           "status": {
             "type": "string",
             "enum": [
               "active",
-              "inactive"
+              "inactive",
+              "deleted"
             ]
           },
           "lockedUntil": {
@@ -2108,10 +2357,12 @@
             "nullable": true
           },
           "lastLoginIp": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 45
           },
           "lastLoginUserAgent": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 512
           },
           "createdAt": {
             "type": "string",
@@ -2135,7 +2386,8 @@
             "format": "int64"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 60
           }
         }
       },
@@ -2190,7 +2442,8 @@
           },
           "email": {
             "type": "string",
-            "format": "email"
+            "format": "email",
+            "maxLength": 254
           },
           "displayName": {
             "type": "string",
@@ -2198,7 +2451,9 @@
           },
           "avatarUrl": {
             "type": "string",
-            "maxLength": 400
+            "format": "uri",
+            "maxLength": 400,
+            "pattern": "^https://"
           }
         }
       },
@@ -2210,16 +2465,20 @@
             "format": "int64"
           },
           "actorSub": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64
           },
           "action": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           },
           "entity": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120
           },
           "entityId": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "meta": {},
           "createdAt": {

@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -67,6 +68,18 @@ func newRequestID() string {
 	return hex.EncodeToString(b)
 }
 
+func validRequestID(id string) bool {
+	if id == "" || len(id) > 64 {
+		return false
+	}
+	for _, r := range id {
+		if !(r >= 'a' && r <= 'z') && !(r >= 'A' && r <= 'Z') && !(r >= '0' && r <= '9') && !strings.ContainsRune("._:-", r) {
+			return false
+		}
+	}
+	return true
+}
+
 // Trace (PLAN item 70) continues an incoming trace via the traceparent header
 // and starts this service's server span. With tracing disabled the OTel
 // no-op tracer makes this middleware free.
@@ -105,7 +118,7 @@ func SetSlowRequestThreshold(d time.Duration) {
 func CorrelationID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.Header.Get("X-Request-ID")
-		if id == "" {
+		if !validRequestID(id) {
 			id = newRequestID()
 		}
 		w.Header().Set("X-Request-ID", id)

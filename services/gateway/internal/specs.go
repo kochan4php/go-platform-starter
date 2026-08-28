@@ -34,6 +34,8 @@ type Route struct {
 	Service      string
 	Perm         string // x-required-permission value ("" = none)
 	AuthRequired bool   // x-auth: required
+	RateClass    string
+	BodyLimit    int64
 }
 
 // SpecRouteTable parses an upstream's OpenAPI YAML and produces the gateway-
@@ -57,9 +59,11 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				continue
 			}
 			route := Route{
-				Method:  strings.ToUpper(method),
-				Path:    prefix + path,
-				Service: service,
+				Method:    strings.ToUpper(method),
+				Path:      prefix + path,
+				Service:   service,
+				RateClass: "standard",
+				BodyLimit: 1 << 20,
 			}
 			if op != nil {
 				if p, ok := op["x-required-permission"].(string); ok {
@@ -67,6 +71,12 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				}
 				if v, ok := op["x-auth"].(string); ok && v == "required" {
 					route.AuthRequired = true
+				}
+				if v, ok := op["x-rate-limit-class"].(string); ok && v != "" {
+					route.RateClass = v
+				}
+				if v, ok := op["x-request-body-limit"].(int); ok && v > 0 {
+					route.BodyLimit = int64(v)
 				}
 				if _, internalOnly := op["x-internal"]; internalOnly {
 					continue // internal APIs are never exposed through the gateway

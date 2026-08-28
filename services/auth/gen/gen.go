@@ -55,13 +55,14 @@ type EnvelopeOK struct {
 
 // ForgotInput defines model for ForgotInput.
 type ForgotInput struct {
-	Email string `json:"email"`
+	Email openapi_types.Email `json:"email"`
 }
 
 // LoginInput defines model for LoginInput.
 type LoginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    openapi_types.Email `json:"email"`
+	Otp      *string             `json:"otp,omitempty"`
+	Password string              `json:"password"`
 }
 
 // RegisterInput defines model for RegisterInput.
@@ -85,6 +86,7 @@ type ResetTokenInput struct {
 type Session struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	Current   *bool      `json:"current,omitempty"`
+	DeviceId  *string    `json:"deviceId,omitempty"`
 	Id        *int64     `json:"id,omitempty"`
 	Ip        *string    `json:"ip,omitempty"`
 	UserAgent *string    `json:"userAgent,omitempty"`
@@ -93,6 +95,17 @@ type Session struct {
 // ConfirmPasswordJSONBody defines parameters for ConfirmPassword.
 type ConfirmPasswordJSONBody struct {
 	Password string `json:"password"`
+}
+
+// VerifyMFAJSONBody defines parameters for VerifyMFA.
+type VerifyMFAJSONBody struct {
+	Code string `json:"code"`
+}
+
+// ChangePasswordJSONBody defines parameters for ChangePassword.
+type ChangePasswordJSONBody struct {
+	NewPassword string `json:"newPassword"`
+	OldPassword string `json:"oldPassword"`
 }
 
 // AdminSetUserPasswordJSONBody defines parameters for AdminSetUserPassword.
@@ -117,6 +130,12 @@ type ForgotPasswordJSONRequestBody = ForgotInput
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginInput
+
+// VerifyMFAJSONRequestBody defines body for VerifyMFA for application/json ContentType.
+type VerifyMFAJSONRequestBody VerifyMFAJSONBody
+
+// ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
+type ChangePasswordJSONRequestBody ChangePasswordJSONBody
 
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
 type RegisterJSONRequestBody = RegisterInput
@@ -147,6 +166,15 @@ type ServerInterface interface {
 	// Logout revoke the session carried by the refresh cookie and clear it
 	// (POST /auth/logout)
 	Logout(w http.ResponseWriter, r *http.Request)
+	// BeginMFA create a time-limited TOTP enrollment and QR code
+	// (POST /auth/mfa/enroll)
+	BeginMFA(w http.ResponseWriter, r *http.Request)
+	// VerifyMFA verify TOTP and enable MFA for the authenticated user
+	// (POST /auth/mfa/verify)
+	VerifyMFA(w http.ResponseWriter, r *http.Request)
+	// ChangePassword change the authenticated user's password after verifying the old password
+	// (POST /auth/password)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
 	// Refresh rotate the refresh cookie (reuse kills the family) and mint a new access token
 	// (POST /auth/refresh)
 	Refresh(w http.ResponseWriter, r *http.Request)
@@ -210,6 +238,24 @@ func (_ Unimplemented) Login(w http.ResponseWriter, r *http.Request) {
 // Logout revoke the session carried by the refresh cookie and clear it
 // (POST /auth/logout)
 func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// BeginMFA create a time-limited TOTP enrollment and QR code
+// (POST /auth/mfa/enroll)
+func (_ Unimplemented) BeginMFA(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// VerifyMFA verify TOTP and enable MFA for the authenticated user
+// (POST /auth/mfa/verify)
+func (_ Unimplemented) VerifyMFA(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ChangePassword change the authenticated user's password after verifying the old password
+// (POST /auth/password)
+func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -341,6 +387,48 @@ func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.Logout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BeginMFA operation middleware
+func (siw *ServerInterfaceWrapper) BeginMFA(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BeginMFA(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// VerifyMFA operation middleware
+func (siw *ServerInterfaceWrapper) VerifyMFA(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifyMFA(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ChangePassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ChangePassword(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -725,6 +813,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/auth/logout", wrapper.Logout)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/mfa/enroll", wrapper.BeginMFA)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/mfa/verify", wrapper.VerifyMFA)
+	})
+	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/auth/sessions", wrapper.RevokeAllSessions)
 	})
 	r.Group(func(r chi.Router) {
@@ -747,6 +841,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/confirm-password", wrapper.ConfirmPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/password", wrapper.ChangePassword)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/auth/users/{id}/sessions", wrapper.AdminRevokeUserSessions)

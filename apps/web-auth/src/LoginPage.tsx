@@ -32,6 +32,8 @@ export default function LoginPage({
 }) {
   const draft = useEmailDraft("auth:login-email");
   const [password, setPassword] = useState("");
+  const [otp, setOTP] = useState("");
+  const [mfaRequired, setMFARequired] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -78,7 +80,9 @@ export default function LoginPage({
     setBusy(true);
     setError("");
     try {
-      const result = await login(normalizeEmail(draft.email), password);
+      const result = mfaRequired
+        ? await login(normalizeEmail(draft.email), password, otp)
+        : await login(normalizeEmail(draft.email), password);
       draft.clear();
       setAttempts(MAX_ATTEMPTS);
       onLoggedIn({
@@ -87,6 +91,11 @@ export default function LoginPage({
       });
     } catch (caught) {
       const apiError = caught as AuthApiError;
+      if (apiError.message === "mfa_required") {
+        setMFARequired(true);
+        setError("Enter the six-digit code from your authenticator app.");
+        return;
+      }
       const remaining = apiError.status === 401 ? Math.max(0, attempts - 1) : attempts;
       setAttempts(remaining);
       setError(apiError.message || "Invalid credentials or request");
@@ -133,6 +142,23 @@ export default function LoginPage({
           onChange={setPassword}
           error={touched && !password ? "Password is required" : undefined}
         />
+        {mfaRequired ? (
+          <AuthInput
+            id="login-otp"
+            label="Authenticator code"
+            icon="token"
+            type="text"
+            name="one-time-code"
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            value={otp}
+            maxLength={6}
+            placeholder="123456"
+            onChange={(event) => setOTP(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            error={touched && otp.length !== 6 ? "Enter all six digits" : undefined}
+            valid={otp.length === 6}
+          />
+        ) : null}
         {error ? <Alert message={error} /> : null}
         {lockSeconds > 0 ? (
           <output aria-live="polite" className="block text-sm text-[var(--color-warning)]">
@@ -144,7 +170,10 @@ export default function LoginPage({
           </output>
         ) : null}
         <div className="ui-auth-sticky-actions flex items-center justify-between gap-4 pt-1">
-          <SubmitButton busy={busy} disabled={!emailValid || !password || lockSeconds > 0}>
+          <SubmitButton
+            busy={busy}
+            disabled={!emailValid || !password || (mfaRequired && otp.length !== 6) || lockSeconds > 0}
+          >
             {mode === "reauth" ? "Continue" : "Log in"}
           </SubmitButton>
           {mode === "page" ? (

@@ -1,0 +1,13 @@
+# API server EncryptionConfiguration template. This file belongs on every
+# control-plane node and is activated with --encryption-provider-config.
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources: [secrets]
+    providers:
+      - kms:
+          apiVersion: v2
+          name: platform-kms
+          endpoint: unix:///var/run/kms-provider/socket.sock
+          timeout: 3s
+      - identity: {}

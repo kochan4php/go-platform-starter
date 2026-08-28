@@ -64,7 +64,9 @@ const scalarPage = `<!doctype html>
 </head>
 <body>
 <script id="api-reference" data-url="/docs/openapi.json"></script>
-<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.66.1/dist/browser/standalone.js"
+ integrity="sha384-RkhHYpdjsrJH9sH8RmczPchxNiHEhmW300QwMB/8yg6feduTZu9FBN4W0DJnp50Z"
+ crossorigin="anonymous"></script>
 </body>
 </html>`
 
@@ -76,6 +78,8 @@ func ScalarHandlers(getAggregate func() []byte) (jsonHandler, pageHandler http.H
 	}
 	pageHandler = func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), clipboard-write=(self)")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'")
 		_, _ = w.Write([]byte(scalarPage))
 	}
 	return jsonHandler, pageHandler

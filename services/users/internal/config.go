@@ -8,6 +8,8 @@ type Config struct {
 	SlowQueryThreshold time.Duration `env:"SLOW_QUERY_THRESHOLD" envDefault:"500ms"`
 	DatabaseURL        string        `env:"DATABASE_URL,required"`
 	RedisAddr          string        `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername      string        `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword      string        `env:"REDIS_PASSWORD" envDefault:""`
 	InternalSecret     string        `env:"INTERNAL_SECRET,required"`
 }
 
@@ -27,6 +29,7 @@ type Profile struct {
 	LastLoginUserAgent  string     `gorm:"not null;default:''"       json:"lastLoginUserAgent"`
 	CreatedAt           time.Time  `                                 json:"createdAt"`
 	UpdatedAt           time.Time  `                                 json:"updatedAt"`
+	DeletedAt           *time.Time `gorm:"index"                    json:"-"`
 
 	// Computed at read time from auth.sessions (same database, read-only).
 	Online         bool          `gorm:"-" json:"online"`

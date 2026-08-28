@@ -46,6 +46,7 @@ components:
           type: boolean
         message:
           type: string
+          maxLength: 255
         data:
           description: endpoint-specific payload
 
@@ -57,5 +58,7 @@ components:
           type: boolean
         message:
           type: string
+          maxLength: 255
         error:
           type: string
+          maxLength: 120

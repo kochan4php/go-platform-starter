@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("roles page shows accordion content after login", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.local");
-  await page.getByLabel("Password").fill("admin-bootstrap-pw");
+  await page.getByLabel("Password").fill("local-root-access-2026!");
   await page.getByRole("button", { name: "Log in" }).click();
   await page.waitForURL(/admin\/users/, { timeout: 15000 });
   // Ensure the dashboard has settled before deep-linking to roles.

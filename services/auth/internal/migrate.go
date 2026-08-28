@@ -1,8 +1,6 @@
 package internal
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -12,11 +10,6 @@ import (
 
 	migrations "github.com/kochan4php/go-platform-starter/services/auth/migrations"
 )
-
-func sha256Hex(s string) string {
-	h := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(h[:])
-}
 
 func MigrateUp(databaseURL string) error {
 	src, err := iofs.New(migrations.FS, ".")

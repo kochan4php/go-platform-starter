@@ -28,22 +28,23 @@ func NewHandlers(svc *Service, cfg Config, log *slog.Logger) *Handlers {
 }
 
 type registerInput struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=72"`
+	Email    string `json:"email" validate:"required,email,max=254"`
+	Password string `json:"password" validate:"required,min=12,max=72"`
 }
 
 type loginInput struct {
-	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required,max=254"`
+	Password string `json:"password" validate:"required,max=72"`
+	OTP      string `json:"otp" validate:"omitempty,len=6,numeric"`
 }
 
 type forgotInput struct {
-	Email string `json:"email" validate:"required,email"`
+	Email string `json:"email" validate:"required,email,max=254"`
 }
 
 type resetInput struct {
-	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"newPassword" validate:"required,min=8,max=72"`
+	Token       string `json:"token" validate:"required,max=4096"`
+	NewPassword string `json:"newPassword" validate:"required,min=12,max=72"`
 }
 
 func (h *Handlers) decode(r *http.Request, dst any) error {
@@ -95,7 +96,7 @@ func withAuthScope(r *http.Request, sub, currentHash string) *http.Request {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, ctxKeySub{}, sub)
 	if currentHash != "" {
-		ctx = context.WithValue(ctx, ctxKeyHash{}, sha256Hex(currentHash))
+		ctx = context.WithValue(ctx, ctxKeyHash{}, currentHash)
 	}
 	return r.WithContext(ctx)
 }
@@ -135,7 +136,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	res, err := h.svc.Login(r.Context(), in.Email, in.Password, r.UserAgent(), clientIP(r))
+	res, err := h.svc.Login(r.Context(), in.Email, in.Password, r.UserAgent(), clientIP(r), deviceID(r), in.OTP)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
@@ -153,7 +154,7 @@ func (h *Handlers) Refresh(w http.ResponseWriter, r *http.Request) {
 		platform.WriteError(w, h.log, ErrBadCredentials())
 		return
 	}
-	res, err := h.svc.Refresh(r.Context(), refresh)
+	res, err := h.svc.Refresh(r.Context(), refresh, deviceID(r))
 	if err != nil {
 		h.clearRefreshCookie(w)
 		platform.WriteError(w, h.log, err)
@@ -203,7 +204,7 @@ func (h *Handlers) RevokeSession(w http.ResponseWriter, r *http.Request, id int6
 
 func (h *Handlers) AdminSetUserPassword(w http.ResponseWriter, r *http.Request, id int64) {
 	var in struct {
-		NewPassword string `json:"newPassword" validate:"required,min=8,max=72"`
+		NewPassword string `json:"newPassword" validate:"required,min=12,max=72"`
 	}
 	if err := h.decode(r, &in); err != nil {
 		platform.WriteError(w, h.log, err)
@@ -229,6 +230,47 @@ func (h *Handlers) ConfirmPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	platform.OK(w, http.StatusOK, "confirmed", struct{}{})
+}
+
+func (h *Handlers) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		OldPassword string `json:"oldPassword" validate:"required,max=72"`
+		NewPassword string `json:"newPassword" validate:"required,min=12,max=72"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.ChangePassword(r.Context(), subFromContextAsInt64(r), in.OldPassword, in.NewPassword); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	h.clearRefreshCookie(w)
+	platform.OK(w, http.StatusOK, "password_changed", struct{}{})
+}
+
+func (h *Handlers) BeginMFA(w http.ResponseWriter, r *http.Request) {
+	enrollment, err := h.svc.BeginMFA(r.Context(), subFromContextAsInt64(r))
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "mfa_enrollment_started", enrollment)
+}
+
+func (h *Handlers) VerifyMFA(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Code string `json:"code" validate:"required,len=6,numeric"`
+	}
+	if err := h.decode(r, &in); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	if err := h.svc.VerifyMFAEnrollment(r.Context(), subFromContextAsInt64(r), in.Code); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "mfa_enabled", struct{}{})
 }
 
 func (h *Handlers) AdminListUserSessions(w http.ResponseWriter, r *http.Request, id int64) {
@@ -327,4 +369,12 @@ func clientIP(r *http.Request) string {
 		host = host[:i]
 	}
 	return host
+}
+
+func deviceID(r *http.Request) string {
+	id := strings.TrimSpace(r.Header.Get("X-Device-ID"))
+	if len(id) > 128 {
+		return ""
+	}
+	return id
 }

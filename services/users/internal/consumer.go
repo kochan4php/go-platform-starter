@@ -10,6 +10,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
 
 const (
@@ -56,7 +58,16 @@ func ConsumeUserEvents(ctx context.Context, rdb *redis.Client, db *gorm.DB, log 
 
 		for _, s := range res {
 			for _, msg := range s.Messages {
-				handleEvent(ctx, db, log, msg.Values["event"], msg.Values["payload"])
+				event, payload, decodeErr := platform.DecodeStreamMessage(stream, msg.Values)
+				if decodeErr != nil {
+					log.Warn("invalid user event ignored", "err", decodeErr)
+					_ = rdb.XAdd(ctx, &redis.XAddArgs{Stream: stream + ":dlq", Values: map[string]any{
+						"reason": decodeErr.Error(), "orig_id": msg.ID,
+					}}).Err()
+					rdb.XAck(ctx, stream, group, msg.ID)
+					continue
+				}
+				handleEvent(ctx, db, log, event, payload)
 				rdb.XAck(ctx, stream, group, msg.ID)
 			}
 		}
@@ -79,15 +90,9 @@ func handleEvent(ctx context.Context, db *gorm.DB, log *slog.Logger, eventRaw, p
 
 	switch event {
 	case EventCreated:
-		// auth already created the identity row before publishing; this is a
-		// safety net for events that raced a fresh database.
-		if err := db.WithContext(ctx).Exec(
-			`INSERT INTO users.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`, payload.Sub,
-		).Error; err != nil {
-			log.Error("materialize profile failed", "sub", payload.Sub, "err", err)
-		} else {
-			log.Info("profile materialized", "sub", payload.Sub)
-		}
+		// The identity transaction creates the profile columns in users.users
+		// before publishing this notification, so no second write is needed.
+		log.Info("profile available", "sub", payload.Sub)
 	case EventDeleted:
 		if err := db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, payload.Sub).Error; err != nil {
 			log.Error("profile purge failed", "sub", payload.Sub, "err", err)

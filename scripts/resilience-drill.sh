@@ -9,7 +9,7 @@ BASE_PORT=$((18000 + ($$ % 500) * 2))
 GW_PORT=$((BASE_PORT))
 AUTH_PORT=$((BASE_PORT + 1))
 
-export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-admin-password-1}"
+export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-root-access-2026!}"
 PG_UP=0
 cleanup() {
   [ "$PG_UP" = "1" ] && docker rm -f drill-pg drill-redis >/dev/null 2>&1 || true

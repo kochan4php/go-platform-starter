@@ -21,21 +21,31 @@ TRUSTED_DOMAINS at the gateway first — that's the trigger, noted here.
 
 ## Headers
 
-Every Go service sets helmet-parity headers via `platform.SecurityHeaders`
-(nosniff, frame-deny, referrer-policy, permissions-policy; HSTS when TLS).
-CSP is deliberately not global — API responses are not HTML. The one HTML
-surface (gateway `/docs`) ships its own CSP allowing the Scalar CDN bundle.
+Every Go service sets helmet-parity headers via `platform.SecurityHeaders`.
+The nginx edge adds a complete CSP, COOP/COEP/CORP, granular
+Permissions-Policy, two-year preload HSTS on TLS, and a strict referrer policy.
+Scalar is version-pinned with SRI; Cabinet Grotesk is bundled locally.
 
 ## Scanning
 
 - `gosec` runs inside golangci-lint on every PR.
-- Trivy (vuln + misconfig, HIGH/CRITICAL, failing) and semgrep `p/default`
-  run in the CI `security` job.
+- Trivy vulnerability and Kubernetes config scans, default and project Semgrep
+  rules, gitleaks, SBOM generation, and dependency-license policy run in CI.
 
 ## Secrets
 
-- No secrets in code or compose defaults that matter: compose/k8s templates use
-  obvious placeholder values; real values arrive via k8s Secrets rendered from
-  `secret.tpl.yaml` files or CI credentials.
+- Secrets accept `NAME_FILE` and rotating key rings; production templates use
+  External Secrets/Vault and API-server KMS encryption.
 - Identity headers are bound by the shared internal secret — a leaked network
   position alone grants nothing (CONTRACTS.md).
+
+## Kubernetes network boundary
+
+`infra/k8s/security/network-policies.yaml` starts with default-deny. Before
+exposing the stack, label only the ingress-controller namespace with
+`networking.platform/ingress=allowed`; that namespace can reach gateway and
+web pods, while service, data-store, DNS, and approved public egress remain
+separately scoped.
+
+See `SECRETS.md`, `THREAT_MODEL.md`, `PENTEST_CHECKLIST.md`, and the root
+`SECURITY.md` responsible-disclosure policy.

@@ -22,8 +22,8 @@ import (
 
 const (
 	adminEmail    = "admin@example.local"
-	adminPassword = "admin-password-123"
-	userPassword  = "user-password-123"
+	adminPassword = "Blue-Orchid-123!"
+	userPassword  = "River-Quartz-456!"
 )
 
 type proc struct {

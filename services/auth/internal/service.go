@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"crypto/subtle"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,8 +13,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -66,7 +67,66 @@ func NewService(db *gorm.DB, rdb *redis.Client, log *slog.Logger, cfg Config, pu
 
 func (s *Service) UseClaimsClient(c *ClaimsClient) { s.claims = c }
 
-func (s *Service) secret() []byte { return []byte(s.cfg.AccessTokenSecret) }
+func (s *Service) secretRing() string { return s.cfg.AccessTokenSecret }
+
+func (s *Service) checkNewPassword(ctx context.Context, email, password string) error {
+	if err := validatePasswordComplexity(password, email); err != nil {
+		return err
+	}
+	checkCtx, cancel := context.WithTimeout(ctx, s.cfg.HIBPTimeout)
+	defer cancel()
+	return checkHIBP(checkCtx, s.cfg.HIBPAPIURL, password)
+}
+
+type passwordRecord struct {
+	Email           string
+	PasswordHash    string
+	PasswordHistory pq.StringArray `gorm:"type:text[]"`
+}
+
+func (s *Service) replacePassword(ctx context.Context, userID int64, password string) error {
+	record, err := s.validatePasswordReplacement(ctx, userID, password)
+	if err != nil {
+		return err
+	}
+	return s.storePasswordReplacement(ctx, userID, password, record)
+}
+
+func (s *Service) validatePasswordReplacement(ctx context.Context, userID int64, password string) (passwordRecord, error) {
+	var record passwordRecord
+	if err := s.db.WithContext(ctx).Table("users.users").
+		Select("email, password_hash, password_history").Where("id = ?", userID).Scan(&record).Error; err != nil {
+		return record, err
+	}
+	if record.PasswordHash == "" {
+		return record, platform.ErrNotFound("user %d not found", userID)
+	}
+	if err := s.checkNewPassword(ctx, record.Email, password); err != nil {
+		return record, err
+	}
+	if verifyPassword(record.PasswordHash, password) || passwordHistoryContains(record.PasswordHistory, password) {
+		return record, platform.ErrBadRequest("new password must not reuse a recent password")
+	}
+	return record, nil
+}
+
+func (s *Service) storePasswordReplacement(ctx context.Context, userID int64, password string, record passwordRecord) error {
+	nextHash, err := hashPassword(password, s.cfg.PasswordAlgorithm, s.cfg.BcryptCost)
+	if err != nil {
+		return err
+	}
+	history := append(pq.StringArray{record.PasswordHash}, record.PasswordHistory...)
+	limit := s.cfg.PasswordHistory
+	if limit <= 0 {
+		limit = 5
+	}
+	if len(history) > limit {
+		history = history[:limit]
+	}
+	return s.db.WithContext(ctx).Table("users.users").Where("id = ?", userID).Updates(map[string]any{
+		"password_hash": nextHash, "password_history": history,
+	}).Error
+}
 
 type AuthResult struct {
 	AccessToken   string
@@ -74,6 +134,7 @@ type AuthResult struct {
 	RefreshCookie string
 	SessionID     int64
 	FamilyID      string
+	DeviceID      string
 }
 
 func lower(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
@@ -96,21 +157,24 @@ func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password
 		return err
 	}
 
-	hash, herr := bcrypt.GenerateFromPassword([]byte(password), s.cfg.BcryptCost)
+	if herr := s.checkNewPassword(ctx, email, password); herr != nil {
+		return herr
+	}
+	hash, herr := hashPassword(password, s.cfg.PasswordAlgorithm, s.cfg.BcryptCost)
 	if herr != nil {
 		return herr
 	}
-	var id string
+	var id int64
 	if err := s.db.WithContext(ctx).Raw(
 		`SELECT id FROM users.users WHERE lower(email) = ?`, lower(email),
 	).Scan(&id).Error; err != nil {
 		return err
 	}
-	if id == "" {
+	if id == 0 {
 		return platform.ErrNotFound("bootstrap admin %s vanished", email)
 	}
 	if err := s.db.WithContext(ctx).Exec(
-		`UPDATE users.users SET password_hash = ? WHERE id = ?`, string(hash), id,
+		`UPDATE users.users SET password_hash = ? WHERE id = ?`, hash, id,
 	).Error; err != nil {
 		return err
 	}
@@ -127,17 +191,8 @@ func (s *Service) EnsureBootstrapAdmin(ctx context.Context, sub, email, password
 // SetPasswordByID lets an admin replace a user's password and revoke their
 // sessions, forcing re-login with the new credential.
 func (s *Service) SetPasswordByID(ctx context.Context, userID int64, newPassword string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.cfg.BcryptCost)
-	if err != nil {
+	if err := s.replacePassword(ctx, userID, newPassword); err != nil {
 		return err
-	}
-	res := s.db.WithContext(ctx).Exec(
-		`UPDATE users.users SET password_hash = ? WHERE id = ?`, string(hash), userID)
-	if res.Error != nil {
-		return res.Error
-	}
-	if res.RowsAffected == 0 {
-		return platform.ErrNotFound("user %d not found", userID)
 	}
 	if err := s.db.WithContext(ctx).Exec(
 		`DELETE FROM auth.sessions WHERE user_id = ?`, userID,
@@ -145,11 +200,15 @@ func (s *Service) SetPasswordByID(ctx context.Context, userID int64, newPassword
 		return err
 	}
 	s.log.Info("password set by admin", "sub", strconv.FormatInt(userID, 10))
+	s.auditAuth(ctx, "password.admin_changed", strconv.FormatInt(userID, 10), nil)
 	return nil
 }
 
 func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password string) (*User, error) {
 	email = lower(email)
+	if err := s.checkNewPassword(ctx, email, password); err != nil {
+		return nil, err
+	}
 	_, lookupErr := findUserByEmail(s.db.WithContext(ctx), email)
 	switch {
 	case lookupErr == nil:
@@ -158,7 +217,7 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 		return nil, lookupErr
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), s.cfg.BcryptCost)
+	hash, err := hashPassword(password, s.cfg.PasswordAlgorithm, s.cfg.BcryptCost)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +226,7 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 		id64 = 0 // public registration: let the identity sequence assign it
 	}
 
-	u := &User{Email: lower(email), PasswordHash: string(hash)}
+	u := &User{Email: lower(email), PasswordHash: hash}
 	if id64 > 0 {
 		if err := s.db.WithContext(ctx).Raw(
 			`INSERT INTO users.users (id, email, password_hash) VALUES (?, ?, ?) RETURNING *`,
@@ -193,14 +252,27 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 		s.log.Error("publish user.created failed", "err", err)
 	}
 	s.log.Info("user registered", "sub", strconv.FormatInt(u.ID, 10))
+	s.auditAuth(ctx, "register.succeeded", strconv.FormatInt(u.ID, 10), nil)
 	return u, nil
 }
 
-func (s *Service) Login(ctx context.Context, email, password, userAgent, ip string) (*AuthResult, error) {
+func (s *Service) Login(ctx context.Context, email, password, userAgent, ip string, device ...string) (*AuthResult, error) {
 	email = lower(email)
+	if err := s.checkAccountRate(ctx, email); err != nil {
+		return nil, err
+	}
+	deviceID := ""
+	otp := ""
+	if len(device) > 0 {
+		deviceID = strings.TrimSpace(device[0])
+	}
+	if len(device) > 1 {
+		otp = strings.TrimSpace(device[1])
+	}
 	u, err := findUserByEmail(s.db.WithContext(ctx), email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		_ = bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(password))
+		_ = verifyPassword(dummyHash, password)
+		s.auditAuth(ctx, "login.failed", "", map[string]any{"reason": "invalid", "ip": ip})
 		return nil, ErrBadCredentials()
 	} else if err != nil {
 		return nil, err
@@ -209,14 +281,29 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	if u.Status != "active" || (u.LockedUntil != nil && u.LockedUntil.After(s.now())) {
 		return nil, ErrBadCredentials()
 	}
-	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) != nil {
-		s.recordFailedAttempt(ctx, u)
+	if !verifyPassword(u.PasswordHash, password) {
+		s.recordFailedAttempt(ctx, u, ip, userAgent)
+		s.auditAuth(ctx, "login.failed", strconv.FormatInt(u.ID, 10), map[string]any{"reason": "invalid", "ip": ip})
 		return nil, ErrBadCredentials()
+	}
+	if passwordNeedsRehash(u.PasswordHash, s.cfg.PasswordAlgorithm, s.cfg.BcryptCost) {
+		if upgraded, hashErr := hashPassword(password, s.cfg.PasswordAlgorithm, s.cfg.BcryptCost); hashErr == nil {
+			_ = s.db.Model(&User{}).Where("id = ?", u.ID).Update("password_hash", upgraded).Error
+		}
+	}
+	if err := s.verifyMFA(u, otp); err != nil {
+		s.recordFailedAttempt(ctx, u, ip, userAgent)
+		s.auditAuth(ctx, "mfa.failed", strconv.FormatInt(u.ID, 10), map[string]any{"ip": ip})
+		return nil, err
 	}
 
 	if err := s.db.Model(&User{}).Where("id = ?", u.ID).
 		Updates(map[string]any{"failed_login_attempts": 0, "locked_until": nil}).Error; err != nil {
 		return nil, err
+	}
+	if u.LastLoginAt != nil && u.LastLoginIP != "" && u.LastLoginIP != ip && u.LastLoginUserAgent != "" && u.LastLoginUserAgent != userAgent {
+		s.enqueueSecurityMail(ctx, u.Email, "Suspicious sign-in", "A sign-in used a new network and device. If this was not you, change your password immediately.")
+		s.auditAuth(ctx, "login.suspicious", strconv.FormatInt(u.ID, 10), map[string]any{"ip": ip, "userAgent": userAgent})
 	}
 	// Login telemetry for the users dashboard (IP, device, recency).
 	if err := s.db.Exec(
@@ -227,13 +314,13 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	}
 	_ = s.rdb.Del(ctx, s.failKey(email)).Err()
 
-	result, err := s.startSession(ctx, u, userAgent, ip)
+	result, err := s.startSession(ctx, u, userAgent, ip, deviceID)
 	if err != nil {
 		return nil, err
 	}
 	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{
 		ActorSub: strconv.FormatInt(u.ID, 10),
-		Action:   "login",
+		Action:   "login.succeeded",
 		Entity:   "user",
 		EntityID: strconv.FormatInt(u.ID, 10),
 		Meta:     map[string]any{"ip": ip, "userAgent": userAgent},
@@ -241,7 +328,7 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	return result, nil
 }
 
-func (s *Service) recordFailedAttempt(ctx context.Context, u *User) {
+func (s *Service) recordFailedAttempt(ctx context.Context, u *User, ip, userAgent string) {
 	key := s.failKey(u.Email)
 	n, err := s.rdb.Incr(ctx, key).Result()
 	if err != nil {
@@ -260,48 +347,125 @@ func (s *Service) recordFailedAttempt(ctx context.Context, u *User) {
 		}
 		s.rdb.Del(ctx, key)
 		s.log.Warn("account locked", "sub", u.ID)
+		s.enqueueSecurityMail(ctx, u.Email, "Account temporarily locked", "Too many failed sign-in attempts locked your account temporarily. If this was not you, reset your password.")
+		s.auditAuth(ctx, "login.locked", strconv.FormatInt(u.ID, 10), map[string]any{"ip": ip, "userAgent": userAgent})
 		return
 	}
 	s.db.Model(&User{}).Where("id = ?", u.ID).UpdateColumn("failed_login_attempts", n)
 }
 
-func (s *Service) failKey(email string) string { return "login:fail:" + lower(email) }
+func (s *Service) failKey(email string) string {
+	return "login:fail:" + platform.KeyedDigest(platform.ActiveSecret(s.cryptoRing()), lower(email))
+}
 
-func (s *Service) startSession(ctx context.Context, u *User, ua, ip string) (*AuthResult, error) {
+func (s *Service) checkAccountRate(ctx context.Context, email string) error {
+	limit := s.cfg.LoginAccountRate
+	if limit <= 0 {
+		limit = 10
+	}
+	key := "login:account:" + platform.KeyedDigest(platform.ActiveSecret(s.cryptoRing()), email)
+	n, err := s.rdb.Incr(ctx, key).Result()
+	if err != nil {
+		return nil
+	}
+	if n == 1 {
+		_ = s.rdb.Expire(ctx, key, time.Minute).Err()
+	}
+	if n > int64(limit) {
+		return &platform.AppError{Status: http.StatusTooManyRequests, Message: "rate_limited", Detail: "too many login attempts for this account"}
+	}
+	return nil
+}
+
+func (s *Service) enqueueSecurityMail(ctx context.Context, to, subject, text string) {
+	if err := s.pub.Publish(ctx, StreamMail, EventSend, map[string]string{
+		"to": to, "subject": subject, "html": "<p>" + text + "</p>",
+	}); err != nil {
+		s.log.Warn("security email enqueue failed", "err", err)
+	}
+}
+
+func (s *Service) auditAuth(ctx context.Context, action, sub string, meta map[string]any) {
+	platform.Audit(ctx, s.pub, s.log, platform.AuditEvent{ActorSub: sub, Action: action, Entity: "auth", EntityID: sub, Meta: meta})
+}
+
+func (s *Service) cryptoRing() string {
+	if strings.TrimSpace(s.cfg.SessionCryptoKeys) != "" {
+		return s.cfg.SessionCryptoKeys
+	}
+	return s.cfg.AccessTokenSecret
+}
+
+func (s *Service) tokenDigests(plain string) []string {
+	out := []string{}
+	for _, key := range strings.Split(s.cryptoRing(), ",") {
+		if key = strings.TrimSpace(key); key != "" {
+			out = append(out, platform.KeyedDigest(key, plain))
+		}
+	}
+	return out
+}
+
+func (s *Service) tokenDigest(plain string) string {
+	return platform.KeyedDigest(platform.ActiveSecret(s.cryptoRing()), plain)
+}
+
+func (s *Service) startSession(ctx context.Context, u *User, ua, ip, deviceID string) (*AuthResult, error) {
 	family := uuid.NewString()
-	return s.newSessionInFamily(ctx, u, family, ua, ip)
+	return s.newSessionInFamily(ctx, u, family, ua, ip, deviceID)
 }
 
 // newSessionInFamily creates a session row + access token for the user and
 // returns the result carrying the plaintext refresh token (cookie value).
-func (s *Service) newSessionInFamily(ctx context.Context, u *User, family, ua, ip string) (*AuthResult, error) {
+func (s *Service) newSessionInFamily(ctx context.Context, u *User, family, ua, ip, deviceID string) (*AuthResult, error) {
 	refresh, err := randomToken(32)
 	if err != nil {
 		return nil, err
 	}
 	sess := Session{
 		UserID: u.ID, FamilyID: family,
-		RefreshTokenHash: sha256Hex(refresh), UserAgent: ua, IP: ip,
+		RefreshTokenHash: s.tokenDigest(refresh), UserAgent: ua, IP: ip, DeviceID: deviceID,
 		ExpiresAt: s.now().AddDate(0, 0, s.cfg.RefreshTTLDays),
 	}
 	if err := s.db.WithContext(ctx).Create(&sess).Error; err != nil {
 		return nil, err
 	}
-	perms, ver := []string{}, int64(0)
+	maxSessions := s.cfg.MaxActiveSessions
+	if maxSessions <= 0 {
+		maxSessions = 10
+	}
+	if err := s.db.WithContext(ctx).Exec(`UPDATE auth.sessions SET revoked_at = ?
+		WHERE user_id = ? AND revoked_at IS NULL AND id NOT IN (
+			SELECT id FROM auth.sessions WHERE user_id = ? AND revoked_at IS NULL ORDER BY created_at DESC, id DESC LIMIT ?
+		)`, s.now(), u.ID, u.ID, maxSessions).Error; err != nil {
+		return nil, err
+	}
+	perms, ver := []string{"user:update:own"}, int64(0)
 	if s.claims != nil {
 		perms, ver = s.claims.Resolve(ctx, strconv.FormatInt(u.ID, 10))
 	}
-	access, err := MintAccess(s.secret(), strconv.FormatInt(u.ID, 10), u.Email, ver, perms, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
+	access, err := MintAccessWithRing(s.secretRing(), strconv.FormatInt(u.ID, 10), u.Email, ver, perms, time.Duration(s.cfg.AccessTTLMinutes)*time.Minute)
 	if err != nil {
 		return nil, err
 	}
-	return &AuthResult{AccessToken: access, User: u, RefreshCookie: refresh, SessionID: sess.ID, FamilyID: family}, nil
+	return &AuthResult{AccessToken: access, User: u, RefreshCookie: refresh, SessionID: sess.ID, FamilyID: family, DeviceID: deviceID}, nil
 }
 
-func (s *Service) Refresh(ctx context.Context, refreshPlain string) (*AuthResult, error) {
-	hash := sha256Hex(refreshPlain)
+func (s *Service) Refresh(ctx context.Context, refreshPlain string, device ...string) (*AuthResult, error) {
+	deviceID := ""
+	if len(device) > 0 {
+		deviceID = strings.TrimSpace(device[0])
+	}
+	graceKey := "refresh:grace:" + s.tokenDigest(refreshPlain)
+	if cached, err := s.rdb.Get(ctx, graceKey).Result(); err == nil {
+		var result AuthResult
+		plain, decryptErr := platform.DecryptForSubject(s.cryptoRing(), "refresh-grace", graceKey, cached)
+		if decryptErr == nil && json.Unmarshal([]byte(plain), &result) == nil && (result.DeviceID == "" || result.DeviceID == deviceID) {
+			return &result, nil
+		}
+	}
 	var sess Session
-	err := s.db.Where("refresh_token_hash = ?", hash).First(&sess).Error
+	err := s.db.Where("refresh_token_hash IN ?", s.tokenDigests(refreshPlain)).First(&sess).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return nil, ErrBadCredentials()
@@ -311,6 +475,7 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string) (*AuthResult
 
 	if sess.RevokedAt != nil {
 		s.killFamily(ctx, sess.FamilyID)
+		s.auditAuth(ctx, "refresh.reuse", strconv.FormatInt(sess.UserID, 10), map[string]any{"family": sess.FamilyID})
 		s.log.Warn("refresh reuse detected — family killed", "family", sess.FamilyID)
 		return nil, ErrBadCredentials()
 	}
@@ -320,10 +485,17 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string) (*AuthResult
 		s.db.Save(&sess)
 		return nil, ErrBadCredentials()
 	}
+	if sess.DeviceID != "" && (deviceID == "" || subtle.ConstantTimeCompare([]byte(sess.DeviceID), []byte(deviceID)) != 1) {
+		return nil, ErrBadCredentials()
+	}
 
 	var u User
 	if err := s.db.First(&u, "id = ?", sess.UserID).Error; err != nil {
 		return nil, err
+	}
+	if u.Status != "active" {
+		s.killFamily(ctx, sess.FamilyID)
+		return nil, ErrBadCredentials()
 	}
 
 	now := s.now()
@@ -331,10 +503,20 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string) (*AuthResult
 	if err := s.db.Save(&sess).Error; err != nil {
 		return nil, err
 	}
-	res, err := s.newSessionInFamily(ctx, &u, sess.FamilyID, sess.UserAgent, sess.IP)
+	res, err := s.newSessionInFamily(ctx, &u, sess.FamilyID, sess.UserAgent, sess.IP, sess.DeviceID)
 	if err != nil {
 		return nil, err
 	}
+	if raw, marshalErr := json.Marshal(res); marshalErr == nil {
+		grace := s.cfg.RefreshGrace
+		if grace <= 0 {
+			grace = 10 * time.Second
+		}
+		if encrypted, encryptErr := platform.EncryptForSubject(platform.ActiveSecret(s.cryptoRing()), "refresh-grace", graceKey, string(raw)); encryptErr == nil {
+			_ = s.rdb.Set(ctx, graceKey, encrypted, grace).Err()
+		}
+	}
+	s.auditAuth(ctx, "refresh.succeeded", strconv.FormatInt(sess.UserID, 10), map[string]any{"deviceId": sess.DeviceID})
 	return res, nil
 }
 
@@ -354,8 +536,9 @@ func (s *Service) Logout(ctx context.Context, refreshPlain string) error {
 	if refreshPlain == "" {
 		return nil
 	}
+	_ = s.rdb.Del(ctx, "refresh:grace:"+s.tokenDigest(refreshPlain)).Err()
 	var sess Session
-	err := s.db.Where("refresh_token_hash = ?", sha256Hex(refreshPlain)).First(&sess).Error
+	err := s.db.Where("refresh_token_hash IN ?", s.tokenDigests(refreshPlain)).First(&sess).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil
 	}
@@ -364,18 +547,23 @@ func (s *Service) Logout(ctx context.Context, refreshPlain string) error {
 	}
 	now := s.now()
 	sess.RevokedAt = &now
-	return s.db.Save(&sess).Error
+	if err := s.db.Save(&sess).Error; err != nil {
+		return err
+	}
+	s.auditAuth(ctx, "logout.succeeded", strconv.FormatInt(sess.UserID, 10), nil)
+	return nil
 }
 
 type sessionView struct {
 	ID        int64     `json:"id"`
 	UserAgent string    `json:"userAgent"`
 	IP        string    `json:"ip"`
+	DeviceID  string    `json:"deviceId"`
 	CreatedAt time.Time `json:"createdAt"`
 	Current   bool      `json:"current"`
 }
 
-func (s *Service) ListSessions(ctx context.Context, sub int64, currentHash string) ([]sessionView, error) {
+func (s *Service) ListSessions(ctx context.Context, sub int64, currentToken string) ([]sessionView, error) {
 	var rows []Session
 	err := s.db.Where("user_id = ? AND revoked_at IS NULL AND expires_at > ?", sub, s.now()).
 		Order("created_at DESC").Find(&rows).Error
@@ -383,10 +571,15 @@ func (s *Service) ListSessions(ctx context.Context, sub int64, currentHash strin
 		return nil, err
 	}
 	out := make([]sessionView, 0, len(rows))
+	currentDigests := s.tokenDigests(currentToken)
 	for _, r := range rows {
+		current := false
+		for _, digest := range currentDigests {
+			current = current || subtle.ConstantTimeCompare([]byte(r.RefreshTokenHash), []byte(digest)) == 1
+		}
 		out = append(out, sessionView{
-			ID: r.ID, UserAgent: r.UserAgent, IP: r.IP, CreatedAt: r.CreatedAt,
-			Current: currentHash != "" && subtle.ConstantTimeCompare([]byte(r.RefreshTokenHash), []byte(currentHash)) == 1,
+			ID: r.ID, UserAgent: r.UserAgent, IP: r.IP, DeviceID: r.DeviceID, CreatedAt: r.CreatedAt,
+			Current: currentToken != "" && current,
 		})
 	}
 	return out, nil
@@ -405,10 +598,12 @@ func (s *Service) RevokeSession(ctx context.Context, sub, sessionID int64) error
 	return nil
 }
 
-func (s *Service) RevokeAllOtherSessions(ctx context.Context, sub int64, currentHash string) (int64, error) {
-	res := s.db.Model(&Session{}).
-		Where("user_id = ? AND revoked_at IS NULL AND refresh_token_hash <> ?", sub, currentHash).
-		Update("revoked_at", s.now())
+func (s *Service) RevokeAllOtherSessions(ctx context.Context, sub int64, currentToken string) (int64, error) {
+	query := s.db.Model(&Session{}).Where("user_id = ? AND revoked_at IS NULL", sub)
+	if currentToken != "" {
+		query = query.Where("refresh_token_hash NOT IN ?", s.tokenDigests(currentToken))
+	}
+	res := query.Update("revoked_at", s.now())
 	return res.RowsAffected, res.Error
 }
 
@@ -417,9 +612,24 @@ func (s *Service) ConfirmPassword(ctx context.Context, sub int64, password strin
 	if err := s.db.WithContext(ctx).First(&user, "id = ?", sub).Error; err != nil {
 		return ErrBadCredentials()
 	}
-	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
+	if !verifyPassword(user.PasswordHash, password) {
 		return ErrBadCredentials()
 	}
+	return nil
+}
+
+func (s *Service) ChangePassword(ctx context.Context, sub int64, oldPassword, newPassword string) error {
+	if err := s.ConfirmPassword(ctx, sub, oldPassword); err != nil {
+		return err
+	}
+	if err := s.replacePassword(ctx, sub, newPassword); err != nil {
+		return err
+	}
+	if _, err := s.RevokeAllOtherSessions(ctx, sub, ""); err != nil {
+		return err
+	}
+	_ = s.rdb.Publish(ctx, channelLogout, sub).Err()
+	s.auditAuth(ctx, "password.changed", strconv.FormatInt(sub, 10), nil)
 	return nil
 }
 
@@ -470,7 +680,7 @@ func (s *Service) Forgot(ctx context.Context, email string) error {
 	}
 
 	jti := uuid.NewString()
-	token, err := MintReset(s.secret(), strconv.FormatInt(u.ID, 10), jti, time.Duration(s.cfg.ResetTTLMinutes)*time.Minute)
+	token, err := MintResetWithRing(s.secretRing(), strconv.FormatInt(u.ID, 10), jti, time.Duration(s.cfg.ResetTTLMinutes)*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -487,6 +697,7 @@ func (s *Service) Forgot(ctx context.Context, email string) error {
 		s.log.Error("enqueue reset mail failed", "err", err)
 	}
 	s.log.Info("reset requested", "sub", u.ID)
+	s.auditAuth(ctx, "password.reset_requested", strconv.FormatInt(u.ID, 10), nil)
 	return nil
 }
 
@@ -495,7 +706,7 @@ func resetJTIKey(jti string) string { return "reset:jti:" + jti }
 // ValidateReset verifies a reset grant without consuming it. The actual reset
 // still performs an atomic GETDEL, preserving single-use semantics under races.
 func (s *Service) ValidateReset(ctx context.Context, rawToken string) error {
-	claims, err := ParseToken(s.secret(), rawToken, PurposeReset)
+	claims, err := ParseTokenWithRing(s.secretRing(), rawToken, PurposeReset)
 	if err != nil {
 		return platform.ErrBadRequest("invalid or expired reset token")
 	}
@@ -510,23 +721,26 @@ func (s *Service) ValidateReset(ctx context.Context, rawToken string) error {
 }
 
 func (s *Service) Reset(ctx context.Context, rawToken, newPassword string) error {
-	claims, err := ParseToken(s.secret(), rawToken, PurposeReset)
+	claims, err := ParseTokenWithRing(s.secretRing(), rawToken, PurposeReset)
 	if err != nil {
 		return platform.ErrBadRequest("invalid or expired reset token")
 	}
 
+	userID, parseErr := strconv.ParseInt(claims.Sub, 10, 64)
+	if parseErr != nil || userID <= 0 {
+		return platform.ErrBadRequest("invalid reset subject")
+	}
+	record, err := s.validatePasswordReplacement(ctx, userID, newPassword)
+	if err != nil {
+		return err
+	}
 	storedSub, err := s.rdb.GetDel(ctx, resetJTIKey(claims.JTI)).Result()
 	if errors.Is(err, redis.Nil) || (err == nil && storedSub != claims.Sub) {
 		return platform.ErrBadRequest("invalid or expired reset token")
 	} else if err != nil {
 		return err
 	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.cfg.BcryptCost)
-	if err != nil {
-		return err
-	}
-	if err := s.db.Model(&User{}).Where("id = ?", claims.Sub).Update("password_hash", string(hash)).Error; err != nil {
+	if err := s.storePasswordReplacement(ctx, userID, newPassword, record); err != nil {
 		return err
 	}
 	if err := s.db.Model(&Session{}).
@@ -535,5 +749,6 @@ func (s *Service) Reset(ctx context.Context, rawToken, newPassword string) error
 		return err
 	}
 	s.log.Info("password reset", "sub", claims.Sub)
+	s.auditAuth(ctx, "password.reset_completed", claims.Sub, nil)
 	return nil
 }

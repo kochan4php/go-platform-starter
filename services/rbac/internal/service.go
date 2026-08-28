@@ -337,6 +337,7 @@ func (s *Service) UpdateRole(ctx context.Context, id int64, input RoleInput) (*R
 	if err != nil {
 		return nil, err
 	}
+	s.invalidateRoleUsers(ctx, id)
 	updated := Role{
 		ID: id, Name: normalized.Name, Description: normalized.Description, Color: normalized.Color,
 		Icon: normalized.Icon, Archived: normalized.Archived, CreatedAt: before.CreatedAt,
@@ -368,6 +369,7 @@ func (s *Service) DeleteRole(ctx context.Context, id int64, fallbackID *int64) e
 	if role.System {
 		return platform.ErrBadRequest("the admin system role cannot be deleted")
 	}
+	affectedUserIDs := []int64{}
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if role.UserCount > 0 {
 			if fallbackID == nil || *fallbackID == id {
@@ -379,6 +381,9 @@ func (s *Service) DeleteRole(ctx context.Context, id int64, fallbackID *int64) e
 			}
 			if exists == 0 {
 				return platform.ErrBadRequest("fallback role is unknown or archived")
+			}
+			if err := tx.Table("rbac.user_roles").Where("role_id = ?", id).Pluck("user_id", &affectedUserIDs).Error; err != nil {
+				return err
 			}
 			if err := tx.Exec(`
 				INSERT INTO rbac.user_roles (user_id, role_id, ver)
@@ -402,6 +407,14 @@ func (s *Service) DeleteRole(ctx context.Context, id int64, fallbackID *int64) e
 	if err != nil {
 		return err
 	}
+	for _, userID := range affectedUserIDs {
+		var version int64
+		if err := s.db.WithContext(ctx).Table("rbac.user_versions").Select("ver").Where("user_id = ?", userID).Scan(&version).Error; err != nil {
+			s.log.Warn("load claim version after role delete failed", "user", userID, "err", err)
+			continue
+		}
+		s.invalidateClaims(ctx, userID, version)
+	}
 	s.audit(ctx, "delete", "role", fmt.Sprintf("%d", id), map[string]any{"before": role, "fallbackRoleId": fallbackID})
 	return nil
 }
@@ -413,7 +426,8 @@ type Claims struct {
 
 func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int64) error {
 	roleIDs = uniqueInt64s(roleIDs)
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	var nextVersion int64
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if len(roleIDs) > 0 {
 			var known int64
 			if err := tx.Model(&Role{}).Where("id IN ? AND archived = false", roleIDs).Count(&known).Error; err != nil {
@@ -423,7 +437,6 @@ func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int6
 				return platform.ErrBadRequest("unknown or archived role in set")
 			}
 		}
-		var nextVersion int64
 		if err := tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
 			ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, userID).Scan(&nextVersion).Error; err != nil {
 			return err
@@ -438,6 +451,33 @@ func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int6
 		}
 		return nil
 	})
+	if err == nil {
+		s.invalidateClaims(ctx, userID, nextVersion)
+	}
+	return err
+}
+
+func (s *Service) invalidateRoleUsers(ctx context.Context, roleID int64) {
+	var versions []struct{ UserID, Ver int64 }
+	if err := s.db.WithContext(ctx).Table("rbac.user_versions uv").Select("uv.user_id, uv.ver").
+		Where("uv.user_id IN (SELECT user_id FROM rbac.user_roles WHERE role_id = ?)", roleID).Scan(&versions).Error; err != nil {
+		s.log.Warn("load affected claim versions failed", "err", err)
+		return
+	}
+	for _, version := range versions {
+		s.invalidateClaims(ctx, version.UserID, version.Ver)
+	}
+}
+
+func (s *Service) invalidateClaims(ctx context.Context, userID, version int64) {
+	publisher, ok := s.pub.(interface {
+		InvalidateClaims(context.Context, int64, int64) error
+	})
+	if ok {
+		if err := publisher.InvalidateClaims(ctx, userID, version); err != nil {
+			s.log.Warn("invalidate claims failed", "user", userID, "err", err)
+		}
+	}
 }
 
 func uniqueInt64s(items []int64) []int64 {
@@ -477,11 +517,11 @@ func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error
 		Where("ur.user_id = ? AND r.archived = false", subID).Scan(&assigned).Error; err != nil {
 		return nil, err
 	}
-	claims := Claims{Perms: []string{}}
+	claims := Claims{Perms: []string{"user:update:own"}}
 	if err := s.db.WithContext(ctx).Table("rbac.user_versions").Select("ver").Where("user_id = ?", subID).Scan(&claims.Ver).Error; err != nil {
 		return nil, err
 	}
-	seen := map[string]bool{}
+	seen := map[string]bool{"user:update:own": true}
 	for _, assignment := range assigned {
 		for _, permission := range s.permsForRole(ctx, assignment.RoleID) {
 			if !seen[permission] {

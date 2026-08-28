@@ -2,7 +2,14 @@ import { Card, SkeletonBlock, SkeletonLine } from "@starter/ui";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import AuthFrame from "./AuthFrame";
 import { type AuthApiError, reset, validateReset } from "./api";
-import { ErrorSummary, PasswordInput, SubmitButton, SuccessPanel, authNavigate } from "./auth-ui";
+import {
+  ErrorSummary,
+  PasswordInput,
+  SubmitButton,
+  SuccessPanel,
+  authNavigate,
+  validPassword,
+} from "./auth-ui";
 
 export default function ResetPage() {
   const token = new URLSearchParams(window.location.search).get("token") ?? "";
@@ -15,7 +22,7 @@ export default function ResetPage() {
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
   const [redirectIn, setRedirectIn] = useState(3);
-  const strongEnough = newPassword.length >= 8;
+  const strongEnough = validPassword(newPassword);
   const matches = Boolean(confirm) && confirm === newPassword;
 
   useEffect(() => {
@@ -130,7 +137,11 @@ export default function ResetPage() {
                 autoComplete="new-password"
                 onChange={setNewPassword}
                 withStrength
-                error={touched && !strongEnough ? "Use at least 8 characters" : undefined}
+                error={
+                  touched && !strongEnough
+                    ? "Use 12+ characters from at least three character classes"
+                    : undefined
+                }
                 valid={touched && strongEnough}
               />
               <PasswordInput

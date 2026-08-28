@@ -17,102 +17,106 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Security
 
-- [ ] 🔧 S1. MFA/TOTP: endpoint enroll + verify + UI QR code
-- [ ] 🔧 S2. Password policy: complexity check + breached-password check (HIBP k-anonymity)
-- [ ] 🔧 S3. Password history — blokir reuse N password terakhir (kolom `password_history`)
-- [ ] 🔧 S4. Concurrent session limit per user (max N sesi aktif)
-- [ ] 🔧 S5. Grace window refresh rotation (token lama valid ±10 dtk untuk multi-tab)
-- [ ] 🔧 S6. BroadcastChannel/SharedWorker coordination antar-tab (satu refresh saja)
-- [ ] 🔧 S7. Device fingerprint pada sesi (kolom device_id + tampil di UI)
+- [x] 🔧 S1. MFA/TOTP: endpoint enroll + verify + UI QR code
+- [x] 🔧 S2. Password policy: complexity check + breached-password check (HIBP k-anonymity)
+- [x] 🔧 S3. Password history — blokir reuse N password terakhir (kolom `password_history`)
+- [x] 🔧 S4. Concurrent session limit per user (max N sesi aktif)
+- [x] 🔧 S5. Grace window refresh rotation (token lama valid ±10 dtk untuk multi-tab)
+- [x] 🔧 S6. BroadcastChannel/SharedWorker coordination antar-tab (satu refresh saja)
+- [x] 🔧 S7. Device fingerprint pada sesi (kolom device_id + tampil di UI)
 - [ ] 🧭 S8. Email verification flow (token + verify page + blokir login sebelum verify)
-- [ ] 🔧 S9. Account lockout notification email (via worker mail)
-- [ ] 🔧 S10. Suspicious-login detection (IP/UA berubah drastis → email warning)
+- [x] 🔧 S9. Account lockout notification email (via worker mail)
+- [x] 🔧 S10. Suspicious-login detection (IP/UA berubah drastis → email warning)
 - [ ] 🧭 S11. CAPTCHA/Turnstile pada register + forgot setelah N kegagalan
-- [ ] 🔧 S12. Rate limit login per-account (bukan hanya per-IP di edge)
-- [ ] 🔧 S13. Password change flow untuk user yang sedang login (bukan hanya admin reset)
-- [ ] 🔧 S14. Old password verification wajib saat ganti password sendiri
-- [ ] 🔧 S15. Session regeneration saat privilege change (anti fixation)
-- [ ] 🔧 S16. Audit event lengkap semua auth event (login gagal/sukses/lockout/reset)
-- [ ] 🔧 S17. Refresh token binding per device-id (kolom device_id di sessions)
-- [ ] 🔧 S18. Admin endpoint: list active sessions per user
-- [ ] 🔧 S19. Admin force-logout endpoint + UI
-- [ ] 🔧 S20. Soft-delete user (status=deleted) sebagai alternatif hard delete
-- [ ] 🔧 S21. CSP header penuh di edge nginx (content directives lengkap)
+- [x] 🔧 S12. Rate limit login per-account (bukan hanya per-IP di edge)
+- [x] 🔧 S13. Password change flow untuk user yang sedang login (bukan hanya admin reset)
+- [x] 🔧 S14. Old password verification wajib saat ganti password sendiri
+- [x] 🔧 S15. Session regeneration saat privilege change (anti fixation)
+- [x] 🔧 S16. Audit event lengkap semua auth event (login gagal/sukses/lockout/reset)
+- [x] 🔧 S17. Refresh token binding per device-id (kolom device_id di sessions)
+- [x] 🔧 S18. Admin endpoint: list active sessions per user
+- [x] 🔧 S19. Admin force-logout endpoint + UI
+- [x] 🔧 S20. Soft-delete user (status=deleted) sebagai alternatif hard delete
+- [x] 🔧 S21. CSP header penuh di edge nginx (content directives lengkap)
 - [ ] 🔧 S22. HSTS preload directive + submission ke preload list
-- [ ] 🔧 S23. COOP/COEP/CORP headers di edge
-- [ ] 🔧 S24. Permissions-Policy granular per tipe endpoint
-- [ ] 🔧 S25. X-Request-ID validation (format + max length) sebelum di-echo balik
-- [ ] 🔧 S26. TLS 1.3-only cipher suite di edge TLS template
-- [ ] 🔧 S27. OCSP stapling di nginx TLS config
-- [ ] 🔧 S28. Internal secret rotasi tanpa downtime (dual-secret window)
+- [x] 🔧 S23. COOP/COEP/CORP headers di edge
+- [x] 🔧 S24. Permissions-Policy granular per tipe endpoint
+- [x] 🔧 S25. X-Request-ID validation (format + max length) sebelum di-echo balik
+- [x] 🔧 S26. TLS 1.3-only cipher suite di edge TLS template
+- [x] 🔧 S27. OCSP stapling di nginx TLS config
+- [x] 🔧 S28. Internal secret rotasi tanpa downtime (dual-secret window)
 - [ ] 🧭 S29. mTLS antar service (service mesh atau cert rotation infra)
-- [ ] 🔧 S30. OpenAPI request validation middleware (kin-openapi) di gateway
-- [ ] 🔧 S31. Validasi max-length semua field di level spec
-- [ ] 🔧 S32. Sanitasi HTML di display_name (XSS via profile fields)
-- [ ] 🔧 S33. Validasi avatar_url: blokir `javascript:`/data URI, whitelist https
-- [ ] 🔧 S34. SSRF guard jika suatu saat server fetch avatar eksternal
+- [x] 🔧 S30. OpenAPI request validation middleware (kin-openapi) di gateway
+- [x] 🔧 S31. Validasi max-length semua field di level spec
+- [x] 🔧 S32. Sanitasi HTML di display_name (XSS via profile fields)
+- [x] 🔧 S33. Validasi avatar_url: blokir `javascript:`/data URI, whitelist https
+- [x] 🔧 S34. SSRF guard jika suatu saat server fetch avatar eksternal
 - [ ] 🧭 S35. Email normalization policy: blokir plus-addressing & dot-trick Gmail
-- [ ] 🔧 S36. Rate limit class per-endpoint via spec (`x-rate-limit-class` per route)
-- [ ] 🔧 S37. Request body size limit per-endpoint (bukan hanya global 1 MB)
+- [x] 🔧 S36. Rate limit class per-endpoint via spec (`x-rate-limit-class` per route)
+- [x] 🔧 S37. Request body size limit per-endpoint (bukan hanya global 1 MB)
 - [ ] 🧭 S38. File upload avatar asli (multipart → S3/MinIO presigned) menggantikan URL eksternal
-- [ ] 🔧 S39. Content-type sniffing guard di gateway
-- [ ] 🔧 S40. Fuzz test SQL injection di semua raw query
-- [ ] 🔧 S41. Scope `own` vs `any` benar-benar dipakai (user:update:own untuk edit diri)
+- [x] 🔧 S39. Content-type sniffing guard di gateway
+- [x] 🔧 S40. Fuzz test SQL injection di semua raw query
+- [x] 🔧 S41. Scope `own` vs `any` benar-benar dipakai (user:update:own untuk edit diri)
 - [ ] 🧭 S42. ABAC: attribute-based rules (user hanya lihat data dirinya)
-- [ ] 🔧 S43. Resource-level authorization helper di platform (bukan cek manual per handler)
+- [x] 🔧 S43. Resource-level authorization helper di platform (bukan cek manual per handler)
 - [ ] 🧭 S44. Permission expiration (sementara, auto-revoke setelah N hari)
 - [ ] 🧭 S45. Delegated admin (scope terbatas per divisi/OU)
-- [ ] 🔧 S46. Break-glass admin procedure + dokumentasi
+- [x] 🔧 S46. Break-glass admin procedure + dokumentasi
 - [ ] 🧭 S47. Separation of duties: tidak bisa assign role ke diri sendiri
 - [ ] 🧭 S48. Approval workflow untuk perubahan role sensitif
-- [ ] 🔧 S49. Vault/Secrets Manager adapter untuk env secrets
-- [ ] 🔧 S50. ACCESS_TOKEN_SECRET rotasi tanpa downtime (kid + dual-key verify)
+- [x] 🔧 S49. Vault/Secrets Manager adapter untuk env secrets
+- [x] 🔧 S50. ACCESS_TOKEN_SECRET rotasi tanpa downtime (kid + dual-key verify)
 - [ ] 🧭 S51. RS256/EdDSA signing menggantikan HS256 shared secret
-- [ ] 🔧 S52. Encrypt refresh_token_hash dengan app key (defense-in-depth)
-- [ ] 🔧 S53. Argon2id sebagai opsi password hashing di samping bcrypt
-- [ ] 🔧 S54. Audit semua titik secret compare pakai constant-time
-- [ ] 🔧 S55. Key derivation per-user untuk kebutuhan crypto per-user
-- [ ] 🔧 S56. NetworkPolicy default-deny antar service di k8s
-- [ ] 🔧 S57. Pod Security Standards (restricted) di semua deployment
-- [ ] 🔧 S58. read-only rootFilesystem + tmpfs mount di semua container
-- [ ] 🔧 S59. Verifikasi non-root user di semua image (distroless ✓, nginx ✓)
-- [ ] 🔧 S60. seccompProfile RuntimeDefault di semua container
-- [ ] 🔧 S61. Capabilities drop ALL di semua container
-- [ ] 🔧 S62. Image signing (cosign) + admission verification
-- [ ] 🔧 S63. SBOM generation (syft) per image di CI
+- [x] 🔧 S52. Encrypt refresh_token_hash dengan app key (defense-in-depth)
+- [x] 🔧 S53. Argon2id sebagai opsi password hashing di samping bcrypt
+- [x] 🔧 S54. Audit semua titik secret compare pakai constant-time
+- [x] 🔧 S55. Key derivation per-user untuk kebutuhan crypto per-user
+- [x] 🔧 S56. NetworkPolicy default-deny antar service di k8s
+- [x] 🔧 S57. Pod Security Standards (restricted) di semua deployment
+- [x] 🔧 S58. read-only rootFilesystem + tmpfs mount di semua container
+- [x] 🔧 S59. Verifikasi non-root user di semua image (distroless ✓, nginx ✓)
+- [x] 🔧 S60. seccompProfile RuntimeDefault di semua container
+- [x] 🔧 S61. Capabilities drop ALL di semua container
+- [x] 🔧 S62. Image signing (cosign) + admission verification
+- [x] 🔧 S63. SBOM generation (syft) per image di CI
 - [ ] 🔧 S64. Secret encryption at rest di etcd (KMS provider)
-- [ ] 🔧 S65. External Secrets Operator menggantikan env plaintext
+- [x] 🔧 S65. External Secrets Operator menggantikan env plaintext
 - [ ] 🔧 S66. Kubernetes audit log activation
 - [ ] 🔧 S67. Falco runtime threat detection
-- [ ] 🔧 S68. Semgrep rules custom untuk pattern khusus proyek ini
-- [ ] 🔧 S69. Trivy config scan untuk k8s manifests (bukan hanya filesystem)
-- [ ] 🔧 S70. gitleaks secret scanning di CI + pre-commit hook
-- [ ] 🔧 S71. Dependency license compliance scan
-- [ ] 🔧 S72. GDPR data export endpoint (user download semua data-nya)
-- [ ] 🔧 S73. GDPR right-to-erasure flow lengkap (delete + anonimisasi audit)
-- [ ] 🔧 S74. Data retention policy: audit_logs auto-purge > N bulan
+- [x] 🔧 S68. Semgrep rules custom untuk pattern khusus proyek ini
+- [x] 🔧 S69. Trivy config scan untuk k8s manifests (bukan hanya filesystem)
+- [x] 🔧 S70. gitleaks secret scanning di CI + pre-commit hook
+- [x] 🔧 S71. Dependency license compliance scan
+- [x] 🔧 S72. GDPR data export endpoint (user download semua data-nya)
+- [x] 🔧 S73. GDPR right-to-erasure flow lengkap (delete + anonimisasi audit)
+- [x] 🔧 S74. Data retention policy: audit_logs auto-purge > N bulan
 - [ ] 🧭 S75. Cookie policy + consent banner untuk deployment publik
-- [ ] 🔧 S76. SECURITY.md + responsible disclosure process
-- [ ] 🔧 S77. Internal penetration test checklist
-- [ ] 🔧 S78. E2E test: session fixation otomatis
-- [ ] 🔧 S79. E2E test: IDOR suite (akses resource user lain harus 403)
-- [ ] 🔧 S80. Security test: rate-limit bypass via X-Forwarded-For spoofing
-- [ ] 🔧 S81. Trusted Types untuk innerHTML (jika ada penggunaan)
-- [ ] 🔧 S82. Subresource Integrity untuk CDN scripts (Scalar, fontshare)
-- [ ] 🔧 S83. Self-host font Cabinet Grotesk (hilangkan dependensi CDN + privacy)
-- [ ] 🔧 S84. Referrer-Policy meta tag di index.html semua app
-- [ ] 🔧 S85. Audit: pastikan tidak ada innerHTML untuk render data user
-- [ ] 🔧 S86. CSP nonce untuk inline script config.js
-- [ ] 🔧 S87. autocomplete="new-password" pada field password register/reset
-- [ ] 🔧 S88. Dokumentasi kebijakan paste password (diizinkan — UX principle)
+- [x] 🔧 S76. SECURITY.md + responsible disclosure process
+- [x] 🔧 S77. Internal penetration test checklist
+- [x] 🔧 S78. E2E test: session fixation otomatis
+- [x] 🔧 S79. E2E test: IDOR suite (akses resource user lain harus 403)
+- [x] 🔧 S80. Security test: rate-limit bypass via X-Forwarded-For spoofing
+- [x] 🔧 S81. Trusted Types untuk innerHTML (jika ada penggunaan)
+- [x] 🔧 S82. Subresource Integrity untuk CDN scripts (Scalar, fontshare)
+- [x] 🔧 S83. Self-host font Cabinet Grotesk (hilangkan dependensi CDN + privacy)
+- [x] 🔧 S84. Referrer-Policy meta tag di index.html semua app
+- [x] 🔧 S85. Audit: pastikan tidak ada innerHTML untuk render data user
+- [x] 🔧 S86. CSP nonce untuk inline script config.js (N/A: `config.js` eksternal; CSP melarang inline script)
+- [x] 🔧 S87. autocomplete="new-password" pada field password register/reset
+- [x] 🔧 S88. Dokumentasi kebijakan paste password (diizinkan — UX principle)
 - [ ] 🧭 S89. Idle timeout auto-logout di frontend (durasi configurable)
-- [ ] 🔧 S90. Tab visibility → re-validasi token saat tab kembali aktif
-- [ ] 🔧 S91. Validasi payload stream sebelum diproses (schema per event type)
-- [ ] 🔧 S92. DLQ access control (siapa boleh replay)
-- [ ] 🔧 S93. Audit event signing (HMAC) agar tak bisa dipalsukan producer lain
-- [ ] 🔧 S94. Redis ACL user terpisah per service (producer vs consumer)
-- [ ] 🔧 S95. Encrypted stream payload untuk sensitive field (opsional)
-- [ ] 🔧 S96. Threat model document (STRIDE per service)
+- [x] 🔧 S90. Tab visibility → re-validasi token saat tab kembali aktif
+- [x] 🔧 S91. Validasi payload stream sebelum diproses (schema per event type)
+- [x] 🔧 S92. DLQ access control (siapa boleh replay)
+- [x] 🔧 S93. Audit event signing (HMAC) agar tak bisa dipalsukan producer lain
+- [x] 🔧 S94. Redis ACL user terpisah per service (producer vs consumer)
+- [x] 🔧 S95. Encrypted stream payload untuk sensitive field (opsional)
+- [x] 🔧 S96. Threat model document (STRIDE per service)
+
+> Pending operasional: S22 memerlukan domain produksi untuk submission HSTS preload;
+> S64 dan S66 memerlukan akses control-plane Kubernetes; S67 memerlukan cluster
+> runtime. Template tervalidasi tersedia di `infra/k8s/security/`.
 
 ---
 

@@ -23,6 +23,16 @@ export function passwordStrength(value: string) {
   ].filter(Boolean).length;
 }
 
+export function validPassword(value: string) {
+  const classes = [
+    /[a-z]/.test(value),
+    /[A-Z]/.test(value),
+    /\d/.test(value),
+    /[^\p{L}\p{N}]/u.test(value),
+  ].filter(Boolean).length;
+  return value.length >= 12 && value.length <= PASSWORD_MAX && classes >= 3;
+}
+
 export function useEmailDraft(key: string) {
   const params = new URLSearchParams(window.location.search);
   const initial = params.get("email") ?? sessionStorage.getItem(key) ?? "";

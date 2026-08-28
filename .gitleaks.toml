@@ -1,0 +1,16 @@
+title = "go-platform-starter secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documented local-only example values"
+paths = [
+  '''services/.*/\.env\.example''',
+  '''infra/\.env\.production\.example''',
+  '''docs/.*''',
+]
+regexes = [
+  '''change-me-[A-Za-z0-9,!._-]+''',
+  '''admin-bootstrap-pw-1''',
+]

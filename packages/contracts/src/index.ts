@@ -11,6 +11,7 @@ import type { paths } from "./gen";
  * module, and the token must be visible across all of them.
  */
 const KEY = "__starterAccessToken";
+const DEVICE_KEY = "starter:device-id";
 
 type GlobalWithToken = typeof globalThis & { [KEY]?: string };
 
@@ -20,6 +21,15 @@ export function setAccessToken(token: string | undefined) {
 
 export function getAccessToken(): string | undefined {
   return (globalThis as GlobalWithToken)[KEY];
+}
+
+export function getDeviceID(): string {
+  if (typeof window === "undefined") return "server";
+  const existing = window.localStorage.getItem(DEVICE_KEY);
+  if (existing) return existing;
+  const created = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(DEVICE_KEY, created);
+  return created;
 }
 
 export interface TokenClaims {
@@ -97,21 +107,45 @@ export const GATEWAY_URL = (() => {
  * racing cookie rotation against each other.
  */
 let inflightRefresh: Promise<string | undefined> | null = null;
+let crossTabToken: { value: string; at: number } | undefined;
+const refreshChannel =
+  typeof BroadcastChannel === "undefined" ? undefined : new BroadcastChannel("starter:auth");
+
+refreshChannel?.addEventListener("message", (event: MessageEvent<{ type: string; token?: string }>) => {
+  if (event.data?.type === "refresh:done" && event.data.token) {
+    crossTabToken = { value: event.data.token, at: Date.now() };
+    setAccessToken(event.data.token);
+  }
+});
+
+async function refreshRequest(baseUrl: string): Promise<string | undefined> {
+  const res = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-Device-ID": getDeviceID() },
+  });
+  if (!res.ok) return undefined;
+  const body = (await res.json()) as { data?: { accessToken?: string } };
+  const token = body.data?.accessToken;
+  if (!token) return undefined;
+  crossTabToken = { value: token, at: Date.now() };
+  setAccessToken(token);
+  refreshChannel?.postMessage({ type: "refresh:done", token });
+  return token;
+}
 
 export function silentRefresh(baseUrl = GATEWAY_URL): Promise<string | undefined> {
   if (!inflightRefresh) {
-    inflightRefresh = fetch(`${baseUrl}/api/v1/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    })
-      .then(async (res) => {
-        if (!res.ok) return undefined;
-        const body = (await res.json()) as { data?: { accessToken?: string } };
-        const token = body.data?.accessToken;
-        if (!token) return undefined;
-        setAccessToken(token);
-        return token;
-      })
+    const coordinated = async () => {
+      const recent = crossTabToken;
+      if (recent && Date.now() - recent.at < 2_000) return recent.value;
+      return refreshRequest(baseUrl);
+    };
+    const locks = typeof navigator === "undefined" ? undefined : navigator.locks;
+    const refresh: Promise<string | undefined> = locks
+      ? locks.request("starter-auth-refresh", coordinated).then((result) => result)
+      : coordinated();
+    inflightRefresh = refresh
       .catch(() => undefined)
       .finally(() => {
         inflightRefresh = null;
@@ -128,6 +162,7 @@ export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
     onRequest({ request }) {
       const token = getAccessToken();
       if (token) request.headers.set("Authorization", `Bearer ${token}`);
+      request.headers.set("X-Device-ID", getDeviceID());
       return request;
     },
     async onResponse({ request, response }) {

@@ -8,6 +8,7 @@ import "fmt"
 var catalog = []string{
 	"user:create:any",
 	"user:read:any",
+	"user:update:own",
 	"user:update:any",
 	"user:delete:any",
 

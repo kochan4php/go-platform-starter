@@ -9,6 +9,7 @@ info:
 paths:
   /auth/register:
     post:
+      x-request-body-limit: 16384
       operationId: register
       summary: create credentials; emits user.created onto users.events
       requestBody:
@@ -31,7 +32,7 @@ paths:
                         type: object
                         properties:
                           id: { type: integer, format: int64 }
-                          email: { type: string }
+                          email: { type: string, maxLength: 254 }
         "409":
           description: email already registered (documented enumeration trade — see PLAN risks)
           content:
@@ -41,6 +42,7 @@ paths:
 
   /auth/login:
     post:
+      x-request-body-limit: 16384
       operationId: login
       summary: uniform-401 login with lockout; mints access token + sets refresh cookie
       requestBody:
@@ -66,12 +68,12 @@ paths:
                       data:
                         type: object
                         properties:
-                          accessToken: { type: string }
+                          accessToken: { type: string, maxLength: 4096 }
                           user:
                             type: object
                             properties:
                               id: { type: integer, format: int64 }
-                              email: { type: string }
+                              email: { type: string, maxLength: 254 }
         "401":
           description: unknown/wrong/locked are indistinguishable (incl. timing)
           content:
@@ -96,7 +98,7 @@ paths:
                       data:
                         type: object
                         properties:
-                          accessToken: { type: string }
+                          accessToken: { type: string, maxLength: 4096 }
         "401": { description: missing/invalid/replayed refresh token, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
       x-rate-limit-class: strict
 
@@ -106,6 +108,34 @@ paths:
       summary: revoke the session carried by the refresh cookie and clear it
       responses:
         "200": { description: logged out, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/mfa/enroll:
+    post:
+      operationId: beginMFA
+      summary: create a time-limited TOTP enrollment and QR code
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      responses:
+        "200": { description: enrollment started, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/mfa/verify:
+    post:
+      x-request-body-limit: 4096
+      operationId: verifyMFA
+      summary: verify TOTP and enable MFA for the authenticated user
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: "^[0-9]{6}$", maxLength: 6 }
+      responses:
+        "200": { description: MFA enabled, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
 
   /auth/sessions:
     get:
@@ -155,6 +185,7 @@ paths:
 
   /auth/forgot:
     post:
+      x-request-body-limit: 4096
       operationId: forgotPassword
       summary: always-200 password reset request (anti-enumeration)
       requestBody:
@@ -169,6 +200,7 @@ paths:
 
   /auth/reset:
     post:
+      x-request-body-limit: 16384
       operationId: resetPassword
       summary: consume a single-use reset token, set new password, wipe all sessions
       requestBody:
@@ -184,6 +216,7 @@ paths:
 
   /auth/reset/validate:
     post:
+      x-request-body-limit: 4096
       operationId: validateResetToken
       summary: validate a reset token without consuming its single-use grant
       requestBody:
@@ -194,11 +227,12 @@ paths:
               $ref: "#/components/schemas/ResetTokenInput"
       responses:
         "200": { description: token valid, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
-        "400": { description: invalid, expired, or consumed token, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+        "400": { description: "invalid, expired, or consumed token", content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
       x-rate-limit-class: strict
 
   /auth/users/{id}/password:
     post:
+      x-request-body-limit: 16384
       operationId: adminSetUserPassword
       summary: admin sets a new password for a user (revokes their sessions)
       x-required-permission: "user:update:any"
@@ -211,13 +245,14 @@ paths:
               type: object
               required: [newPassword]
               properties:
-                newPassword: { type: string, minLength: 8, maxLength: 72 }
+                newPassword: { type: string, minLength: 12, maxLength: 72 }
       responses:
         "200": { description: password updated, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: user not found, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
   /auth/confirm-password:
     post:
+      x-request-body-limit: 4096
       operationId: confirmPassword
       summary: re-authenticate the current user before a sensitive admin action
       security: [{ bearerAuth: [] }]
@@ -234,6 +269,28 @@ paths:
       responses:
         "200": { description: confirmed, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "401": { description: invalid password, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/password:
+    post:
+      operationId: changePassword
+      summary: change the authenticated user's password after verifying the old password
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      x-rate-limit-class: strict
+      x-request-body-limit: 1024
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oldPassword, newPassword]
+              properties:
+                oldPassword: { type: string, minLength: 1, maxLength: 72 }
+                newPassword: { type: string, minLength: 12, maxLength: 72 }
+      responses:
+        "200": { description: changed and all sessions revoked, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "401": { description: old password invalid, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
   /auth/users/{id}/sessions:
     get:
@@ -265,6 +322,7 @@ paths:
 
   /auth/users/{id}/state:
     patch:
+      x-request-body-limit: 4096
       operationId: adminSetUserState
       summary: activate/deactivate and lock/unlock a managed user
       x-required-permission: "user:update:any"
@@ -300,7 +358,7 @@ components:
       required: [success, message, data]
       properties:
         success: { type: boolean }
-        message: { type: string }
+        message: { type: string, maxLength: 255 }
         data: { description: endpoint-specific payload }
 
     EnvelopeFail:
@@ -308,15 +366,16 @@ components:
       required: [success, message, error]
       properties:
         success: { type: boolean }
-        message: { type: string }
-        error: { type: string }
+        message: { type: string, maxLength: 255 }
+        error: { type: string, maxLength: 120 }
 
     Session:
       type: object
       properties:
         id: { type: integer, format: int64 }
-        userAgent: { type: string }
-        ip: { type: string }
+        userAgent: { type: string, maxLength: 512 }
+        ip: { type: string, maxLength: 64 }
+        deviceId: { type: string, maxLength: 128 }
         createdAt: { type: string, format: date-time }
         current: { type: boolean }
 
@@ -324,31 +383,32 @@ components:
       type: object
       required: [email, password]
       properties:
-        email: { type: string, format: email }
-        password: { type: string, minLength: 8, maxLength: 72 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 12, maxLength: 72 }
 
     LoginInput:
       type: object
       required: [email, password]
       properties:
-        email: { type: string }
-        password: { type: string }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, maxLength: 72 }
+        otp: { type: string, pattern: "^[0-9]{6}$", maxLength: 6 }
 
     ForgotInput:
       type: object
       required: [email]
       properties:
-        email: { type: string }
+        email: { type: string, format: email, maxLength: 254 }
 
     ResetInput:
       type: object
       required: [token, newPassword]
       properties:
-        token: { type: string }
-        newPassword: { type: string, minLength: 8, maxLength: 72 }
+        token: { type: string, maxLength: 4096 }
+        newPassword: { type: string, minLength: 12, maxLength: 72 }
 
     ResetTokenInput:
       type: object
       required: [token]
       properties:
-        token: { type: string }
+        token: { type: string, maxLength: 4096 }

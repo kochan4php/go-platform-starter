@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -64,7 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	pub := internal.RedisPublisher{RDB: rdb}
 	svc := internal.NewService(db, rdb, log, *cfg, pub)
 	if cfg.RBACInternalURL != "" && cfg.InternalSecret != "" {

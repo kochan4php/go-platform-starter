@@ -18,8 +18,8 @@ export class AuthApiError extends Error {
   }
 }
 
-export async function login(email: string, password: string): Promise<LoginResult> {
-  const { data, error, response } = await api.POST("/api/v1/auth/login", { body: { email, password } });
+export async function login(email: string, password: string, otp?: string): Promise<LoginResult> {
+  const { data, error, response } = await api.POST("/api/v1/auth/login", { body: { email, password, otp } });
   if (error) throw apiError(error, response);
   const payload = data?.data as LoginResult | undefined;
   if (!payload?.accessToken) throw new Error("login returned no access token");
@@ -56,6 +56,7 @@ function apiError(error: unknown, response: Response): AuthApiError {
 
 function readMessage(err: unknown): string {
   const e = err as { message?: string; error?: string };
+  if (e?.message === "mfa_required") return "mfa_required";
   if (e?.message === "invalid_credentials") return "Email or password is incorrect.";
   if (e?.message === "conflict") return "That email is already registered.";
   if (e?.message === "rate_limited" || e?.message === "too many requests") {

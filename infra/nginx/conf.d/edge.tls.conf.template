@@ -13,13 +13,16 @@
 # to a permanent redirect once certificates are live.
 
 server {
-    listen 443 ssl;
+    listen 8443 ssl;
     http2 on;
     server_name example.com;
 
     ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_protocols TLSv1.3;
+    ssl_conf_command Ciphersuites TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256;
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     # Per-request DNS resolution (see default.conf note)
     resolver 127.0.0.11 valid=10s ipv6=off;
@@ -35,7 +38,12 @@ server {
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options DENY always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header Cross-Origin-Opener-Policy same-origin always;
+    add_header Cross-Origin-Embedder-Policy credentialless always;
+    add_header Cross-Origin-Resource-Policy same-site always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss:; worker-src 'self' blob:" always;
 
     location = /ws {
         set $up_ws http://gateway:8000;
@@ -52,32 +60,32 @@ server {
         proxy_pass $up_gw;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Request-ID $request_id;
     }
 
     location /remote/auth/ {
-        set $up_auth http://web-auth;
+        set $up_auth http://web-auth:8080;
         rewrite ^/remote/auth/(.*)$ /$1 break;
         proxy_pass $up_auth;
         proxy_set_header Host $host;
     }
     location /remote/admin-users/ {
-        set $up_users http://web-admin-users;
+        set $up_users http://web-admin-users:8080;
         rewrite ^/remote/admin-users/(.*)$ /$1 break;
         proxy_pass $up_users;
         proxy_set_header Host $host;
     }
     location /remote/admin-roles/ {
-        set $up_roles http://web-admin-roles;
+        set $up_roles http://web-admin-roles:8080;
         rewrite ^/remote/admin-roles/(.*)$ /$1 break;
         proxy_pass $up_roles;
         proxy_set_header Host $host;
     }
 
     location / {
-        set $up_shell http://web;
+        set $up_shell http://web:8080;
         proxy_pass $up_shell;
         proxy_set_header Host $host;
     }

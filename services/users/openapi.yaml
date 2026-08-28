@@ -25,9 +25,30 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/Profile" }
         "401": { description: no identity, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+    delete:
+      operationId: eraseMe
+      summary: irreversibly erase the caller's personal data and revoke access
+      x-auth: required
+      responses:
+        "200": { description: erased, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/me/export:
+    get:
+      operationId: exportMyData
+      summary: download all personal data held by the platform
+      x-auth: required
+      responses:
+        "200":
+          description: JSON data export
+          headers:
+            Content-Disposition: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EnvelopeOK" }
 
   /users:
     post:
+      x-request-body-limit: 16384
       operationId: createUserProfile
       summary: provision a profile row for an existing sub
       x-required-permission: "user:create:any"
@@ -117,8 +138,9 @@ paths:
         "404": { description: unknown, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
     patch:
+      x-request-body-limit: 16384
       operationId: updateUser
-      x-required-permission: "user:update:any"
+      x-auth: required
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
       requestBody:
         required: true
@@ -140,7 +162,7 @@ paths:
 
     delete:
       operationId: deleteUser
-      summary: hard-delete the profile row and emit user.deleted
+      summary: soft-delete the profile row and emit user.deleted
       x-required-permission: "user:delete:any"
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
       responses:
@@ -162,7 +184,7 @@ components:
       required: [success, message, data]
       properties:
         success: { type: boolean }
-        message: { type: string }
+        message: { type: string, maxLength: 255 }
         data: {}
 
     EnvelopeFail:
@@ -170,17 +192,17 @@ components:
       required: [success, message, error]
       properties:
         success: { type: boolean }
-        message: { type: string }
-        error: { type: string }
+        message: { type: string, maxLength: 255 }
+        error: { type: string, maxLength: 120 }
 
     Profile:
       type: object
       properties:
         id: { type: integer, format: int64 }
-        email: { type: string }
-        displayName: { type: string }
-        avatarUrl: { type: string }
-        status: { type: string, enum: [active, inactive] }
+        email: { type: string, format: email, maxLength: 254 }
+        displayName: { type: string, maxLength: 120 }
+        avatarUrl: { type: string, format: uri, maxLength: 400, pattern: "^https://" }
+        status: { type: string, enum: [active, inactive, deleted] }
         lockedUntil: { type: string, format: date-time, nullable: true }
         roles:
           type: array
@@ -188,8 +210,8 @@ components:
         online: { type: boolean }
         activeSessions: { type: integer }
         lastLoginAt: { type: string, format: date-time, nullable: true }
-        lastLoginIp: { type: string }
-        lastLoginUserAgent: { type: string }
+        lastLoginIp: { type: string, maxLength: 45 }
+        lastLoginUserAgent: { type: string, maxLength: 512 }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -198,7 +220,7 @@ components:
       required: [id, name]
       properties:
         id: { type: integer, format: int64 }
-        name: { type: string }
+        name: { type: string, maxLength: 60 }
 
     UserStats:
       type: object
@@ -220,6 +242,6 @@ components:
       required: [id]
       properties:
         id: { type: integer, format: int64, description: existing subject id }
-        email: { type: string, format: email }
+        email: { type: string, format: email, maxLength: 254 }
         displayName: { type: string, maxLength: 120 }
-        avatarUrl: { type: string, maxLength: 400 }
+        avatarUrl: { type: string, format: uri, maxLength: 400, pattern: "^https://" }

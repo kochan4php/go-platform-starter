@@ -6,7 +6,7 @@ test("full admin user lifecycle", async ({ page }) => {
   // 1. register with the FULL form: avatar, display name, email, password, role
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@example.local");
-  await page.getByLabel("Password").fill("admin-bootstrap-pw");
+  await page.getByLabel("Password").fill("local-root-access-2026!");
   await page.getByRole("button", { name: "Log in" }).click();
   await page.waitForURL(/admin\/users/, { timeout: 20000 });
 

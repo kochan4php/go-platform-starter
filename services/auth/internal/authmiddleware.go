@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -17,14 +16,13 @@ func RequireSessionIdentity(internalSecret string) func(http.Handler) http.Handl
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.TrimPrefix(r.URL.Path, "/api/v1")
-			if !strings.HasPrefix(path, "/auth/sessions") {
+			if !strings.HasPrefix(path, "/auth/sessions") && path != "/auth/password" && !strings.HasPrefix(path, "/auth/mfa/") {
 				next.ServeHTTP(w, r)
 				return
 			}
 
 			sub := r.Header.Get("X-User-Id")
-			okSecret := subtle.ConstantTimeCompare(
-				[]byte(r.Header.Get("X-Internal-Secret")), []byte(internalSecret)) == 1
+			okSecret := platform.SecretMatch(r.Header.Get("X-Internal-Secret"), internalSecret)
 			if !okSecret || sub == "" {
 				platform.WriteError(w, platform.LoggerFromContext(r.Context()),
 					platform.ErrUnauthorized("missing identity"))
@@ -33,7 +31,7 @@ func RequireSessionIdentity(internalSecret string) func(http.Handler) http.Handl
 
 			hash := ""
 			if c, cerr := r.Cookie(cookieName); cerr == nil && c.Value != "" {
-				hash = sha256Hex(c.Value)
+				hash = c.Value
 			}
 			next.ServeHTTP(w, withAuthScope(r, sub, hash))
 		})

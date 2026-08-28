@@ -1,0 +1,11 @@
+# Reference policy. compose.prod.yml creates equivalent users from generated
+# deployment secrets before Redis becomes healthy; never place real passwords
+# in this tracked file.
+user default off
+user auth off resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* &force-logout +get +set +getdel +del +incr +expire +setnx +xadd +publish +eval +evalsha +time +ping
+user users off resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +set +setnx +publish +ping
+user rbac off resetkeys resetchannels ~claims:* ~audit.events* &force-logout +set +xadd +publish +ping
+user worker off resetkeys resetchannels ~mail.jobs* ~audit.events* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +setnx +del +incr +expire +ping
+user realtime off resetkeys resetchannels &force-logout +subscribe +unsubscribe +psubscribe +punsubscribe +ping
+user gateway off resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping
+user dlq-admin off resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping

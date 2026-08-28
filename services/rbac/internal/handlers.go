@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"io"
@@ -170,8 +169,7 @@ func (h *Handlers) DeleteRole(w http.ResponseWriter, r *http.Request, id int64, 
 // ResolveClaims is the internal claim-resolution API — guarded by the shared
 // internal secret header, never exposed through the gateway.
 func (h *Handlers) ResolveClaims(w http.ResponseWriter, r *http.Request, sub int64) {
-	if h.internalSecret == "" ||
-		subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Internal-Secret")), []byte(h.internalSecret)) != 1 {
+	if h.internalSecret == "" || !platform.SecretMatch(r.Header.Get("X-Internal-Secret"), h.internalSecret) {
 		platform.WriteError(w, h.log, platform.ErrForbidden("internal endpoint requires secret"))
 		return
 	}

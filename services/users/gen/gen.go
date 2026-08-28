@@ -17,6 +17,7 @@ import (
 // Defines values for ProfileStatus.
 const (
 	Active   ProfileStatus = "active"
+	Deleted  ProfileStatus = "deleted"
 	Inactive ProfileStatus = "inactive"
 )
 
@@ -24,6 +25,8 @@ const (
 func (e ProfileStatus) Valid() bool {
 	switch e {
 	case Active:
+		return true
+	case Deleted:
 		return true
 	case Inactive:
 		return true
@@ -136,20 +139,20 @@ type EnvelopeOK struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	ActiveSessions     *int           `json:"activeSessions,omitempty"`
-	AvatarUrl          *string        `json:"avatarUrl,omitempty"`
-	CreatedAt          *time.Time     `json:"createdAt,omitempty"`
-	DisplayName        *string        `json:"displayName,omitempty"`
-	Email              *string        `json:"email,omitempty"`
-	Id                 *int64         `json:"id,omitempty"`
-	LastLoginAt        *time.Time     `json:"lastLoginAt,omitempty"`
-	LastLoginIp        *string        `json:"lastLoginIp,omitempty"`
-	LastLoginUserAgent *string        `json:"lastLoginUserAgent,omitempty"`
-	LockedUntil        *time.Time     `json:"lockedUntil,omitempty"`
-	Online             *bool          `json:"online,omitempty"`
-	Roles              *[]RoleSummary `json:"roles,omitempty"`
-	Status             *ProfileStatus `json:"status,omitempty"`
-	UpdatedAt          *time.Time     `json:"updatedAt,omitempty"`
+	ActiveSessions     *int                 `json:"activeSessions,omitempty"`
+	AvatarUrl          *string              `json:"avatarUrl,omitempty"`
+	CreatedAt          *time.Time           `json:"createdAt,omitempty"`
+	DisplayName        *string              `json:"displayName,omitempty"`
+	Email              *openapi_types.Email `json:"email,omitempty"`
+	Id                 *int64               `json:"id,omitempty"`
+	LastLoginAt        *time.Time           `json:"lastLoginAt,omitempty"`
+	LastLoginIp        *string              `json:"lastLoginIp,omitempty"`
+	LastLoginUserAgent *string              `json:"lastLoginUserAgent,omitempty"`
+	LockedUntil        *time.Time           `json:"lockedUntil,omitempty"`
+	Online             *bool                `json:"online,omitempty"`
+	Roles              *[]RoleSummary       `json:"roles,omitempty"`
+	Status             *ProfileStatus       `json:"status,omitempty"`
+	UpdatedAt          *time.Time           `json:"updatedAt,omitempty"`
 }
 
 // ProfileStatus defines model for Profile.Status.
@@ -222,13 +225,19 @@ type ServerInterface interface {
 	// CreateUserProfile provision a profile row for an existing sub
 	// (POST /users)
 	CreateUserProfile(w http.ResponseWriter, r *http.Request)
+	// EraseMe irreversibly erase the caller's personal data and revoke access
+	// (DELETE /users/me)
+	EraseMe(w http.ResponseWriter, r *http.Request)
 	// Me the caller's profile, served purely from identity headers
 	// (GET /users/me)
 	Me(w http.ResponseWriter, r *http.Request)
+	// ExportMyData download all personal data held by the platform
+	// (GET /users/me/export)
+	ExportMyData(w http.ResponseWriter, r *http.Request)
 	// GetUserStats directory totals and seven-day registration series
 	// (GET /users/stats)
 	GetUserStats(w http.ResponseWriter, r *http.Request)
-	// DeleteUser hard-delete the profile row and emit user.deleted
+	// DeleteUser soft-delete the profile row and emit user.deleted
 	// (DELETE /users/{id})
 	DeleteUser(w http.ResponseWriter, r *http.Request, id int64)
 
@@ -255,9 +264,21 @@ func (_ Unimplemented) CreateUserProfile(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// EraseMe irreversibly erase the caller's personal data and revoke access
+// (DELETE /users/me)
+func (_ Unimplemented) EraseMe(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Me the caller's profile, served purely from identity headers
 // (GET /users/me)
 func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ExportMyData download all personal data held by the platform
+// (GET /users/me/export)
+func (_ Unimplemented) ExportMyData(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -267,7 +288,7 @@ func (_ Unimplemented) GetUserStats(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// DeleteUser hard-delete the profile row and emit user.deleted
+// DeleteUser soft-delete the profile row and emit user.deleted
 // (DELETE /users/{id})
 func (_ Unimplemented) DeleteUser(w http.ResponseWriter, r *http.Request, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -443,11 +464,39 @@ func (siw *ServerInterfaceWrapper) CreateUserProfile(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// EraseMe operation middleware
+func (siw *ServerInterfaceWrapper) EraseMe(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EraseMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Me operation middleware
 func (siw *ServerInterfaceWrapper) Me(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.Me(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportMyData operation middleware
+func (siw *ServerInterfaceWrapper) ExportMyData(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportMyData(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -663,7 +712,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/users/me", wrapper.EraseMe)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users/me", wrapper.Me)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/me/export", wrapper.ExportMyData)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users", wrapper.ListUsers)

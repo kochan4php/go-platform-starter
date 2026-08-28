@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -59,7 +58,7 @@ func main() {
 		return
 	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	svc := internal.NewService(db, rdb, log, internal.RedisPublisher{RDB: rdb})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,7 +67,7 @@ func main() {
 
 	purgeDone := platform.NewScheduler(rdb, log, time.Hour, "users-profile-purge",
 		func(ctx context.Context) {
-			n, err := internal.PurgeDeletedProfiles(ctx, rdb, db)
+			n, err := internal.PurgeDeletedProfiles(ctx, db)
 			if err != nil {
 				log.Error("profile purge failed", "err", err)
 				return

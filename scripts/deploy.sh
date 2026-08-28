@@ -140,6 +140,16 @@ RATE_GLOBAL_PER_MINUTE=${RATE_GLOBAL_PER_MINUTE:-300}
 POSTGRES_PASSWORD=$(rand_hex)
 ACCESS_TOKEN_SECRET=$(rand_hex)
 INTERNAL_SECRET=$(rand_hex)
+SESSION_CRYPTO_KEYS=$(rand_hex)
+STREAM_SIGNING_KEYS=$(rand_hex)
+STREAM_ENCRYPTION_KEYS=$(rand_hex)
+REDIS_AUTH_PASSWORD=$(rand_hex)
+REDIS_USERS_PASSWORD=$(rand_hex)
+REDIS_RBAC_PASSWORD=$(rand_hex)
+REDIS_WORKER_PASSWORD=$(rand_hex)
+REDIS_REALTIME_PASSWORD=$(rand_hex)
+REDIS_GATEWAY_PASSWORD=$(rand_hex)
+REDIS_DLQ_ADMIN_PASSWORD=$(rand_hex)
 SEED_ADMIN=${SEED_ADMIN:-true}
 ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
 ADMIN_BOOTSTRAP_PASSWORD=$(rand_hex)
@@ -204,8 +214,8 @@ if [ "$TARGET" = "lab" ]; then
   compose up -d --remove-orphans
 
   compose run --rm -T rbac -seed >/dev/null && echo "  ok: rbac seed"
-  # Deterministic lab credentials (documented): admin@example.local / admin-bootstrap-pw
-  ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}"     compose run --rm -T auth -seed >/dev/null && echo "  ok: auth seed"
+  # Deterministic lab credentials (documented): admin@example.local / local-root-access-2026!
+  ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-local-root-access-2026!}"     compose run --rm -T auth -seed >/dev/null && echo "  ok: auth seed"
 
   # /docs/openapi.json proves the REAL gateway owns :8000 (a stray process
   # serving index.html would pass a bare /healthz check).
@@ -229,7 +239,7 @@ if [ "$TARGET" = "lab" ]; then
   Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}  (docs at /docs, health at /healthz)
   Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
   Remotes      web-auth :5174 · web-admin-users :5175 · web-admin-roles :5176
-  Admin login  admin@example.local / admin-bootstrap-pw
+  Admin login  admin@example.local / local-root-access-2026!
 
   logs     : docker compose -f infra/compose.base.yml -f infra/compose.lab.yml logs -f [svc]
   stop     : ./scripts/deploy-lab.sh down

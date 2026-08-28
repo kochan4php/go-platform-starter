@@ -2,7 +2,7 @@
 # debugging — every service port is published, seeds are included.
 #
 #   docker compose -f infra/compose.base.yml -f infra/compose.lab.yml up --build
-# Seeded admin: admin@example.local / admin-bootstrap-pw
+# Seeded admin: admin@example.local / local-root-access-2026!
 # Shell: http://127.0.0.1:5173 · API docs: http://127.0.0.1:8010/docs
 name: go-platform-lab
 
@@ -42,7 +42,7 @@ services:
       RBAC_INTERNAL_URL: http://rbac:8083
       # Interpolated from the caller so deploy-lab / CI can pin credentials.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
-      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-local-root-access-2026!}
     ports: ["8081:8081"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -105,7 +105,7 @@ services:
 
   web:
     build: { context: .., dockerfile: apps/web/Dockerfile }
-    ports: ["5173:80"]
+    ports: ["5173:8080"]
     environment:
       REMOTE_AUTH_URL: http://127.0.0.1:5174/assets/remoteEntry.js
       REMOTE_ADMIN_USERS_URL: http://127.0.0.1:5175/assets/remoteEntry.js
@@ -113,15 +113,15 @@ services:
 
   web-auth:
     build: { context: .., dockerfile: apps/web-auth/Dockerfile }
-    ports: ["5174:80"]
+    ports: ["5174:8080"]
 
   web-admin-users:
     build: { context: .., dockerfile: apps/web-admin-users/Dockerfile }
-    ports: ["5175:80"]
+    ports: ["5175:8080"]
 
   web-admin-roles:
     build: { context: .., dockerfile: apps/web-admin-roles/Dockerfile }
-    ports: ["5176:80"]
+    ports: ["5176:8080"]
 
 volumes:
   pgdata:

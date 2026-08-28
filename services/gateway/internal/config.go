@@ -6,11 +6,14 @@ type Config struct {
 	Port              string `env:"PORT" envDefault:"8080"`
 	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
 	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername     string `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword     string `env:"REDIS_PASSWORD" envDefault:""`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
 	InternalSecret    string `env:"INTERNAL_SECRET,required"`
 	TrustedDomains    string `env:"TRUSTED_DOMAINS" envDefault:"http://127.0.0.1:5173,http://127.0.0.1:5174"`
 	UpstreamsJSON     string `env:"UPSTREAMS" envDefault:"{\"auth\":\"http://127.0.0.1:8081\",\"users\":\"http://127.0.0.1:8082\",\"rbac\":\"http://127.0.0.1:8083\",\"worker\":\"http://127.0.0.1:8084\"}"`
 	RatePerMinute     int    `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"300"`
+	TrustedProxyCIDRs string `env:"TRUSTED_PROXY_CIDRS" envDefault:""`
 	SlowRequestMs     int    `env:"SLOW_REQUEST_THRESHOLD_MS" envDefault:"500"`
 	// WebSocket upstream (realtime). When set, the gateway proxies /ws to it
 	// with upgrade passthrough; the realtime REST routes still ride UPSTREAMS.

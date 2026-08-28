@@ -1,0 +1,24 @@
+rules:
+  - id: go-unsafe-sql-format
+    languages: [go]
+    severity: ERROR
+    message: Never build SQL with fmt.Sprintf; use bound parameters.
+    patterns:
+      - pattern: $DB.$METHOD(fmt.Sprintf(...), ...)
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(Exec|Raw|Where)$
+  - id: go-plain-secret-compare
+    languages: [go]
+    severity: WARNING
+    message: Compare secrets through platform.SecretMatch or crypto/subtle.
+    pattern-either:
+      - pattern: $REQ.Header.Get("X-Internal-Secret") == $SECRET
+      - pattern: $REQ.Header.Get("X-Internal-Secret") != $SECRET
+  - id: web-user-data-innerhtml
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: User-controlled data must not be rendered through innerHTML.
+    pattern-either:
+      - pattern: $EL.innerHTML = $VALUE
+      - pattern: <$TAG dangerouslySetInnerHTML={...} />

@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -21,18 +20,21 @@ import (
 var specFS embed.FS
 
 type config struct {
-	Port           string `env:"PORT" envDefault:"8080"`
-	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
-	DatabaseURL    string `env:"DATABASE_URL,required"`
-	RedisAddr      string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
-	InternalSecret string `env:"INTERNAL_SECRET,required"`
-	MailerDriver   string `env:"MAILER_DRIVER" envDefault:"console"`
-	SMTPHost       string `env:"SMTP_HOST"`
-	SMTPPort       int    `env:"SMTP_PORT" envDefault:"587"`
-	SMTPUser       string `env:"SMTP_USER"`
-	SMTPPass       string `env:"SMTP_PASS"`
-	MailFrom       string `env:"MAIL_FROM" envDefault:"noreply@example.local"`
-	MailFromName   string `env:"MAIL_FROM_NAME" envDefault:"Platform"`
+	Port               string `env:"PORT" envDefault:"8080"`
+	LogLevel           string `env:"LOG_LEVEL" envDefault:"info"`
+	DatabaseURL        string `env:"DATABASE_URL,required"`
+	RedisAddr          string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername      string `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword      string `env:"REDIS_PASSWORD" envDefault:""`
+	InternalSecret     string `env:"INTERNAL_SECRET,required"`
+	MailerDriver       string `env:"MAILER_DRIVER" envDefault:"console"`
+	SMTPHost           string `env:"SMTP_HOST"`
+	SMTPPort           int    `env:"SMTP_PORT" envDefault:"587"`
+	SMTPUser           string `env:"SMTP_USER"`
+	SMTPPass           string `env:"SMTP_PASS"`
+	MailFrom           string `env:"MAIL_FROM" envDefault:"noreply@example.local"`
+	MailFromName       string `env:"MAIL_FROM_NAME" envDefault:"Platform"`
+	AuditRetentionDays int    `env:"AUDIT_RETENTION_DAYS" envDefault:"365"`
 }
 
 func main() {
@@ -68,7 +70,7 @@ func main() {
 		return
 	}
 
-	rdb := newRedis(cfg.RedisAddr)
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	mailer, err := platform.NewMailer(platform.SMTPConfig{
 		Driver: cfg.MailerDriver, Host: cfg.SMTPHost, Port: cfg.SMTPPort,
 		User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.MailFrom, FromName: cfg.MailFromName,
@@ -82,6 +84,19 @@ func main() {
 	defer cancel()
 	consumer := internal.NewConsumer(rdb, db, mailer, log)
 	go consumer.Run(ctx)
+	retentionDone := platform.NewScheduler(rdb, log, 24*time.Hour, "audit-retention", func(ctx context.Context) {
+		if cfg.AuditRetentionDays <= 0 {
+			return
+		}
+		result := db.WithContext(ctx).Exec(
+			`DELETE FROM audit.audit_logs WHERE created_at < now() - (? * interval '1 day')`, cfg.AuditRetentionDays,
+		)
+		if result.Error != nil {
+			log.Error("audit retention purge failed", "err", result.Error)
+		} else if result.RowsAffected > 0 {
+			log.Info("expired audit entries purged", "count", result.RowsAffected)
+		}
+	}).Start(ctx)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"postgres": func(ctx context.Context) error { return pingDB(db) },
@@ -99,13 +114,15 @@ func main() {
 	router.Get("/api/v1/audit/viewer", internal.AuditViewer(db, cfg.InternalSecret))
 
 	log.Info("worker listening (consumer in background)", "port", cfg.Port)
-	if err := platform.GracefulRun(":"+cfg.Port, router, func() { _ = closeDB(db) }); err != nil {
+	if err := platform.GracefulRun(":"+cfg.Port, router, func() {
+		cancel()
+		<-retentionDone
+		_ = closeDB(db)
+	}); err != nil {
 		log.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}
 }
-
-func newRedis(addr string) *redis.Client { return redis.NewClient(&redis.Options{Addr: addr}) }
 
 func pingDB(db *gorm.DB) error {
 	sqlDB, err := db.DB()

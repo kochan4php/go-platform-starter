@@ -17,7 +17,7 @@ export RBAC_INTERNAL_URL="http://127.0.0.1:8083"
 export TRUSTED_DOMAINS="http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176"
 export UPSTREAMS='{"auth":"http://127.0.0.1:8081","users":"http://127.0.0.1:8082","rbac":"http://127.0.0.1:8083","worker":"http://127.0.0.1:8084"}'
 export VITE_GATEWAY_URL="http://127.0.0.1:8000"
-export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-admin-password-1}"
+export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-root-access-2026!}"
 
 down() {
   docker rm -f e2e-pg e2e-redis >/dev/null 2>&1 || true

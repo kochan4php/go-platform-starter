@@ -13,9 +13,19 @@ spec:
       labels:
         app: auth-migrate
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       restartPolicy: Never
       containers:
         - name: migrate
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
           image: ghcr.io/kochan4php/auth:latest-migrate
           envFrom:
             - secretRef:

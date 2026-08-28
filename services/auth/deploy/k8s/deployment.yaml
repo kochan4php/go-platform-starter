@@ -14,8 +14,18 @@ spec:
       labels:
         app: auth
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: service
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
           image: ghcr.io/kochan4php/auth:latest
           ports:
             - containerPort: 8080
@@ -40,3 +50,11 @@ spec:
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi

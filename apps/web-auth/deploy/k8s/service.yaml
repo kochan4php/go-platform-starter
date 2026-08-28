@@ -7,4 +7,4 @@ spec:
     app: web-auth
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080

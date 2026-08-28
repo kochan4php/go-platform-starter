@@ -19,7 +19,7 @@
 #   remotes      :5174 web-auth · :5175 admin-users · :5176 admin-roles
 #   gateway      http://127.0.0.1:8010      (/docs for the aggregate spec)
 #   services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
-#   admin login  admin@example.local / admin-bootstrap-pw
+#   admin login  admin@example.local / local-root-access-2026!
 #
 set -euo pipefail
 
@@ -132,7 +132,7 @@ export INTERNAL_SECRET="${INTERNAL_SECRET:-dev-internal-secret-change-me}"
 export APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://127.0.0.1:5173}"
 export RBAC_INTERNAL_URL="${RBAC_INTERNAL_URL:-http://127.0.0.1:8083}"
 export TRUSTED_DOMAINS="${TRUSTED_DOMAINS:-http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176}"
-export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-admin-bootstrap-pw}"
+export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-local-root-access-2026!}"
 # Vite reads this at request time; without it the apps would fall back to
 # same-origin and miss the gateway listening on its own dev port.
 export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://127.0.0.1:$LAB_GATEWAY_PORT}"
@@ -271,7 +271,7 @@ cat <<SUMMARY
   Remotes      :5174 auth · :5175 users · :5176 roles
   Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}/docs   (aggregate API reference)
   Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
-  Admin login  admin@example.local / admin-bootstrap-pw
+  Admin login  admin@example.local / local-root-access-2026!
   Logs         tmp/dev/logs/<name>.log      (or: ./scripts/dev-all.sh logs [name])
 
   Attached mode: press Ctrl-C to stop everything.

@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, type SessionUser } from "./auth-context";
+
+afterEach(() => vi.unstubAllGlobals());
 
 function mount(user: SessionUser | null, perm: string) {
   return render(
@@ -29,6 +31,7 @@ function mount(user: SessionUser | null, perm: string) {
 }
 
 it("redirects anonymous visitors to /login", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
   mount(null, "user:read:any");
   // Booting starts true for anonymous mounts; the failed refresh settles it.
   await screen.findByText("login-page", {}, { timeout: 3000 });

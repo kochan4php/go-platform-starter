@@ -14,9 +14,8 @@ RUN pnpm install --frozen-lockfile \
  && pnpm contracts \
  && pnpm --filter web build
 
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY apps/web/config-entrypoint.sh /docker-entrypoint.d/40-config.sh
-RUN chmod +x /docker-entrypoint.d/40-config.sh
-COPY --from=build /src/apps/web/dist /usr/share/nginx/html
-EXPOSE 80
+COPY --chmod=755 apps/web/config-entrypoint.sh /docker-entrypoint.d/40-config.sh
+COPY --chown=101:101 --from=build /src/apps/web/dist /usr/share/nginx/html
+EXPOSE 8080

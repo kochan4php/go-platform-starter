@@ -18,7 +18,7 @@ ENV REMOTE_BASE=${REMOTE_BASE}
 # the whole dependency tree over slow links.
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-admin-users build
 
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 COPY apps/web-admin-users/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/apps/web-admin-users/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080

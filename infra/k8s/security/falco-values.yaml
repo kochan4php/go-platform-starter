@@ -1,0 +1,17 @@
+driver:
+  kind: modern_ebpf
+falco:
+  json_output: true
+  json_include_output_property: true
+  priority: warning
+falcosidekick:
+  enabled: true
+  webui:
+    enabled: false
+customRules:
+  platform_rules.yaml: |-
+    - rule: Shell spawned in platform workload
+      condition: spawned_process and container and k8s.ns.name=platform and proc.name in (sh, bash, ash)
+      output: Shell in platform workload (pod=%k8s.pod.name user=%user.name command=%proc.cmdline)
+      priority: WARNING
+      tags: [container, platform]

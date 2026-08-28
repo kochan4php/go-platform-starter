@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -124,6 +126,65 @@ func TestCorrelationIDMiddleware(t *testing.T) {
 	if len(rec2.Header().Get("X-Request-ID")) != 24 {
 		t.Fatalf("generated id length = %d, want 24 hex chars", len(rec2.Header().Get("X-Request-ID")))
 	}
+
+	rec3 := httptest.NewRecorder()
+	bad := httptest.NewRequest(http.MethodGet, "/", nil)
+	bad.Header.Set("X-Request-ID", "injected\r\nX-Evil: yes")
+	h.ServeHTTP(rec3, bad)
+	if got := rec3.Header().Get("X-Request-ID"); len(got) != 24 || got == bad.Header.Get("X-Request-ID") {
+		t.Fatalf("unsafe request id was echoed: %q", got)
+	}
+}
+
+func TestSecurityPrimitives(t *testing.T) {
+	if !platform.SecretMatch("old", "new,old") || platform.SecretMatch("nope", "new,old") {
+		t.Fatal("secret rotation ring mismatch")
+	}
+	ciphertext, err := platform.EncryptForSubject("master", "42", "mfa", "secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plaintext, err := platform.DecryptForSubject("next,master", "42", "mfa", ciphertext)
+	if err != nil || plaintext != "secret" {
+		t.Fatalf("decrypt = %q, %v", plaintext, err)
+	}
+	digest := platform.KeyedDigest("key", "token")
+	if !platform.VerifyDigest("next,key", "token", digest) || platform.VerifyDigest("key", "other", digest) {
+		t.Fatal("keyed digest verification mismatch")
+	}
+	for _, raw := range []string{"http://example.com/a", "https://127.0.0.1/a", "javascript:alert(1)", "data:image/png,x"} {
+		if platform.ValidatePublicHTTPSURL(raw) == nil {
+			t.Fatalf("unsafe URL accepted: %s", raw)
+		}
+	}
+	if err := platform.ValidatePublicHTTPSURL("https://cdn.example.com/avatar.png"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestStreamMessageSigningAndEncryption(t *testing.T) {
+	t.Setenv("STREAM_SIGNING_KEYS", "active-signing,previous-signing")
+	t.Setenv("STREAM_ENCRYPTION_KEYS", "active-encryption,previous-encryption")
+
+	payload, err := platform.EncryptForSubject("active-encryption", "audit.events", "audit.entry", `{"action":"login"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	values := map[string]any{
+		"event": "audit.entry", "payload": payload, "encrypted": "1",
+		"signature": platform.KeyedDigest("active-signing", "audit.events\naudit.entry\n"+payload),
+	}
+	event, decoded, err := platform.DecodeStreamMessage("audit.events", values)
+	if err != nil || event != "audit.entry" || decoded != `{"action":"login"}` {
+		t.Fatalf("decoded event = %q %q, err=%v", event, decoded, err)
+	}
+	values["payload"] = payload + "tampered"
+	if _, _, err := platform.DecodeStreamMessage("audit.events", values); err == nil {
+		t.Fatal("tampered signed payload accepted")
+	}
+	if _, _, err := platform.DecodeStreamMessage("audit.events", map[string]any{"payload": payload}); err == nil {
+		t.Fatal("stream message without event accepted")
+	}
 }
 
 func TestRecoverer(t *testing.T) {
@@ -195,6 +256,28 @@ func TestLoadDotEnv(t *testing.T) {
 	if err := platform.LoadDotEnv(t.TempDir() + "/missing.env"); err != nil {
 		t.Fatalf("missing file should be a no-op, got %v", err)
 	}
+}
+
+func TestSecretFileEnvAdapter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "secret")
+	if err := os.WriteFile(path, []byte("from-file\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PLATFORM_TEST_SECRET_FILE", path)
+	t.Setenv("PLATFORM_TEST_SECRET", "")
+	_ = os.Unsetenv("PLATFORM_TEST_SECRET")
+	type config struct {
+		Secret string `env:"PLATFORM_TEST_SECRET,required"`
+	}
+	got := platform.MustParseEnv[config]()
+	if got.Secret != "from-file" {
+		t.Fatalf("secret = %q", got.Secret)
+	}
+}
+
+func TestSecretFileEnvAdapterIgnoresOptionalAppEnvFile(t *testing.T) {
+	t.Setenv("APP_ENV_FILE", filepath.Join(t.TempDir(), "missing.env"))
+	_ = platform.MustParseEnv[struct{}]()
 }
 
 func TestGormLoggerTrace(t *testing.T) {

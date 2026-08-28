@@ -1,32 +1,13 @@
 package internal
 
 import (
-	"fmt"
-
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
 
-type AccessClaims struct {
-	Purpose string   `json:"purpose"`
-	Sub     string   `json:"sub"`
-	Email   string   `json:"email"`
-	Ver     int64    `json:"ver"`
-	Perms   []string `json:"perms"`
-	jwt.RegisteredClaims
-}
+type AccessClaims = platform.AccessClaims
 
-func ParseAccess(secret []byte, raw string) (*AccessClaims, error) {
-	tok, err := jwt.ParseWithClaims(raw, &AccessClaims{}, func(t *jwt.Token) (any, error) {
-		return secret, nil
-	}, jwt.WithValidMethods([]string{"HS256"}))
-	if err != nil || !tok.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-	c, ok := tok.Claims.(*AccessClaims)
-	if !ok || c.Purpose != "access" || c.Sub == "" {
-		return nil, fmt.Errorf("invalid token")
-	}
-	return c, nil
+func ParseAccess(keyRing, raw string) (*AccessClaims, error) {
+	return platform.ParseAccessTokenRing(keyRing, raw)
 }
 
 func HasPerm(perms []string, want string) bool {

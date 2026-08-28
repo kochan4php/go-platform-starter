@@ -99,6 +99,9 @@ func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
 	if in.ID <= 0 {
 		return nil, platform.ErrBadRequest("id must be a positive integer")
 	}
+	if err := validateProfileFields(&in.DisplayName, &in.AvatarUrl); err != nil {
+		return nil, err
+	}
 	var count int64
 	s.db.WithContext(ctx).Model(&Profile{}).Where("id = ?", in.ID).Count(&count)
 	if count > 0 {
@@ -113,7 +116,7 @@ func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {
 
 func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
 	var p Profile
-	if err := s.db.WithContext(ctx).First(&p, "id = ?", id).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("deleted_at IS NULL").First(&p, "id = ?", id).Error; err != nil {
 		if gorm.ErrRecordNotFound == err {
 			return nil, platform.ErrNotFound("profile %s not found", id)
 		}
@@ -128,7 +131,7 @@ func (s *Service) List(ctx context.Context, limit, offset int, sort, order strin
 		items []Profile
 		total int64
 	)
-	db := s.db.WithContext(ctx).Model(&Profile{})
+	db := s.db.WithContext(ctx).Model(&Profile{}).Where("deleted_at IS NULL")
 	if query := strings.TrimSpace(filters.Query); query != "" {
 		needle := "%" + strings.ToLower(query) + "%"
 		db = db.Where("LOWER(email) LIKE ? OR LOWER(display_name) LIKE ?", needle, needle)
@@ -159,7 +162,7 @@ func (s *Service) List(ctx context.Context, limit, offset int, sort, order strin
 
 func (s *Service) Stats(ctx context.Context) (*UserStats, error) {
 	stats := &UserStats{Registrations: []RegistrationDay{}}
-	if err := s.db.WithContext(ctx).Model(&Profile{}).Count(&stats.Total).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&Profile{}).Where("deleted_at IS NULL").Count(&stats.Total).Error; err != nil {
 		return nil, err
 	}
 	if err := s.db.WithContext(ctx).Raw(
@@ -174,7 +177,7 @@ func (s *Service) Stats(ctx context.Context) (*UserStats, error) {
 		   date_trunc('day', now()) - interval '6 days',
 		   date_trunc('day', now()), interval '1 day'
 		 ) AS days(day)
-		 LEFT JOIN users.users u ON u.created_at >= days.day AND u.created_at < days.day + interval '1 day'
+		 LEFT JOIN users.users u ON u.deleted_at IS NULL AND u.created_at >= days.day AND u.created_at < days.day + interval '1 day'
 		 GROUP BY days.day ORDER BY days.day`,
 	).Scan(&stats.Registrations).Error; err != nil {
 		return nil, err
@@ -201,6 +204,9 @@ func userOrderClause(sort, order string) string {
 }
 
 func (s *Service) Update(ctx context.Context, id string, email, displayName, avatarUrl *string) (*Profile, error) {
+	if err := validateProfileFields(displayName, avatarUrl); err != nil {
+		return nil, err
+	}
 	p, err := s.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -228,20 +234,105 @@ func (s *Service) Update(ctx context.Context, id string, email, displayName, ava
 }
 
 func (s *Service) Delete(ctx context.Context, sub string) error {
-	res := s.db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, sub)
-	if res.Error != nil {
-		return res.Error
+	var claimsVersion int64
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Exec(
+			`UPDATE users.users SET status = 'deleted', deleted_at = now(), display_name = '', avatar_url = ''
+			 WHERE id = ? AND deleted_at IS NULL`, sub)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return platform.ErrNotFound("profile %s not found", sub)
+		}
+		if err := tx.Exec(`UPDATE auth.sessions SET revoked_at = now() WHERE user_id = ? AND revoked_at IS NULL`, sub).Error; err != nil {
+			return err
+		}
+		return tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
+			ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, sub).Scan(&claimsVersion).Error
+	})
+	if err != nil {
+		return err
 	}
-	if res.RowsAffected == 0 {
+	if err := s.rdb.Set(ctx, "claims:ver:"+sub, claimsVersion, 0).Err(); err != nil {
+		s.log.Error("invalidate deleted user claims failed", "err", err)
+	}
+	_ = s.rdb.Publish(ctx, "force-logout", sub).Err()
+	s.audit(ctx, "delete", "profile", sub)
+	return nil
+}
+
+func (s *Service) ExportData(ctx context.Context, sub string) (map[string]any, error) {
+	profile, err := s.Get(ctx, sub)
+	if err != nil {
+		return nil, err
+	}
+	var sessions []map[string]any
+	if err := s.db.WithContext(ctx).Table("auth.sessions").
+		Select("id, device_id, user_agent, ip, created_at, expires_at, revoked_at").
+		Where("user_id = ?", sub).Find(&sessions).Error; err != nil {
+		return nil, err
+	}
+	var roles []RoleSummary
+	if err := s.db.WithContext(ctx).Table("rbac.user_roles ur").Select("r.id, r.name").
+		Joins("JOIN rbac.roles r ON r.id = ur.role_id").Where("ur.user_id = ?", sub).Scan(&roles).Error; err != nil {
+		return nil, err
+	}
+	var audit []map[string]any
+	if err := s.db.WithContext(ctx).Table("audit.audit_logs").
+		Select("action, entity, entity_id, meta, created_at").Where("actor_sub = ? OR entity_id = ?", sub, sub).
+		Order("created_at ASC").Find(&audit).Error; err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"exportedAt": time.Now().UTC(), "profile": profile, "sessions": sessions, "roles": roles, "audit": audit,
+	}, nil
+}
+
+func (s *Service) EraseSelf(ctx context.Context, sub string) error {
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer tx.Rollback()
+	result := tx.Exec(`UPDATE users.users SET email = 'erased+' || id || '@invalid.local', password_hash = 'erased',
+		display_name = '', avatar_url = '', mfa_secret_enc = '', mfa_enabled = false,
+		status = 'deleted', deleted_at = now() WHERE id = ? AND deleted_at IS NULL`, sub)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
 		return platform.ErrNotFound("profile %s not found", sub)
 	}
+	for _, statement := range []string{
+		"UPDATE auth.sessions SET revoked_at = now() WHERE user_id = ? AND revoked_at IS NULL",
+		"DELETE FROM rbac.user_roles WHERE user_id = ?",
+		"UPDATE audit.audit_logs SET actor_sub = 'erased', entity_id = CASE WHEN entity_id = ? THEN 'erased' ELSE entity_id END WHERE actor_sub = ? OR entity_id = ?",
+	} {
+		args := []any{sub}
+		if strings.Contains(statement, "audit_logs") {
+			args = []any{sub, sub, sub}
+		}
+		if err := tx.Exec(statement, args...).Error; err != nil {
+			return err
+		}
+	}
+	var claimsVersion int64
+	if err := tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
+		ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, sub).Scan(&claimsVersion).Error; err != nil {
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+	if err := s.rdb.Set(ctx, "claims:ver:"+sub, claimsVersion, 0).Err(); err != nil {
+		s.log.Error("invalidate erased user claims failed", "err", err)
+	}
+	_ = s.rdb.Publish(ctx, "force-logout", sub).Err()
 	if err := s.pub.Publish(ctx, StreamUsers, EventDeleted, map[string]string{"sub": sub}); err != nil {
-		s.log.Error("publish user.deleted failed", "err", err)
+		s.log.Error("publish erased user.deleted failed", "err", err)
 	}
-	if err := QueueProfilePurge(ctx, s.rdb, sub); err != nil {
-		s.log.Error("queue profile purge failed", "err", err)
-	}
-	s.audit(ctx, "delete", "profile", sub)
+	s.audit(ctx, "erase", "profile", "erased")
 	return nil
 }
 
@@ -252,3 +343,23 @@ func (s *Service) audit(ctx context.Context, action, entity, entityID string) {
 }
 
 func lower2(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
+
+func validateProfileFields(displayName, avatarURL *string) error {
+	if displayName != nil {
+		value := strings.TrimSpace(*displayName)
+		if strings.ContainsAny(value, "<>") || strings.IndexFunc(value, func(r rune) bool { return r < 0x20 && r != '\t' }) >= 0 {
+			return platform.ErrBadRequest("displayName must be plain text")
+		}
+		*displayName = value
+	}
+	if avatarURL != nil {
+		value := strings.TrimSpace(*avatarURL)
+		if value != "" {
+			if err := platform.ValidatePublicHTTPSURL(value); err != nil {
+				return platform.ErrBadRequest("avatarUrl must be a public HTTPS URL")
+			}
+		}
+		*avatarURL = value
+	}
+	return nil
+}

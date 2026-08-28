@@ -15,9 +15,9 @@ import (
 const wsProtocolVersion = "v1"
 
 type Handlers struct {
-	Hub    *Hub
-	Secret []byte
-	Log    *slog.Logger
+	Hub        *Hub
+	SecretRing string
+	Log        *slog.Logger
 }
 
 // WS handles the upgrade: token via Sec-WebSocket-Protocol "jwt,<token>"
@@ -30,7 +30,7 @@ func (h *Handlers) WS(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, http.StatusUnauthorized, "unauthorized", "offer subprotocol 'jwt,<accessToken>'")
 		return
 	}
-	claims, err := platform.ParseAccessToken(h.Secret, raw)
+	claims, err := platform.ParseAccessTokenRing(h.SecretRing, raw)
 	if err != nil {
 		platform.Fail(w, http.StatusUnauthorized, "unauthorized", "invalid access token")
 		return
@@ -123,5 +123,9 @@ func (h *Handlers) Disconnect(ctx context.Context, c *Client) {
 }
 
 func NewHandlers(hub *Hub, secret []byte, log *slog.Logger) *Handlers {
-	return &Handlers{Hub: hub, Secret: secret, Log: log.With("service", "realtime")}
+	return NewHandlersWithKeyRing(hub, string(secret), log)
+}
+
+func NewHandlersWithKeyRing(hub *Hub, secretRing string, log *slog.Logger) *Handlers {
+	return &Handlers{Hub: hub, SecretRing: secretRing, Log: log.With("service", "realtime")}
 }

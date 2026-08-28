@@ -13,10 +13,10 @@ paths:
       summary: paginated audit trail, newest first
       x-required-permission: "audit:read:any"
       parameters:
-        - { name: limit, in: query, schema: { type: integer } }
-        - { name: offset, in: query, schema: { type: integer } }
-        - { name: entity, in: query, schema: { type: string } }
-        - { name: entityId, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: entity, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: entityId, in: query, schema: { type: string, maxLength: 255 } }
       responses:
         "200":
           description: ok
@@ -51,7 +51,7 @@ components:
       required: [success, message, data]
       properties:
         success: { type: boolean }
-        message: { type: string }
+        message: { type: string, maxLength: 255 }
         data: {}
 
     EnvelopeFail:
@@ -59,16 +59,16 @@ components:
       required: [success, message, error]
       properties:
         success: { type: boolean }
-        message: { type: string }
-        error: { type: string }
+        message: { type: string, maxLength: 255 }
+        error: { type: string, maxLength: 120 }
 
     AuditEntry:
       type: object
       properties:
         id: { type: integer, format: int64 }
-        actorSub: { type: string }
-        action: { type: string }
-        entity: { type: string }
-        entityId: { type: string }
+        actorSub: { type: string, maxLength: 64 }
+        action: { type: string, maxLength: 120 }
+        entity: { type: string, maxLength: 120 }
+        entityId: { type: string, maxLength: 255 }
         meta: {}
         createdAt: { type: string, format: date-time }

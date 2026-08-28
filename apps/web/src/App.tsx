@@ -1,6 +1,7 @@
-import { Button, Card, SkeletonBlock, SkeletonLine, usePreferences } from "@starter/ui";
+import { GATEWAY_URL, getAccessToken, getDeviceID } from "@starter/contracts";
+import { Button, Card, Field, Input, SkeletonBlock, SkeletonLine, usePreferences } from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
+import { type FormEvent, Suspense, lazy, useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { RemoteErrorBoundary } from "./RemoteErrorBoundary";
 import RequirePermission from "./RequirePermission";
@@ -22,6 +23,26 @@ const queryClient = new QueryClient({
 interface LoginResult {
   accessToken: string;
   user: { id: number | string; email: string; perms?: string[]; ver?: number };
+}
+
+async function secureRequest(path: string, init: RequestInit = {}) {
+  const response = await fetch(`${GATEWAY_URL}/api/v1${path}`, {
+    ...init,
+    credentials: "include",
+    headers: {
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+      "Content-Type": "application/json",
+      "X-Device-ID": getDeviceID(),
+      ...init.headers,
+    },
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    error?: { message?: string };
+    data?: unknown;
+  };
+  if (!response.ok) throw new Error(body.error?.message ?? body.message ?? "Request failed");
+  return body.data;
 }
 
 function AdminRoutes() {
@@ -132,8 +153,26 @@ function NotFoundPage() {
 }
 
 function SettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
   const { timeZone, setTimeZone, soundEnabled, setSoundEnabled } = usePreferences();
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [mfa, setMFA] = useState<{ secret: string; qrDataUrl: string }>();
+  const [mfaCode, setMFACode] = useState("");
+  const [mfaBusy, setMFABusy] = useState(false);
+  const [sessions, setSessions] = useState<
+    Array<{
+      id: number;
+      deviceId?: string;
+      userAgent: string;
+      ip: string;
+      createdAt: string;
+      current: boolean;
+    }>
+  >([]);
   const zones = Array.from(
     new Set([
       timeZone,
@@ -145,6 +184,98 @@ function SettingsPage() {
       "America/New_York",
     ]),
   );
+
+  useEffect(() => {
+    void secureRequest("/auth/sessions")
+      .then((data) => {
+        const payload = data as { items?: typeof sessions } | undefined;
+        setSessions(payload?.items ?? []);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function changePassword(event: FormEvent) {
+    event.preventDefault();
+    setPasswordBusy(true);
+    try {
+      await secureRequest("/auth/password", {
+        method: "POST",
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      toast("success", "Password changed. Sign in again on every device.");
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Could not change password");
+    } finally {
+      setPasswordBusy(false);
+    }
+  }
+
+  async function beginMFA() {
+    setMFABusy(true);
+    try {
+      setMFA((await secureRequest("/auth/mfa/enroll", { method: "POST" })) as typeof mfa);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Could not start MFA enrollment");
+    } finally {
+      setMFABusy(false);
+    }
+  }
+
+  async function verifyMFA(event: FormEvent) {
+    event.preventDefault();
+    setMFABusy(true);
+    try {
+      await secureRequest("/auth/mfa/verify", { method: "POST", body: JSON.stringify({ code: mfaCode }) });
+      setMFA(undefined);
+      setMFACode("");
+      toast("success", "Authenticator MFA enabled.");
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Invalid authenticator code");
+    } finally {
+      setMFABusy(false);
+    }
+  }
+
+  async function revokeSession(id: number) {
+    try {
+      await secureRequest(`/auth/sessions/${id}`, { method: "DELETE" });
+      setSessions((items) => items.filter((item) => item.id !== id));
+      toast("success", "Session revoked.");
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Could not revoke session");
+    }
+  }
+
+  async function exportData() {
+    try {
+      const data = await secureRequest("/users/me/export");
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `platform-data-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast("success", "Your data export is ready.");
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Could not export your data");
+    }
+  }
+
+  async function eraseAccount() {
+    if (!window.confirm("Permanently erase this account and revoke every session? This cannot be undone."))
+      return;
+    try {
+      await secureRequest("/users/me", { method: "DELETE" });
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Could not erase the account");
+    }
+  }
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -189,6 +320,122 @@ function SettingsPage() {
               className="size-4 accent-[var(--color-accent)]"
             />
           </label>
+        </div>
+      </Card>
+      <Card title="Password">
+        <form onSubmit={changePassword} className="grid gap-4 sm:grid-cols-2">
+          <Field label="Current password">
+            <Input
+              required
+              type="password"
+              autoComplete="current-password"
+              maxLength={72}
+              value={oldPassword}
+              onChange={(event) => setOldPassword(event.target.value)}
+            />
+          </Field>
+          <Field label="New password">
+            <Input
+              required
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              maxLength={72}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+            />
+          </Field>
+          <p className="text-xs text-[var(--color-muted)] sm:col-span-2">
+            Use 12 or more characters and at least three of: lowercase, uppercase, number, symbol.
+          </p>
+          <Button disabled={passwordBusy} className="sm:col-span-2 sm:w-fit">
+            {passwordBusy ? "Changing..." : "Change password"}
+          </Button>
+        </form>
+      </Card>
+      <Card title="Authenticator MFA">
+        {!mfa ? (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="max-w-xl text-sm text-[var(--color-muted)]">
+              Add a time-based one-time password from your authenticator app to every login.
+            </p>
+            <Button type="button" disabled={mfaBusy} onClick={beginMFA}>
+              {mfaBusy ? "Preparing..." : "Set up authenticator"}
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={verifyMFA} className="grid gap-5 sm:grid-cols-[256px_1fr]">
+            <img
+              src={mfa.qrDataUrl}
+              width="256"
+              height="256"
+              alt="Authenticator enrollment QR code"
+              className="rounded-xl border border-[var(--color-line)]"
+            />
+            <div className="space-y-4">
+              <p className="text-sm text-[var(--color-muted)]">
+                Scan the QR code, or enter this secret manually: <code>{mfa.secret}</code>
+              </p>
+              <Field label="Six-digit code">
+                <Input
+                  required
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={mfaCode}
+                  onChange={(event) => setMFACode(event.target.value.replace(/\D/g, ""))}
+                />
+              </Field>
+              <Button disabled={mfaBusy || mfaCode.length !== 6}>
+                {mfaBusy ? "Verifying..." : "Enable MFA"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
+      <Card title="Active sessions">
+        {sessions.length === 0 ? (
+          <p className="text-sm text-[var(--color-muted)]">No active session details are available.</p>
+        ) : (
+          <ul className="divide-y divide-[var(--color-line)]">
+            {sessions.map((session) => (
+              <li
+                key={session.id}
+                className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {session.current ? "This device" : session.deviceId || "Unknown device"}
+                  </p>
+                  <p className="truncate text-xs text-[var(--color-muted)]">
+                    {session.ip} · {session.userAgent || "Unknown browser"}
+                  </p>
+                </div>
+                {!session.current ? (
+                  <Button type="button" variant="danger" onClick={() => revokeSession(session.id)}>
+                    Revoke
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card title="Data & privacy">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="max-w-xl text-sm text-[var(--color-muted)]">
+            Download the profile, session, role, and audit data linked to your account, or permanently erase
+            it.
+          </p>
+          <div className="flex gap-3">
+            <Button type="button" variant="ghost" onClick={exportData}>
+              Export my data
+            </Button>
+            <Button type="button" variant="danger" onClick={eraseAccount}>
+              Erase account
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

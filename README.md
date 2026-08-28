@@ -215,7 +215,7 @@ starts the stack with all ports published.
 | http://127.0.0.1:8010/healthz | gateway health |
 | :8081–:8085 | auth/users/rbac/worker/realtime published for direct debugging |
 
-Seeded admin: `admin@example.local` / `admin-bootstrap-pw`.
+Seeded admin: `admin@example.local` / `local-root-access-2026!`.
 Lab container host ports default to non-conflicting values
 (`55432` Postgres, `56380` Redis, `8010` gateway) precisely because other
 local projects often claim 5432/6379/8000 — override with `LAB_PG_PORT`,
@@ -388,6 +388,11 @@ Scaling notes, measured performance baselines and shard triggers:
 | [docs/TOKEN_POLICY.md](docs/TOKEN_POLICY.md) | token storage and silent-refresh flow |
 | [docs/QUERY_KEYS.md](docs/QUERY_KEYS.md) | TanStack Query key conventions |
 | [docs/SECURITY.md](docs/SECURITY.md) | CSRF posture, security headers, scanning, secrets |
+| [SECURITY.md](SECURITY.md) | responsible disclosure and supported versions |
+| [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) | STRIDE model, trust boundaries, mitigations |
+| [docs/SECRETS.md](docs/SECRETS.md) | secret adapters, key rings, zero-downtime rotation |
+| [docs/BREAK_GLASS.md](docs/BREAK_GLASS.md) | audited emergency-admin procedure |
+| [docs/PENTEST_CHECKLIST.md](docs/PENTEST_CHECKLIST.md) | repeatable internal penetration-test checklist |
 | [docs/API_VERSIONING.md](docs/API_VERSIONING.md) | `/api/v1` freeze rules, RFC-9745 deprecations |
 | [docs/SCALING.md](docs/SCALING.md) | pool sizing, HPA math, perf baselines, shard triggers |
 | [docs/ONBOARDING.md](docs/ONBOARDING.md) | 30-minute clone-to-PR path, port allocation table |

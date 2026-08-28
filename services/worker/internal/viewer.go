@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 
@@ -26,8 +25,7 @@ func AuditViewer(db *gorm.DB, internalSecret string) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		if subtle.ConstantTimeCompare(
-			[]byte(r.Header.Get("X-Internal-Secret")), []byte(internalSecret)) != 1 {
+		if !platform.SecretMatch(r.Header.Get("X-Internal-Secret"), internalSecret) {
 			platform.Fail(w, http.StatusUnauthorized, "unauthorized", "missing internal secret")
 			return
 		}

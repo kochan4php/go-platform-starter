@@ -1,0 +1,28 @@
+# Kyverno policy. Replace cosign.pub with the public key matching Jenkins'
+# cosign-private-key credential before applying.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-platform-images
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-cosign-signature
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [platform]
+      verifyImages:
+        - imageReferences: ["ghcr.io/kochan4php/*"]
+          mutateDigest: true
+          verifyDigest: true
+          required: true
+          attestors:
+            - entries:
+                - keys:
+                    publicKeys: |-
+                      -----BEGIN PUBLIC KEY-----
+                      REPLACE_WITH_COSIGN_PUBLIC_KEY
+                      -----END PUBLIC KEY-----

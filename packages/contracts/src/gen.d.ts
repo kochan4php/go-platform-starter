@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/mfa/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** create a time-limited TOTP enrollment and QR code */
+        post: operations["beginMFA"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** verify TOTP and enable MFA for the authenticated user */
+        post: operations["verifyMFA"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sessions": {
         parameters: {
             query?: never;
@@ -186,6 +220,23 @@ export interface paths {
         put?: never;
         /** re-authenticate the current user before a sensitive admin action */
         post: operations["confirmPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** change the authenticated user's password after verifying the old password */
+        post: operations["changePassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -409,6 +460,24 @@ export interface paths {
         get: operations["me"];
         put?: never;
         post?: never;
+        /** irreversibly erase the caller's personal data and revoke access */
+        delete: operations["eraseMe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** download all personal data held by the platform */
+        get: operations["exportMyData"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -460,7 +529,7 @@ export interface paths {
         get: operations["getUser"];
         put?: never;
         post?: never;
-        /** hard-delete the profile row and emit user.deleted */
+        /** soft-delete the profile row and emit user.deleted */
         delete: operations["deleteUser"];
         options?: never;
         head?: never;
@@ -527,6 +596,7 @@ export interface components {
             id?: number;
             userAgent?: string;
             ip?: string;
+            deviceId?: string;
             /** Format: date-time */
             createdAt?: string;
             current?: boolean;
@@ -537,10 +607,13 @@ export interface components {
             password: string;
         };
         LoginInput: {
+            /** Format: email */
             email: string;
             password: string;
+            otp?: string;
         };
         ForgotInput: {
+            /** Format: email */
             email: string;
         };
         ResetInput: {
@@ -586,11 +659,13 @@ export interface components {
         Profile: {
             /** Format: int64 */
             id?: number;
+            /** Format: email */
             email?: string;
             displayName?: string;
+            /** Format: uri */
             avatarUrl?: string;
             /** @enum {string} */
-            status?: "active" | "inactive";
+            status?: "active" | "inactive" | "deleted";
             /** Format: date-time */
             lockedUntil?: string | null;
             roles?: components["schemas"]["RoleSummary"][];
@@ -631,6 +706,7 @@ export interface components {
             /** Format: email */
             email?: string;
             displayName?: string;
+            /** Format: uri */
             avatarUrl?: string;
         };
         AuditEntry: {
@@ -779,6 +855,52 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description logged out */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    beginMFA: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description enrollment started */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    verifyMFA: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description MFA enabled */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -944,7 +1066,7 @@ export interface operations {
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
-            /** @description invalid */
+            /** @description invalid, expired, or consumed token */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -1017,6 +1139,42 @@ export interface operations {
                 };
             };
             /** @description invalid password */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    oldPassword: string;
+                    newPassword: string;
+                };
+            };
+        };
+        responses: {
+            /** @description changed and all sessions revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description old password invalid */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -1579,6 +1737,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+        };
+    };
+    eraseMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description erased */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+        };
+    };
+    exportMyData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON data export */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
         };

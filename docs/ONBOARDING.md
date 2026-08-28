@@ -51,7 +51,7 @@ pnpm check:budget   # host bundle-size gate
 ```
 
 Admin login for seeded environments:
-`admin@example.local` / `admin-bootstrap-pw`.
+`admin@example.local` / `local-root-access-2026!`.
 
 ### Lab stack (docker)
 

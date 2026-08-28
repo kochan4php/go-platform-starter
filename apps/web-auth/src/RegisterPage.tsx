@@ -12,6 +12,7 @@ import {
   normalizeEmail,
   useEmailDraft,
   validEmail,
+  validPassword,
 } from "./auth-ui";
 
 export default function RegisterPage() {
@@ -24,7 +25,7 @@ export default function RegisterPage() {
   const [done, setDone] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const emailValid = validEmail(draft.email);
-  const strongEnough = password.length >= 8;
+  const strongEnough = validPassword(password);
   const matches = Boolean(confirm) && confirm === password;
 
   const errors = useMemo(() => {
@@ -112,7 +113,11 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 onChange={setPassword}
                 withStrength
-                error={touched && !strongEnough ? "Use at least 8 characters" : undefined}
+                error={
+                  touched && !strongEnough
+                    ? "Use 12+ characters from at least three character classes"
+                    : undefined
+                }
                 valid={touched && strongEnough}
               />
               <PasswordInput

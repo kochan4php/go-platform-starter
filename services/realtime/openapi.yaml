@@ -26,8 +26,8 @@ paths:
                       data:
                         type: object
                         properties:
-                          wsUrl: { type: string }
-                          protocol: { type: string }
+                          wsUrl: { type: string, maxLength: 2048 }
+                          protocol: { type: string, maxLength: 64 }
 
 components:
   schemas:
@@ -36,5 +36,5 @@ components:
       required: [success, message, data]
       properties:
         success: { type: boolean }
-        message: { type: string }
+        message: { type: string, maxLength: 255 }
         data: {}

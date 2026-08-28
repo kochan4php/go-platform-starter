@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -27,6 +26,8 @@ type config struct {
 	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
 	DatabaseURL    string `env:"DATABASE_URL,required"`
 	RedisAddr      string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername  string `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword  string `env:"REDIS_PASSWORD" envDefault:""`
 	InternalSecret string `env:"INTERNAL_SECRET,required"`
 }
 
@@ -68,7 +69,7 @@ func main() {
 		return
 	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	svc := internal.NewService(db, log, internal.RedisPublisher{RDB: rdb})
 
 	if *seedOnly {

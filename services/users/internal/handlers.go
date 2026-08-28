@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -63,6 +64,25 @@ func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	platform.OK(w, http.StatusOK, "ok", p)
+}
+
+func (h *Handlers) ExportMyData(w http.ResponseWriter, r *http.Request) {
+	sub := SubFromContext(r)
+	data, err := h.svc.ExportData(r.Context(), sub)
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	w.Header().Set("Content-Disposition", `attachment; filename="platform-data-`+strconv.FormatInt(time.Now().Unix(), 10)+`.json"`)
+	platform.OK(w, http.StatusOK, "exported", data)
+}
+
+func (h *Handlers) EraseMe(w http.ResponseWriter, r *http.Request) {
+	if err := h.svc.EraseSelf(r.Context(), SubFromContext(r)); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "erased", struct{}{})
 }
 
 func (h *Handlers) CreateUserProfile(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +161,11 @@ func (h *Handlers) GetUserStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {
+	actorID := SubFromContext(r)
+	if !platform.AuthorizeResource(actorID, fmt.Sprintf("%d", id), PermissionsFromContext(r), "user:update:own", "user:update:any") {
+		platform.WriteError(w, h.log, platform.ErrForbidden("missing permission to update this profile"))
+		return
+	}
 	var in struct {
 		Email       *string `json:"email"`
 		DisplayName *string `json:"displayName"`

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/mail"
 	"strconv"
 	"strings"
 	"time"
@@ -80,7 +81,12 @@ func (c *Consumer) Run(ctx context.Context) {
 		case err == nil:
 			for _, s := range res {
 				for _, msg := range s.Messages {
-					c.process(ctx, s.Stream, msg.ID, str(msg.Values["payload"]), str(msg.Values["event"]))
+					event, payload, decodeErr := platform.DecodeStreamMessage(s.Stream, msg.Values)
+					if decodeErr != nil {
+						c.process(ctx, s.Stream, msg.ID, "", "invalid:"+decodeErr.Error())
+						continue
+					}
+					c.process(ctx, s.Stream, msg.ID, payload, event)
 				}
 			}
 		case strings.Contains(err.Error(), "NOGROUP"):
@@ -124,7 +130,12 @@ func (c *Consumer) reclaimPending(ctx context.Context) {
 			continue
 		}
 		for _, msg := range res {
-			c.process(ctx, s, msg.ID, str(msg.Values["payload"]), str(msg.Values["event"]))
+			event, payload, decodeErr := platform.DecodeStreamMessage(s, msg.Values)
+			if decodeErr != nil {
+				c.process(ctx, s, msg.ID, "", "invalid:"+decodeErr.Error())
+				continue
+			}
+			c.process(ctx, s, msg.ID, payload, event)
 		}
 	}
 }
@@ -188,6 +199,9 @@ func (c *Consumer) handleEmail(ctx context.Context, dedupKey, payload string) er
 	if err := json.Unmarshal([]byte(payload), &m); err != nil {
 		return fmt.Errorf("bad email payload: %w", err)
 	}
+	if _, err := mail.ParseAddress(m.To); err != nil || strings.TrimSpace(m.Subject) == "" || len(m.Subject) > 200 || len(m.Html) > 1<<20 {
+		return fmt.Errorf("email payload failed schema validation")
+	}
 	sendErr := c.mailer.Send(ctx, platform.Mail{To: m.To, Subject: m.Subject, HTML: m.Html})
 	if sendErr != nil {
 		c.rdb.Del(ctx, dedupKey) // retry must be allowed to try again
@@ -211,6 +225,9 @@ func (c *Consumer) handleAudit(ctx context.Context, event, msgID, payload string
 	}
 	if err := json.Unmarshal([]byte(payload), &ev); err != nil {
 		return fmt.Errorf("bad audit payload: %w", err)
+	}
+	if strings.TrimSpace(ev.Action) == "" || len(ev.Action) > 120 || strings.TrimSpace(ev.Entity) == "" || len(ev.Entity) > 120 || len(ev.EntityID) > 255 {
+		return fmt.Errorf("audit payload failed schema validation")
 	}
 	metaJSON, _ := json.Marshal(ev.Meta)
 	return c.db.WithContext(ctx).Exec(

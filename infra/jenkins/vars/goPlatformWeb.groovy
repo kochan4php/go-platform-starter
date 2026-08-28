@@ -50,6 +50,10 @@ def call(Map cfg = [:]) {
                         sh "docker tag ${imageRepo}:${env.BUILD_NUMBER} ${imageRepo}:latest"
                         sh "docker push ${imageRepo}:${env.BUILD_NUMBER}"
                         sh "docker push ${imageRepo}:latest"
+                        sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \$PWD:/out anchore/syft:latest ${imageRepo}:${env.BUILD_NUMBER} -o spdx-json=/out/sbom-${component}.spdx.json"
+                        withCredentials([file(credentialsId: 'cosign-private-key', variable: 'COSIGN_KEY'), string(credentialsId: 'cosign-password', variable: 'COSIGN_PASSWORD')]) {
+                            sh "cosign sign --yes --key \$COSIGN_KEY ${imageRepo}:${env.BUILD_NUMBER}"
+                        }
                     }
                 }
             }

@@ -23,6 +23,8 @@ x-go-env: &go-env
   REDIS_ADDR: redis:6379
   ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?set ACCESS_TOKEN_SECRET}
   INTERNAL_SECRET: ${INTERNAL_SECRET:?set INTERNAL_SECRET}
+  STREAM_SIGNING_KEYS: ${STREAM_SIGNING_KEYS:?set STREAM_SIGNING_KEYS}
+  STREAM_ENCRYPTION_KEYS: ${STREAM_ENCRYPTION_KEYS:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
 
 services:
@@ -44,9 +46,32 @@ services:
   redis:
     image: redis:7-alpine
     <<: *svc
-    command: ["redis-server", "--appendonly", "yes"]
+    environment:
+      REDIS_AUTH_PASSWORD: ${REDIS_AUTH_PASSWORD:?set REDIS_AUTH_PASSWORD}
+      REDIS_USERS_PASSWORD: ${REDIS_USERS_PASSWORD:?set REDIS_USERS_PASSWORD}
+      REDIS_RBAC_PASSWORD: ${REDIS_RBAC_PASSWORD:?set REDIS_RBAC_PASSWORD}
+      REDIS_WORKER_PASSWORD: ${REDIS_WORKER_PASSWORD:?set REDIS_WORKER_PASSWORD}
+      REDIS_REALTIME_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
+      REDIS_GATEWAY_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
+      REDIS_DLQ_ADMIN_PASSWORD: ${REDIS_DLQ_ADMIN_PASSWORD:?set REDIS_DLQ_ADMIN_PASSWORD}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        umask 077
+        printf '%s\n' \
+          'user default off' \
+          "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* &force-logout +get +set +getdel +del +incr +expire +setnx +xadd +publish +eval +evalsha +time +ping" \
+          "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +set +setnx +publish +ping" \
+          "user rbac on >$$REDIS_RBAC_PASSWORD resetkeys resetchannels ~claims:* ~audit.events* &force-logout +set +xadd +publish +ping" \
+          "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +setnx +del +incr +expire +ping" \
+          "user realtime on >$$REDIS_REALTIME_PASSWORD resetkeys resetchannels &force-logout +subscribe +unsubscribe +psubscribe +punsubscribe +ping" \
+          "user gateway on >$$REDIS_GATEWAY_PASSWORD resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping" \
+          "user dlq-admin on >$$REDIS_DLQ_ADMIN_PASSWORD resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping" \
+          > /data/users.acl
+        exec redis-server --appendonly yes --aclfile /data/users.acl
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli --user gateway --pass \"$$REDIS_GATEWAY_PASSWORD\" ping 2>/dev/null | grep -q PONG"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -61,6 +86,12 @@ services:
       RBAC_INTERNAL_URL: http://rbac:8080
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+      PASSWORD_HASH_ALGORITHM: ${PASSWORD_HASH_ALGORITHM:-argon2id}
+      PASSWORD_HISTORY_COUNT: ${PASSWORD_HISTORY_COUNT:-5}
+      HIBP_API_URL: https://api.pwnedpasswords.com/range
+      SESSION_CRYPTO_KEYS: ${SESSION_CRYPTO_KEYS:?set SESSION_CRYPTO_KEYS}
+      REDIS_USERNAME: auth
+      REDIS_PASSWORD: ${REDIS_AUTH_PASSWORD:?set REDIS_AUTH_PASSWORD}
       SEED_HINT: "run via deploy script when SEED_ADMIN=true"
     depends_on:
       postgres: { condition: service_healthy }
@@ -72,6 +103,8 @@ services:
     environment:
       <<: *go-env
       PORT: "8080"
+      REDIS_USERNAME: users
+      REDIS_PASSWORD: ${REDIS_USERS_PASSWORD:?set REDIS_USERS_PASSWORD}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -82,6 +115,8 @@ services:
     environment:
       <<: *go-env
       PORT: "8080"
+      REDIS_USERNAME: rbac
+      REDIS_PASSWORD: ${REDIS_RBAC_PASSWORD:?set REDIS_RBAC_PASSWORD}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -98,6 +133,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+      REDIS_USERNAME: worker
+      REDIS_PASSWORD: ${REDIS_WORKER_PASSWORD:?set REDIS_WORKER_PASSWORD}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -109,6 +146,8 @@ services:
       <<: *go-env
       PORT: "8080"
       PUBLIC_WS_URL: ${PUBLIC_WS_URL:?set PUBLIC_WS_URL e.g. wss://domain/ws}
+      REDIS_USERNAME: realtime
+      REDIS_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
     depends_on:
       redis: { condition: service_healthy }
 
@@ -120,8 +159,12 @@ services:
       PORT: "8000"
       TRUSTED_DOMAINS: ${TRUSTED_DOMAINS:?set TRUSTED_DOMAINS}
       RATE_GLOBAL_PER_MINUTE: ${RATE_GLOBAL_PER_MINUTE:-300}
+      # Gateway is internal-only here; nginx overwrites X-Forwarded-For.
+      TRUSTED_PROXY_CIDRS: 172.16.0.0/12
       UPSTREAMS: '{"auth":"http://auth:8080","users":"http://users:8080","rbac":"http://rbac:8080","worker":"http://worker:8080","realtime":"http://realtime:8080"}'
       REALTIME_UPSTREAM: http://realtime:8080
+      REDIS_USERNAME: gateway
+      REDIS_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
     depends_on:
       - auth
       - users
@@ -161,13 +204,13 @@ services:
 
   # ---- single public entry ---------------------------------------------------
   edge:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     <<: *svc
     ports:
-      - "80:80"
+      - "80:8080"
       # TLS: drop a rendered edge-ssl.conf into infra/nginx/conf.d (template in
       # edge.tls.conf.template) and publish 443 below.
-      # - "443:443"
+      # - "443:8443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:

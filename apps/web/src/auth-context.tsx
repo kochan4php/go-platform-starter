@@ -70,6 +70,18 @@ export function AuthProvider({
     return () => window.removeEventListener("starter:session-expired", onExpired);
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      void silentRefresh(GATEWAY_URL).then((token) => {
+        if (!token) window.dispatchEvent(new Event("starter:session-expired"));
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user]);
+
   const login = useCallback((accessToken: string, u: SessionUser) => {
     setAccessToken(accessToken);
     setUser(u);

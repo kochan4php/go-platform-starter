@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/redis/go-redis/v9"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 	internal "github.com/kochan4php/go-platform-starter/services/realtime/internal"
@@ -23,6 +22,8 @@ type config struct {
 	Port              string `env:"PORT" envDefault:"8080"`
 	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
 	RedisAddr         string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername     string `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword     string `env:"REDIS_PASSWORD" envDefault:""`
 	AccessTokenSecret string `env:"ACCESS_TOKEN_SECRET,required"`
 	PublicWSUrl       string `env:"PUBLIC_WS_URL" envDefault:"ws://127.0.0.1:8000/ws"`
 	Rooms             string `env:"ROOMS" envDefault:"lobby,general"`
@@ -45,7 +46,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	rdb := newRedis(cfg.RedisAddr)
+	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 
 	connections := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "realtime_connections",
@@ -60,7 +61,7 @@ func main() {
 		"redis": func(ctx context.Context) error { return rdb.Ping(ctx).Err() },
 	})
 
-	router.Get("/ws", internal.NewHandlers(hub, []byte(cfg.AccessTokenSecret), log).WS)
+	router.Get("/ws", internal.NewHandlersWithKeyRing(hub, cfg.AccessTokenSecret, log).WS)
 
 	router.Get("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
 		raw, _ := specFS.ReadFile("openapi.yaml")
@@ -69,7 +70,7 @@ func main() {
 	})
 
 	router.Route("/api/v1/realtime", func(api chi.Router) {
-		api.Use(bearerGuard([]byte(cfg.AccessTokenSecret)))
+		api.Use(bearerGuard(cfg.AccessTokenSecret))
 		api.Get("/info", func(w http.ResponseWriter, _ *http.Request) {
 			platform.OK(w, http.StatusOK, "ok", map[string]string{
 				"wsUrl":    cfg.PublicWSUrl,
@@ -85,8 +86,6 @@ func main() {
 	}
 }
 
-func newRedis(addr string) *redis.Client { return redis.NewClient(&redis.Options{Addr: addr}) }
-
 func envFile() string {
 	if v := os.Getenv("APP_ENV_FILE"); v != "" {
 		return v
@@ -94,11 +93,11 @@ func envFile() string {
 	return ".env"
 }
 
-func bearerGuard(secret []byte) func(http.Handler) http.Handler {
+func bearerGuard(secretRing string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			raw := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if _, err := platform.ParseAccessToken(secret, raw); err != nil {
+			if _, err := platform.ParseAccessTokenRing(secretRing, raw); err != nil {
 				platform.WriteError(w, platform.LoggerFromContext(r.Context()), platform.ErrUnauthorized("invalid access token"))
 				return
 			}

@@ -13,9 +13,19 @@ spec:
       labels:
         app: users-migrate
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       restartPolicy: Never
       containers:
         - name: migrate
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
           image: ghcr.io/kochan4php/users:latest-migrate
           envFrom:
             - secretRef:

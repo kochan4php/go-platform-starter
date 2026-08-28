@@ -2,8 +2,8 @@ package internal
 
 import (
 	"context"
-	"crypto/subtle"
 	"net/http"
+	"strings"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
@@ -11,6 +11,7 @@ import (
 type (
 	ctxKeySub   struct{}
 	ctxKeyEmail struct{}
+	ctxKeyPerms struct{}
 )
 
 // IdentityMiddleware validates the gateway's identity headers. Any request
@@ -24,16 +25,22 @@ func IdentityMiddleware(secret string) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			if secret != "" && subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Internal-Secret")), []byte(secret)) != 1 {
+			if secret != "" && !platform.SecretMatch(r.Header.Get("X-Internal-Secret"), secret) {
 				platform.WriteError(w, platform.LoggerFromContext(r.Context()), platform.ErrForbidden("identity headers require internal secret"))
 				return
 			}
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, ctxKeySub{}, sub)
 			ctx = context.WithValue(ctx, ctxKeyEmail{}, r.Header.Get("X-Email"))
+			ctx = context.WithValue(ctx, ctxKeyPerms{}, strings.Fields(r.Header.Get("X-Permissions")))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func PermissionsFromContext(r *http.Request) []string {
+	permissions, _ := r.Context().Value(ctxKeyPerms{}).([]string)
+	return permissions
 }
 
 func SubFromContext(r *http.Request) string {

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
 
 // ClaimsClient resolves perms[]/ver from the rbac service's internal API,
@@ -71,7 +73,7 @@ func (c *ClaimsClient) fetch(ctx context.Context, sub string) ([]string, int64, 
 	if err != nil {
 		return nil, 0, err
 	}
-	req.Header.Set("X-Internal-Secret", c.Secret)
+	req.Header.Set("X-Internal-Secret", platform.ActiveSecret(c.Secret))
 
 	res, err := c.hc.Do(req)
 	if err != nil {
