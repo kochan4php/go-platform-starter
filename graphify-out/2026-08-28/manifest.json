@@ -775,14 +775,14 @@
   },
   "services/_template/migrations/000001_init.down.sql": {
     "mtime": 1787794670.836034,
-    "seen": 1787841573.4723163,
-    "ast_hash": "",
+    "seen": 1787893283.7354834,
+    "ast_hash": "a6033857380c9bbef7c21ad5f7f81d7f",
     "semantic_hash": ""
   },
   "services/_template/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8370342,
-    "seen": 1787841573.4723172,
-    "ast_hash": "",
+    "seen": 1787893283.735486,
+    "ast_hash": "22c38d21532accb69284c5172f8377df",
     "semantic_hash": ""
   },
   "services/auth/gen/gen.go": {
@@ -871,14 +871,14 @@
   },
   "services/auth/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8452795,
-    "seen": 1787841573.4723303,
-    "ast_hash": "",
+    "seen": 1787893283.736852,
+    "ast_hash": "ea2d02fb2656f44018c9d81ea7c7f3f4",
     "semantic_hash": ""
   },
   "services/auth/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8452795,
-    "seen": 1787841573.472331,
-    "ast_hash": "",
+    "seen": 1787893283.7368536,
+    "ast_hash": "bd874272eebf0226cf61413bba0426cd",
     "semantic_hash": ""
   },
   "services/auth/migrations/embed.go": {
@@ -967,14 +967,14 @@
   },
   "services/rbac/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8562818,
-    "seen": 1787841573.4723444,
-    "ast_hash": "",
+    "seen": 1787893283.739122,
+    "ast_hash": "eb3a21fd560c3599f57822f49b787f22",
     "semantic_hash": ""
   },
   "services/rbac/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8562818,
-    "seen": 1787841573.472345,
-    "ast_hash": "",
+    "seen": 1787893283.7391233,
+    "ast_hash": "2afe10af80e66b1d1279e59203f6e120",
     "semantic_hash": ""
   },
   "services/rbac/migrations/embed.go": {
@@ -1093,14 +1093,14 @@
   },
   "services/users/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8675842,
-    "seen": 1787841573.4723659,
-    "ast_hash": "",
+    "seen": 1787893283.7410977,
+    "ast_hash": "f4246f75d505d134bb6df14c248d7fa3",
     "semantic_hash": ""
   },
   "services/users/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8675842,
-    "seen": 1787841573.4723666,
-    "ast_hash": "",
+    "seen": 1787893283.741099,
+    "ast_hash": "202169dc5d0a9178b49844723bde0d59",
     "semantic_hash": ""
   },
   "services/users/migrations/embed.go": {
@@ -1153,14 +1153,14 @@
   },
   "services/worker/migrations/000001_init.down.sql": {
     "mtime": 1787794670.8735852,
-    "seen": 1787841573.4723742,
-    "ast_hash": "",
+    "seen": 1787893283.7417529,
+    "ast_hash": "7b103571efab1d94c5967b7437aa82b7",
     "semantic_hash": ""
   },
   "services/worker/migrations/000001_init.up.sql": {
     "mtime": 1787794670.8735852,
-    "seen": 1787841573.4723752,
-    "ast_hash": "",
+    "seen": 1787893283.741754,
+    "ast_hash": "d9d7e979bbdae46685197a3880a6c261",
     "semantic_hash": ""
   },
   "services/worker/migrations/embed.go": {
@@ -1837,14 +1837,14 @@
   },
   "services/rbac/migrations/000002_multi_role_users.down.sql": {
     "mtime": 1787804040.2868176,
-    "seen": 1787841573.4723463,
-    "ast_hash": "",
+    "seen": 1787893283.739125,
+    "ast_hash": "16adf1b2259b3df09e4e3fdcfab2239b",
     "semantic_hash": ""
   },
   "services/rbac/migrations/000002_multi_role_users.up.sql": {
     "mtime": 1787804039.3313696,
-    "seen": 1787841573.472347,
-    "ast_hash": "",
+    "seen": 1787893283.739126,
+    "ast_hash": "5776a65b1d7daef5f6197e9e1b49e4d7",
     "semantic_hash": ""
   },
   "services/rbac/internal/service_test.go": {
@@ -1879,14 +1879,14 @@
   },
   "services/rbac/migrations/000003_role_management.down.sql": {
     "mtime": 1787825011.4764588,
-    "seen": 1787841573.4723482,
-    "ast_hash": "",
+    "seen": 1787893283.7391274,
+    "ast_hash": "bc8353d77240832ede677d691a3a819a",
     "semantic_hash": ""
   },
   "services/rbac/migrations/000003_role_management.up.sql": {
     "mtime": 1787826515.0375128,
-    "seen": 1787841573.4723492,
-    "ast_hash": "",
+    "seen": 1787893283.7391284,
+    "ast_hash": "76fe3df04e92555d9ca352dc68ad28fc",
     "semantic_hash": ""
   },
   ".githooks/pre-commit": {

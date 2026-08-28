@@ -2032,5 +2032,29 @@
     "seen": 1787891999.378709,
     "ast_hash": "949031b24516bec238731a9155b25b93",
     "semantic_hash": ""
+  },
+  "services/auth/migrations/000002_security.down.sql": {
+    "mtime": 1787842808.7230875,
+    "seen": 1787901919.3989701,
+    "ast_hash": "91b9561213b33253ae1ea945c5b272eb",
+    "semantic_hash": ""
+  },
+  "services/auth/migrations/000002_security.up.sql": {
+    "mtime": 1787842807.8649864,
+    "seen": 1787901919.3989718,
+    "ast_hash": "60aa86a4af15a99b0e9e1d3a11ae2d22",
+    "semantic_hash": ""
+  },
+  "services/users/migrations/000002_security.down.sql": {
+    "mtime": 1787842765.3629725,
+    "seen": 1787901919.3990126,
+    "ast_hash": "adc7c8da7787474fe861a480540e23df",
+    "semantic_hash": ""
+  },
+  "services/users/migrations/000002_security.up.sql": {
+    "mtime": 1787842764.5459127,
+    "seen": 1787901919.3990192,
+    "ast_hash": "776866ac545ed0858d3d2b8ab357490d",
+    "semantic_hash": ""
   }
 }
