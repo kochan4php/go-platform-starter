@@ -116,7 +116,10 @@ so the same images serve any deployment topology.
 flowchart LR
     SVC[every Go service<br/>/metrics + OTLP spans] --> PROM[Prometheus]
     SVC -- traces --> OTEL[otel-collector]
-    PROM --> GRAF[Grafana dashboards]
+    SVC -- JSON logs --> LOKI[Loki]
+    OTEL --> TEMPO[Tempo]
+    PROM --> ALERT[Alertmanager]
+    PROM & LOKI & TEMPO --> GRAF[Grafana dashboards]
 ```
 
 Trace IDs ride the `traceparent` header from the gateway through every hop and

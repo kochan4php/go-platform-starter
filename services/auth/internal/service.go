@@ -256,10 +256,18 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 	}
 	s.log.Info("user registered", "sub", strconv.FormatInt(u.ID, 10))
 	s.auditAuth(ctx, "register.succeeded", strconv.FormatInt(u.ID, 10), nil)
+	registrationsTotal.Inc()
 	return u, nil
 }
 
-func (s *Service) Login(ctx context.Context, email, password, userAgent, ip string, device ...string) (*AuthResult, error) {
+func (s *Service) Login(ctx context.Context, email, password, userAgent, ip string, device ...string) (result *AuthResult, resultErr error) {
+	defer func() {
+		outcome := "success"
+		if resultErr != nil {
+			outcome = "fail"
+		}
+		loginsTotal.WithLabelValues(outcome).Inc()
+	}()
 	email = lower(email)
 	if err := s.checkAccountRate(ctx, email); err != nil {
 		return nil, err
@@ -317,7 +325,7 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	}
 	_ = s.rdb.Del(ctx, s.failKey(email)).Err()
 
-	result, err := s.startSession(ctx, u, userAgent, ip, deviceID)
+	result, err = s.startSession(ctx, u, userAgent, ip, deviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -350,6 +358,7 @@ func (s *Service) recordFailedAttempt(ctx context.Context, u *User, ip, userAgen
 		}
 		s.rdb.Del(ctx, key)
 		s.log.Warn("account locked", "sub", u.ID)
+		lockoutsTotal.Inc()
 		s.enqueueSecurityMail(ctx, u.Email, "Account temporarily locked", "Too many failed sign-in attempts locked your account temporarily. If this was not you, reset your password.")
 		s.auditAuth(ctx, "login.locked", strconv.FormatInt(u.ID, 10), map[string]any{"ip": ip, "userAgent": userAgent})
 		return

@@ -14,10 +14,13 @@ import (
 // Extra middleware run before the standard stack; services mount their
 // business routes on the returned router.
 func NewRouter(log *slog.Logger, ready map[string]Checker, extra ...func(http.Handler) http.Handler) chi.Router {
+	InitErrorReporter(log)
 	r := chi.NewRouter()
+	r.Use(withBaseLogger(log))
 	for _, mw := range extra {
 		r.Use(mw)
 	}
+	r.Use(DebugRequest)
 	r.Use(Trace)
 	r.Use(Observe)
 	r.Use(CorrelationID)

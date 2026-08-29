@@ -17,6 +17,10 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -32,7 +36,7 @@ const (
 var (
 	jobsProcessed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{Name: "worker_jobs_processed_total"},
-		[]string{"stream", "event", "status"})
+		[]string{"stream", "handler", "status"})
 	streamLag = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{Name: "worker_stream_lag"},
 		[]string{"stream"})
@@ -190,13 +194,26 @@ func (c *Consumer) processMessages(ctx context.Context, stream string, messages 
 			if ctx.Err() != nil {
 				return
 			}
+			msgCtx := platform.ExtractTraceMap(ctx, msg.Values)
+			msgCtx, span := otel.Tracer("go-platform/worker").Start(msgCtx, "stream.process", trace.WithSpanKind(trace.SpanKindConsumer))
 			event, payload, decodeErr := platform.DecodeStreamMessage(stream, msg.Values)
 			if decodeErr != nil {
-				event = "invalid:" + decodeErr.Error()
+				event = "invalid"
+				span.RecordError(decodeErr)
 			}
-			if c.processWithDB(ctx, db, stream, msg.ID, payload, event) {
+			span.SetAttributes(
+				attribute.String("messaging.system", "redis"),
+				attribute.String("messaging.destination.name", stream),
+				attribute.String("messaging.message.id", msg.ID),
+				attribute.String("messaging.operation.name", event),
+			)
+			processed := c.processWithDB(msgCtx, db, stream, msg.ID, payload, event)
+			if processed {
 				acked = append(acked, msg.ID)
+			} else {
+				span.SetStatus(codes.Error, "message processing failed")
 			}
+			span.End()
 		}
 	}
 	if stream == "audit.events" {
@@ -211,6 +228,7 @@ func (c *Consumer) processMessages(ctx context.Context, stream string, messages 
 }
 
 func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, payload, event string) bool {
+	log := c.log.With("trace_id", platform.TraceIDFromContext(ctx), "message_id", id)
 	messageID := stream + ":" + id
 	var processed bool
 	if err := db.WithContext(ctx).Raw(`SELECT EXISTS (SELECT 1 FROM audit.processed_messages WHERE message_id = ?)`, messageID).Scan(&processed).Error; err == nil && processed {
@@ -235,13 +253,13 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 		if insertErr := db.WithContext(ctx).Exec(`INSERT INTO audit.processed_messages (message_id) VALUES (?) ON CONFLICT DO NOTHING`, messageID).Error; insertErr != nil {
 			err = fmt.Errorf("persist processing checkpoint: %w", insertErr)
 		} else {
-			jobsProcessed.WithLabelValues(stream, event, "ok").Inc()
+			jobsProcessed.WithLabelValues(stream, handlerName(stream, event), "ok").Inc()
 			return true
 		}
 	}
 
-	jobsProcessed.WithLabelValues(stream, event, "failed").Inc()
-	c.log.Warn("job failed",
+	jobsProcessed.WithLabelValues(stream, handlerName(stream, event), "failed").Inc()
+	log.WarnContext(ctx, "job failed",
 		"stream", stream, "id", id, "attempt", attempts, "err", err)
 
 	if attempts >= dlqMax {
@@ -250,10 +268,25 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 			MaxLen: c.dlqMaxDepth, Approx: true,
 			Values: map[string]any{"event": event, "payload": payload, "orig_id": id},
 		}).Err()
-		c.log.Error("job moved to DLQ", "stream", stream, "id", id)
+		log.ErrorContext(ctx, "job moved to DLQ", "stream", stream, "id", id)
 		return true
 	}
 	return false
+}
+
+func handlerName(stream, event string) string {
+	switch {
+	case stream == "mail.jobs" && event == "email.send":
+		return "email"
+	case stream == "audit.events" && event == "audit.entry":
+		return "audit"
+	case stream == "webhook.jobs" && event == "webhook.deliver":
+		return "webhook"
+	case event == "invalid":
+		return "invalid"
+	default:
+		return "unknown"
+	}
 }
 
 func (c *Consumer) handleWebhook(ctx context.Context, id, payload string) error {
@@ -389,15 +422,16 @@ func (c *Consumer) handleAuditWithDB(ctx context.Context, db *gorm.DB, event, ms
 }
 
 func FlushAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client) (int, error) {
-	var rows []struct{ ID, Stream, Event, Payload string }
+	var rows []struct{ ID, Stream, Event, Payload, Traceparent, Tracestate, Baggage string }
 	if err := db.WithContext(ctx).Raw(
-		`SELECT id, stream, event, payload::text AS payload FROM audit.event_outbox ORDER BY created_at LIMIT 100`,
+		`SELECT id, stream, event, payload::text AS payload, traceparent, tracestate, baggage FROM audit.event_outbox ORDER BY created_at LIMIT 100`,
 	).Scan(&rows).Error; err != nil {
 		return 0, err
 	}
 	flushed := 0
 	for _, row := range rows {
-		if err := platform.Publish(ctx, rdb, row.Stream, row.Event, json.RawMessage(row.Payload)); err != nil {
+		publishCtx := platform.ExtractTraceMap(ctx, map[string]any{"traceparent": row.Traceparent, "tracestate": row.Tracestate, "baggage": row.Baggage})
+		if err := platform.Publish(publishCtx, rdb, row.Stream, row.Event, json.RawMessage(row.Payload)); err != nil {
 			return flushed, err
 		}
 		if err := db.WithContext(ctx).Exec(`DELETE FROM audit.event_outbox WHERE id = ?`, row.ID).Error; err != nil {

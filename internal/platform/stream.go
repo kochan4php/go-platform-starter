@@ -24,6 +24,7 @@ func Publish(ctx context.Context, rdb *redis.Client, stream, event string, paylo
 	}
 	payloadText := string(raw)
 	values := map[string]any{"event": event, "v": 1}
+	InjectTraceMap(ctx, values)
 	if keyRing := strings.TrimSpace(os.Getenv("STREAM_ENCRYPTION_KEYS")); keyRing != "" {
 		payloadText, err = EncryptForSubject(ActiveSecret(keyRing), stream, event, payloadText)
 		if err != nil {

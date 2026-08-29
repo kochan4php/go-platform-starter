@@ -1,19 +1,36 @@
 pyroscope.scrape "platform" {
-  targets = [
-    {"__address__" = "gateway:6060", "service_name" = "gateway"},
-    {"__address__" = "auth:6060", "service_name" = "auth"},
-    {"__address__" = "users:6060", "service_name" = "users"},
-    {"__address__" = "rbac:6060", "service_name" = "rbac"},
-    {"__address__" = "worker:6060", "service_name" = "worker"},
-    {"__address__" = "realtime:6060", "service_name" = "realtime"},
-  ]
-  scrape_interval = "15s"
-  scrape_timeout  = "18s"
-  forward_to      = [pyroscope.write.local.receiver]
+	targets = [
+		{"__address__" = "gateway:6060", "service_name" = "gateway"},
+		{"__address__" = "auth:6060", "service_name" = "auth"},
+		{"__address__" = "users:6060", "service_name" = "users"},
+		{"__address__" = "rbac:6060", "service_name" = "rbac"},
+		{"__address__" = "worker:6060", "service_name" = "worker"},
+		{"__address__" = "realtime:6060", "service_name" = "realtime"},
+	]
+	scrape_interval = "15s"
+	scrape_timeout  = "18s"
+	forward_to      = [pyroscope.write.local.receiver]
 }
 
 pyroscope.write "local" {
-  endpoint {
-    url = "http://pyroscope:4040"
-  }
+	endpoint {
+		url = "http://pyroscope:4040"
+	}
+}
+
+discovery.docker "local" {
+	host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "platform" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.docker.local.targets
+	labels     = {"job" = "docker", "platform" = "go-platform"}
+	forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
 }

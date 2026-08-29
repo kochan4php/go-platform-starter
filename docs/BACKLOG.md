@@ -621,70 +621,70 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Observability
 
-- [ ] 🔧 H1. Trace context propagate ke worker processing
-- [ ] 🔧 H2. Span per stream message handling
-- [ ] 🔧 H3. OTel collector export ke Tempo/Jaeger UI
-- [ ] 🔧 H4. Trace sampling ratio config
-- [ ] 🔧 H5. Span attributes standar (user.id, route, method)
-- [ ] 🔧 H6. trace_id di semua log termasuk worker (lengkapkan)
-- [ ] 🔧 H7. Loki log aggregation + Grafana datasource
-- [ ] 🔧 H8. Log-based error rate metric
-- [ ] 🔧 H9. Prometheus alert rules (5xx, p95, session errors)
-- [ ] 🔧 H10. Alertmanager routing (Slack/Discord/Email)
-- [ ] 🔧 H11. Grafana dashboard per-service
-- [ ] 🔧 H12. Grafana SLO overview dashboard
-- [ ] 🔧 H13. Grafana variable templating
-- [ ] 🔧 H14. Grafana annotations dari deploy
-- [ ] 🔧 H15. Grafana viewer role provisioning
-- [ ] 🔧 H16. Metric registrations_total
-- [ ] 🔧 H17. Metric logins_total {success,fail}
-- [ ] 🔧 H18. Metric lockouts_total
-- [ ] 🔧 H19. Metric roles_changed_total
-- [ ] 🔧 H20. Metric permission_created_total
-- [ ] 🔧 H21. Metric db_query_duration per query
-- [ ] 🔧 H22. Metric external_call_duration (mail)
-- [ ] 🔧 H23. Gauge session_active count
-- [ ] 🔧 H24. Verify Go runtime metrics (goroutines/heap/GC)
-- [ ] 🔧 H25. Process metrics (fds, threads)
-- [ ] 🔧 H26. Build info metric (version/commit/date)
-- [ ] 🔧 H27. pprof expose + docs profiling
+- [x] 🔧 H1. Trace context propagate ke worker processing
+- [x] 🔧 H2. Span per stream message handling
+- [x] 🔧 H3. OTel collector export ke Tempo/Jaeger UI
+- [x] 🔧 H4. Trace sampling ratio config
+- [x] 🔧 H5. Span attributes standar (user.id, route, method)
+- [x] 🔧 H6. trace_id di semua log termasuk worker (lengkapkan)
+- [x] 🔧 H7. Loki log aggregation + Grafana datasource
+- [x] 🔧 H8. Log-based error rate metric
+- [x] 🔧 H9. Prometheus alert rules (5xx, p95, session errors)
+- [x] 🔧 H10. Alertmanager routing (Slack/Discord/Email)
+- [x] 🔧 H11. Grafana dashboard per-service
+- [x] 🔧 H12. Grafana SLO overview dashboard
+- [x] 🔧 H13. Grafana variable templating
+- [x] 🔧 H14. Grafana annotations dari deploy
+- [x] 🔧 H15. Grafana viewer role provisioning
+- [x] 🔧 H16. Metric registrations_total
+- [x] 🔧 H17. Metric logins_total {success,fail}
+- [x] 🔧 H18. Metric lockouts_total
+- [x] 🔧 H19. Metric roles_changed_total
+- [x] 🔧 H20. Metric permission_created_total
+- [x] 🔧 H21. Metric db_query_duration per query
+- [x] 🔧 H22. Metric external_call_duration (mail)
+- [x] 🔧 H23. Gauge session_active count
+- [x] 🔧 H24. Verify Go runtime metrics (goroutines/heap/GC)
+- [x] 🔧 H25. Process metrics (fds, threads)
+- [x] 🔧 H26. Build info metric (version/commit/date)
+- [x] 🔧 H27. pprof expose + docs profiling
 - [ ] 🧭 H28. Sentry release tracking + source map upload
 - [ ] 🧭 H29. Sentry FE performance tracing
 - [ ] 🧭 H30. Sentry session replay (optional)
-- [ ] 🔧 H31. Error code catalog + metric by code
-- [ ] 🔧 H32. Slow query threshold per-env + sample rate
-- [ ] 🔧 H33. Access log sampling high-traffic path
-- [ ] 🔧 H34. PII scrubbing log (email masking)
-- [ ] 🔧 H35. Log retention + collector rotation config
-- [ ] 🔧 H36. Synthetic monitoring blackbox login flow
-- [ ] 🔧 H37. External uptime monitoring docs
-- [ ] 🔧 H38. Status page generator dari health
-- [ ] 🔧 H39. Trace propagate ke realtime WS messages
-- [ ] 🔧 H40. Gateway span attributes upstream latency
-- [ ] 🔧 H41. FE Web Vitals collector → endpoint
-- [ ] 🔧 H42. FE error boundary → errorreporter
-- [ ] 🔧 H43. FE user action breadcrumbs
-- [ ] 🔧 H44. Alert threshold testing
-- [ ] 🔧 H45. On-call runbook per alert
-- [ ] 🔧 H46. Metric cardinality audit
-- [ ] 🔧 H47. OTel baggage propagation
-- [ ] 🔧 H48. Continuous profiling (Pyroscope)
-- [ ] 🔧 H49. pg_stat_statements + dashboard
-- [ ] 🔧 H50. Slow query alert
-- [ ] 🔧 H51. Redis latency monitoring + bigkey scan
-- [ ] 🔧 H52. Stream consumer lag dashboard
-- [ ] 🔧 H53. DLQ depth gauge + alert dashboard
-- [ ] 🔧 H54. Worker processed/failed rate per handler
-- [ ] 🔧 H55. Deploy webhook → Grafana annotation
-- [ ] 🔧 H56. Incident timeline template
-- [ ] 🔧 H57. Postmortem template + docs
-- [ ] 🔧 H58. Error budget policy doc
-- [ ] 🔧 H59. SLO availability + latency per service
-- [ ] 🔧 H60. SLO dashboard burn rate
-- [ ] 🔧 H61. Tail-based sampling slow requests only
-- [ ] 🔧 H62. FE kirim X-Request-ID ke backend
-- [ ] 🔧 H63. Debug log level per-request header
-- [ ] 🔧 H64. Observability docs: apa yang diukur
+- [x] 🔧 H31. Error code catalog + metric by code
+- [x] 🔧 H32. Slow query threshold per-env + sample rate
+- [x] 🔧 H33. Access log sampling high-traffic path
+- [x] 🔧 H34. PII scrubbing log (email masking)
+- [x] 🔧 H35. Log retention + collector rotation config
+- [x] 🔧 H36. Synthetic monitoring blackbox login flow
+- [x] 🔧 H37. External uptime monitoring docs
+- [x] 🔧 H38. Status page generator dari health
+- [x] 🔧 H39. Trace propagate ke realtime WS messages
+- [x] 🔧 H40. Gateway span attributes upstream latency
+- [x] 🔧 H41. FE Web Vitals collector → endpoint
+- [x] 🔧 H42. FE error boundary → errorreporter
+- [x] 🔧 H43. FE user action breadcrumbs
+- [x] 🔧 H44. Alert threshold testing
+- [x] 🔧 H45. On-call runbook per alert
+- [x] 🔧 H46. Metric cardinality audit
+- [x] 🔧 H47. OTel baggage propagation
+- [x] 🔧 H48. Continuous profiling (Pyroscope)
+- [x] 🔧 H49. pg_stat_statements + dashboard
+- [x] 🔧 H50. Slow query alert
+- [x] 🔧 H51. Redis latency monitoring + bigkey scan
+- [x] 🔧 H52. Stream consumer lag dashboard
+- [x] 🔧 H53. DLQ depth gauge + alert dashboard
+- [x] 🔧 H54. Worker processed/failed rate per handler
+- [x] 🔧 H55. Deploy webhook → Grafana annotation
+- [x] 🔧 H56. Incident timeline template
+- [x] 🔧 H57. Postmortem template + docs
+- [x] 🔧 H58. Error budget policy doc
+- [x] 🔧 H59. SLO availability + latency per service
+- [x] 🔧 H60. SLO dashboard burn rate
+- [x] 🔧 H61. Tail-based sampling slow requests only
+- [x] 🔧 H62. FE kirim X-Request-ID ke backend
+- [x] 🔧 H63. Debug log level per-request header
+- [x] 🔧 H64. Observability docs: apa yang diukur
 
 ---
 

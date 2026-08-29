@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
 
 type Client struct {
@@ -23,6 +25,7 @@ type Client struct {
 }
 
 func (c *Client) Send(ctx context.Context, msg map[string]any) {
+	platform.InjectTraceMap(ctx, msg)
 	raw, err := jsonMarshal(msg)
 	if err != nil {
 		return

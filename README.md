@@ -224,7 +224,7 @@ local projects often claim 5432/6379/8000 — override with `LAB_PG_PORT`,
 Observability on top:
 
 ```bash
-docker compose -f infra/compose.observability.yml --profile obs up
+docker compose -f infra/compose.base.yml -f infra/compose.observability.yml up -d
 # Grafana http://127.0.0.1:3000 · Prometheus http://127.0.0.1:9090 · OTLP :4318
 ```
 

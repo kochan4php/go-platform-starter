@@ -67,7 +67,7 @@ components directly or attach profilers.
 Observability on top of either environment:
 
 ```bash
-docker compose -f infra/compose.observability.yml --profile obs up
+docker compose -f infra/compose.base.yml -f infra/compose.observability.yml up -d
 # Grafana http://127.0.0.1:3000 · Prometheus http://127.0.0.1:9090
 ```
 

@@ -37,6 +37,11 @@ jobs:
       - name: Validate YAML manifests
         run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
 
+      - name: Validate Prometheus config and alert thresholds
+        run: |
+          docker run --rm -v "$PWD/infra/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:latest check config /etc/prometheus/prometheus.yml
+          docker run --rm -v "$PWD/infra/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:latest test rules /etc/prometheus/alerts.test.yml
+
       - name: Test (container tests included; Docker is available on runners)
         run: make test
 

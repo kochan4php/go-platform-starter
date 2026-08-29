@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +47,7 @@ func (l *GormLogger) Error(_ context.Context, format string, a ...any) {
 	l.Log.Error(fmt.Sprintf(format, a...))
 }
 
-func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	dbQueryDuration.WithLabelValues(queryOperation(sql)).Observe(elapsed.Seconds())
@@ -52,12 +55,22 @@ func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string
 
 	switch {
 	case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
-		log.Error("query failed", "err", err, "sql", sql)
+		log.ErrorContext(ctx, "query failed", "err", err, "sql", sql)
 	case l.SlowThreshold > 0 && elapsed > l.SlowThreshold:
-		log.Warn("slow query", "threshold_ms", l.SlowThreshold.Milliseconds(), "sql", sql)
+		if slowQuerySampled() {
+			log.WarnContext(ctx, "slow query", "threshold_ms", l.SlowThreshold.Milliseconds(), "sql", sql)
+		}
 	default:
-		log.Debug("query", "sql", sql)
+		log.DebugContext(ctx, "query", "sql", sql)
 	}
+}
+
+func slowQuerySampled() bool {
+	ratio, err := strconv.ParseFloat(os.Getenv("SLOW_QUERY_SAMPLE_RATE"), 64)
+	if err != nil {
+		ratio = 1
+	}
+	return ratio >= 1 || (ratio > 0 && rand.Float64() < ratio)
 }
 
 // queryOperation intentionally keeps cardinality bounded. SQL text, table

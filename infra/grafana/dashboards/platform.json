@@ -5,6 +5,45 @@
 	"schemaVersion": 39,
 	"refresh": "10s",
 	"time": { "from": "now-30m", "to": "now" },
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": { "type": "grafana", "uid": "-- Grafana --" },
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			},
+			{
+				"datasource": { "type": "grafana", "uid": "-- Grafana --" },
+				"enable": true,
+				"iconColor": "orange",
+				"name": "Deployments",
+				"tags": ["deploy"],
+				"type": "dashboard"
+			}
+		]
+	},
+	"templating": {
+		"list": [
+			{
+				"name": "service",
+				"label": "Service",
+				"type": "query",
+				"datasource": { "type": "prometheus", "uid": "prometheus" },
+				"query": {
+					"query": "label_values(up{job=\"platform-services\"}, instance)",
+					"refId": "service"
+				},
+				"includeAll": true,
+				"allValue": ".*",
+				"refresh": 1,
+				"current": { "text": "All", "value": "$__all" }
+			}
+		]
+	},
 	"panels": [
 		{
 			"id": 1,
@@ -14,7 +53,7 @@
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "sum by (instance, status) (rate(http_requests_total[1m]))",
+					"expr": "sum by (instance, status) (rate(http_requests_total{instance=~\"$service\"}[1m]))",
 					"legendFormat": "{{instance}} {{status}}"
 				}
 			]
@@ -27,7 +66,7 @@
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "histogram_quantile(0.95, sum by (instance, route, le) (rate(http_request_duration_seconds_bucket[5m])))",
+					"expr": "histogram_quantile(0.95, sum by (instance, route, le) (rate(http_request_duration_seconds_bucket{instance=~\"$service\"}[5m])))",
 					"legendFormat": "{{instance}} {{route}}"
 				}
 			]
@@ -40,7 +79,7 @@
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
+					"expr": "sum(rate(http_requests_total{instance=~\"$service\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total{instance=~\"$service\"}[5m])), 0.001)",
 					"legendFormat": "5xx"
 				}
 			]
@@ -51,7 +90,12 @@
 			"title": "Worker stream lag (jobs waiting)",
 			"gridPos": { "x": 6, "y": 8, "w": 9, "h": 6 },
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
-			"targets": [{ "expr": "worker_stream_lag", "legendFormat": "{{stream}}" }]
+			"targets": [
+				{
+					"expr": "worker_stream_lag{instance=~\"$service\"}",
+					"legendFormat": "{{stream}}"
+				}
+			]
 		},
 		{
 			"id": 5,
@@ -59,7 +103,12 @@
 			"title": "Realtime connections",
 			"gridPos": { "x": 15, "y": 8, "w": 4, "h": 3 },
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
-			"targets": [{ "expr": "realtime_connections", "legendFormat": "conns" }]
+			"targets": [
+				{
+					"expr": "realtime_connections{instance=~\"$service\"}",
+					"legendFormat": "conns"
+				}
+			]
 		},
 		{
 			"id": 6,
@@ -69,8 +118,8 @@
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "sum by (stream, status) (rate(worker_jobs_processed_total[5m]))",
-					"legendFormat": "{{stream}} {{status}}"
+					"expr": "sum by (stream, handler, status) (rate(worker_jobs_processed_total{instance=~\"$service\"}[5m]))",
+					"legendFormat": "{{stream}} {{handler}} {{status}}"
 				}
 			]
 		},
@@ -82,7 +131,7 @@
 			"datasource": { "type": "prometheus", "uid": "prometheus" },
 			"targets": [
 				{
-					"expr": "histogram_quantile(0.95, sum by (instance, query_name, le) (rate(db_query_duration_seconds_bucket[5m])))",
+					"expr": "histogram_quantile(0.95, sum by (instance, query_name, le) (rate(db_query_duration_seconds_bucket{instance=~\"$service\"}[5m])))",
 					"legendFormat": "{{instance}} {{query_name}}"
 				}
 			]
@@ -110,6 +159,109 @@
 				{
 					"expr": "sum(rate(pg_stat_database_blks_hit[5m])) / clamp_min(sum(rate(pg_stat_database_blks_hit[5m]) + rate(pg_stat_database_blks_read[5m])), 1)",
 					"legendFormat": "hit ratio"
+				}
+			]
+		},
+		{
+			"id": 10,
+			"type": "timeseries",
+			"title": "Runtime: goroutines and heap",
+			"gridPos": { "x": 0, "y": 21, "w": 12, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "go_goroutines{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} goroutines"
+				},
+				{
+					"expr": "go_memstats_heap_alloc_bytes{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} heap"
+				}
+			]
+		},
+		{
+			"id": 11,
+			"type": "timeseries",
+			"title": "Process FDs and threads",
+			"gridPos": { "x": 12, "y": 21, "w": 12, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "process_open_fds{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} fds"
+				},
+				{
+					"expr": "go_threads{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} threads"
+				}
+			]
+		},
+		{
+			"id": 12,
+			"type": "timeseries",
+			"title": "Auth registrations, logins, and lockouts",
+			"gridPos": { "x": 0, "y": 28, "w": 12, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "rate(registrations_total[5m])",
+					"legendFormat": "registrations"
+				},
+				{
+					"expr": "sum by (result) (rate(logins_total[5m]))",
+					"legendFormat": "login {{result}}"
+				},
+				{ "expr": "rate(lockouts_total[5m])", "legendFormat": "lockouts" },
+				{ "expr": "session_active", "legendFormat": "active sessions" }
+			]
+		},
+		{
+			"id": 13,
+			"type": "timeseries",
+			"title": "Worker lag and DLQ depth",
+			"gridPos": { "x": 12, "y": 28, "w": 12, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{ "expr": "worker_stream_lag", "legendFormat": "{{stream}} lag" },
+				{ "expr": "worker_dlq_depth", "legendFormat": "{{stream}} dlq" }
+			]
+		},
+		{
+			"id": 14,
+			"type": "timeseries",
+			"title": "Redis latency",
+			"gridPos": { "x": 0, "y": 35, "w": 8, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "rate(redis_commands_duration_seconds_total[5m]) / clamp_min(rate(redis_commands_processed_total[5m]), 1)",
+					"legendFormat": "avg"
+				}
+			]
+		},
+		{
+			"id": 15,
+			"type": "timeseries",
+			"title": "pg_stat_statements calls",
+			"gridPos": { "x": 8, "y": 35, "w": 8, "h": 7 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "rate(pg_stat_statements_calls[5m])",
+					"legendFormat": "query {{queryid}}"
+				}
+			]
+		},
+		{
+			"id": 16,
+			"type": "logs",
+			"title": "Correlated service logs",
+			"gridPos": { "x": 16, "y": 35, "w": 8, "h": 7 },
+			"datasource": { "type": "loki", "uid": "loki" },
+			"targets": [
+				{
+					"expr": "{platform=\"go-platform\"} | json | service=~\"$service\"",
+					"refId": "A"
 				}
 			]
 		}

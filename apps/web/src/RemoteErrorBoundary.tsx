@@ -1,4 +1,5 @@
-import { Component, type ReactNode } from "react";
+import { reportFrontendError } from "@starter/contracts";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useCopy, useToast } from "./lib/ui";
 
 interface Props {
@@ -14,6 +15,10 @@ export class RemoteErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error) {
     return { error };
+  }
+
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    reportFrontendError(error, "boundary");
   }
 
   componentDidUpdate(prev: Props) {

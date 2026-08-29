@@ -1,0 +1,135 @@
+{
+	"title": "Platform / SLO overview",
+	"uid": "platform-slo",
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"refresh": "30s",
+	"time": { "from": "now-30d", "to": "now" },
+	"templating": {
+		"list": [
+			{
+				"name": "service",
+				"label": "Service",
+				"type": "query",
+				"datasource": { "type": "prometheus", "uid": "prometheus" },
+				"query": {
+					"query": "label_values(service:slo_availability:ratio30d, instance)",
+					"refId": "service"
+				},
+				"includeAll": true,
+				"allValue": ".*",
+				"refresh": 1
+			}
+		]
+	},
+	"annotations": {
+		"list": [
+			{
+				"datasource": { "type": "grafana", "uid": "-- Grafana --" },
+				"enable": true,
+				"iconColor": "orange",
+				"name": "Deployments",
+				"tags": ["deploy"],
+				"type": "dashboard"
+			}
+		]
+	},
+	"panels": [
+		{
+			"id": 1,
+			"type": "stat",
+			"title": "30-day availability",
+			"gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "red", "value": null },
+							{ "color": "green", "value": 0.999 }
+						]
+					}
+				}
+			},
+			"targets": [
+				{
+					"expr": "service:slo_availability:ratio30d{instance=~\"$service\"}",
+					"legendFormat": "{{instance}}"
+				}
+			]
+		},
+		{
+			"id": 2,
+			"type": "stat",
+			"title": "Error budget remaining",
+			"gridPos": { "x": 8, "y": 0, "w": 8, "h": 6 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"fieldConfig": { "defaults": { "unit": "percentunit" } },
+			"targets": [
+				{
+					"expr": "service:slo_error_budget:remaining30d{instance=~\"$service\"}",
+					"legendFormat": "{{instance}}"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "stat",
+			"title": "p95 latency",
+			"gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"fieldConfig": { "defaults": { "unit": "s" } },
+			"targets": [
+				{
+					"expr": "service:http_latency:p95_5m{instance=~\"$service\"}",
+					"legendFormat": "{{instance}}"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "timeseries",
+			"title": "Error-budget burn rate (1h)",
+			"gridPos": { "x": 0, "y": 6, "w": 24, "h": 9 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"fieldConfig": {
+				"defaults": {
+					"custom": { "drawStyle": "line" },
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "orange", "value": 6 },
+							{ "color": "red", "value": 14.4 }
+						]
+					}
+				}
+			},
+			"targets": [
+				{
+					"expr": "service:slo_burn_rate:ratio1h{instance=~\"$service\"}",
+					"legendFormat": "{{instance}}"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "timeseries",
+			"title": "Request and error rate",
+			"gridPos": { "x": 0, "y": 15, "w": 24, "h": 9 },
+			"datasource": { "type": "prometheus", "uid": "prometheus" },
+			"targets": [
+				{
+					"expr": "service:http_requests:rate5m{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} requests"
+				},
+				{
+					"expr": "service:http_errors:ratio5m{instance=~\"$service\"}",
+					"legendFormat": "{{instance}} errors"
+				}
+			]
+		}
+	]
+}

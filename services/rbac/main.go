@@ -21,13 +21,14 @@ import (
 var specFS embed.FS
 
 type config struct {
-	Port           string `env:"PORT" envDefault:"8080"`
-	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
-	DatabaseURL    string `env:"DATABASE_URL,required"`
-	RedisAddr      string `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
-	RedisUsername  string `env:"REDIS_USERNAME" envDefault:""`
-	RedisPassword  string `env:"REDIS_PASSWORD" envDefault:""`
-	InternalSecret string `env:"INTERNAL_SECRET,required"`
+	Port               string        `env:"PORT" envDefault:"8080"`
+	LogLevel           string        `env:"LOG_LEVEL" envDefault:"info"`
+	DatabaseURL        string        `env:"DATABASE_URL,required"`
+	RedisAddr          string        `env:"REDIS_ADDR" envDefault:"127.0.0.1:6379"`
+	RedisUsername      string        `env:"REDIS_USERNAME" envDefault:""`
+	RedisPassword      string        `env:"REDIS_PASSWORD" envDefault:""`
+	InternalSecret     string        `env:"INTERNAL_SECRET,required"`
+	SlowQueryThreshold time.Duration `env:"SLOW_QUERY_THRESHOLD" envDefault:"500ms"`
 }
 
 func main() {
@@ -53,7 +54,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, 500*time.Millisecond)
+	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, cfg.SlowQueryThreshold)
 	if err != nil {
 		log.Error("connect db failed", "err", err)
 		os.Exit(1)

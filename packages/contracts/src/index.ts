@@ -12,6 +12,7 @@ import type { paths } from "./gen";
  */
 const KEY = "__starterAccessToken";
 const DEVICE_KEY = "starter:device-id";
+let lastRequestID = "";
 
 type GlobalWithToken = typeof globalThis & { [KEY]?: string };
 
@@ -30,6 +31,13 @@ export function getDeviceID(): string {
   const created = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   window.localStorage.setItem(DEVICE_KEY, created);
   return created;
+}
+
+function requestID(): string {
+  const bytes = new Uint8Array(12);
+  globalThis.crypto?.getRandomValues?.(bytes);
+  const value = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return value === "000000000000000000000000" ? Date.now().toString(16).padEnd(24, "0").slice(0, 24) : value;
 }
 
 export interface TokenClaims {
@@ -119,10 +127,12 @@ refreshChannel?.addEventListener("message", (event: MessageEvent<{ type: string;
 });
 
 async function refreshRequest(baseUrl: string): Promise<string | undefined> {
+  const correlationID = requestID();
+  lastRequestID = correlationID;
   const res = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
     method: "POST",
     credentials: "include",
-    headers: { "X-Device-ID": getDeviceID() },
+    headers: { "X-Device-ID": getDeviceID(), "X-Request-ID": correlationID },
   });
   if (!res.ok) return undefined;
   const body = (await res.json()) as { data?: { accessToken?: string } };
@@ -163,6 +173,8 @@ export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
       const token = getAccessToken();
       if (token) request.headers.set("Authorization", `Bearer ${token}`);
       request.headers.set("X-Device-ID", getDeviceID());
+      if (!request.headers.has("X-Request-ID")) request.headers.set("X-Request-ID", requestID());
+      lastRequestID = request.headers.get("X-Request-ID") ?? "";
       return request;
     },
     async onResponse({ request, response }) {
@@ -184,4 +196,65 @@ export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
   });
 
   return client as unknown as ApiClient;
+}
+
+interface Breadcrumb {
+  type: "click" | "submit" | "navigation";
+  target: string;
+  at: number;
+}
+
+const breadcrumbs: Breadcrumb[] = [];
+
+function addBreadcrumb(type: Breadcrumb["type"], target: string) {
+  breadcrumbs.push({ type, target: target.slice(0, 160), at: Date.now() });
+  if (breadcrumbs.length > 20) breadcrumbs.shift();
+}
+
+function telemetryTarget(target: EventTarget | null): string {
+  if (!(target instanceof Element)) return "unknown";
+  return (
+    target.closest<HTMLElement>("[data-telemetry]")?.dataset.telemetry ??
+    target.closest<HTMLElement>("[aria-label]")?.getAttribute("aria-label") ??
+    target.closest<HTMLElement>("[id]")?.id ??
+    target.tagName.toLowerCase()
+  );
+}
+
+export function reportFrontendError(
+  error: unknown,
+  kind: "boundary" | "unhandled" | "promise" = "unhandled",
+) {
+  const normalized = error instanceof Error ? error : new Error(String(error));
+  const body = JSON.stringify({
+    kind,
+    message: normalized.message.slice(0, 1000),
+    stack: normalized.stack?.slice(0, 32_768) ?? "",
+    route: typeof location === "undefined" ? "" : location.pathname,
+    requestId: lastRequestID,
+    breadcrumbs,
+  });
+  const url = `${GATEWAY_URL}/telemetry/errors`;
+  if (!navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }))) {
+    void fetch(url, {
+      method: "POST",
+      body,
+      headers: { "Content-Type": "application/json", "X-Request-ID": requestID() },
+      keepalive: true,
+    });
+  }
+}
+
+export function observeUserActions() {
+  addEventListener("click", (event) => addBreadcrumb("click", telemetryTarget(event.target)), {
+    capture: true,
+    passive: true,
+  });
+  addEventListener("submit", (event) => addBreadcrumb("submit", telemetryTarget(event.target)), {
+    capture: true,
+    passive: true,
+  });
+  addEventListener("popstate", () => addBreadcrumb("navigation", location.pathname));
+  addEventListener("error", (event) => reportFrontendError(event.error ?? event.message, "unhandled"));
+  addEventListener("unhandledrejection", (event) => reportFrontendError(event.reason, "promise"));
 }

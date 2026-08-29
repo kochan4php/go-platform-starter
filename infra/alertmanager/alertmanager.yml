@@ -1,0 +1,38 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: mailpit:1025
+  smtp_from: alertmanager@platform.local
+  smtp_require_tls: false
+
+route:
+  receiver: email
+  group_by: [alertname, instance]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity="critical"]
+      receiver: critical
+    - matchers: [source="frontend"]
+      receiver: frontend
+
+receivers:
+  - name: email
+    email_configs:
+      - to: oncall@platform.local
+        send_resolved: true
+  - name: critical
+    # Replace through the environment-specific secret deployment process.
+    slack_configs:
+      - api_url: https://hooks.slack.com/services/replace/with/secret
+        send_resolved: true
+    email_configs:
+      - to: oncall@platform.local
+        send_resolved: true
+  - name: frontend
+    discord_configs:
+      - webhook_url: https://discord.com/api/webhooks/replace/with-secret
+        send_resolved: true
+    email_configs:
+      - to: oncall@platform.local
+        send_resolved: true

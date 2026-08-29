@@ -77,6 +77,7 @@ func main() {
 	}
 	redisCancel()
 	limiter := redis_rate.NewLimiter(rdb)
+	trustedProxies := parsePrefixes(cfg.TrustedProxyCIDRs)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"redis": func(ctx context.Context) error { return rdb.Ping(ctx).Err() },
@@ -95,7 +96,9 @@ func main() {
 		w.Header().Set("Content-Type", "application/yaml")
 		_, _ = w.Write(raw)
 	})
-	router.Post("/telemetry/vitals", internal.WebVitals)
+	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies)).Post("/telemetry/vitals", internal.WebVitals)
+	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies)).Post("/telemetry/errors", internal.FrontendErrors(log))
+	router.Get("/status", internal.StatusPage(upstreams))
 
 	// WebSocket passthrough to the realtime service (PLAN item 41/47): the
 	// upgrade request cannot be a registry route, so it gets its own proxy.
@@ -113,7 +116,6 @@ func main() {
 		router.Get("/ws", wsProxy.ServeHTTP)
 	}
 
-	trustedProxies := parsePrefixes(cfg.TrustedProxyCIDRs)
 	router.Group(func(api chi.Router) {
 		api.Use(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies))
 		api.Use(routeBodyGuard(cfg.Matcher()))

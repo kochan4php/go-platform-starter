@@ -6,3 +6,33 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherRegex: '"trace_id":"([a-f0-9]{32})"'
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1m
+        spanEndTimeShift: 1m
+        filterByTraceID: true
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph: { enabled: true }
+  - name: Pyroscope
+    type: grafana-pyroscope-datasource
+    uid: pyroscope
+    access: proxy
+    url: http://pyroscope:4040

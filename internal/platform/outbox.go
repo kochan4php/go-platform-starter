@@ -26,9 +26,15 @@ func PublishWithAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client,
 	if audit, ok := payload.(AuditEvent); ok && audit.ID != "" {
 		id = audit.ID
 	}
+	traceValues := map[string]any{}
+	InjectTraceMap(ctx, traceValues)
+	traceparent, _ := traceValues["traceparent"].(string)
+	tracestate, _ := traceValues["tracestate"].(string)
+	baggage, _ := traceValues["baggage"].(string)
 	if err := db.WithContext(ctx).Exec(
-		`INSERT INTO audit.event_outbox (id, stream, event, payload) VALUES (?, ?, ?, ?::jsonb) ON CONFLICT (id) DO NOTHING`,
-		id, stream, event, string(raw)).Error; err != nil {
+		`INSERT INTO audit.event_outbox (id, stream, event, payload, traceparent, tracestate, baggage)
+		 VALUES (?, ?, ?, ?::jsonb, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
+		id, stream, event, string(raw), traceparent, tracestate, baggage).Error; err != nil {
 		if publishErr := Publish(ctx, rdb, stream, event, json.RawMessage(raw)); publishErr == nil {
 			return nil
 		}

@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
@@ -58,17 +61,24 @@ func ConsumeUserEvents(ctx context.Context, rdb *redis.Client, db *gorm.DB, log 
 
 		for _, s := range res {
 			for _, msg := range s.Messages {
+				msgCtx := platform.ExtractTraceMap(ctx, msg.Values)
+				msgCtx, span := otel.Tracer("go-platform/users").Start(msgCtx, "stream.process", trace.WithSpanKind(trace.SpanKindConsumer))
 				event, payload, decodeErr := platform.DecodeStreamMessage(stream, msg.Values)
+				span.SetAttributes(attribute.String("messaging.destination.name", stream), attribute.String("messaging.message.id", msg.ID), attribute.String("messaging.operation.name", event))
+				msgLog := log.With("trace_id", platform.TraceIDFromContext(msgCtx), "message_id", msg.ID)
 				if decodeErr != nil {
-					log.Warn("invalid user event ignored", "err", decodeErr)
+					span.RecordError(decodeErr)
+					msgLog.WarnContext(msgCtx, "invalid user event ignored", "err", decodeErr)
 					_ = rdb.XAdd(ctx, &redis.XAddArgs{Stream: stream + ":dlq", Values: map[string]any{
 						"reason": decodeErr.Error(), "orig_id": msg.ID,
 					}, MaxLen: 10_000, Approx: true}).Err()
 					rdb.XAck(ctx, stream, group, msg.ID)
+					span.End()
 					continue
 				}
-				handleEvent(ctx, db, log, event, payload)
+				handleEvent(msgCtx, db, msgLog, event, payload)
 				rdb.XAck(ctx, stream, group, msg.ID)
+				span.End()
 			}
 		}
 		if ctx.Err() != nil {

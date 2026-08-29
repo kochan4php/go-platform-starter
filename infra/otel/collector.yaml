@@ -4,12 +4,34 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 384
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 50000
+    expected_new_traces_per_sec: 100
+    policies:
+      - name: errors
+        type: status_code
+        status_code: { status_codes: [ERROR] }
+      - name: slow-requests
+        type: latency
+        latency: { threshold_ms: 500 }
+      - name: baseline
+        type: probabilistic
+        probabilistic: { sampling_percentage: 10 }
+  batch:
+    timeout: 2s
+
 exporters:
-  debug:
-    verbosity: basic
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [debug]
+      processors: [memory_limiter, tail_sampling, batch]
+      exporters: [otlphttp/tempo]

@@ -32,6 +32,7 @@ x-go-env: &go-env
   LOG_LEVEL: ${LOG_LEVEL:-info}
   APP_VERSION: ${APP_VERSION:-dev}
   GIT_COMMIT: ${GIT_COMMIT:-unknown}
+  BUILD_DATE: ${BUILD_DATE:-unknown}
   GOMEMLIMIT: ${GOMEMLIMIT:-200MiB}
   GOGC: ${GOGC:-100}
   DB_PREPARE_STMT: ${DB_PREPARE_STMT:-true}
@@ -44,6 +45,11 @@ x-go-env: &go-env
   DB_IDLE_TX_TIMEOUT: ${DB_IDLE_TX_TIMEOUT:-30s}
   STREAM_MAXLEN: ${STREAM_MAXLEN:-100000}
   SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-20s}
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  OTEL_TRACE_SAMPLE_RATIO: ${OTEL_TRACE_SAMPLE_RATIO:-1}
+  SLOW_QUERY_SAMPLE_RATE: ${SLOW_QUERY_SAMPLE_RATE:-1}
+  ACCESS_LOG_SAMPLE_RATE: ${ACCESS_LOG_SAMPLE_RATE:-0.1}
+  DEBUG_REQUEST_TOKEN: ${DEBUG_REQUEST_TOKEN:-}
 
 services:
   postgres:
@@ -55,6 +61,7 @@ services:
       POSTGRES_DB: app
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres/observability.sql:/docker-entrypoint-initdb.d/20-observability.sql:ro
     command:
       - postgres
       - -c
@@ -63,6 +70,10 @@ services:
       - work_mem=${PG_WORK_MEM:-8MB}
       - -c
       - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-64MB}
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app"]
       interval: 5s
@@ -82,6 +93,7 @@ services:
       REDIS_GATEWAY_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
       REDIS_DLQ_ADMIN_PASSWORD: ${REDIS_DLQ_ADMIN_PASSWORD:?set REDIS_DLQ_ADMIN_PASSWORD}
       REDIS_BACKUP_PASSWORD: ${REDIS_BACKUP_PASSWORD:?set REDIS_BACKUP_PASSWORD}
+      REDIS_OBSERVER_PASSWORD: ${REDIS_OBSERVER_PASSWORD:?set REDIS_OBSERVER_PASSWORD}
     command:
       - /bin/sh
       - -ec
@@ -97,6 +109,7 @@ services:
           "user gateway on >$$REDIS_GATEWAY_PASSWORD resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping" \
           "user dlq-admin on >$$REDIS_DLQ_ADMIN_PASSWORD resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping" \
           "user backup on >$$REDIS_BACKUP_PASSWORD resetkeys resetchannels ~* +sync +psync +replconf +ping" \
+          "user observer on >$$REDIS_OBSERVER_PASSWORD resetkeys resetchannels ~* +info +slowlog +latency +scan +dbsize +memory +ping" \
           > /data/users.acl
         exec redis-server --appendonly yes --aclfile /data/users.acl --io-threads 4 --io-threads-do-reads yes --lazyfree-lazy-eviction yes --lazyfree-lazy-expire yes
     healthcheck:

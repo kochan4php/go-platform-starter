@@ -3,6 +3,11 @@ global:
 
 rule_files: [/etc/prometheus/alerts.yml]
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
 scrape_configs:
   - job_name: platform-services
     static_configs:
@@ -24,12 +29,26 @@ scrape_configs:
     static_configs:
       - targets: [node-exporter:9100]
 
+  - job_name: redis
+    static_configs:
+      - targets: [redis-exporter:9121]
+
   - job_name: certificate
     metrics_path: /probe
     params: { module: [https_2xx] }
     static_configs:
       # Replace with the deployment's public health URL.
       - targets: ["https://example.com/healthz"]
+    relabel_configs:
+      - { source_labels: [__address__], target_label: __param_target }
+      - { source_labels: [__param_target], target_label: instance }
+      - { target_label: __address__, replacement: "blackbox-exporter:9115" }
+
+  - job_name: synthetic-login
+    metrics_path: /probe
+    params: { module: [login_http_2xx] }
+    static_configs:
+      - targets: ["http://gateway:8000/api/v1/auth/login"]
     relabel_configs:
       - { source_labels: [__address__], target_label: __param_target }
       - { source_labels: [__param_target], target_label: instance }

@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
@@ -84,35 +87,46 @@ func (h *Handlers) serve(reqCtx context.Context, c *Client) {
 			return
 		}
 		var msg struct {
-			Type string `json:"type"`
-			Room string `json:"room"`
-			Text string `json:"text"`
+			Type        string `json:"type"`
+			Room        string `json:"room"`
+			Text        string `json:"text"`
+			Traceparent string `json:"traceparent"`
+			Tracestate  string `json:"tracestate"`
+			Baggage     string `json:"baggage"`
 		}
 		if json.Unmarshal(raw, &msg) != nil || msg.Type == "" {
 			h.Log.Warn("malformed frame", "raw", string(raw))
 			c.Send(ctx, map[string]any{"type": "error", "reason": "malformed message"})
 			continue
 		}
+		msgCtx := platform.ExtractTraceMap(ctx, map[string]any{
+			"traceparent": msg.Traceparent, "tracestate": msg.Tracestate, "baggage": msg.Baggage,
+		})
+		msgCtx, span := otel.Tracer("go-platform/realtime").Start(msgCtx, "websocket.message", trace.WithSpanKind(trace.SpanKindConsumer))
+		span.SetAttributes(attribute.String("messaging.system", "websocket"), attribute.String("messaging.operation.name", msg.Type), attribute.String("messaging.destination.name", msg.Room), attribute.String("user.id", c.Sub))
 
 		switch msg.Type {
 		case "room:join":
-			if err := h.Join(ctx, c, msg.Room); err != nil {
-				c.Send(ctx, map[string]any{"type": "error", "reason": err.Error()})
+			if err := h.Join(msgCtx, c, msg.Room); err != nil {
+				span.RecordError(err)
+				c.Send(msgCtx, map[string]any{"type": "error", "reason": err.Error()})
 			}
 		case "room:leave":
-			h.Leave(ctx, c, msg.Room)
+			h.Leave(msgCtx, c, msg.Room)
 		case "message:send":
 			if !c.InRoom(msg.Room) {
-				c.Send(ctx, map[string]any{"type": "error", "reason": "join the room first"})
+				c.Send(msgCtx, map[string]any{"type": "error", "reason": "join the room first"})
+				span.End()
 				continue
 			}
-			h.Broadcast(ctx, msg.Room, map[string]any{
+			h.Broadcast(msgCtx, msg.Room, map[string]any{
 				"type": "message", "room": msg.Room,
 				"from": c.Sub, "text": msg.Text, "ts": time.Now().UnixMilli(),
 			}, nil)
 		default:
-			c.Send(ctx, map[string]any{"type": "error", "reason": "unknown type"})
+			c.Send(msgCtx, map[string]any{"type": "error", "reason": "unknown type"})
 		}
+		span.End()
 		if ctx.Err() != nil {
 			return
 		}

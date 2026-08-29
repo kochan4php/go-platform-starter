@@ -28,5 +28,6 @@ func OK(w http.ResponseWriter, status int, message string, data any) {
 }
 
 func Fail(w http.ResponseWriter, status int, message, errDetail string) {
+	recordAPIError(message, status)
 	WriteJSON(w, status, failEnvelope{Success: false, Message: message, Error: errDetail})
 }

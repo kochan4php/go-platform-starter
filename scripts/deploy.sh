@@ -116,6 +116,10 @@ ensure_docker() {
 }
 ensure_docker
 
+export GIT_COMMIT="${GIT_COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+export APP_VERSION="${APP_VERSION:-$GIT_COMMIT}"
+export BUILD_DATE="${BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+
 # --- 2. repo --------------------------------------------------------------------
 if [ "$SKIP_PULL" = "0" ] && [ -d .git ]; then
   log "updating repository ($BRANCH)"
@@ -130,6 +134,7 @@ if [[ "$TARGET" != "lab" ]]; then
   if [ ! -f "$ENV_FILE" ]; then
     log "creating $ENV_FILE with generated secrets"
     [ -n "${DOMAIN:-}" ] || die "first run: set DOMAIN, e.g.  sudo DOMAIN=$TARGET.example.com ./scripts/deploy.sh $TARGET"
+    REDIS_OBSERVER_GENERATED="$(rand_hex)"
     cat > "$ENV_FILE" <<EOF
 STACK_ENV=$TARGET
 DOMAIN=${DOMAIN}
@@ -151,6 +156,11 @@ REDIS_REALTIME_PASSWORD=$(rand_hex)
 REDIS_GATEWAY_PASSWORD=$(rand_hex)
 REDIS_DLQ_ADMIN_PASSWORD=$(rand_hex)
 REDIS_BACKUP_PASSWORD=$(rand_hex)
+REDIS_OBSERVER_PASSWORD=$REDIS_OBSERVER_GENERATED
+DEBUG_REQUEST_TOKEN=$(rand_hex)
+GRAFANA_ADMIN_PASSWORD=$(rand_hex)
+REDIS_EXPORTER_USER=observer
+REDIS_EXPORTER_PASSWORD=$REDIS_OBSERVER_GENERATED
 SEED_ADMIN=${SEED_ADMIN:-true}
 ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
 ADMIN_BOOTSTRAP_PASSWORD=$(rand_hex)
@@ -160,6 +170,12 @@ EOF
   elif [ ! -s "$ENV_FILE" ]; then
     die "$ENV_FILE exists but is empty"
   fi
+  if ! grep -q '^REDIS_OBSERVER_PASSWORD=' "$ENV_FILE"; then
+    REDIS_OBSERVER_GENERATED="$(rand_hex)"
+    printf 'REDIS_OBSERVER_PASSWORD=%s\nREDIS_EXPORTER_USER=observer\nREDIS_EXPORTER_PASSWORD=%s\n' "$REDIS_OBSERVER_GENERATED" "$REDIS_OBSERVER_GENERATED" >> "$ENV_FILE"
+  fi
+  grep -q '^DEBUG_REQUEST_TOKEN=' "$ENV_FILE" || printf 'DEBUG_REQUEST_TOKEN=%s\n' "$(rand_hex)" >> "$ENV_FILE"
+  grep -q '^GRAFANA_ADMIN_PASSWORD=' "$ENV_FILE" || printf 'GRAFANA_ADMIN_PASSWORD=%s\n' "$(rand_hex)" >> "$ENV_FILE"
   chmod 600 "$ENV_FILE" 2>/dev/null || true
 fi
 
@@ -286,6 +302,11 @@ done
   compose logs --tail=40 gateway edge >&2
   die "health gate failed"
 }
+
+if [ -n "${GRAFANA_URL:-}" ] && [ -n "${GRAFANA_TOKEN:-}" ]; then
+  GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
+    "$REPO_DIR/scripts/annotate-deploy.sh" "$TARGET" || echo "  warning: Grafana deploy annotation failed" >&2
+fi
 
 DOMAIN_SET="$(grep -E '^DOMAIN=' "$ENV_FILE" | cut -d= -f2-)"
 SCHEME="http"

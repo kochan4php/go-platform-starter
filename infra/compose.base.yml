@@ -27,7 +27,10 @@ services:
     # Host side is configurable so the lab never fights other local projects
     # for the default Postgres/Redis ports.
     ports: ["${LAB_PG_PORT:-55432}:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/observability.sql:/docker-entrypoint-initdb.d/20-observability.sql:ro
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app"]
       interval: 3s

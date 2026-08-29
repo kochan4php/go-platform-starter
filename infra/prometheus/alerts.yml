@@ -1,4 +1,20 @@
 groups:
+  - name: platform-slo-recording
+    interval: 30s
+    rules:
+      - record: service:http_requests:rate5m
+        expr: sum by (instance) (rate(http_requests_total[5m]))
+      - record: service:http_errors:ratio5m
+        expr: sum by (instance) (rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum by (instance) (rate(http_requests_total[5m])), 0.001)
+      - record: service:http_latency:p95_5m
+        expr: histogram_quantile(0.95, sum by (instance, le) (rate(http_request_duration_seconds_bucket[5m])))
+      - record: service:slo_availability:ratio30d
+        expr: 1 - (sum by (instance) (rate(http_requests_total{status=~"5.."}[30d])) / clamp_min(sum by (instance) (rate(http_requests_total[30d])), 0.001))
+      - record: service:slo_burn_rate:ratio1h
+        expr: (sum by (instance) (rate(http_requests_total{status=~"5.."}[1h])) / clamp_min(sum by (instance) (rate(http_requests_total[1h])), 0.001)) / 0.001
+      - record: service:slo_error_budget:remaining30d
+        expr: clamp_min(1 - ((1 - service:slo_availability:ratio30d) / 0.001), 0)
+
   - name: platform-reliability
     rules:
       - alert: PlatformErrorRateAnomaly
@@ -29,3 +45,76 @@ groups:
         for: 1h
         labels: { severity: warning }
         annotations: { summary: "Public TLS certificate expires within 14 days" }
+
+  - name: platform-observability
+    rules:
+      - alert: PlatformHigh5xxRate
+        expr: service:http_errors:ratio5m > 0.05
+        for: 10m
+        labels: { severity: critical, team: platform, notify: slack }
+        annotations:
+          summary: "Service 5xx ratio exceeds 5%"
+          runbook_url: "docs/ONCALL.md#platformhigh5xxrate"
+      - alert: PlatformHighP95Latency
+        expr: service:http_latency:p95_5m > 1
+        for: 10m
+        labels: { severity: warning, team: platform }
+        annotations:
+          summary: "Service p95 latency exceeds one second"
+          runbook_url: "docs/ONCALL.md#platformhighp95latency"
+      - alert: AuthLoginFailureRate
+        expr: sum by (instance) (rate(logins_total{result="fail"}[5m])) / clamp_min(sum by (instance) (rate(logins_total[5m])), 0.001) > 0.25 and sum by (instance) (rate(logins_total[5m])) > 0.1
+        for: 10m
+        labels: { severity: warning, team: identity }
+        annotations:
+          summary: "Login failure ratio exceeds 25%"
+          runbook_url: "docs/ONCALL.md#authloginfailurerate"
+      - alert: AuthSessionErrors
+        expr: sum by (instance) (rate(http_requests_total{route=~"/api/v1/auth/(refresh|sessions.*|logout-all)",status=~"5.."}[5m])) > 0.05
+        for: 10m
+        labels: { severity: warning, team: identity }
+        annotations:
+          summary: "Session endpoints are returning server errors"
+          runbook_url: "docs/ONCALL.md#authsessionerrors"
+      - alert: FrontendErrorBurst
+        expr: sum(rate(frontend_errors_total[5m])) > 0.1
+        for: 5m
+        labels: { severity: warning, team: frontend, source: frontend, notify: discord }
+        annotations:
+          summary: "Frontend error reports are increasing"
+          runbook_url: "docs/ONCALL.md#frontenderrorburst"
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, sum by (instance, le) (rate(db_query_duration_seconds_bucket[5m]))) > 1
+        for: 15m
+        labels: { severity: warning, team: data }
+        annotations:
+          summary: "Database query p95 exceeds one second"
+          runbook_url: "docs/ONCALL.md#slowdatabasequeries"
+      - alert: RedisHighLatency
+        expr: rate(redis_commands_duration_seconds_total[5m]) / clamp_min(rate(redis_commands_processed_total[5m]), 1) > 0.01
+        for: 10m
+        labels: { severity: warning, team: platform }
+        annotations:
+          summary: "Redis average command latency exceeds 10ms"
+          runbook_url: "docs/ONCALL.md#redishighlatency"
+      - alert: SyntheticLoginFailed
+        expr: probe_success{job="synthetic-login"} == 0
+        for: 5m
+        labels: { severity: critical, team: identity, notify: slack }
+        annotations:
+          summary: "Synthetic login probe is failing"
+          runbook_url: "docs/ONCALL.md#syntheticloginfailed"
+      - alert: SLOBurnRateFast
+        expr: service:slo_burn_rate:ratio1h > 14.4
+        for: 5m
+        labels: { severity: critical, team: platform, notify: slack }
+        annotations:
+          summary: "Availability error budget is burning rapidly"
+          runbook_url: "docs/ONCALL.md#sloburnratefast"
+      - alert: SLOBurnRateSlow
+        expr: service:slo_burn_rate:ratio1h > 6
+        for: 1h
+        labels: { severity: warning, team: platform }
+        annotations:
+          summary: "Availability error budget burn is elevated"
+          runbook_url: "docs/ONCALL.md#sloburnrateslow"

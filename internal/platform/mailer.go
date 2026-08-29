@@ -6,7 +6,16 @@ import (
 	"log/slog"
 	"net/smtp"
 	"strings"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var externalCallDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name: "external_call_duration_seconds", Help: "External call latency by bounded dependency and outcome.", Buckets: prometheus.DefBuckets,
+}, []string{"dependency", "status"})
+
+func init() { prometheus.MustRegister(externalCallDuration) }
 
 type Mail struct {
 	To      string
@@ -59,7 +68,9 @@ func NewMailer(cfg SMTPConfig, log *slog.Logger) (Mailer, error) {
 type ConsoleMailer struct{ Log *slog.Logger }
 
 func (m *ConsoleMailer) Send(_ context.Context, mail Mail) error {
-	m.Log.Info("email (console transport)", "to", mail.To, "subject", mail.Subject, "html", mail.HTML)
+	started := time.Now()
+	m.Log.Info("email (console transport)", "to", mail.To, "subject", mail.Subject)
+	externalCallDuration.WithLabelValues("mail.console", "ok").Observe(time.Since(started).Seconds())
 	return nil
 }
 
@@ -83,5 +94,12 @@ func BuildMIME(fromName, from string, mail Mail) []byte {
 }
 
 func (m *SMTPMailer) Send(_ context.Context, mail Mail) error {
-	return smtp.SendMail(m.Addr, m.Auth, m.From, []string{mail.To}, BuildMIME(m.FromName, m.From, mail))
+	started := time.Now()
+	err := smtp.SendMail(m.Addr, m.Auth, m.From, []string{mail.To}, BuildMIME(m.FromName, m.From, mail))
+	status := "ok"
+	if err != nil {
+		status = "error"
+	}
+	externalCallDuration.WithLabelValues("mail.smtp", status).Observe(time.Since(started).Seconds())
+	return err
 }

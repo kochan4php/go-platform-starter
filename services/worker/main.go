@@ -44,6 +44,7 @@ type config struct {
 	DLQMaxDepth        int64         `env:"DLQ_MAX_DEPTH" envDefault:"10000"`
 	DLQRedisUsername   string        `env:"DLQ_REDIS_USERNAME"`
 	DLQRedisPassword   string        `env:"DLQ_REDIS_PASSWORD"`
+	SlowQueryThreshold time.Duration `env:"SLOW_QUERY_THRESHOLD" envDefault:"500ms"`
 }
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
 	}
 	defer func() { _ = shutdownTracer(context.Background()) }()
 
-	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, 500*time.Millisecond)
+	db, err := platform.OpenDatabase(cfg.DatabaseURL, log, cfg.SlowQueryThreshold)
 	if err != nil {
 		log.Error("connect db failed", "err", err)
 		os.Exit(1)

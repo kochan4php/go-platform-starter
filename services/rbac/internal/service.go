@@ -133,6 +133,7 @@ func (s *Service) CreatePermission(ctx context.Context, name string) error {
 		return platform.ErrConflict("permission %s already exists", name)
 	}
 	s.audit(ctx, "create", "permission", name, map[string]any{"name": name})
+	permissionCreatedTotal.Inc()
 	return nil
 }
 
@@ -237,6 +238,7 @@ func (s *Service) CreateRole(ctx context.Context, input RoleInput) (*Role, error
 	}
 	created.Permissions = normalized.Permissions
 	s.audit(ctx, "create", "role", fmt.Sprintf("%d", created.ID), map[string]any{"after": created})
+	rolesChangedTotal.Inc()
 	return &created, nil
 }
 
@@ -370,6 +372,7 @@ func (s *Service) UpdateRole(ctx context.Context, id int64, input RoleInput) (*R
 		Permissions: normalized.Permissions, UserCount: before.UserCount, System: before.System,
 	}
 	s.audit(ctx, "update", "role", fmt.Sprintf("%d", id), map[string]any{"before": before, "after": updated})
+	rolesChangedTotal.Inc()
 	return &updated, nil
 }
 
@@ -442,6 +445,7 @@ func (s *Service) DeleteRole(ctx context.Context, id int64, fallbackID *int64) e
 		s.invalidateClaims(ctx, userID, version)
 	}
 	s.audit(ctx, "delete", "role", fmt.Sprintf("%d", id), map[string]any{"before": role, "fallbackRoleId": fallbackID})
+	rolesChangedTotal.Inc()
 	return nil
 }
 
@@ -479,6 +483,7 @@ func (s *Service) SetUserRoles(ctx context.Context, userID int64, roleIDs []int6
 	})
 	if err == nil {
 		s.invalidateClaims(ctx, userID, nextVersion)
+		rolesChangedTotal.Inc()
 	}
 	return err
 }

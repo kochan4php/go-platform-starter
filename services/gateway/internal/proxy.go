@@ -13,6 +13,8 @@ import (
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // LoadSpecs fetches every upstream's /openapi.json, builds the route table
@@ -193,6 +195,7 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				outReq.Header.Set("X-User-Id", claims.Sub)
 				outReq.Header.Set("X-Email", claims.Email)
 				outReq.Header.Set("X-Permissions", strings.Join(claims.Perms, " "))
+				trace.SpanFromContext(r.Context()).SetAttributes(attribute.String("user.id", claims.Sub))
 			}
 			outReq.Header.Set("X-Internal-Secret", deps.InternalSecret)
 

@@ -14,6 +14,12 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/kochan4php/go-platform-starter/internal/platform"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type routePolicyKey struct{}
@@ -194,10 +200,33 @@ func (t *resilientTransport) send(req *http.Request, index int) (*http.Response,
 	t.mu.Lock()
 	target := *t.endpoints[index].url
 	t.mu.Unlock()
-	clone := req.Clone(req.Context())
+	started := time.Now()
+	ctx, span := otel.Tracer("go-platform/gateway").Start(req.Context(), "http.upstream", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+	clone := req.Clone(ctx)
 	clone.URL.Scheme, clone.URL.Host = target.Scheme, target.Host
 	clone.Host = target.Host
-	return t.base.RoundTrip(clone)
+	platform.InjectTraceHeaders(ctx, clone.Header)
+	response, err := t.base.RoundTrip(clone)
+	latency := time.Since(started)
+	attrs := []attribute.KeyValue{
+		attribute.String("server.address", target.Hostname()),
+		attribute.String("http.request.method", req.Method),
+		attribute.Int64("upstream.latency_ms", latency.Milliseconds()),
+	}
+	if response != nil {
+		attrs = append(attrs, attribute.Int("http.response.status_code", response.StatusCode))
+		if response.StatusCode >= http.StatusInternalServerError {
+			span.SetStatus(codes.Error, response.Status)
+		}
+	}
+	span.SetAttributes(attrs...)
+	trace.SpanFromContext(req.Context()).SetAttributes(attrs...)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return response, err
 }
 
 func (t *resilientTransport) pick(start int) int {

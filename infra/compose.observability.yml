@@ -15,6 +15,10 @@ services:
     environment: &pprof-env
       PPROF_ADDR: 0.0.0.0:6060
       PPROF_ALLOW_NETWORK: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_TRACE_SAMPLE_RATIO: ${OTEL_TRACE_SAMPLE_RATIO:-1}
+      SLOW_QUERY_SAMPLE_RATE: ${SLOW_QUERY_SAMPLE_RATE:-1}
+      ACCESS_LOG_SAMPLE_RATE: ${ACCESS_LOG_SAMPLE_RATE:-0.1}
 
   users:
     environment: *pprof-env
@@ -38,6 +42,25 @@ services:
     volumes:
       - ./otel/collector.yaml:/etc/otel/config.yaml:ro
     ports: ["4318:4318"]
+    depends_on: [tempo]
+
+  tempo:
+    <<: *observability
+    image: grafana/tempo:latest
+    command: ["--config.file=/etc/tempo/config.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/config.yml:ro
+      - tempo-data:/var/tempo
+    ports: ["3200:3200"]
+
+  loki:
+    <<: *observability
+    image: grafana/loki:latest
+    command: ["--config.file=/etc/loki/config.yml"]
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
 
   prometheus:
     <<: *observability
@@ -45,13 +68,30 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
     ports: ["9090:9090"]
+    depends_on: [alertmanager]
+
+  alertmanager:
+    <<: *observability
+    image: prom/alertmanager:latest
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports: ["9093:9093"]
+    depends_on: [mailpit]
+
+  mailpit:
+    <<: *observability
+    image: axllent/mailpit:latest
+    ports: ["8025:8025"]
 
   postgres-exporter:
     <<: *observability
     image: prometheuscommunity/postgres-exporter:v0.17.1
     environment:
-      DATA_SOURCE_NAME: postgresql://app:app@postgres:5432/app?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://app:${POSTGRES_PASSWORD:-app}@postgres:5432/app?sslmode=disable
+    command: ["--collector.stat_statements"]
     depends_on:
       - postgres
 
@@ -60,16 +100,20 @@ services:
     image: grafana/grafana:latest
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_DEFAULT_THEME: system
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
     ports: ["3000:3000"]
 
   pyroscope:
     <<: *observability
     image: grafana/pyroscope:latest
     command: ["server"]
+    volumes: ["pyroscope-data:/var/lib/pyroscope"]
     ports: ["4040:4040"]
 
   alloy:
@@ -78,8 +122,10 @@ services:
     command: ["run", "/etc/alloy/config.alloy"]
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - pyroscope
+      - loki
       - auth
       - users
       - rbac
@@ -99,3 +145,19 @@ services:
     command: ["--config.file=/etc/blackbox/blackbox.yml"]
     volumes:
       - ./prometheus/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+
+  redis-exporter:
+    <<: *observability
+    image: oliver006/redis_exporter:latest
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_USER: ${REDIS_EXPORTER_USER:-}
+      REDIS_PASSWORD: ${REDIS_EXPORTER_PASSWORD:-}
+    depends_on: [redis]
+
+volumes:
+  grafana-data:
+  loki-data:
+  prometheus-data:
+  pyroscope-data:
+  tempo-data:

@@ -1,0 +1,55 @@
+rule_files: [alerts.yml]
+evaluation_interval: 1m
+
+tests:
+  - name: high error ratio pages after sustained breach
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{instance="gateway:8000",method="GET",route="/api",status="500"}'
+        values: '0+10x20'
+      - series: 'http_requests_total{instance="gateway:8000",method="GET",route="/api",status="200"}'
+        values: '0+100x20'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: PlatformHigh5xxRate
+        exp_alerts:
+          - exp_labels: { severity: critical, team: platform, notify: slack, instance: "gateway:8000" }
+            exp_annotations: { summary: "Service 5xx ratio exceeds 5%", runbook_url: "docs/ONCALL.md#platformhigh5xxrate" }
+
+  - name: login failures alert only with meaningful traffic
+    interval: 1m
+    input_series:
+      - series: 'logins_total{instance="auth:8081",result="fail"}'
+        values: '0+5x20'
+      - series: 'logins_total{instance="auth:8081",result="success"}'
+        values: '0+5x20'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: AuthLoginFailureRate
+        exp_alerts:
+          - exp_labels: { severity: warning, team: identity, instance: "auth:8081" }
+            exp_annotations: { summary: "Login failure ratio exceeds 25%", runbook_url: "docs/ONCALL.md#authloginfailurerate" }
+
+  - name: session endpoint failures alert after sustained breach
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{instance="auth:8081",method="POST",route="/api/v1/auth/refresh",status="500"}'
+        values: '0+10x20'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: AuthSessionErrors
+        exp_alerts:
+          - exp_labels: { severity: warning, team: identity, instance: "auth:8081" }
+            exp_annotations: { summary: "Session endpoints are returning server errors", runbook_url: "docs/ONCALL.md#authsessionerrors" }
+
+  - name: dlq depth pages after five minutes
+    interval: 1m
+    input_series:
+      - series: 'worker_dlq_depth{stream="mail.jobs"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: WorkerDLQNotEmpty
+        exp_alerts:
+          - exp_labels: { severity: critical, stream: "mail.jobs" }
+            exp_annotations: { summary: "Worker dead-letter queue contains messages" }

@@ -53,6 +53,9 @@ func (sentryReporter) Report(ctx context.Context, err error, format string, args
 		if id := RequestIDFromContext(ctx); id != "" {
 			scope.SetTag("request_id", id)
 		}
+		if id := TraceIDFromContext(ctx); id != "" {
+			scope.SetTag("trace_id", id)
+		}
 		hub.CaptureException(err)
 	})
 }

@@ -67,6 +67,7 @@ func main() {
 		log.Error("migrate failed", "err", err)
 		os.Exit(1)
 	}
+	internal.RegisterSessionMetrics(db)
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
