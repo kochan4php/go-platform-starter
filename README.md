@@ -213,7 +213,7 @@ starts the stack with all ports published.
 | http://127.0.0.1:5173 | app shell (login → admin dashboard); same-origin `/api/…` proxy included |
 | http://127.0.0.1:8010/docs | aggregate API reference (Scalar) |
 | http://127.0.0.1:8010/healthz | gateway health |
-| :8081–:8085 | auth/users/rbac/worker/realtime published for direct debugging |
+| :8081–:8086 | auth/users/rbac/worker/realtime/scheduler published for direct debugging |
 
 Seeded admin: `admin@example.local` / `local-root-access-2026!`.
 Lab container host ports default to non-conflicting values

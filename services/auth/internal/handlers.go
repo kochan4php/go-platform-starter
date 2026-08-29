@@ -28,8 +28,9 @@ func NewHandlers(svc *Service, cfg Config, log *slog.Logger) *Handlers {
 }
 
 type registerInput struct {
-	Email    string `json:"email" validate:"required,email,max=254"`
-	Password string `json:"password" validate:"required,min=12,max=72"`
+	Email       string `json:"email" validate:"required,email,max=254"`
+	Password    string `json:"password" validate:"required,min=12,max=72"`
+	DisplayName string `json:"displayName" validate:"omitempty,max=120"`
 }
 
 type loginInput struct {
@@ -122,12 +123,34 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		platform.WriteError(w, h.log, err)
 		return
 	}
-	u, err := h.svc.Register(r.Context(), in.Email, in.Password)
+	u, err := h.svc.Register(r.Context(), in.Email, in.Password, in.DisplayName)
 	if err != nil {
 		platform.WriteError(w, h.log, err)
 		return
 	}
 	platform.OK(w, http.StatusCreated, "registered", map[string]any{"id": u.ID, "email": u.Email})
+}
+
+// IntrospectToken is deliberately mounted outside the public OpenAPI surface.
+// Only trusted service callers holding INTERNAL_SECRET may use it.
+func (h *Handlers) IntrospectToken(w http.ResponseWriter, r *http.Request) {
+	if !platform.SecretMatch(r.Header.Get("X-Internal-Secret"), h.cfg.InternalSecret) {
+		platform.WriteError(w, h.log, platform.ErrUnauthorized("invalid internal credentials"))
+		return
+	}
+	var input struct {
+		Token string `json:"token" validate:"required,max=4096"`
+	}
+	if err := h.decode(r, &input); err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	result, err := h.svc.IntrospectToken(r.Context(), input.Token)
+	if err != nil {
+		platform.WriteError(w, h.log, err)
+		return
+	}
+	platform.OK(w, http.StatusOK, "introspected", result)
 }
 
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {

@@ -100,6 +100,13 @@ func TestUsersCRUDValidationPresenceAndBoundaries(t *testing.T) {
 	if err := db.Exec(`INSERT INTO auth.sessions (user_id, expires_at) VALUES (1, now() + interval '1 hour')`).Error; err != nil {
 		t.Fatal(err)
 	}
+	if err := RefreshReadModels(ctx, db); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := svc.Stats(ctx)
+	if err != nil || stats.Total != 3 || stats.Online != 1 || len(stats.Registrations) != 7 {
+		t.Fatalf("materialized stats = %#v err=%v", stats, err)
+	}
 
 	got, err := svc.Get(ctx, "1")
 	if err != nil || !got.Online || got.ActiveSessions != 1 {

@@ -1,5 +1,22 @@
 {
-  "generated_at": "2026-08-29T07:35:53.739398+00:00",
-  "nodes": {},
+  "generated_at": "2026-08-29T12:11:55.713094+00:00",
+  "nodes": {
+    "docs_backlog_architecture_scalability": {
+      "code_fingerprint": "44c31fe3cff91fde266befc5813e223bc928506c6943d2b67b24cd859ad09eee",
+      "label": "Backlog: Architecture & Scalability",
+      "last": "2026-08-29T12:08:36.916480+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-29T12:08:36.916480+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
+        }
+      ],
+      "score": 0.99994684,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }

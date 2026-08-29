@@ -198,6 +198,9 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				trace.SpanFromContext(r.Context()).SetAttributes(attribute.String("user.id", claims.Sub))
 			}
 			outReq.Header.Set("X-Internal-Secret", deps.InternalSecret)
+			for name, value := range route.RequestHeaders {
+				outReq.Header.Set(name, value)
+			}
 
 			// Continue the trace into the upstream service (PLAN item 70):
 			// the gateway's server span becomes the parent of theirs.
@@ -209,7 +212,9 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 			}
 			ctx, cancel := context.WithTimeout(outReq.Context(), timeout)
 			defer cancel()
-			ctx = context.WithValue(ctx, routePolicyKey{}, routePolicy{hedge: route.Hedge, stale: route.StaleIfError && !route.AuthRequired && route.Perm == ""})
+			ctx = context.WithValue(ctx, routePolicyKey{}, routePolicy{
+				hedge: route.Hedge, stale: route.StaleIfError && !route.AuthRequired && route.Perm == "", cacheTTL: route.CacheTTL,
+			})
 			proxied := outReq.WithContext(ctx)
 			if r.Method == http.MethodPost && deps.RDB != nil && r.Header.Get("Idempotency-Key") != "" {
 				serveIdempotent(w, proxied, deps.RDB, proxied.Header.Get("X-User-Id"), func(target http.ResponseWriter) {

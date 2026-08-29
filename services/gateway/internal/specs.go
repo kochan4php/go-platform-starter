@@ -34,16 +34,19 @@ func ParseUpstreams(raw string) (Upstreams, error) {
 }
 
 type Route struct {
-	Method       string
-	Path         string // gateway-facing: /api/v1/<svc><spec-path>
-	Service      string
-	Perm         string // x-required-permission value ("" = none)
-	AuthRequired bool   // x-auth: required
-	RateClass    string
-	BodyLimit    int64
-	Timeout      time.Duration
-	Hedge        bool
-	StaleIfError bool
+	Method         string
+	Path           string // gateway-facing: /api/v1/<svc><spec-path>
+	Service        string
+	Perm           string // x-required-permission value ("" = none)
+	AuthRequired   bool   // x-auth: required
+	RateClass      string
+	BodyLimit      int64
+	Timeout        time.Duration
+	Hedge          bool
+	StaleIfError   bool
+	CacheTTL       time.Duration
+	ConsumerQuota  int
+	RequestHeaders map[string]string
 }
 
 // SpecRouteTable parses an upstream's OpenAPI YAML and produces the gateway-
@@ -94,6 +97,26 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				}
 				route.Hedge, _ = op["x-hedge"].(bool)
 				route.StaleIfError, _ = op["x-stale-if-error"].(bool)
+				if v, ok := op["x-cache-ttl"].(string); ok {
+					if ttl, err := time.ParseDuration(v); err == nil && ttl > 0 {
+						route.CacheTTL = ttl
+					}
+				}
+				if v, ok := op["x-consumer-quota-per-minute"].(int); ok && v > 0 {
+					route.ConsumerQuota = v
+				}
+				if headers, ok := op["x-request-headers"].(map[string]any); ok {
+					route.RequestHeaders = map[string]string{}
+					for name, value := range headers {
+						lower := strings.ToLower(name)
+						if lower == "authorization" || lower == "x-internal-secret" || strings.HasPrefix(lower, "x-user-") {
+							return nil, fmt.Errorf("request transformation may not set reserved header %q", name)
+						}
+						if text, ok := value.(string); ok {
+							route.RequestHeaders[name] = text
+						}
+					}
+				}
 				if _, internalOnly := op["x-internal"]; internalOnly {
 					continue // internal APIs are never exposed through the gateway
 				}

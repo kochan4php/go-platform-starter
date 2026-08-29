@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: app-blue }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: app, slot: blue } }
+  template:
+    metadata: { labels: { app: app, slot: blue } }
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/kochan4php/app:stable
+          ports: [{ containerPort: 8080 }]
+          readinessProbe: { httpGet: { path: /readyz, port: 8080 }, periodSeconds: 5 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: app-green }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: app, slot: green } }
+  template:
+    metadata: { labels: { app: app, slot: green } }
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/kochan4php/app:candidate
+          ports: [{ containerPort: 8080 }]
+          readinessProbe: { httpGet: { path: /readyz, port: 8080 }, periodSeconds: 5 }
+---
+# Promote or roll back atomically by patching spec.selector.slot.
+apiVersion: v1
+kind: Service
+metadata: { name: app }
+spec:
+  selector: { app: app, slot: blue }
+  ports: [{ port: 80, targetPort: 8080 }]

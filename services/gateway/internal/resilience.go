@@ -23,7 +23,10 @@ import (
 )
 
 type routePolicyKey struct{}
-type routePolicy struct{ hedge, stale bool }
+type routePolicy struct {
+	hedge, stale bool
+	cacheTTL     time.Duration
+}
 
 type endpointState struct {
 	url       *url.URL
@@ -35,6 +38,8 @@ type cachedResponse struct {
 	status int
 	header http.Header
 	body   []byte
+	stored time.Time
+	ttl    time.Duration
 }
 
 type cancelBody struct {
@@ -81,10 +86,16 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 		return nil, req.Context().Err()
 	}
 	policy, _ := req.Context().Value(routePolicyKey{}).(routePolicy)
+	cacheKey := responseCacheKey(req)
+	if policy.cacheTTL > 0 {
+		if cached, ok := t.cached(cacheKey); ok && time.Since(cached.stored) < cached.ttl {
+			return cachedHTTPResponse(req, cached, false), nil
+		}
+	}
 	start := int(t.next.Add(1) - 1)
 	if req.Method == http.MethodGet && policy.hedge && len(t.endpoints) > 1 {
 		if res, err := t.hedge(req, start); err == nil {
-			return t.remember(req, res, policy.stale)
+			return t.remember(req, res, policy)
 		}
 	}
 
@@ -102,7 +113,7 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 		res, err := t.send(req, index)
 		if err == nil && res.StatusCode < 500 {
 			t.success(index)
-			return t.remember(req, res, policy.stale)
+			return t.remember(req, res, policy)
 		}
 		if err == nil {
 			lastErr = fmt.Errorf("upstream returned %d", res.StatusCode)
@@ -127,8 +138,8 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 		}
 	}
 	if policy.stale {
-		if cached, ok := t.cached(req.URL.RequestURI()); ok {
-			return cachedHTTPResponse(req, cached), nil
+		if cached, ok := t.cached(cacheKey); ok {
+			return cachedHTTPResponse(req, cached, true), nil
 		}
 	}
 	return nil, lastErr
@@ -258,8 +269,8 @@ func (t *resilientTransport) failure(index int) {
 	}
 }
 
-func (t *resilientTransport) remember(req *http.Request, res *http.Response, enabled bool) (*http.Response, error) {
-	if !enabled || req.Method != http.MethodGet || res.StatusCode != http.StatusOK || res.ContentLength > 1<<20 {
+func (t *resilientTransport) remember(req *http.Request, res *http.Response, policy routePolicy) (*http.Response, error) {
+	if (!policy.stale && policy.cacheTTL <= 0) || req.Method != http.MethodGet || res.StatusCode != http.StatusOK || res.ContentLength > 1<<20 {
 		return res, nil
 	}
 	body, err := io.ReadAll(io.LimitReader(res.Body, 1<<20+1))
@@ -273,7 +284,7 @@ func (t *resilientTransport) remember(req *http.Request, res *http.Response, ena
 	if len(t.cache) >= 128 {
 		clear(t.cache)
 	}
-	t.cache[req.URL.RequestURI()] = cachedResponse{res.StatusCode, res.Header.Clone(), body}
+	t.cache[responseCacheKey(req)] = cachedResponse{res.StatusCode, res.Header.Clone(), body, time.Now(), policy.cacheTTL}
 	t.mu.Unlock()
 	return res, nil
 }
@@ -285,10 +296,18 @@ func (t *resilientTransport) cached(key string) (cachedResponse, bool) {
 	return value, ok
 }
 
-func cachedHTTPResponse(req *http.Request, cached cachedResponse) *http.Response {
+func responseCacheKey(req *http.Request) string {
+	return req.Header.Get("X-User-Id") + "\n" + req.URL.RequestURI()
+}
+
+func cachedHTTPResponse(req *http.Request, cached cachedResponse, stale bool) *http.Response {
 	header := cached.header.Clone()
-	header.Set("Warning", `110 - "Response is stale"`)
-	header.Set("X-Cache", "STALE")
+	if stale {
+		header.Set("Warning", `110 - "Response is stale"`)
+		header.Set("X-Cache", "STALE")
+	} else {
+		header.Set("X-Cache", "HIT")
+	}
 	return &http.Response{StatusCode: cached.status, Status: fmt.Sprintf("%d %s", cached.status, http.StatusText(cached.status)), Header: header, Body: io.NopCloser(bytes.NewReader(cached.body)), ContentLength: int64(len(cached.body)), Request: req}
 }
 

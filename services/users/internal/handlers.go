@@ -286,6 +286,28 @@ func (h *Handlers) GetUserStats(w http.ResponseWriter, r *http.Request) {
 	platform.OK(w, http.StatusOK, "ok", stats)
 }
 
+func (h *Handlers) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(maxAvatarBytes); err != nil {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("invalid avatar upload"))
+		return
+	}
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("file is required"))
+		return
+	}
+	defer file.Close()
+	output, err := ResizeAvatar(file, 512)
+	if err != nil {
+		platform.WriteError(w, h.log, platform.ErrBadRequest("%v", err))
+		return
+	}
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(output)
+}
+
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request, id int64) {
 	actorID := SubFromContext(r)
 	if !platform.AuthorizeResource(actorID, fmt.Sprintf("%d", id), PermissionsFromContext(r), "user:update:own", "user:update:any") {

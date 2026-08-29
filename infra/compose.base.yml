@@ -110,6 +110,18 @@ services:
     depends_on:
       redis: { condition: service_healthy }
 
+  scheduler:
+    <<: *runtime
+    build: { context: .., dockerfile: services/scheduler/Dockerfile }
+    env_file: [./go.env]
+    environment:
+      PORT: "8086"
+      SCHEDULED_JOBS: ${SCHEDULED_JOBS:-[]}
+    ports: ["8086:8086"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
   gateway:
     <<: *runtime
     build: { context: .., dockerfile: services/gateway/Dockerfile }

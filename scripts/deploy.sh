@@ -152,6 +152,7 @@ REDIS_AUTH_PASSWORD=$(rand_hex)
 REDIS_USERS_PASSWORD=$(rand_hex)
 REDIS_RBAC_PASSWORD=$(rand_hex)
 REDIS_WORKER_PASSWORD=$(rand_hex)
+REDIS_SCHEDULER_PASSWORD=$(rand_hex)
 REDIS_REALTIME_PASSWORD=$(rand_hex)
 REDIS_GATEWAY_PASSWORD=$(rand_hex)
 REDIS_DLQ_ADMIN_PASSWORD=$(rand_hex)
@@ -176,6 +177,7 @@ EOF
   fi
   grep -q '^DEBUG_REQUEST_TOKEN=' "$ENV_FILE" || printf 'DEBUG_REQUEST_TOKEN=%s\n' "$(rand_hex)" >> "$ENV_FILE"
   grep -q '^GRAFANA_ADMIN_PASSWORD=' "$ENV_FILE" || printf 'GRAFANA_ADMIN_PASSWORD=%s\n' "$(rand_hex)" >> "$ENV_FILE"
+  grep -q '^REDIS_SCHEDULER_PASSWORD=' "$ENV_FILE" || printf 'REDIS_SCHEDULER_PASSWORD=%s\n' "$(rand_hex)" >> "$ENV_FILE"
   chmod 600 "$ENV_FILE" 2>/dev/null || true
 fi
 
@@ -214,7 +216,7 @@ if [ "$TARGET" = "lab" ]; then
   # injected (infra/lab/web.config.js), so env changes never need a build.
   if [ "$SKIP_BUILD" = "0" ]; then
     MISSING=""
-    for img in auth users rbac worker realtime gateway auth-seed rbac-seed web web-auth web-admin-users web-admin-roles; do
+    for img in auth users rbac worker realtime scheduler gateway auth-seed rbac-seed web web-auth web-admin-users web-admin-roles; do
       docker image inspect "go-platform-lab-$img:latest" >/dev/null 2>&1 || MISSING="$MISSING $img"
     done
     if [ -n "$MISSING" ] || [ "${FORCE_BUILD:-0}" = "1" ]; then
@@ -254,7 +256,7 @@ if [ "$TARGET" = "lab" ]; then
 
   Shell        http://127.0.0.1:5173
   Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}  (docs at /docs, health at /healthz)
-  Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
+  Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085 · scheduler :8086
   Remotes      web-auth :5174 · web-admin-users :5175 · web-admin-roles :5176
   Admin login  admin@example.local / local-root-access-2026!
 

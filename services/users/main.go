@@ -82,6 +82,12 @@ func main() {
 				log.Info("profiles purged", "count", n)
 			}
 		}).Start(ctx)
+	readModelDone := platform.NewScheduler(rdb, log, time.Minute, "users-read-model-refresh",
+		func(ctx context.Context) {
+			if err := internal.RefreshReadModels(ctx, db); err != nil {
+				log.Error("read model refresh failed", "err", err)
+			}
+		}).Start(ctx)
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"postgres": func(ctx context.Context) error { return pingDB(db) },
@@ -103,6 +109,7 @@ func main() {
 	if err := platform.GracefulRun(":"+cfg.Port, router, func() {
 		cancel()
 		<-purgeDone
+		<-readModelDone
 		_ = closeDB(db)
 	}); err != nil {
 		log.Error("server exited with error", "err", err)

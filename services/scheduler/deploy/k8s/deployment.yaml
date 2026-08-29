@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: scheduler }
+  template:
+    metadata:
+      labels: { app: scheduler }
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: scheduler
+          image: ghcr.io/kochan4php/scheduler:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ containerPort: 8080 }]
+          envFrom: [{ secretRef: { name: scheduler } }]
+          readinessProbe: { httpGet: { path: /readyz, port: 8080 }, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: 8080 }, periodSeconds: 10 }
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { memory: 128Mi }

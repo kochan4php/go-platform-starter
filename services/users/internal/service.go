@@ -200,7 +200,7 @@ func orderDirection(order string) string {
 
 func (s *Service) Stats(ctx context.Context) (*UserStats, error) {
 	stats := &UserStats{Registrations: []RegistrationDay{}}
-	if err := s.db.WithContext(ctx).Model(&Profile{}).Where("deleted_at IS NULL").Count(&stats.Total).Error; err != nil {
+	if err := s.db.WithContext(ctx).Raw(`SELECT total FROM users.dashboard_stats WHERE id = 1`).Scan(&stats.Total).Error; err != nil {
 		return nil, err
 	}
 	if err := s.db.WithContext(ctx).Raw(
@@ -210,13 +210,13 @@ func (s *Service) Stats(ctx context.Context) (*UserStats, error) {
 		return nil, err
 	}
 	if err := s.db.WithContext(ctx).Raw(
-		`SELECT to_char(days.day, 'YYYY-MM-DD') AS day, COUNT(u.id) AS count
+		`SELECT to_char(days.day, 'YYYY-MM-DD') AS day, COALESCE(r.count, 0) AS count
 		 FROM generate_series(
 		   date_trunc('day', now()) - interval '6 days',
 		   date_trunc('day', now()), interval '1 day'
 		 ) AS days(day)
-		 LEFT JOIN users.users u ON u.deleted_at IS NULL AND u.created_at >= days.day AND u.created_at < days.day + interval '1 day'
-		 GROUP BY days.day ORDER BY days.day`,
+		 LEFT JOIN users.registration_daily r ON r.day = days.day::date
+		 ORDER BY days.day`,
 	).Scan(&stats.Registrations).Error; err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (s *Service) EraseSelf(ctx context.Context, sub string) error {
 		s.log.Error("invalidate erased user claims failed", "err", err)
 	}
 	_ = s.rdb.Publish(ctx, "force-logout", sub).Err()
-	if err := s.pub.Publish(ctx, StreamUsers, EventDeleted, map[string]string{"sub": sub}); err != nil {
+	if err := s.pub.Publish(ctx, StreamUsers, EventDeleted, platform.UserDeletedEvent{Sub: sub}); err != nil {
 		s.log.Error("publish erased user.deleted failed", "err", err)
 	}
 	s.audit(ctx, "erase", "profile", "erased")

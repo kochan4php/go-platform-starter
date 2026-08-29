@@ -137,3 +137,21 @@ func TestPermissionAndRoleAssignmentIntegration(t *testing.T) {
 		t.Fatalf("final assignment versions = %#v, want [2]", versions)
 	}
 }
+
+func TestAssignDefaultRoleIsIdempotent(t *testing.T) {
+	_, db, _ := newRBACFixture(t)
+	event := platform.UserCreatedEvent{Sub: "42", Email: "new@example.local", DisplayName: "New User"}
+	for range 2 {
+		if err := AssignDefaultRole(context.Background(), db, event); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var count int64
+	if err := db.Table("rbac.user_roles ur").Joins("JOIN rbac.roles r ON r.id = ur.role_id").
+		Where("ur.user_id = ? AND r.name = ?", 42, "user").Count(&count).Error; err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Fatalf("default role assignments = %d, want 1", count)
+	}
+}

@@ -6,10 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/mail"
-	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,22 +45,33 @@ var (
 func init() { prometheus.MustRegister(jobsProcessed, streamLag, dlqDepth) }
 
 type Consumer struct {
-	rdb    *redis.Client
-	db     *gorm.DB
-	mailer platform.Mailer
-	log    *slog.Logger
-	stream []string
+	rdb     *redis.Client
+	db      *gorm.DB
+	mailer  platform.Mailer
+	webhook WebhookProvider
+	log     *slog.Logger
+	stream  []string
 
 	minIdle      time.Duration // PEL for XAUTOCLAIM reclaim
 	reclaimEvery time.Duration // how often pending entries are reclaimed + lag reported
 	concurrency  int
 	readCount    int64
 	dlqMaxDepth  int64
+	handlers     map[string]WorkerHandler
 }
 
+type WorkerHandler struct {
+	Name   string
+	Stream string
+	Event  string
+	Handle func(context.Context, *gorm.DB, string, string) error
+}
+
+func handlerKey(stream, event string) string { return stream + "/" + event }
+
 func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *slog.Logger) *Consumer {
-	return &Consumer{
-		rdb: rdb, db: db, mailer: mailer,
+	c := &Consumer{
+		rdb: rdb, db: db, mailer: mailer, webhook: NewHTTPWebhookProvider(),
 		log:          log.With("component", "consumer"),
 		stream:       []string{"mail.jobs", "audit.events", "webhook.jobs"},
 		minIdle:      30 * time.Second,
@@ -71,7 +79,67 @@ func NewConsumer(rdb *redis.Client, db *gorm.DB, mailer platform.Mailer, log *sl
 		concurrency:  1,
 		readCount:    10,
 		dlqMaxDepth:  10_000,
+		handlers:     map[string]WorkerHandler{},
 	}
+	c.RegisterHandler(WorkerHandler{Name: "email", Stream: "mail.jobs", Event: "email.send", Handle: func(ctx context.Context, _ *gorm.DB, messageID, payload string) error {
+		return c.handleEmail(ctx, "worker:sent:"+messageID, payload)
+	}})
+	c.RegisterHandler(WorkerHandler{Name: "audit", Stream: "audit.events", Event: "audit.entry", Handle: func(ctx context.Context, db *gorm.DB, messageID, payload string) error {
+		return c.handleAuditWithDB(ctx, db, "audit.entry", messageID, payload)
+	}})
+	c.RegisterHandler(WorkerHandler{Name: "webhook", Stream: "webhook.jobs", Event: "webhook.deliver", Handle: func(ctx context.Context, _ *gorm.DB, messageID, payload string) error {
+		return c.handleWebhook(ctx, messageID, payload)
+	}})
+	return c
+}
+
+// RegisterHandler adds or replaces a worker plugin. Registration is performed
+// before Run, keeping the hot path lock-free.
+func (c *Consumer) RegisterHandler(handler WorkerHandler) {
+	if handler.Name == "" || handler.Stream == "" || handler.Event == "" || handler.Handle == nil {
+		panic("worker handler requires name, stream, event, and function")
+	}
+	c.handlers[handlerKey(handler.Stream, handler.Event)] = handler
+	if !contains(c.stream, handler.Stream) {
+		c.stream = append(c.stream, handler.Stream)
+	}
+}
+
+// ConfigureHandlers enables named built-in or registered plugins from a
+// comma-separated environment value. Empty means all registered handlers.
+func (c *Consumer) ConfigureHandlers(enabled string) *Consumer {
+	if strings.TrimSpace(enabled) == "" {
+		return c
+	}
+	wanted := map[string]bool{}
+	for _, name := range strings.Split(enabled, ",") {
+		wanted[strings.TrimSpace(name)] = true
+	}
+	streams := []string{}
+	for key, handler := range c.handlers {
+		if !wanted[handler.Name] {
+			delete(c.handlers, key)
+			continue
+		}
+		if !contains(streams, handler.Stream) {
+			streams = append(streams, handler.Stream)
+		}
+		delete(wanted, handler.Name)
+	}
+	for name := range wanted {
+		c.log.Warn("unknown worker handler ignored", "handler", name)
+	}
+	c.stream = streams
+	return c
+}
+
+func contains(items []string, want string) bool {
+	for _, item := range items {
+		if item == want {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Consumer) Configure(concurrency int, readCount int64) *Consumer {
@@ -235,30 +303,24 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 		return true
 	}
 	attempts := c.bumpAttempts(ctx, stream, id)
-	dedupKey := "worker:sent:" + stream + ":" + id
-
+	handler, found := c.handlers[handlerKey(stream, event)]
 	var err error
-	switch {
-	case stream == "mail.jobs" && event == "email.send":
-		err = c.handleEmail(ctx, dedupKey, payload)
-	case stream == "audit.events":
-		err = c.handleAuditWithDB(ctx, db, event, stream+":"+id, payload)
-	case stream == "webhook.jobs" && event == "webhook.deliver":
-		err = c.handleWebhook(ctx, id, payload)
-	default:
+	if !found {
 		err = fmt.Errorf("no handler for %s/%s", stream, event)
+	} else {
+		err = handler.Handle(ctx, db, messageID, payload)
 	}
 
 	if err == nil {
 		if insertErr := db.WithContext(ctx).Exec(`INSERT INTO audit.processed_messages (message_id) VALUES (?) ON CONFLICT DO NOTHING`, messageID).Error; insertErr != nil {
 			err = fmt.Errorf("persist processing checkpoint: %w", insertErr)
 		} else {
-			jobsProcessed.WithLabelValues(stream, handlerName(stream, event), "ok").Inc()
+			jobsProcessed.WithLabelValues(stream, handlerName(handler, found, event), "ok").Inc()
 			return true
 		}
 	}
 
-	jobsProcessed.WithLabelValues(stream, handlerName(stream, event), "failed").Inc()
+	jobsProcessed.WithLabelValues(stream, handlerName(handler, found, event), "failed").Inc()
 	log.WarnContext(ctx, "job failed",
 		"stream", stream, "id", id, "attempt", attempts, "err", err)
 
@@ -274,19 +336,14 @@ func (c *Consumer) processWithDB(ctx context.Context, db *gorm.DB, stream, id, p
 	return false
 }
 
-func handlerName(stream, event string) string {
-	switch {
-	case stream == "mail.jobs" && event == "email.send":
-		return "email"
-	case stream == "audit.events" && event == "audit.entry":
-		return "audit"
-	case stream == "webhook.jobs" && event == "webhook.deliver":
-		return "webhook"
-	case event == "invalid":
-		return "invalid"
-	default:
-		return "unknown"
+func handlerName(handler WorkerHandler, found bool, event string) string {
+	if found {
+		return handler.Name
 	}
+	if event == "invalid" {
+		return "invalid"
+	}
+	return "unknown"
 }
 
 func (c *Consumer) handleWebhook(ctx context.Context, id, payload string) error {
@@ -297,34 +354,7 @@ func (c *Consumer) handleWebhook(ctx context.Context, id, payload string) error 
 	if err := json.Unmarshal([]byte(payload), &job); err != nil {
 		return fmt.Errorf("bad webhook payload: %w", err)
 	}
-	target, err := url.Parse(job.URL)
-	if err != nil || target.Scheme != "https" || !allowedWebhookHost(target.Hostname()) {
-		return fmt.Errorf("webhook target is not an allowlisted HTTPS host")
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), strings.NewReader(string(job.Body)))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Idempotency-Key", id)
-	response, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("webhook returned %d", response.StatusCode)
-	}
-	return nil
-}
-
-func allowedWebhookHost(host string) bool {
-	for _, allowed := range strings.Split(os.Getenv("WEBHOOK_ALLOWED_HOSTS"), ",") {
-		if strings.EqualFold(strings.TrimSpace(allowed), host) && host != "" {
-			return true
-		}
-	}
-	return false
+	return c.webhook.Deliver(ctx, WebhookDelivery{MessageID: id, URL: job.URL, Body: job.Body})
 }
 
 func freshMarkers(count int) []string {
@@ -357,6 +387,22 @@ func ReplayDLQ(ctx context.Context, rdb *redis.Client, stream string, limit int6
 		replayed++
 	}
 	return replayed, nil
+}
+
+// ReplayFromStart resets a consumer group to the beginning of a stream. This
+// is an explicit maintenance operation and should be run while consumers are stopped.
+func ReplayFromStart(ctx context.Context, rdb *redis.Client, stream, consumerGroup string) error {
+	if strings.TrimSpace(stream) == "" || strings.TrimSpace(consumerGroup) == "" {
+		return fmt.Errorf("stream and consumer group are required")
+	}
+	if err := rdb.XGroupDestroy(ctx, stream, consumerGroup).Err(); err != nil && !errors.Is(err, redis.Nil) {
+		return err
+	}
+	err := rdb.XGroupCreateMkStream(ctx, stream, consumerGroup, "0").Err()
+	if err != nil && !strings.Contains(err.Error(), "BUSYGROUP") {
+		return err
+	}
+	return nil
 }
 
 // handleEmail sends one transactional mail. At-least-once delivery means a

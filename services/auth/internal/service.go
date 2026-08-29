@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -21,8 +22,8 @@ import (
 )
 
 const (
-	StreamUsers   = "users.events"
-	EventCreated  = "user.created"
+	StreamUsers   = platform.StreamUsers
+	EventCreated  = platform.EventUserCreated
 	StreamMail    = "mail.jobs"
 	EventSend     = "email.send"
 	channelLogout = "force-logout"
@@ -140,10 +141,46 @@ type AuthResult struct {
 	DeviceID      string
 }
 
+type TokenIntrospection struct {
+	Active bool     `json:"active"`
+	Sub    string   `json:"sub,omitempty"`
+	Email  string   `json:"email,omitempty"`
+	Perms  []string `json:"perms,omitempty"`
+	Ver    int64    `json:"ver,omitempty"`
+	Exp    int64    `json:"exp,omitempty"`
+}
+
+// IntrospectToken validates both the token and the current account/claims
+// state. Invalid, deleted, deactivated, or stale tokens are uniformly inactive.
+func (s *Service) IntrospectToken(ctx context.Context, raw string) (TokenIntrospection, error) {
+	claims, err := ParseTokenWithRing(s.secretRing(), strings.TrimSpace(raw), PurposeAccess)
+	if err != nil {
+		return TokenIntrospection{}, nil
+	}
+	var state struct {
+		Status string
+		Ver    int64
+	}
+	result := s.db.WithContext(ctx).Raw(`SELECT u.status, COALESCE(v.ver, 0) AS ver
+		FROM users.users u LEFT JOIN rbac.user_versions v ON v.user_id = u.id
+		WHERE u.id = ? AND u.deleted_at IS NULL`, claims.Sub).Scan(&state)
+	if result.Error != nil {
+		return TokenIntrospection{}, result.Error
+	}
+	if result.RowsAffected == 0 || state.Status != string(platform.UserActive) || state.Ver != claims.Ver {
+		return TokenIntrospection{}, nil
+	}
+	response := TokenIntrospection{Active: true, Sub: claims.Sub, Email: claims.Email, Perms: claims.Perms, Ver: claims.Ver}
+	if claims.ExpiresAt != nil {
+		response.Exp = claims.ExpiresAt.Unix()
+	}
+	return response, nil
+}
+
 func lower(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 
-func (s *Service) Register(ctx context.Context, email, password string) (*User, error) {
-	return s.RegisterWithSub(ctx, uuid.NewString(), email, password)
+func (s *Service) Register(ctx context.Context, email, password string, displayName ...string) (*User, error) {
+	return s.RegisterWithSub(ctx, uuid.NewString(), email, password, displayName...)
 }
 
 // EnsureBootstrapAdmin creates the bootstrap account when missing; when it
@@ -207,7 +244,7 @@ func (s *Service) SetPasswordByID(ctx context.Context, userID int64, newPassword
 	return nil
 }
 
-func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password string) (*User, error) {
+func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password string, displayName ...string) (*User, error) {
 	email = lower(email)
 	if err := s.checkNewPassword(ctx, email, password); err != nil {
 		return nil, err
@@ -229,11 +266,18 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 		id64 = 0 // public registration: let the identity sequence assign it
 	}
 
-	u := &User{Email: lower(email), PasswordHash: hash}
+	name := ""
+	if len(displayName) > 0 {
+		name = strings.TrimSpace(displayName[0])
+	}
+	if utf8.RuneCountInString(name) > 120 || strings.ContainsAny(name, "<>") || strings.IndexFunc(name, func(r rune) bool { return r < 0x20 && r != '\t' }) >= 0 {
+		return nil, platform.ErrBadRequest("displayName must be at most 120 plain-text characters")
+	}
+	u := &User{Email: lower(email), PasswordHash: hash, DisplayName: name}
 	if id64 > 0 {
 		if err := s.db.WithContext(ctx).Raw(
-			`INSERT INTO users.users (id, email, password_hash) VALUES (?, ?, ?) RETURNING *`,
-			id64, u.Email, u.PasswordHash,
+			`INSERT INTO users.users (id, email, password_hash, display_name) VALUES (?, ?, ?, ?) RETURNING *`,
+			id64, u.Email, u.PasswordHash, u.DisplayName,
 		).Scan(u).Error; err != nil {
 			return nil, err
 		}
@@ -245,13 +289,15 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 		}
 	} else {
 		if err := s.db.WithContext(ctx).Raw(
-			`INSERT INTO users.users (email, password_hash) VALUES (?, ?) RETURNING *`,
-			u.Email, u.PasswordHash,
+			`INSERT INTO users.users (email, password_hash, display_name) VALUES (?, ?, ?) RETURNING *`,
+			u.Email, u.PasswordHash, u.DisplayName,
 		).Scan(u).Error; err != nil {
 			return nil, err
 		}
 	}
-	if err := s.pub.Publish(ctx, StreamUsers, EventCreated, map[string]string{"sub": strconv.FormatInt(u.ID, 10), "email": u.Email}); err != nil {
+	if err := s.pub.Publish(ctx, StreamUsers, EventCreated, platform.UserCreatedEvent{
+		Sub: strconv.FormatInt(u.ID, 10), Email: u.Email, DisplayName: u.DisplayName,
+	}); err != nil {
 		s.log.Error("publish user.created failed", "err", err)
 	}
 	s.log.Info("user registered", "sub", strconv.FormatInt(u.ID, 10))
@@ -682,8 +728,15 @@ func (s *Service) ChangePassword(ctx context.Context, sub int64, oldPassword, ne
 func (s *Service) SetUserState(ctx context.Context, sub int64, status *string, locked *bool) error {
 	updates := map[string]any{}
 	if status != nil {
-		if *status != "active" && *status != "inactive" {
-			return platform.ErrBadRequest("status must be active or inactive")
+		var current string
+		if err := s.db.WithContext(ctx).Table("users.users").Select("status").Where("id = ?", sub).Scan(&current).Error; err != nil {
+			return err
+		}
+		if current == "" {
+			return platform.ErrNotFound("user %d not found", sub)
+		}
+		if err := platform.ValidateUserTransition(platform.UserStatus(current), platform.UserStatus(*status)); err != nil {
+			return err
 		}
 		updates["status"] = *status
 	}

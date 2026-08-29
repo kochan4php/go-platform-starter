@@ -129,7 +129,9 @@ func main() {
 		_, _ = w.Write(raw)
 	})
 
-	gen.HandlerWithOptions(internal.NewHandlers(svc, *cfg, log), gen.ChiServerOptions{
+	handlers := internal.NewHandlers(svc, *cfg, log)
+	router.Post("/internal/token/introspect", handlers.IntrospectToken)
+	gen.HandlerWithOptions(handlers, gen.ChiServerOptions{
 		BaseURL:    "/api/v1",
 		BaseRouter: router,
 	})

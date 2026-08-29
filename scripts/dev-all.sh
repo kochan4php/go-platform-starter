@@ -18,7 +18,7 @@
 #   shell        http://127.0.0.1:5173      (vite dev, hot reload)
 #   remotes      :5174 web-auth · :5175 admin-users · :5176 admin-roles
 #   gateway      http://127.0.0.1:8010      (/docs for the aggregate spec)
-#   services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
+#   services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085 · scheduler :8086
 #   admin login  admin@example.local / local-root-access-2026!
 #
 set -euo pipefail
@@ -47,6 +47,7 @@ SERVICES=(
   "rbac|8083|./services/rbac"
   "worker|8084|./services/worker"
   "realtime|8085|./services/realtime"
+  "scheduler|8086|./services/scheduler"
 )
 WEB_APPS=(
   "web|5173"
@@ -54,7 +55,7 @@ WEB_APPS=(
   "web-admin-users|5175"
   "web-admin-roles|5176"
 )
-MANAGED_PORTS=(8000 8081 8082 8083 8084 8085 5173 5174 5175 5176)
+MANAGED_PORTS=(8000 8081 8082 8083 8084 8085 8086 5173 5174 5175 5176)
 
 WIN=0
 command -v powershell.exe > /dev/null 2>&1 && WIN=1
@@ -90,7 +91,7 @@ kill_managed() {
     powershell.exe -NoProfile -ExecutionPolicy Bypass \
       -File "$ROOT/scripts/stop-dev.ps1" >/dev/null 2>&1 || true
   else
-    pkill -f 'tmp/dev/bin/(auth|users|rbac|worker|realtime|gateway)' 2>/dev/null || true
+    pkill -f 'tmp/dev/bin/(auth|users|rbac|worker|realtime|scheduler|gateway)' 2>/dev/null || true
     pkill -f 'vite --port 517' 2>/dev/null || true
   fi
   if [ -f "$PID_FILE" ]; then
@@ -176,7 +177,7 @@ esac
 
 # --- up --------------------------------------------------------------------------
 log "checking managed ports"
-for port in "$LAB_GATEWAY_PORT" 8081 8082 8083 8084 8085 5173 5174 5175 5176; do
+for port in "$LAB_GATEWAY_PORT" 8081 8082 8083 8084 8085 8086 5173 5174 5175 5176; do
   if port_busy "$port"; then
     die "port $port already has a listener — the LAB stack or a previous dev-all is probably still up. Stop it: ./scripts/deploy-lab.sh --down  (or: ./scripts/dev-all.sh down)"
   fi
@@ -206,7 +207,7 @@ log "all binaries built"
 # before ever binding to their port, causing /healthz to time out.
 log "running migrations (sequential)"
 for spec in "${SERVICES[@]}"; do IFS='|' read -r name port dir <<< "$spec"
-  case "$name" in realtime) continue ;; esac   # realtime has no DB
+  case "$name" in realtime|scheduler) continue ;; esac   # infrastructure services own no migrations
   log "  migrate: $name"
   (cd "$ROOT" && ./tmp/dev/bin/"$name" -migrate > "$LOG_DIR/$name-migrate.log" 2>&1) \
     || die "migration failed for $name — check $LOG_DIR/$name-migrate.log"
@@ -254,7 +255,7 @@ for spec in "${WEB_APPS[@]}"; do IFS='|' read -r name port <<<"$spec"; launch_we
 log "waiting for every endpoint to report healthy"
 for url in \
   http://127.0.0.1:8081/healthz http://127.0.0.1:8082/healthz http://127.0.0.1:8083/healthz \
-  http://127.0.0.1:8084/healthz http://127.0.0.1:8085/healthz "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" \
+  http://127.0.0.1:8084/healthz http://127.0.0.1:8085/healthz http://127.0.0.1:8086/healthz "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" \
   http://127.0.0.1:5173/ http://127.0.0.1:5174/; do
   ok=0
   for _ in $(seq 1 60); do
@@ -270,7 +271,7 @@ cat <<SUMMARY
   Shell        http://127.0.0.1:5173        (hot reload)
   Remotes      :5174 auth · :5175 users · :5176 roles
   Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}/docs   (aggregate API reference)
-  Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085
+  Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085 · scheduler :8086
   Admin login  admin@example.local / local-root-access-2026!
   Logs         tmp/dev/logs/<name>.log      (or: ./scripts/dev-all.sh logs [name])
 

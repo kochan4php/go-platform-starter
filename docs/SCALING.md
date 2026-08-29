@@ -84,3 +84,18 @@ Observed:
 | One service's pool wait | p95 query queue >10 ms | give that service its own Postgres instance (schema extraction path: ADR-0001) |
 | Gateway p95 | >100 ms with empty upstreams | terminate TLS earlier / add replicas before sharding routes |
 | Streams DLQ volume | >0.5% of jobs | fix producer/consumer contract before scaling anything |
+
+## Users sharding strategy (K12)
+
+Stay on one Postgres cluster while the users table is below 100 million live
+rows, write IOPS stays below 60%, and p95 indexed lookup remains below 20 ms.
+When two thresholds breach for 30 consecutive days, shard by the stable user
+ID: `shard = xxhash64(user_id) mod N`. Never shard by email because it changes;
+the email uniqueness directory remains a small global lookup service/table.
+
+Start with 16 logical buckets mapped to two physical clusters. Virtual buckets
+allow a bucket to move without changing application keys. Dual-write through
+the outbox, backfill by increasing ID ranges, compare per-bucket counts and
+checksums, shadow-read, then switch one bucket at a time. Rollback is the same
+mapping change while dual-write is active. Sessions and RBAC records follow the
+user's bucket; audit remains time-partitioned and independent.

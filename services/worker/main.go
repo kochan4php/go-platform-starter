@@ -41,6 +41,7 @@ type config struct {
 	WorkerConcurrency  int           `env:"WORKER_CONCURRENCY" envDefault:"4"`
 	WorkerReadCount    int64         `env:"WORKER_XREAD_COUNT" envDefault:"100"`
 	WorkerMinIdle      time.Duration `env:"WORKER_MIN_IDLE" envDefault:"30s"`
+	WorkerHandlers     string        `env:"WORKER_HANDLERS" envDefault:"email,audit,webhook"`
 	DLQMaxDepth        int64         `env:"DLQ_MAX_DEPTH" envDefault:"10000"`
 	DLQRedisUsername   string        `env:"DLQ_REDIS_USERNAME"`
 	DLQRedisPassword   string        `env:"DLQ_REDIS_PASSWORD"`
@@ -50,6 +51,7 @@ type config struct {
 func main() {
 	migrateOnly := flag.Bool("migrate", false, "run migrations then exit")
 	replayStream := flag.String("replay", "", "replay up to 100 messages from <stream>:dlq")
+	replayFromStart := flag.String("replay-from-start", "", "reset the workers group and replay <stream> from its beginning")
 	flag.Parse()
 
 	if err := platform.LoadDotEnv(envFile()); err != nil {
@@ -100,6 +102,14 @@ func main() {
 		fmt.Printf("replayed %d message(s) from %s:dlq\n", n, *replayStream)
 		return
 	}
+	if *replayFromStart != "" {
+		if replayErr := internal.ReplayFromStart(context.Background(), rdb, *replayFromStart, "workers"); replayErr != nil {
+			log.Error("stream replay reset failed", "stream", *replayFromStart, "err", replayErr)
+			os.Exit(1)
+		}
+		fmt.Printf("reset workers group for %s; next worker boot replays from start\n", *replayFromStart)
+		return
+	}
 	mailer, err := platform.NewMailer(platform.SMTPConfig{
 		Driver: cfg.MailerDriver, Host: cfg.SMTPHost, Port: cfg.SMTPPort,
 		User: cfg.SMTPUser, Pass: cfg.SMTPPass, From: cfg.MailFrom, FromName: cfg.MailFromName,
@@ -122,7 +132,10 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	consumer := internal.NewConsumer(rdb, db, mailer, log).Configure(cfg.WorkerConcurrency, cfg.WorkerReadCount).ConfigureReliability(cfg.WorkerMinIdle, cfg.DLQMaxDepth)
+	consumer := internal.NewConsumer(rdb, db, mailer, log).
+		ConfigureHandlers(cfg.WorkerHandlers).
+		Configure(cfg.WorkerConcurrency, cfg.WorkerReadCount).
+		ConfigureReliability(cfg.WorkerMinIdle, cfg.DLQMaxDepth)
 	consumerDone := make(chan struct{})
 	go func() { consumer.Run(ctx); close(consumerDone) }()
 	retentionDone := platform.NewScheduler(rdb, log, 24*time.Hour, "audit-retention", func(ctx context.Context) {

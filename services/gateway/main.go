@@ -67,6 +67,16 @@ func main() {
 		log.Error("request validator build failed", "err", err)
 		os.Exit(1)
 	}
+	consumerQuotas, err := internal.ParseConsumerQuotas(cfg.ConsumerQuotas)
+	if err != nil {
+		log.Error("bad consumer quotas", "err", err)
+		os.Exit(1)
+	}
+	webSocketRoutes, err := internal.ParseWebSocketRoutes(cfg.WebSocketRoutes, cfg.RealtimeUpstream)
+	if err != nil {
+		log.Error("bad WebSocket routes", "err", err)
+		os.Exit(1)
+	}
 
 	rdb := platform.NewRedisClient(cfg.RedisAddr, cfg.RedisUsername, cfg.RedisPassword)
 	redisCtx, redisCancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -96,39 +106,42 @@ func main() {
 		w.Header().Set("Content-Type", "application/yaml")
 		_, _ = w.Write(raw)
 	})
-	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies)).Post("/telemetry/vitals", internal.WebVitals)
-	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies)).Post("/telemetry/errors", internal.FrontendErrors(log))
+	quotaPolicy := consumerQuotaPolicy{secret: cfg.AccessTokenSecret, overrides: consumerQuotas}
+	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies, quotaPolicy)).Post("/telemetry/vitals", internal.WebVitals)
+	router.With(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies, quotaPolicy)).Post("/telemetry/errors", internal.FrontendErrors(log))
 	router.Get("/status", internal.StatusPage(upstreams))
 
 	// WebSocket passthrough to the realtime service (PLAN item 41/47): the
 	// upgrade request cannot be a registry route, so it gets its own proxy.
-	if cfg.RealtimeUpstream != "" {
+	for path, target := range webSocketRoutes {
 		wsProxy := &httputil.ReverseProxy{
 			Rewrite: func(pr *httputil.ProxyRequest) {
-				pr.Out.URL.Scheme = "http"
-				pr.Out.URL.Host = strings.TrimPrefix(cfg.RealtimeUpstream, "http://")
+				pr.Out.URL.Scheme = target.Scheme
+				pr.Out.URL.Host = target.Host
 			},
 			ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 				log.Error("ws upstream failed", "err", err)
 				platform.Fail(w, http.StatusServiceUnavailable, "upstream_unavailable", "realtime is not responding")
 			},
 		}
-		router.Get("/ws", wsProxy.ServeHTTP)
+		router.Get(path, wsProxy.ServeHTTP)
 	}
 
+	plugins := internal.NewMiddlewareRegistry()
+	plugins.Register("rate-limit", edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies, quotaPolicy))
+	plugins.Register("body-guard", routeBodyGuard(cfg.Matcher()))
+	plugins.Register("proxy", internal.ProxyHandler(internal.ProxyDeps{
+		Secret: cfg.AccessTokenSecret, InternalSecret: platform.ActiveSecret(cfg.InternalSecret), Log: log,
+		Matcher: cfg.Matcher(), Upstreams: upstreams, RDB: rdb, Validator: validator,
+		ClientIP: func(r *http.Request) string { return clientIP(r, trustedProxies) },
+	}))
+	pluginChain, err := plugins.Chain(cfg.MiddlewarePlugins)
+	if err != nil {
+		log.Error("gateway middleware registry invalid", "err", err)
+		os.Exit(1)
+	}
 	router.Group(func(api chi.Router) {
-		api.Use(edgeRateLimit(limiter, log, cfg.RatePerMinute, cfg.Matcher(), trustedProxies))
-		api.Use(routeBodyGuard(cfg.Matcher()))
-		api.Use(internal.ProxyHandler(internal.ProxyDeps{
-			Secret:         cfg.AccessTokenSecret,
-			InternalSecret: platform.ActiveSecret(cfg.InternalSecret),
-			Log:            log,
-			Matcher:        cfg.Matcher(),
-			Upstreams:      upstreams,
-			RDB:            rdb,
-			Validator:      validator,
-			ClientIP:       func(r *http.Request) string { return clientIP(r, trustedProxies) },
-		}))
+		api.Use(pluginChain)
 		api.HandleFunc("/*", func(w http.ResponseWriter, _ *http.Request) {
 			platform.Fail(w, http.StatusNotFound, "not_found", "no route")
 		})
@@ -184,13 +197,20 @@ func trimSpace(s string) string {
 	return s
 }
 
-func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int, matcher *internal.Matcher, trusted []netip.Prefix) func(http.Handler) http.Handler {
+type consumerQuotaPolicy struct {
+	secret    string
+	overrides map[string]int
+}
+
+func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int, matcher *internal.Matcher, trusted []netip.Prefix, policies ...consumerQuotaPolicy) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			limit := perMinute
 			class := "standard"
 			bucket := class
-			if route := matcher.Match(r.Method, r.URL.Path); route != nil {
+			consumer := clientIP(r, trusted)
+			route := matcher.Match(r.Method, r.URL.Path)
+			if route != nil {
 				class = route.RateClass
 				bucket = class + ":" + route.Method + ":" + route.Path
 				switch class {
@@ -200,7 +220,19 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 					limit = perMinute * 2
 				}
 			}
-			res, err := limiter.Allow(r.Context(), "rl:edge:"+bucket+":"+clientIP(r, trusted), redis_rate.PerMinute(limit))
+			if len(policies) > 0 {
+				raw := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+				if claims, err := internal.ParseAccess(policies[0].secret, raw); err == nil {
+					consumer = claims.Sub
+					if route != nil && route.ConsumerQuota > 0 {
+						limit = route.ConsumerQuota
+					}
+					if override := policies[0].overrides[claims.Sub]; override > 0 {
+						limit = override
+					}
+				}
+			}
+			res, err := limiter.Allow(r.Context(), "rl:edge:"+bucket+":"+consumer, redis_rate.PerMinute(limit))
 			if err != nil {
 				if class == "strict" {
 					log.Error("strict edge rate limiter unavailable (fail-closed)", "err", err)
@@ -233,8 +265,9 @@ func routeBodyGuard(matcher *internal.Matcher) func(http.Handler) http.Handler {
 				platform.Fail(w, http.StatusRequestEntityTooLarge, "body_too_large", "request body exceeds the route limit")
 				return
 			}
-			if r.ContentLength > 0 && r.Method != http.MethodGet && !strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "application/json") {
-				platform.Fail(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "Content-Type must be application/json")
+			contentType := strings.ToLower(r.Header.Get("Content-Type"))
+			if r.ContentLength > 0 && r.Method != http.MethodGet && !strings.HasPrefix(contentType, "application/json") && !strings.HasPrefix(contentType, "multipart/form-data") {
+				platform.Fail(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "Content-Type must be application/json or multipart/form-data")
 				return
 			}
 			r.Body = http.MaxBytesReader(w, r.Body, limit)

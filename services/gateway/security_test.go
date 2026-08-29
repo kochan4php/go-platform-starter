@@ -9,9 +9,12 @@ import (
 	"net/netip"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-redis/redis_rate/v10"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 	"github.com/kochan4php/go-platform-starter/internal/testutil"
 	gatewayinternal "github.com/kochan4php/go-platform-starter/services/gateway/internal"
 	"github.com/redis/go-redis/v9"
@@ -88,6 +91,40 @@ func TestStrictRateLimitsAreIsolatedPerRoute(t *testing.T) {
 	}
 	if got := request("/api/v1/auth/refresh"); got != http.StatusNoContent {
 		t.Fatalf("refresh shared the login bucket: status = %d", got)
+	}
+}
+
+func TestConsumerQuotaUsesAuthenticatedSubject(t *testing.T) {
+	client := redis.NewClient(&redis.Options{Addr: testutil.StartRedis(t)})
+	t.Cleanup(func() { _ = client.Close() })
+	const secret = "quota-test-secret"
+	matcher := gatewayinternal.NewMatcher([]gatewayinternal.Route{{
+		Method: http.MethodGet, Path: "/api/v1/users/stats", ConsumerQuota: 1,
+	}})
+	handler := edgeRateLimit(redis_rate.NewLimiter(client), slog.New(slog.NewTextHandler(io.Discard, nil)), 100, matcher, nil,
+		consumerQuotaPolicy{secret: secret, overrides: map[string]int{}},
+	)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) }))
+	mint := func(sub string) string {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, platform.AccessClaims{
+			Purpose: "access", Sub: sub,
+			RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute))},
+		})
+		raw, err := token.SignedString([]byte(secret))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return raw
+	}
+	request := func(sub string) int {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/users/stats", nil)
+		req.RemoteAddr = "203.0.113.9:54321"
+		req.Header.Set("Authorization", "Bearer "+mint(sub))
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		return res.Code
+	}
+	if request("42") != http.StatusNoContent || request("42") != http.StatusTooManyRequests || request("43") != http.StatusNoContent {
+		t.Fatal("consumer quota buckets were not isolated by subject")
 	}
 }
 

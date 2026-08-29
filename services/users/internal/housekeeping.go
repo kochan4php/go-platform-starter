@@ -19,3 +19,11 @@ func PurgeDeletedProfiles(ctx context.Context, db *gorm.DB) (int64, error) {
 	)
 	return result.RowsAffected, result.Error
 }
+
+// RefreshReadModels updates dashboard projections without blocking readers.
+func RefreshReadModels(ctx context.Context, db *gorm.DB) error {
+	if err := db.WithContext(ctx).Exec(`REFRESH MATERIALIZED VIEW CONCURRENTLY users.dashboard_stats`).Error; err != nil {
+		return err
+	}
+	return db.WithContext(ctx).Exec(`REFRESH MATERIALIZED VIEW CONCURRENTLY users.registration_daily`).Error
+}

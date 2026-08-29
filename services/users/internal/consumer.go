@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	StreamUsers  = "users.events"
-	EventCreated = "user.created"
-	EventDeleted = "user.deleted"
+	StreamUsers  = platform.StreamUsers
+	EventCreated = platform.EventUserCreated
+	EventDeleted = platform.EventUserDeleted
 )
 
 // ConsumeUserEvents materializes/deletes profile rows from the auth lifecycle
@@ -90,9 +90,7 @@ func ConsumeUserEvents(ctx context.Context, rdb *redis.Client, db *gorm.DB, log 
 func handleEvent(ctx context.Context, db *gorm.DB, log *slog.Logger, eventRaw, payloadRaw any) {
 	event, _ := eventRaw.(string)
 	payloadStr, _ := payloadRaw.(string)
-	var payload struct {
-		Sub string `json:"sub"`
-	}
+	var payload platform.UserCreatedEvent
 	if err := json.Unmarshal([]byte(payloadStr), &payload); err != nil || payload.Sub == "" {
 		log.Warn("malformed user event ignored", "event", event)
 		return
@@ -100,8 +98,13 @@ func handleEvent(ctx context.Context, db *gorm.DB, log *slog.Logger, eventRaw, p
 
 	switch event {
 	case EventCreated:
-		// The identity transaction creates the profile columns in users.users
-		// before publishing this notification, so no second write is needed.
+		if err := db.WithContext(ctx).Exec(
+			`UPDATE users.users SET email = ?, display_name = ? WHERE id = ?`,
+			payload.Email, payload.DisplayName, payload.Sub,
+		).Error; err != nil {
+			log.Error("profile projection failed", "sub", payload.Sub, "err", err)
+			return
+		}
 		log.Info("profile available", "sub", payload.Sub)
 	case EventDeleted:
 		if err := db.WithContext(ctx).Exec(`DELETE FROM users.users WHERE id = ?`, payload.Sub).Error; err != nil {

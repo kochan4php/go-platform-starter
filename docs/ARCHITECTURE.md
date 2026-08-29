@@ -27,6 +27,8 @@ flowchart LR
 
     RT[realtime :8085]:::ws
     GW -. ws upgrade .-> RT
+    SC[scheduler :8086]:::ws
+    SC -. leader-elected events .-> WK
 
     classDef ws stroke-dasharray: 5 5
 ```
@@ -75,9 +77,11 @@ flowchart LR
     ALL[any api] -- audit.entry --> ST3[(audit.events)]
 
     US -- consumes --> ST1
+    RB[rbac] -- consumes default-role saga --> ST1
     WK[worker] -- consumes: mail send, audit flush --> ST2
     WK -- consumes --> ST3
     US -- scheduled purge sweep --> PL
+    SC[scheduler] -- configured jobs --> ST4[(domain streams)]
 
     AUTH2[auth force-logout] -- pub/sub channel --> RTK[realtime kick]
 ```

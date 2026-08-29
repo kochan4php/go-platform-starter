@@ -23,6 +23,13 @@ type recordingMailer struct {
 	fail func() bool
 }
 
+type recordingWebhook struct{ delivery WebhookDelivery }
+
+func (w *recordingWebhook) Deliver(_ context.Context, delivery WebhookDelivery) error {
+	w.delivery = delivery
+	return nil
+}
+
 func (m *recordingMailer) Send(_ context.Context, mail platform.Mail) error {
 	if m.fail != nil && m.fail() {
 		return fmt.Errorf("transient smtp failure")
@@ -112,6 +119,29 @@ func TestFlushAuditOutboxPublishesAndDeletes(t *testing.T) {
 	}
 	if remaining != 0 {
 		t.Fatalf("outbox rows = %d", remaining)
+	}
+}
+
+func TestUniversalOutboxPersistsNonAuditEventWhenRedisIsDown(t *testing.T) {
+	f := startFixture(t, nil)
+	unavailable := redis.NewClient(&redis.Options{Addr: "127.0.0.1:1", DialTimeout: 20 * time.Millisecond})
+	defer unavailable.Close()
+	event := platform.UserCreatedEvent{Sub: "42", Email: "outbox@example.local", DisplayName: "Outbox"}
+	if err := platform.PublishWithAuditOutbox(context.Background(), f.db, unavailable, platform.StreamUsers, platform.EventUserCreated, event); err != nil {
+		t.Fatal(err)
+	}
+	var count int64
+	if err := f.db.Table("audit.event_outbox").Where("stream = ? AND event = ?", platform.StreamUsers, platform.EventUserCreated).Count(&count).Error; err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Fatalf("durable non-audit events = %d, want 1", count)
+	}
+	if _, err := FlushAuditOutbox(context.Background(), f.db, f.rdb); err != nil {
+		t.Fatal(err)
+	}
+	if length, _ := f.rdb.XLen(context.Background(), platform.StreamUsers).Result(); length != 1 {
+		t.Fatalf("relayed users stream length = %d", length)
 	}
 }
 
@@ -266,6 +296,46 @@ func TestDLQReplayMovesMessagesBackToTheSourceStream(t *testing.T) {
 	}
 	if n, _ := f.rdb.XLen(ctx, "mail.jobs").Result(); n != 1 {
 		t.Fatalf("source stream has %d message(s)", n)
+	}
+}
+
+func TestWorkerHandlerRegistryAndReplayFromStart(t *testing.T) {
+	f := startFixture(t, nil)
+	called := false
+	f.c.RegisterHandler(WorkerHandler{
+		Name: "custom", Stream: "custom.jobs", Event: "custom.run",
+		Handle: func(context.Context, *gorm.DB, string, string) error { called = true; return nil },
+	})
+	if !f.c.processWithDB(context.Background(), f.db, "custom.jobs", "1-0", `{}`, "custom.run") || !called {
+		t.Fatal("registered handler was not invoked")
+	}
+	f.c.ConfigureHandlers("custom")
+	if len(f.c.stream) != 1 || f.c.stream[0] != "custom.jobs" {
+		t.Fatalf("configured streams = %#v", f.c.stream)
+	}
+
+	ctx := context.Background()
+	if err := f.rdb.XAdd(ctx, &redis.XAddArgs{Stream: "custom.jobs", Values: map[string]any{"event": "custom.run", "payload": `{}`}}).Err(); err != nil {
+		t.Fatal(err)
+	}
+	if err := ReplayFromStart(ctx, f.rdb, "custom.jobs", "workers"); err != nil {
+		t.Fatal(err)
+	}
+	groups, err := f.rdb.XInfoGroups(ctx, "custom.jobs").Result()
+	if err != nil || len(groups) != 1 || groups[0].LastDeliveredID != "0-0" {
+		t.Fatalf("groups=%#v err=%v", groups, err)
+	}
+}
+
+func TestWebhookAntiCorruptionAdapterReceivesDomainDelivery(t *testing.T) {
+	f := startFixture(t, nil)
+	provider := &recordingWebhook{}
+	f.c.webhook = provider
+	if err := f.c.handleWebhook(context.Background(), "webhook.jobs:1-0", `{"url":"https://provider.example/hook","body":{"ok":true}}`); err != nil {
+		t.Fatal(err)
+	}
+	if provider.delivery.MessageID != "webhook.jobs:1-0" || provider.delivery.URL != "https://provider.example/hook" || string(provider.delivery.Body) != `{"ok":true}` {
+		t.Fatalf("delivery = %#v", provider.delivery)
 	}
 }
 

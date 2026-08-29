@@ -16,15 +16,20 @@ import (
 
 func TestProxyUsesValidatedClientIP(t *testing.T) {
 	forwarded := make(chan string, 1)
+	transformed := make(chan string, 1)
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		forwarded <- r.Header.Get("X-Forwarded-For")
+		transformed <- r.Header.Get("X-Read-Model")
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer upstream.Close()
 
 	handler := ProxyHandler(ProxyDeps{
-		Log:       slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Matcher:   NewMatcher([]Route{{Method: http.MethodPost, Path: "/api/v1/auth/login", Service: "auth"}}),
+		Log: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Matcher: NewMatcher([]Route{{
+			Method: http.MethodPost, Path: "/api/v1/auth/login", Service: "auth",
+			RequestHeaders: map[string]string{"X-Read-Model": "dashboard"},
+		}}),
 		Upstreams: Upstreams{"auth": upstream.URL},
 		ClientIP:  func(*http.Request) string { return "203.0.113.7" },
 	})(http.NotFoundHandler())
@@ -38,6 +43,9 @@ func TestProxyUsesValidatedClientIP(t *testing.T) {
 	}
 	if got := <-forwarded; got != "203.0.113.7" {
 		t.Fatalf("forwarded client IP = %q", got)
+	}
+	if got := <-transformed; got != "dashboard" {
+		t.Fatalf("transformed header = %q", got)
 	}
 }
 
@@ -123,5 +131,34 @@ func TestResilientTransportHedgesSlowGET(t *testing.T) {
 	}
 	if elapsed := time.Since(started); elapsed >= 500*time.Millisecond {
 		t.Fatalf("hedge took %s", elapsed)
+	}
+}
+
+func TestResilientTransportServesFreshCachedResponsePerConsumer(t *testing.T) {
+	calls := 0
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		_, _ = w.Write([]byte("cached"))
+	}))
+	defer upstream.Close()
+	transport, err := newResilientTransport(upstream.URL, http.DefaultTransport.(*http.Transport).Clone())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.WithValue(context.Background(), routePolicyKey{}, routePolicy{cacheTTL: time.Minute})
+	for i := range 2 {
+		request, _ := http.NewRequestWithContext(ctx, http.MethodGet, upstream.URL+"/stats", nil)
+		request.Header.Set("X-User-Id", "42")
+		response, err := transport.RoundTrip(request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response.Body.Close()
+		if i == 1 && response.Header.Get("X-Cache") != "HIT" {
+			t.Fatalf("second response cache marker = %q", response.Header.Get("X-Cache"))
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("upstream calls = %d, want 1", calls)
 	}
 }

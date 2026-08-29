@@ -1,7 +1,5 @@
 package internal
 
-import ()
-
 type Config struct {
 	Port              string `env:"PORT" envDefault:"8080"`
 	LogLevel          string `env:"LOG_LEVEL" envDefault:"info"`
@@ -15,6 +13,9 @@ type Config struct {
 	RatePerMinute     int    `env:"RATE_GLOBAL_PER_MINUTE" envDefault:"300"`
 	TrustedProxyCIDRs string `env:"TRUSTED_PROXY_CIDRS" envDefault:""`
 	SlowRequestMs     int    `env:"SLOW_REQUEST_THRESHOLD_MS" envDefault:"500"`
+	MiddlewarePlugins string `env:"GATEWAY_MIDDLEWARES" envDefault:"rate-limit,body-guard,proxy"`
+	ConsumerQuotas    string `env:"CONSUMER_QUOTAS" envDefault:"{}"`
+	WebSocketRoutes   string `env:"WEBSOCKET_ROUTES" envDefault:"{}"`
 	// WebSocket upstream (realtime). When set, the gateway proxies /ws to it
 	// with upgrade passthrough; the realtime REST routes still ride UPSTREAMS.
 	RealtimeUpstream string `env:"REALTIME_UPSTREAM" envDefault:""`

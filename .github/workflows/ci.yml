@@ -34,6 +34,11 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Architecture fitness and template drift
+        run: |
+          node scripts/check-template-drift.mjs
+          node scripts/check-architecture.mjs
+
       - name: Validate YAML manifests
         run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
 
@@ -148,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: [auth, users, rbac, worker, realtime, gateway]
+        component: [auth, users, rbac, worker, realtime, scheduler, gateway]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

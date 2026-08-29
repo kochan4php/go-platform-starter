@@ -247,8 +247,16 @@ type ListUsersParamsSort string
 // ListUsersParamsOrder defines parameters for ListUsers.
 type ListUsersParamsOrder string
 
+// ResizeAvatarMultipartBody defines parameters for ResizeAvatar.
+type ResizeAvatarMultipartBody struct {
+	File openapi_types.File `json:"file"`
+}
+
 // CreateUserProfileJSONRequestBody defines body for CreateUserProfile for application/json ContentType.
 type CreateUserProfileJSONRequestBody = ProfileInput
+
+// ResizeAvatarMultipartRequestBody defines body for ResizeAvatar for multipart/form-data ContentType.
+type ResizeAvatarMultipartRequestBody ResizeAvatarMultipartBody
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = ProfileInput
@@ -261,6 +269,9 @@ type ServerInterface interface {
 	// CreateUserProfile provision a profile row for an existing sub
 	// (POST /users)
 	CreateUserProfile(w http.ResponseWriter, r *http.Request)
+	// ResizeAvatar validate and resize an avatar to fit within 512x512
+	// (POST /users/avatar/resize)
+	ResizeAvatar(w http.ResponseWriter, r *http.Request)
 	// EraseMe irreversibly erase the caller's personal data and revoke access
 	// (DELETE /users/me)
 	EraseMe(w http.ResponseWriter, r *http.Request)
@@ -297,6 +308,12 @@ func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request, params 
 // CreateUserProfile provision a profile row for an existing sub
 // (POST /users)
 func (_ Unimplemented) CreateUserProfile(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ResizeAvatar validate and resize an avatar to fit within 512x512
+// (POST /users/avatar/resize)
+func (_ Unimplemented) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -543,6 +560,20 @@ func (siw *ServerInterfaceWrapper) CreateUserProfile(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUserProfile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResizeAvatar operation middleware
+func (siw *ServerInterfaceWrapper) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResizeAvatar(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -799,6 +830,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/avatar/resize", wrapper.ResizeAvatar)
+	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/users/me", wrapper.EraseMe)
 	})

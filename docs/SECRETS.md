@@ -13,6 +13,13 @@ Rotation: publish both keys, roll verifiers, move the new key first, roll
 producers, wait longer than the longest token/grace window, remove the old key,
 and roll verifiers again. Never reuse a key across purposes.
 
+`infra/k8s/security/secret-rotation.yaml` automates the monthly Vault ring
+advance with `concurrencyPolicy: Forbid`; replace the example Vault address and
+token bootstrap with workload identity before applying. ESO refreshes service
+Secrets after Vault changes. `certificates.yaml` configures cert-manager ACME
+renewal and private-key rotation. Alert if either CronJob/Certificate reports a
+failed condition, and rehearse removal of the previous signing key in UAT.
+
 `infra/k8s/security` contains ESO/Vault, API-server KMS, cosign admission,
 audit, NetworkPolicy, and Falco templates. Bind their placeholders to the real
 cluster before applying. `infra/redis/users.acl` separates gateway, producer,

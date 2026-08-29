@@ -856,35 +856,35 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Architecture & Scalability
 
-- [ ] 🔧 K1. Template drift check (template vs services diff CI)
-- [ ] 🔧 K2. Shared DTO types di platform (anti duplikasi struct)
+- [x] 🔧 K1. Template drift check (template vs services diff CI)
+- [x] 🔧 K2. Shared DTO types di platform (anti duplikasi struct)
 - [ ] 🧭 K3. gRPC antar service (evaluasi — deferred)
-- [ ] 🔧 K4. Event-carried state transfer (display_name di user.created)
-- [ ] 🔧 K5. CQRS ringan: read model users list
-- [ ] 🔧 K6. Outbox table pattern semua event
-- [ ] 🔧 K7. Event replay tooling dari stream awal
-- [ ] 🔧 K8. Saga pattern multi-service flow (register+role+profile)
-- [ ] 🔧 K9. Anti-corruption layer untuk integrasi pihak ketiga
+- [x] 🔧 K4. Event-carried state transfer (display_name di user.created)
+- [x] 🔧 K5. CQRS ringan: read model users list
+- [x] 🔧 K6. Outbox table pattern semua event
+- [x] 🔧 K7. Event replay tooling dari stream awal
+- [x] 🔧 K8. Saga pattern multi-service flow (register+role+profile)
+- [x] 🔧 K9. Anti-corruption layer untuk integrasi pihak ketiga
 - [ ] 🧭 K10. Service mesh evaluasi doc (istio/linkerd triggers)
 - [ ] 🧭 K11. Multi-tenant readiness (tenant_id + scoping)
-- [ ] 🔧 K12. Sharding strategy docs (users by id hash triggers)
-- [ ] 🔧 K13. Read model denormalisasi dashboard stats
-- [ ] 🔧 K14. Materialized view statistik harian
+- [x] 🔧 K12. Sharding strategy docs (users by id hash triggers)
+- [x] 🔧 K13. Read model denormalisasi dashboard stats
+- [x] 🔧 K14. Materialized view statistik harian
 - [ ] 🧭 K15. Event sourcing audit penuh (evaluasi)
 - [ ] 🧭 K16. BFF pattern per-platform (mobile BFF)
 - [ ] 🧭 K17. Mobile client API contract review
 - [ ] 🧭 K18. Public API + API key auth
 - [ ] 🧭 K19. Webhook system outbound
-- [ ] 🔧 K20. Worker handler plugin architecture
-- [ ] 🔧 K21. Dynamic worker handler registration (config-driven)
-- [ ] 🔧 K22. Service discovery abstraction via env
+- [x] 🔧 K20. Worker handler plugin architecture
+- [x] 🔧 K21. Dynamic worker handler registration (config-driven)
+- [x] 🔧 K22. Service discovery abstraction via env
 - [ ] 🧭 K23. Centralized config service (evaluasi vs env)
-- [ ] 🔧 K24. Blue-green infra template
+- [x] 🔧 K24. Blue-green infra template
 - [ ] 🧭 K25. Multi-region active-passive docs
 - [ ] 🧭 K26. Data residency per deployment
 - [ ] 🧭 K27. Compliance mode toggle
 - [ ] 🧭 K28. Centralized rate limiter service
-- [ ] 🔧 K29. Token introspection endpoint
+- [x] 🔧 K29. Token introspection endpoint
 - [ ] 🧭 K30. OIDC provider mode
 - [ ] 🧭 K31. SCIM provisioning (enterprise)
 - [ ] 🧭 K32. LDAP/AD connector (enterprise)
@@ -892,7 +892,7 @@ by priority — baca seluruhnya lalu pilih.
 - [ ] 🧭 K34. Organization/workspace hierarchy
 - [ ] 🧭 K35. Team/division entity
 - [ ] 🧭 K36. Invitation flow (email invite)
-- [ ] 🔧 K37. User lifecycle state machine
+- [x] 🔧 K37. User lifecycle state machine
 - [ ] 🧭 K38. Service account entity (non-human)
 - [ ] 🧭 K39. API key entity + scopes
 - [ ] 🧭 K40. Delegated admin scopes
@@ -903,29 +903,29 @@ by priority — baca seluruhnya lalu pilih.
 - [ ] 🧭 K45. Search service terpisah (Meilisearch)
 - [ ] 🧭 K46. Notification service terpisah
 - [ ] 🧭 K47. File storage service (S3/MinIO)
-- [ ] 🔧 K48. Image processing (resize avatar)
+- [x] 🔧 K48. Image processing (resize avatar)
 - [ ] 🧭 K49. Reporting service (async export)
 - [ ] 🧭 K50. Data warehouse pipeline (CDC)
 - [ ] 🧭 K51. CDC via Debezium
 - [ ] 🧭 K52. Message broker abstraction (→Kafka path)
-- [ ] 🔧 K53. Scheduler service terpisah
-- [ ] 🔧 K54. Leader election library formal
-- [ ] 🔧 K55. Distributed lock library formal
-- [ ] 🔧 K56. Idempotency service
-- [ ] 🔧 K57. Distributed rate limiter service
+- [x] 🔧 K53. Scheduler service terpisah
+- [x] 🔧 K54. Leader election library formal
+- [x] 🔧 K55. Distributed lock library formal
+- [x] 🔧 K56. Idempotency service
+- [x] 🔧 K57. Distributed rate limiter service
 - [ ] 🧭 K58. Feature flag service
 - [ ] 🧭 K59. Config service dengan audit
-- [ ] 🔧 K60. Secrets rotation service
-- [ ] 🔧 K61. Certificate management automation
-- [ ] 🔧 K62. Edge: multiple gateway + LB
-- [ ] 🔧 K63. Gateway plugin/middleware registry
+- [x] 🔧 K60. Secrets rotation service
+- [x] 🔧 K61. Certificate management automation
+- [x] 🔧 K62. Edge: multiple gateway + LB
+- [x] 🔧 K63. Gateway plugin/middleware registry
 - [ ] 🧭 K64. Gateway per-tenant routing
-- [ ] 🔧 K65. Gateway request transformation rules
-- [ ] 🔧 K66. Gateway response caching layer
-- [ ] 🔧 K67. Gateway WebSocket routing dinamis
-- [ ] 🔧 K68. Gateway quota management per-consumer
+- [x] 🔧 K65. Gateway request transformation rules
+- [x] 🔧 K66. Gateway response caching layer
+- [x] 🔧 K67. Gateway WebSocket routing dinamis
+- [x] 🔧 K68. Gateway quota management per-consumer
 - [ ] 🧭 K69. Gateway metering (roadmap jauh)
-- [ ] 🔧 K70. Architecture fitness functions (arch tests)
+- [x] 🔧 K70. Architecture fitness functions (arch tests)
 
 ---
 

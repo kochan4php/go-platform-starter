@@ -91,6 +91,10 @@ func (s *Service) Seed(ctx context.Context) error {
 	if err := s.db.WithContext(ctx).Where("name = ?", "admin").FirstOrCreate(&admin).Error; err != nil {
 		return err
 	}
+	standard := Role{Name: "user", Description: "default registered-user role", Color: "#2563eb", Icon: "user"}
+	if err := s.db.WithContext(ctx).Where("name = ?", "user").FirstOrCreate(&standard).Error; err != nil {
+		return err
+	}
 	var permissionRows []permissionRow
 	if err := s.db.WithContext(ctx).Find(&permissionRows).Error; err != nil {
 		return err
@@ -107,7 +111,7 @@ func (s *Service) Seed(ctx context.Context) error {
 		platform.BootstrapSub, admin.ID).Error; err != nil {
 		return err
 	}
-	s.log.Info("rbac seeded", "roles", 1, "permissions", len(permissionRows))
+	s.log.Info("rbac seeded", "roles", 2, "permissions", len(permissionRows))
 	return nil
 }
 

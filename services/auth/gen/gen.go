@@ -67,8 +67,9 @@ type LoginInput struct {
 
 // RegisterInput defines model for RegisterInput.
 type RegisterInput struct {
-	Email    openapi_types.Email `json:"email"`
-	Password string              `json:"password"`
+	DisplayName *string             `json:"displayName,omitempty"`
+	Email       openapi_types.Email `json:"email"`
+	Password    string              `json:"password"`
 }
 
 // ResetInput defines model for ResetInput.

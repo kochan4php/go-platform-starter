@@ -8,6 +8,28 @@ info:
     auth materialize/delete rows automatically. Mounted under /api/v1/users.
 
 paths:
+  /users/avatar/resize:
+    post:
+      operationId: resizeAvatar
+      summary: validate and resize an avatar to fit within 512x512
+      x-auth: required
+      x-request-body-limit: 8388608
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: resized JPEG
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+
   /users/me:
     get:
       operationId: me
@@ -111,6 +133,10 @@ paths:
       operationId: getUserStats
       summary: directory totals and seven-day registration series
       x-required-permission: "user:read:any"
+      x-cache-ttl: 15s
+      x-consumer-quota-per-minute: 120
+      x-request-headers:
+        X-Read-Model: dashboard
       responses:
         "200":
           description: ok

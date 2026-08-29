@@ -85,6 +85,12 @@ func main() {
 		}
 		return
 	}
+	consumerCtx, consumerCancel := context.WithCancel(context.Background())
+	consumerDone := make(chan struct{})
+	go func() {
+		defer close(consumerDone)
+		internal.ConsumeUserEvents(consumerCtx, rdb, db, log)
+	}()
 
 	router := platform.NewRouter(log, map[string]platform.Checker{
 		"postgres": func(ctx context.Context) error { return pingDB(db) },
@@ -100,7 +106,11 @@ func main() {
 	gen.HandlerWithOptions(internal.NewHandlers(svc, log, cfg.InternalSecret), gen.ChiServerOptions{BaseURL: "/api/v1", BaseRouter: router})
 
 	log.Info("rbac service listening", "port", cfg.Port)
-	if err := platform.GracefulRun(":"+cfg.Port, router, func() { _ = closeDB(db) }); err != nil {
+	if err := platform.GracefulRun(":"+cfg.Port, router, func() {
+		consumerCancel()
+		<-consumerDone
+		_ = closeDB(db)
+	}); err != nil {
 		log.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}

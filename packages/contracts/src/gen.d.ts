@@ -449,6 +449,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/avatar/resize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** validate and resize an avatar to fit within 512x512 */
+        post: operations["resizeAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -605,6 +622,7 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            displayName?: string;
         };
         LoginInput: {
             /** Format: email */
@@ -1706,6 +1724,33 @@ export interface operations {
                             protocol?: string;
                         };
                     };
+                };
+            };
+        };
+    };
+    resizeAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description resized JPEG */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
         };

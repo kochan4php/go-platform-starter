@@ -18,7 +18,8 @@
 		"build": "corepack pnpm -r --workspace-concurrency=1 build",
 		"check:budget": "corepack pnpm --filter web check:budget",
 		"e2e": "playwright test",
-		"check:deps": "node scripts/check-deps.mjs"
+		"check:deps": "node scripts/check-deps.mjs",
+		"check:architecture": "node scripts/check-template-drift.mjs && node scripts/check-architecture.mjs"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.10.2",

@@ -89,6 +89,7 @@ services:
       REDIS_USERS_PASSWORD: ${REDIS_USERS_PASSWORD:?set REDIS_USERS_PASSWORD}
       REDIS_RBAC_PASSWORD: ${REDIS_RBAC_PASSWORD:?set REDIS_RBAC_PASSWORD}
       REDIS_WORKER_PASSWORD: ${REDIS_WORKER_PASSWORD:?set REDIS_WORKER_PASSWORD}
+      REDIS_SCHEDULER_PASSWORD: ${REDIS_SCHEDULER_PASSWORD:?set REDIS_SCHEDULER_PASSWORD}
       REDIS_REALTIME_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
       REDIS_GATEWAY_PASSWORD: ${REDIS_GATEWAY_PASSWORD:?set REDIS_GATEWAY_PASSWORD}
       REDIS_DLQ_ADMIN_PASSWORD: ${REDIS_DLQ_ADMIN_PASSWORD:?set REDIS_DLQ_ADMIN_PASSWORD}
@@ -101,10 +102,11 @@ services:
         umask 077
         printf '%s\n' \
           'user default off' \
-          "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* ~webhook.jobs* &force-logout +get +set +getdel +del +incr +expire +setnx +xadd +publish +eval +evalsha +time +ping" \
-          "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +set +setnx +publish +ping" \
-          "user rbac on >$$REDIS_RBAC_PASSWORD resetkeys resetchannels ~claims:* ~audit.events* &force-logout +set +xadd +publish +ping" \
-          "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~webhook.jobs* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +setnx +del +incr +expire +ping" \
+          "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* ~webhook.jobs* &force-logout +get +set +getdel +del +incr +expire +pexpire +setnx +xadd +publish +eval +evalsha +time +ping" \
+          "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +get +set +setnx +del +pexpire +eval +evalsha +publish +ping" \
+          "user rbac on >$$REDIS_RBAC_PASSWORD resetkeys resetchannels ~claims:* ~audit.events* ~users.events* &force-logout +get +set +xadd +xreadgroup +xgroup +xack +publish +ping" \
+          "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~webhook.jobs* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +get +set +setnx +del +pexpire +eval +evalsha +incr +expire +ping" \
+          "user scheduler on >$$REDIS_SCHEDULER_PASSWORD resetkeys resetchannels ~leader:* ~scheduler:* ~*.events* ~*.jobs* +get +set +del +pexpire +eval +evalsha +xadd +ping" \
           "user realtime on >$$REDIS_REALTIME_PASSWORD resetkeys resetchannels &force-logout +subscribe +unsubscribe +psubscribe +punsubscribe +ping" \
           "user gateway on >$$REDIS_GATEWAY_PASSWORD resetkeys resetchannels ~rl:* ~claims:* +get +set +eval +evalsha +time +ping" \
           "user dlq-admin on >$$REDIS_DLQ_ADMIN_PASSWORD resetkeys resetchannels ~*:dlq +xrange +xread +xdel +xadd +ping" \
@@ -202,6 +204,19 @@ services:
       REDIS_PASSWORD: ${REDIS_REALTIME_PASSWORD:?set REDIS_REALTIME_PASSWORD}
       WS_HEARTBEAT_INTERVAL: ${WS_HEARTBEAT_INTERVAL:-30s}
     depends_on:
+      redis: { condition: service_healthy }
+
+  scheduler:
+    build: { context: .., dockerfile: services/scheduler/Dockerfile }
+    <<: *svc
+    environment:
+      <<: *go-env
+      PORT: "8080"
+      REDIS_USERNAME: scheduler
+      REDIS_PASSWORD: ${REDIS_SCHEDULER_PASSWORD:?set REDIS_SCHEDULER_PASSWORD}
+      SCHEDULED_JOBS: ${SCHEDULED_JOBS:-[]}
+    depends_on:
+      postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
 
   gateway:

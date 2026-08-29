@@ -59,7 +59,7 @@ func (s *Scheduler) tryRun(ctx context.Context) {
 	lockKey := "scheduler:lock:" + s.name
 	ttl := 2 * s.interval
 
-	acquired, err := s.rdb.SetNX(ctx, lockKey, "held", ttl).Result()
+	lock, acquired, err := TryDistributedLock(ctx, s.rdb, lockKey, ttl)
 	if err != nil {
 		s.log.Error("lock check failed, skipping tick", "err", err)
 		return
@@ -68,6 +68,11 @@ func (s *Scheduler) tryRun(ctx context.Context) {
 		s.log.Debug("another replica holds the lock, skipping tick")
 		return
 	}
+	defer func() {
+		if err := lock.Release(context.WithoutCancel(ctx)); err != nil {
+			s.log.Warn("lock release failed", "err", err)
+		}
+	}()
 
 	runCtx, cancel := context.WithTimeout(ctx, s.interval)
 	defer cancel()

@@ -9,12 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// PublishWithAuditOutbox persists audit events before attempting Redis. A
-// Redis outage therefore delays audit delivery instead of losing it.
+// PublishWithAuditOutbox persists every domain event before attempting Redis.
+// The historical name remains API-compatible; the worker relays any stream.
 func PublishWithAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client, stream, event string, payload any) error {
-	if stream != StreamAudit {
-		return Publish(ctx, rdb, stream, event, payload)
-	}
 	if db == nil {
 		return Publish(ctx, rdb, stream, event, payload)
 	}
@@ -22,7 +19,7 @@ func PublishWithAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client,
 	if err != nil {
 		return err
 	}
-	id := "audit-" + newRequestID()
+	id := "event-" + newRequestID()
 	if audit, ok := payload.(AuditEvent); ok && audit.ID != "" {
 		id = audit.ID
 	}
@@ -35,10 +32,7 @@ func PublishWithAuditOutbox(ctx context.Context, db *gorm.DB, rdb *redis.Client,
 		`INSERT INTO audit.event_outbox (id, stream, event, payload, traceparent, tracestate, baggage)
 		 VALUES (?, ?, ?, ?::jsonb, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
 		id, stream, event, string(raw), traceparent, tracestate, baggage).Error; err != nil {
-		if publishErr := Publish(ctx, rdb, stream, event, json.RawMessage(raw)); publishErr == nil {
-			return nil
-		}
-		return fmt.Errorf("persist audit outbox: %w", err)
+		return fmt.Errorf("persist event outbox: %w", err)
 	}
 	if err := Publish(ctx, rdb, stream, event, json.RawMessage(raw)); err != nil {
 		return nil // durable row is retried by the worker relay

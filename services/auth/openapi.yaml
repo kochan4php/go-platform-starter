@@ -385,6 +385,7 @@ components:
       properties:
         email: { type: string, format: email, maxLength: 254 }
         password: { type: string, minLength: 12, maxLength: 72 }
+        displayName: { type: string, maxLength: 120 }
 
     LoginInput:
       type: object
