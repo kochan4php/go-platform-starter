@@ -249,6 +249,26 @@ func TestAuditFlushIsIdempotentPerMessageID(t *testing.T) {
 	}
 }
 
+func TestDLQReplayMovesMessagesBackToTheSourceStream(t *testing.T) {
+	f := startFixture(t, nil)
+	ctx := context.Background()
+	if err := f.rdb.XAdd(ctx, &redis.XAddArgs{Stream: "mail.jobs:dlq", Values: map[string]any{
+		"event": "email.send", "payload": `{"to":"qa@example.test"}`, "attempts": 5,
+	}}).Err(); err != nil {
+		t.Fatal(err)
+	}
+	replayed, err := ReplayDLQ(ctx, f.rdb, "mail.jobs", 10)
+	if err != nil || replayed != 1 {
+		t.Fatalf("replayed=%d err=%v", replayed, err)
+	}
+	if n, _ := f.rdb.XLen(ctx, "mail.jobs:dlq").Result(); n != 0 {
+		t.Fatalf("DLQ still has %d message(s)", n)
+	}
+	if n, _ := f.rdb.XLen(ctx, "mail.jobs").Result(); n != 1 {
+		t.Fatalf("source stream has %d message(s)", n)
+	}
+}
+
 func openDB(t *testing.T, dsn string) (out *gorm.DB) {
 	t.Helper()
 	var db *gorm.DB

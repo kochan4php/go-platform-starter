@@ -9,8 +9,8 @@ import { defineConfig } from "vite";
 // match the local dev port map. With externalType "promise" the plugin wraps
 // this expression as () => EXPR and calls .then() on the result — so EXPR
 // must resolve to the remoteEntry.js URL.
-const remoteEntry = (name: string, port: number) =>
-  `Promise.resolve((window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://127.0.0.1:${port}/assets/remoteEntry.js')`;
+const remoteEntry = (name: string, port: number, envName: string) =>
+  `Promise.resolve(${JSON.stringify(process.env[envName] ?? "")} || (window.__REMOTE_URLS__ && window.__REMOTE_URLS__['${name}']) || 'http://127.0.0.1:${port}/assets/remoteEntry.js')`;
 
 const cdnOrigin = process.env.VITE_CDN_ORIGIN?.replace(/\/$/, "");
 
@@ -42,13 +42,22 @@ export default defineConfig({
     federation({
       name: "web_host",
       remotes: {
-        web_auth: { external: remoteEntry("web_auth", 5174), externalType: "promise" },
-        web_admin_users: { external: remoteEntry("web_admin_users", 5175), externalType: "promise" },
-        web_admin_roles: { external: remoteEntry("web_admin_roles", 5176), externalType: "promise" },
+        web_auth: {
+          external: remoteEntry("web_auth", 5174, "E2E_REMOTE_AUTH_URL"),
+          externalType: "promise",
+        },
+        web_admin_users: {
+          external: remoteEntry("web_admin_users", 5175, "E2E_REMOTE_USERS_URL"),
+          externalType: "promise",
+        },
+        web_admin_roles: {
+          external: remoteEntry("web_admin_roles", 5176, "E2E_REMOTE_RBAC_URL"),
+          externalType: "promise",
+        },
       },
       // Router is host-only; sharing it would ship the entire package instead
       // of letting Rollup tree-shake the small subset used by the shell.
-      shared: ["react", "react-dom", "@tanstack/react-query"],
+      shared: ["react", "react-dom", "@tanstack/react-query", "@starter/ui", "@starter/contracts"],
     }),
   ],
   ...(process.env.NODE_ENV === "development"
@@ -70,7 +79,6 @@ export default defineConfig({
     terserOptions: {
       compress: {
         passes: 3,
-        booleans_as_integers: true,
         drop_console: true,
         keep_fargs: false,
         unsafe: true,

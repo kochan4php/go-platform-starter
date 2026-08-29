@@ -8,16 +8,20 @@
 	},
 	"scripts": {
 		"specs:compose": "node scripts/compose-specs.mjs",
-		"contracts": "pnpm --filter @starter/contracts gen",
+		"contracts": "corepack pnpm --filter @starter/contracts gen",
 		"lint": "biome check .",
 		"format": "biome check --write .",
-		"test": "pnpm -r --workspace-concurrency=1 test",
-		"build": "pnpm -r --workspace-concurrency=1 build",
-		"check:budget": "pnpm --filter web check:budget",
+		"test": "corepack pnpm -r --workspace-concurrency=1 test",
+		"test:gates": "node --test scripts/quality-gates.test.mjs",
+		"test:contracts": "node scripts/check-contracts.mjs",
+		"test:coverage": "node scripts/check-coverage.mjs",
+		"build": "corepack pnpm -r --workspace-concurrency=1 build",
+		"check:budget": "corepack pnpm --filter web check:budget",
 		"e2e": "playwright test",
 		"check:deps": "node scripts/check-deps.mjs"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.10.2",
 		"@biomejs/biome": "^1.9.4",
 		"@playwright/test": "^1.49.0",
 		"js-yaml": "^4.1.0"

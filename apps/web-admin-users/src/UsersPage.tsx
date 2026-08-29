@@ -130,7 +130,7 @@ const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
 };
 
 /** Compact browser-os label from a raw User-Agent string. */
-function deviceLabel(ua?: string): string {
+export function deviceLabel(ua?: string): string {
   if (!ua) return "—";
   const browser = /Edg\//.test(ua)
     ? "Edge"
@@ -986,6 +986,7 @@ export default function UsersPage() {
           <input
             ref={importRef}
             type="file"
+            aria-label="Import users CSV"
             accept=".csv,text/csv"
             className="sr-only"
             onChange={(event) => {
@@ -1907,9 +1908,12 @@ function RegistrationSparkline({ values }: { values: Array<{ day: string; count:
 
 function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
-    <aside className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+    <aside
+      aria-label="Recent activity"
+      className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5"
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold">Recent activity</h3>
+        <h2 className="text-sm font-bold">Recent activity</h2>
         <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)]">
           this tab
         </span>

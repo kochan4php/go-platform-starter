@@ -90,19 +90,26 @@ declare global {
   }
 }
 
-export const GATEWAY_URL = (() => {
-  const fromEnv =
-    typeof import.meta !== "undefined"
-      ? (import.meta.env?.VITE_GATEWAY_URL as string | undefined)
-      : undefined;
+export function resolveGatewayURL(
+  fromEnv?: string,
+  browser?: { runtime?: string; protocol?: string; origin?: string },
+): string {
   if (fromEnv) return fromEnv.replace(/\/$/, "");
-  if (typeof window !== "undefined") {
-    const runtime = window.__STARTER_GATEWAY_URL__;
-    if (runtime) return runtime.replace(/\/$/, "");
-    if (/^https?:$/.test(window.location?.protocol ?? "")) return window.location.origin;
-  }
+  if (browser?.runtime) return browser.runtime.replace(/\/$/, "");
+  if (/^https?:$/.test(browser?.protocol ?? "") && browser?.origin) return browser.origin;
   return "http://127.0.0.1:8000";
-})();
+}
+
+export const GATEWAY_URL = resolveGatewayURL(
+  typeof import.meta !== "undefined" ? (import.meta.env?.VITE_GATEWAY_URL as string | undefined) : undefined,
+  typeof window === "undefined"
+    ? undefined
+    : {
+        runtime: window.__STARTER_GATEWAY_URL__,
+        protocol: window.location?.protocol,
+        origin: window.location?.origin,
+      },
+);
 
 /**
  * Typed client against the aggregate spec (PLAN items 58/59): bearer attach,

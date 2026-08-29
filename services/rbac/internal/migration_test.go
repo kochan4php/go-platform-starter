@@ -1,0 +1,12 @@
+package internal
+
+import (
+	"testing"
+
+	"github.com/kochan4php/go-platform-starter/internal/testutil"
+	migrations "github.com/kochan4php/go-platform-starter/services/rbac/migrations"
+)
+
+func TestMigrationsAreReversibleAndIdempotent(t *testing.T) {
+	testutil.AssertMigrationRoundTrip(t, testutil.StartPostgres(t), migrations.FS, "rbac_migrations")
+}

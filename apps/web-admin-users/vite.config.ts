@@ -21,7 +21,7 @@ export default defineConfig({
     federation({
       name: "web_admin_users",
       exposes: { "./UsersPage": "./src/UsersPage.tsx" },
-      shared: ["react", "react-dom", "@tanstack/react-query"],
+      shared: ["react", "react-dom", "@tanstack/react-query", "@starter/ui", "@starter/contracts"],
     }),
   ],
   build: { target: "es2022", manifest: true },

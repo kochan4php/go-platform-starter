@@ -8,6 +8,7 @@
 	"types": "./src/index.tsx",
 	"exports": {
 		".": "./src/index.tsx",
+		"./package.json": "./package.json",
 		"./styles.css": "./src/styles.css"
 	},
 	"peerDependencies": {

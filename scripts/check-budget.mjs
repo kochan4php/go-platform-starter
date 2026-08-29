@@ -5,9 +5,12 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const dist = fileURLToPath(new URL("../apps/web/dist/assets", import.meta.url));
+const dist = process.env.BUDGET_DIST || fileURLToPath(new URL("../apps/web/dist/assets", import.meta.url));
 const budget = JSON.parse(
-  readFileSync(fileURLToPath(new URL("../apps/web/budget.json", import.meta.url)), "utf8"),
+  readFileSync(
+    process.env.BUDGET_FILE || fileURLToPath(new URL("../apps/web/budget.json", import.meta.url)),
+    "utf8",
+  ),
 );
 
 let totalJs = 0;

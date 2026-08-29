@@ -268,6 +268,7 @@ const Sidebar = forwardRef<
   return (
     <aside
       ref={ref}
+      aria-label="Primary navigation"
       tabIndex={-1}
       className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-[var(--color-line)] bg-[var(--color-surface)] transition-all duration-300 lg:static lg:z-auto lg:translate-x-0 ${
         collapsed ? "w-[68px] px-3" : "w-[248px] px-6"
@@ -285,11 +286,11 @@ const Sidebar = forwardRef<
         </button>
       </div>
 
-      <nav className={`mt-10 flex-1 space-y-5 ${collapsed ? "px-0" : ""}`}>
+      <nav aria-label="Primary" className={`mt-10 flex-1 space-y-5 ${collapsed ? "px-0" : ""}`}>
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="space-y-1">
             {!collapsed ? (
-              <p className="px-3 font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-muted)]/70">
+              <p className="px-3 font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
                 {group.label}
               </p>
             ) : null}
@@ -324,7 +325,7 @@ const Sidebar = forwardRef<
         )}
         <SessionMenu collapsed={collapsed} />
         <p
-          className={`text-center font-mono text-[10px] text-[var(--color-muted)]/50 ${collapsed ? "" : "pt-1"}`}
+          className={`text-center font-mono text-[10px] text-[var(--color-muted)] ${collapsed ? "" : "pt-1"}`}
         >
           v{APP_VERSION}
         </p>
@@ -533,7 +534,7 @@ function FooterStrip() {
   return (
     <div className="flex w-full items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--color-muted)]">
       <p>go-platform-starter · spec-first · schema-per-service</p>
-      <nav className="flex items-center gap-4">
+      <nav aria-label="Footer" className="flex items-center gap-4">
         <Link viewTransition to="/admin/users" className="transition-colors hover:text-[var(--color-ink)]">
           Users
         </Link>

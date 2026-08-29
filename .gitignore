@@ -1,6 +1,7 @@
 # Go
 bin/
 coverage.out
+coverage/
 *.test
 
 # Node
@@ -22,6 +23,7 @@ tmp/
 # Playwright
 test-results/
 playwright-report/
+lighthouse-results/
 *.tsbuildinfo
 
 # Windows build artifacts

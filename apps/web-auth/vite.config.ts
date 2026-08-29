@@ -26,7 +26,7 @@ export default defineConfig({
         "./ForgotPage": "./src/ForgotPage.tsx",
         "./ResetPage": "./src/ResetPage.tsx",
       },
-      shared: ["react", "react-dom", "@tanstack/react-query"],
+      shared: ["react", "react-dom", "@tanstack/react-query", "@starter/ui", "@starter/contracts"],
     }),
   ],
   build: { target: "es2022", manifest: true },

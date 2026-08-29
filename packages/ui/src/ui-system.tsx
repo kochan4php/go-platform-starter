@@ -228,7 +228,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {state
         ? createPortal(
-            <div className="ui-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center p-4 backdrop-blur-[6px]">
+            <div className="ui-modal-backdrop fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-[6px]">
               <div
                 ref={dialogRef}
                 tabIndex={-1}

@@ -130,8 +130,9 @@ func (s *Service) Get(ctx context.Context, id string) (*Profile, error) {
 		}
 		return nil, err
 	}
-	s.attachManagementData(ctx, []Profile{p})
-	return &p, nil
+	profiles := []Profile{p}
+	s.attachManagementData(ctx, profiles)
+	return &profiles[0], nil
 }
 
 func (s *Service) List(ctx context.Context, limit, offset int, sort, order string, filters ListFilters) ([]Profile, int64, error) {

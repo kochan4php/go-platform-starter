@@ -189,8 +189,10 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			limit := perMinute
 			class := "standard"
+			bucket := class
 			if route := matcher.Match(r.Method, r.URL.Path); route != nil {
 				class = route.RateClass
+				bucket = class + ":" + route.Method + ":" + route.Path
 				switch class {
 				case "strict":
 					limit = min(perMinute, 20)
@@ -198,7 +200,7 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 					limit = perMinute * 2
 				}
 			}
-			res, err := limiter.Allow(r.Context(), "rl:edge:"+class+":"+clientIP(r, trusted), redis_rate.PerMinute(limit))
+			res, err := limiter.Allow(r.Context(), "rl:edge:"+bucket+":"+clientIP(r, trusted), redis_rate.PerMinute(limit))
 			if err != nil {
 				if class == "strict" {
 					log.Error("strict edge rate limiter unavailable (fail-closed)", "err", err)

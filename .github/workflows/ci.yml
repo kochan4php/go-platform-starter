@@ -45,6 +45,29 @@ jobs:
       - name: Test (container tests included; Docker is available on runners)
         run: make test
 
+      - name: Race detector (Linux, concurrency-sensitive packages)
+        run: go test -race -count=1 ./internal/platform ./services/auth/internal ./services/users/internal ./services/rbac/internal ./services/worker/internal
+
+      - name: Fuzz smoke (validators and request decoders)
+        run: |
+          go test ./services/rbac/internal -run '^$' -fuzz FuzzPermissionNameGrammar -fuzztime 5s
+          go test ./services/users/internal -run '^$' -fuzz FuzzHandlerDecode -fuzztime 5s
+          go test ./services/users/internal -run '^$' -fuzz FuzzUserOrderClauseNeverIncludesInput -fuzztime 5s
+
+      - name: Coverage report + changed-code gate (>=70%)
+        env:
+          COVERAGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          COVERAGE_MIN: 70
+        run: node scripts/check-coverage.mjs
+
+      - name: Upload coverage report and per-package badges
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: |
+            coverage/go.out
+            docs/testing/badges/
+
       - name: Hot-path benchmark smoke
         run: go test ./internal/platform ./services/users/internal -run '^$' -bench . -benchtime=100ms -benchmem
 
@@ -79,12 +102,16 @@ jobs:
       - name: Import boundaries
         run: pnpm check:deps
 
+      - name: Quality gate regression tests
+        run: pnpm test:gates
+
       - name: Test (Vitest + RTL)
         run: pnpm test
 
       - name: Contracts are fresh
         run: |
           pnpm contracts
+          pnpm test:contracts
           git diff --exit-code
 
   web-build:

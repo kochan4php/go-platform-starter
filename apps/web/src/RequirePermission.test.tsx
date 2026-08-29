@@ -34,6 +34,7 @@ it("redirects anonymous visitors to /login", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
   mount(null, "user:read:any");
   // Booting starts true for anonymous mounts; the failed refresh settles it.
+  expect(screen.queryByText("login-page")).toBeNull();
   await screen.findByText("login-page", {}, { timeout: 3000 });
 });
 

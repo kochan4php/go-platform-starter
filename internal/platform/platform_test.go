@@ -29,6 +29,18 @@ func TestOKEnvelopeShape(t *testing.T) {
 	}
 }
 
+func TestEnvelopeGoldenFile(t *testing.T) {
+	rec := httptest.NewRecorder()
+	platform.OK(rec, http.StatusOK, "done", map[string]string{"id": "abc"})
+	want, err := os.ReadFile(filepath.Join("testdata", "envelope.golden"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Body.String() != string(want) {
+		t.Fatalf("golden envelope drift:\n got %s\nwant %s", rec.Body.String(), want)
+	}
+}
+
 func TestFailEnvelopeShape(t *testing.T) {
 	rec := httptest.NewRecorder()
 	platform.Fail(rec, http.StatusBadRequest, "bad_request", "name required")

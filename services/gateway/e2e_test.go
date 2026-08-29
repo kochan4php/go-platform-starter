@@ -5,6 +5,7 @@ package main_test
 // happy paths plus the 401/403 matrix — through the gateway only.
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -17,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/kochan4php/go-platform-starter/internal/testutil"
 )
 
@@ -146,6 +148,10 @@ func login(t *testing.T, base, email, password string) string {
 }
 
 func TestFullMeshThroughGateway(t *testing.T) {
+	if testing.CoverMode() != "" {
+		t.Skip("external binaries are exercised by the full-mesh and Playwright gates")
+	}
+
 	tmp := t.TempDir()
 	dsn := testutil.StartPostgres(t)
 	redisAddr := testutil.StartRedis(t)
@@ -156,7 +162,7 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	internalSecret := "e2e-internal-secret"
 	jwtSecret := "e2e-jwt-secret-at-least-16ch"
 
-	bins := buildBinaries(t, tmp, "auth", "users", "rbac", "gateway")
+	bins := buildBinaries(t, tmp, "auth", "users", "rbac", "worker", "gateway")
 
 	baseAuth := "http://127.0.0.1:" + strconv.Itoa(authPort)
 	baseUsers := "http://127.0.0.1:" + strconv.Itoa(usersPort)
@@ -168,6 +174,7 @@ func TestFullMeshThroughGateway(t *testing.T) {
 			"APP_ENV_FILE":        filepath.Join(tmp, "nonexistent.env"),
 			"DATABASE_URL":        dsn,
 			"REDIS_ADDR":          redisAddr,
+			"BCRYPT_COST":         "4",
 			"ACCESS_TOKEN_SECRET": jwtSecret,
 			"INTERNAL_SECRET":     internalSecret,
 		}
@@ -175,6 +182,10 @@ func TestFullMeshThroughGateway(t *testing.T) {
 			m[k] = v
 		}
 		return m
+	}
+
+	for _, svc := range []string{"auth", "users", "rbac", "worker"} {
+		run(t, bins[svc], "-migrate", common(nil))
 	}
 
 	start(t, bins["auth"], nil, common(map[string]string{
@@ -215,8 +226,90 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	if registerRes.StatusCode != 201 {
 		t.Fatalf("register: %d %+v", registerRes.StatusCode, registerEnv)
 	}
+	wandaID := int64(registerEnv.Data["id"].(float64))
 
 	adminToken := login(t, baseGW, adminEmail, adminPassword)
+
+	// -- Testing & QA contract/integration matrix --------------------------
+	permissionRes, permissionEnv := call(t, http.MethodPost, baseGW+"/api/v1/rbac/permissions", adminToken,
+		map[string]string{"name": "qa:inspect:any"})
+	if permissionRes.StatusCode != http.StatusCreated {
+		t.Fatalf("create permission: %d %+v", permissionRes.StatusCode, permissionEnv)
+	}
+	duplicatePermission, _ := call(t, http.MethodPost, baseGW+"/api/v1/rbac/permissions", adminToken,
+		map[string]string{"name": "qa:inspect:any"})
+	if duplicatePermission.StatusCode != http.StatusConflict {
+		t.Fatalf("duplicate permission = %d, want 409", duplicatePermission.StatusCode)
+	}
+
+	rolesRes, rolesEnv := call(t, http.MethodGet, baseGW+"/api/v1/rbac/roles", adminToken, nil)
+	if rolesRes.StatusCode != http.StatusOK {
+		t.Fatalf("list roles: %d %+v", rolesRes.StatusCode, rolesEnv)
+	}
+	adminRoleID := int64(0)
+	for _, raw := range rolesEnv.Data["items"].([]any) {
+		role := raw.(map[string]any)
+		if role["name"] == "admin" {
+			adminRoleID = int64(role["id"].(float64))
+		}
+	}
+	if adminRoleID == 0 {
+		t.Fatal("seeded admin role missing")
+	}
+	assignRes, assignEnv := call(t, http.MethodPut,
+		fmt.Sprintf("%s/api/v1/rbac/users/%d/roles", baseGW, wandaID), adminToken,
+		map[string]any{"roleIds": []int64{adminRoleID}})
+	if assignRes.StatusCode != http.StatusOK {
+		t.Fatalf("assign role: %d %+v", assignRes.StatusCode, assignEnv)
+	}
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var version int64
+	if err := db.QueryRow(`SELECT ver FROM rbac.user_versions WHERE user_id = $1`, wandaID).Scan(&version); err != nil || version != 1 {
+		t.Fatalf("role assignment version = %d, err=%v", version, err)
+	}
+
+	otherRes, otherEnv := call(t, http.MethodPost, baseGW+"/api/v1/auth/register", "",
+		map[string]string{"email": "other@example.local", "password": userPassword})
+	if otherRes.StatusCode != http.StatusCreated {
+		t.Fatalf("register conflict peer: %d %+v", otherRes.StatusCode, otherEnv)
+	}
+	conflictRes, _ := call(t, http.MethodPatch, fmt.Sprintf("%s/api/v1/users/%d", baseGW, wandaID), adminToken,
+		map[string]any{"id": wandaID, "email": "other@example.local"})
+	if conflictRes.StatusCode != http.StatusConflict {
+		t.Fatalf("duplicate email patch = %d, want 409", conflictRes.StatusCode)
+	}
+
+	passwordRes, passwordEnv := call(t, http.MethodPost,
+		fmt.Sprintf("%s/api/v1/auth/users/%d/password", baseGW, wandaID), adminToken,
+		map[string]string{"newPassword": "Quartz-renewed-789!"})
+	if passwordRes.StatusCode != http.StatusOK {
+		t.Fatalf("admin password reset: %d %+v", passwordRes.StatusCode, passwordEnv)
+	}
+	oldLogin, _ := call(t, http.MethodPost, baseGW+"/api/v1/auth/login", "",
+		map[string]string{"email": "wanda@example.local", "password": userPassword})
+	if oldLogin.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("old password login = %d", oldLogin.StatusCode)
+	}
+	wandaToken := login(t, baseGW, "wanda@example.local", "Quartz-renewed-789!")
+	if wandaToken == "" {
+		t.Fatal("new password did not mint a token")
+	}
+	var telemetry struct{ IP, UserAgent string }
+	if err := db.QueryRow(`SELECT last_login_ip, last_login_user_agent FROM users.users WHERE id = $1`, wandaID).
+		Scan(&telemetry.IP, &telemetry.UserAgent); err != nil || telemetry.IP == "" || telemetry.UserAgent == "" {
+		t.Fatalf("login telemetry = %#v, err=%v", telemetry, err)
+	}
+	newEmail := "wanda-renamed@example.local"
+	renameRes, renameEnv := call(t, http.MethodPatch, fmt.Sprintf("%s/api/v1/users/%d", baseGW, wandaID), adminToken,
+		map[string]any{"id": wandaID, "email": newEmail})
+	if renameRes.StatusCode != http.StatusOK {
+		t.Fatalf("rename email: %d %+v", renameRes.StatusCode, renameEnv)
+	}
+	_ = login(t, baseGW, newEmail, "Quartz-renewed-789!")
 
 	var profileReady bool
 	for i := 0; i < 30 && !profileReady; i++ {
@@ -238,6 +331,14 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	data, _ := listEnv.Data["meta"].(map[string]any)
 	if data == nil || data["total"] == nil {
 		t.Fatalf("list meta missing: %+v", listEnv)
+	}
+	invalidList, _ := call(t, http.MethodGet, baseGW+"/api/v1/users?sort=created_at%3BDELETE&offset=-1", adminToken, nil)
+	if invalidList.StatusCode != http.StatusBadRequest {
+		t.Fatalf("invalid sort/filter params = %d, want 400", invalidList.StatusCode)
+	}
+	beyond, beyondEnv := call(t, http.MethodGet, baseGW+"/api/v1/users?offset=999999", adminToken, nil)
+	if beyond.StatusCode != http.StatusOK || len(beyondEnv.Data["items"].([]any)) != 0 {
+		t.Fatalf("pagination beyond total: %d %+v", beyond.StatusCode, beyondEnv)
 	}
 
 	meRes, _ := call(t, http.MethodGet, baseGW+"/api/v1/users/me", adminToken, nil)

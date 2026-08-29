@@ -7,16 +7,19 @@
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"gen": "node ../../scripts/compose-specs.mjs && openapi-typescript gen/openapi.json -o src/gen.d.ts"
+		"gen": "node ../../scripts/compose-specs.mjs && openapi-typescript gen/openapi.json -o src/gen.d.ts",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"openapi-fetch": "^0.15.0"
 	},
 	"devDependencies": {
 		"js-yaml": "^4.1.0",
-		"openapi-typescript": "^7.8.0"
+		"openapi-typescript": "^7.8.0",
+		"vitest": "^2.1.8"
 	}
 }

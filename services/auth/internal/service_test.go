@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"sync"
 	"testing"
 	"time"
 
@@ -50,6 +51,7 @@ type fixture struct {
 	svc *internal.Service
 	pub *capturedPublisher
 	rdb *redis.Client
+	db  *gorm.DB
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -110,11 +112,11 @@ func newFixture(t *testing.T) *fixture {
 		AppPublicURL:        "http://127.0.0.1:5173",
 		RateGlobalPerMinute: 1000,
 		RateStrictPerMinute: 1000,
-		RefreshGrace:        30 * time.Millisecond,
+		RefreshGrace:        2 * time.Second,
 		MaxActiveSessions:   2,
 	}
 	pub := &capturedPublisher{}
-	return &fixture{svc: internal.NewService(db, rdb, log, cfg, pub), pub: pub, rdb: rdb}
+	return &fixture{svc: internal.NewService(db, rdb, log, cfg, pub), pub: pub, rdb: rdb, db: db}
 }
 
 func mustRegister(t *testing.T, f *fixture, email string) {
@@ -285,13 +287,58 @@ func TestRefreshRotationAndReuseDetection(t *testing.T) {
 	if err != nil || grace.RefreshCookie != res1.RefreshCookie {
 		t.Fatal("old refresh token must return the same rotation inside the grace window")
 	}
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(2100 * time.Millisecond)
 
 	if _, err := f.svc.Refresh(ctx, login.RefreshCookie); err == nil {
 		t.Fatal("replayed old refresh token after grace must fail")
 	}
 	if _, err := f.svc.Refresh(ctx, res1.RefreshCookie); err == nil {
 		t.Fatal("refresh after family kill must fail even with the newest token")
+	}
+}
+
+func TestConcurrentRefreshSharesOneRotation(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	mustRegister(t, f, "parallel-refresh@example.local")
+	login, err := f.svc.Login(ctx, "parallel-refresh@example.local", "password-123", "ua", "ip", "device-a")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	start := make(chan struct{})
+	results := make(chan *internal.AuthResult, 2)
+	errs := make(chan error, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			result, refreshErr := f.svc.Refresh(ctx, login.RefreshCookie, "device-a")
+			results <- result
+			errs <- refreshErr
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	close(errs)
+	for refreshErr := range errs {
+		if refreshErr != nil {
+			t.Fatalf("concurrent refresh failed: %v", refreshErr)
+		}
+	}
+	var cookie string
+	for result := range results {
+		if result == nil || result.RefreshCookie == "" {
+			t.Fatal("concurrent refresh returned an empty rotation")
+		}
+		if cookie == "" {
+			cookie = result.RefreshCookie
+		} else if result.RefreshCookie != cookie {
+			t.Fatal("concurrent refreshes did not share the same rotation")
+		}
 	}
 }
 
@@ -375,5 +422,104 @@ func TestForgotIsUniformAndResetIsSingleUseAndWipesSessions(t *testing.T) {
 	}
 	if err := f.svc.ValidateReset(ctx, token); err == nil {
 		t.Fatal("preflight must reject a consumed reset token")
+	}
+}
+
+func TestEnsureBootstrapAdminResetsConflictAndRevokesSessions(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	const email = "bootstrap@example.local"
+	if err := f.svc.EnsureBootstrapAdmin(ctx, "1", email, "initial-password-123"); err != nil {
+		t.Fatalf("initial bootstrap: %v", err)
+	}
+	login, err := f.svc.Login(ctx, email, "initial-password-123", "seed-agent", "127.0.0.1")
+	if err != nil {
+		t.Fatalf("initial login: %v", err)
+	}
+	if err := f.svc.EnsureBootstrapAdmin(ctx, "1", email, "replacement-password-456"); err != nil {
+		t.Fatalf("conflict reset: %v", err)
+	}
+	if _, err := f.svc.Refresh(ctx, login.RefreshCookie); err == nil {
+		t.Fatal("bootstrap reset did not revoke the existing session")
+	}
+	if _, err := f.svc.Login(ctx, email, "initial-password-123", "seed-agent", "127.0.0.1"); err == nil {
+		t.Fatal("old bootstrap password still works")
+	}
+	if _, err := f.svc.Login(ctx, email, "replacement-password-456", "seed-agent", "127.0.0.1"); err != nil {
+		t.Fatalf("replacement password login: %v", err)
+	}
+}
+
+func TestAdminPasswordChangeNotFoundRevokesSessionsAndAudits(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	if err := f.svc.SetPasswordByID(ctx, 999999, "replacement-password-456"); err == nil {
+		t.Fatal("unknown user password change succeeded")
+	}
+	user, err := f.svc.Register(ctx, "managed@example.local", "initial-password-123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	login, err := f.svc.Login(ctx, user.Email, "initial-password-123", "Chrome/140", "203.0.113.7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.svc.SetPasswordByID(ctx, user.ID, "replacement-password-456"); err != nil {
+		t.Fatalf("admin password change: %v", err)
+	}
+	if _, err := f.svc.Refresh(ctx, login.RefreshCookie); err == nil {
+		t.Fatal("admin password change did not revoke sessions")
+	}
+	audit := f.pub.lastPayload(platform.StreamAudit, "audit.entry")
+	if audit == nil || audit["action"] != "password.admin_changed" {
+		t.Fatalf("password change audit missing: %#v", audit)
+	}
+}
+
+func TestLoginPersistsOriginalTelemetry(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	user, err := f.svc.Register(ctx, "telemetry@example.local", "initial-password-123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.svc.Login(ctx, user.Email, "initial-password-123", "Firefox/141 Linux", "198.51.100.9"); err != nil {
+		t.Fatal(err)
+	}
+	var stored internal.User
+	if err := f.db.First(&stored, user.ID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if stored.LastLoginAt == nil || stored.LastLoginIP != "198.51.100.9" || stored.LastLoginUserAgent != "Firefox/141 Linux" {
+		t.Fatalf("login telemetry = %#v", stored)
+	}
+}
+
+func TestConcurrentRegisterSameEmailHasSingleWinner(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	start := make(chan struct{})
+	errs := make(chan error, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, err := f.svc.Register(ctx, "race@example.local", "initial-password-123")
+			errs <- err
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(errs)
+	successes := 0
+	for err := range errs {
+		if err == nil {
+			successes++
+		}
+	}
+	if successes != 1 {
+		t.Fatalf("successful concurrent registrations = %d, want 1", successes)
 	}
 }

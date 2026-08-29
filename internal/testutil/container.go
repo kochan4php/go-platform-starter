@@ -5,11 +5,14 @@ package testutil
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 	"testing"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 
@@ -55,6 +58,22 @@ func StartPostgres(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("postgres dsn: %v", err)
 	}
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		t.Fatalf("open postgres readiness probe: %v", err)
+	}
+	defer db.Close()
+	deadline := time.Now().Add(20 * time.Second)
+	for {
+		err = db.PingContext(ctx)
+		if err == nil {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("postgres never accepted a query: %v", err)
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
 	slog.Info("postgres container ready")
 	return dsn
 }
@@ -72,6 +91,19 @@ func StartRedis(t *testing.T) string {
 	addr, err := rc.Endpoint(ctx, "")
 	if err != nil {
 		t.Fatalf("redis endpoint: %v", err)
+	}
+	probe := redis.NewClient(&redis.Options{Addr: addr})
+	defer probe.Close()
+	deadline := time.Now().Add(20 * time.Second)
+	for {
+		err = probe.Ping(ctx).Err()
+		if err == nil {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("redis never accepted a command: %v", err)
+		}
+		time.Sleep(250 * time.Millisecond)
 	}
 	return addr
 }

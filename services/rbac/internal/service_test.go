@@ -1,6 +1,9 @@
 package internal
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestPermissionAndRoleNameValidation(t *testing.T) {
 	t.Parallel()
@@ -24,6 +27,19 @@ func TestPermissionAndRoleNameValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func FuzzPermissionNameGrammar(f *testing.F) {
+	for _, seed := range []string{"user:read:any", "report:export:own", "User:read:any", "a:b", "x:y:z;DROP TABLE"} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, value string) {
+		got := validPermissionName(value)
+		want := permNameRe.MatchString(strings.TrimSpace(value))
+		if got != want {
+			t.Fatalf("validator disagrees with grammar for %q", value)
+		}
+	})
 }
 
 func TestUniqueValuesPreserveOrder(t *testing.T) {

@@ -469,12 +469,46 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string, device ...st
 		deviceID = strings.TrimSpace(device[0])
 	}
 	graceKey := "refresh:grace:" + s.tokenDigest(refreshPlain)
-	if cached, err := s.rdb.Get(ctx, graceKey).Result(); err == nil {
+	readGrace := func() (*AuthResult, bool) {
+		cached, err := s.rdb.Get(ctx, graceKey).Result()
+		if err != nil {
+			return nil, false
+		}
 		var result AuthResult
 		plain, decryptErr := platform.DecryptForSubject(s.cryptoRing(), "refresh-grace", graceKey, cached)
 		if decryptErr == nil && json.Unmarshal([]byte(plain), &result) == nil && (result.DeviceID == "" || result.DeviceID == deviceID) {
-			return &result, nil
+			return &result, true
 		}
+		return nil, false
+	}
+	if result, ok := readGrace(); ok {
+		return result, nil
+	}
+
+	lockKey := "refresh:lock:" + s.tokenDigest(refreshPlain)
+	lockID := uuid.NewString()
+	for {
+		locked, err := s.rdb.SetNX(ctx, lockKey, lockID, 20*time.Second).Result()
+		if err != nil {
+			return nil, err
+		}
+		if locked {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+	defer func() {
+		const release = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`
+		if err := s.rdb.Eval(context.WithoutCancel(ctx), release, []string{lockKey}, lockID).Err(); err != nil {
+			s.log.Warn("refresh lock release failed", "err", err)
+		}
+	}()
+	if result, ok := readGrace(); ok {
+		return result, nil
 	}
 	var sess Session
 	err := s.db.Where("refresh_token_hash IN ?", s.tokenDigests(refreshPlain)).First(&sess).Error

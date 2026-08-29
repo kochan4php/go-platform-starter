@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`keeps shared primitive markup stable 1`] = `
+<section
+  class="ui-card p-6"
+>
+  <h1
+    class="mb-5 text-lg font-bold tracking-tight"
+  >
+    Profile
+  </h1>
+  <input
+    aria-label="Name"
+    class="ui-input "
+    value="Ada"
+  />
+  <p
+    aria-live="polite"
+    class="flex items-start gap-2 rounded-xl border px-4 py-2.5 text-sm border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+    role="status"
+  >
+    <span
+      aria-hidden="true"
+      class="font-bold"
+    >
+      ✓
+    </span>
+    <span>
+      Saved
+    </span>
+  </p>
+  <button
+    class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold tracking-tight transition-all duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/60 bg-[var(--color-ink)] text-[var(--color-canvas)] hover:opacity-88 disabled:opacity-40 "
+  >
+    Continue
+  </button>
+  <span
+    aria-label="loading"
+    class="inline-block size-4 animate-spin rounded-full border-2 border-white/15 border-t-[var(--color-accent)]"
+  />
+</section>
+`;

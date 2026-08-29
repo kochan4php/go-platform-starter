@@ -2365,7 +2365,7 @@
             "type": "string",
             "format": "uri",
             "maxLength": 400,
-            "pattern": "^https://"
+            "pattern": "^$|^https://"
           },
           "status": {
             "type": "string",
@@ -2494,7 +2494,7 @@
             "type": "string",
             "format": "uri",
             "maxLength": 400,
-            "pattern": "^https://"
+            "pattern": "^$|^https://"
           }
         }
       },

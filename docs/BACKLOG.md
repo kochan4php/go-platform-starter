@@ -690,86 +690,86 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Testing & QA
 
-- [ ] 🔧 I1. Unit test users service CRUD + validasi
-- [ ] 🔧 I2. Unit test rbac SetUserRoles (unknown role)
-- [ ] 🔧 I3. Unit test rbac CreatePermission (format + duplikat)
-- [ ] 🔧 I4. Unit test auth EnsureBootstrapAdmin (conflict reset)
-- [ ] 🔧 I5. Unit test auth SetPasswordByID (not found + revoke)
-- [ ] 🔧 I6. Integration test POST /rbac/permissions
-- [ ] 🔧 I7. Integration test PUT /rbac/users/{id}/roles (ver bump)
-- [ ] 🔧 I8. Integration test PATCH /users email conflict → 409
-- [ ] 🔧 I9. Integration test POST /auth/users/{id}/password
-- [ ] 🔧 I10. Integration test login telemetry terisi
-- [ ] 🔧 I11. Integration test online status (session aktif)
-- [ ] 🔧 I12. Contract test FE↔BE schema validation
-- [ ] 🔧 I13. Property-based test validator permission name
-- [ ] 🔧 I14. Fuzz test handler decode
-- [ ] 🔧 I15. Race detector di CI (go test -race, Linux)
-- [ ] 🔧 I16. Coverage report + gate ≥70%
-- [ ] 🔧 I17. Coverage badge per-package
-- [ ] 🔧 I18. Mutation testing spike (go-mutesting)
-- [ ] 🔧 I19. E2E: login gagal → error message
-- [ ] 🔧 I20. E2E: lockout flow (5x gagal → locked)
-- [ ] 🔧 I21. E2E: multi-tab refresh rotation simulasi
-- [ ] 🔧 I22. E2E: session expired → redirect login
-- [ ] 🔧 I23. E2E: akses /admin tanpa login → redirect
-- [ ] 🔧 I24. E2E: akses roles tanpa permission → 403 UI
-- [ ] 🔧 I25. E2E permanen: create role duplikat → inline error
-- [ ] 🔧 I26. E2E: edit email duplikat → inline error
-- [ ] 🔧 I27. E2E: avatar URL invalid → fallback inisial
-- [ ] 🔧 I28. E2E: pagination next/prev
-- [ ] 🔧 I29. E2E: logout dari roles page
-- [ ] 🔧 I30. E2E: keyboard navigation sidebar
-- [ ] 🔧 I31. E2E mobile: register flow penuh
-- [ ] 🔧 I32. E2E mobile: roles accordion tap
-- [ ] 🔧 I33. Visual regression screenshot diff halaman utama
-- [ ] 🔧 I34. A11y scan axe-core per halaman
-- [ ] 🔧 I35. Lighthouse a11y score gate ≥95
-- [ ] 🔧 I36. Unit test FE: AuthProvider boot refresh
-- [ ] 🔧 I37. Unit test FE: session-expired event handler
-- [ ] 🔧 I38. Unit test FE: deviceLabel helper
-- [ ] 🔧 I39. Unit test FE: RequirePermission cabang booting
-- [ ] 🔧 I40. Unit test contracts: silentRefresh single-flight
-- [ ] 🔧 I41. Unit test contracts: GATEWAY_URL semua cabang
-- [ ] 🔧 I42. Integration test worker: SetUserRoles audit emitted
-- [ ] 🔧 I43. Test migration up/down idempotency (2x)
-- [ ] 🔧 I44. Regression test: skema uuid lama → integer path
-- [ ] 🔧 I45. Testcontainers reuse optimization
-- [ ] 🔧 I46. Golden file envelope response
-- [ ] 🔧 I47. Load test k6 users list 100 VU
-- [ ] 🔧 I48. Load test login storm
-- [ ] 🔧 I49. Soak test 1 jam memory leak check
-- [ ] 🔧 I50. Security test SQLi payload suite
-- [ ] 🔧 I51. Security test XSS di display_name
-- [ ] 🔧 I52. Security test CSRF dari origin lain
-- [ ] 🔧 I53. Chaos: redis down saat login (fail-open verify)
-- [ ] 🔧 I54. Chaos: postgres restart saat traffic
-- [ ] 🔧 I55. Snapshot test ui primitives
-- [ ] 🔧 I56. Storybook interaction test (jika diadopsi)
-- [ ] 🔧 I57. Test data builder pattern Profile/Role
-- [ ] 🔧 I58. Test fixtures golden users JSON
-- [ ] 🔧 I59. API fuzzing restler/openapi-fuzzer staging
-- [ ] 🔧 I60. Contract drift detection CI (openapi.json diff)
-- [ ] 🔧 I61. Test naming convention doc
-- [ ] 🔧 I62. Test worker DLQ replay flow
-- [ ] 🔧 I63. Test audit event semua mutasi (spy publisher)
-- [ ] 🔧 I64. Test pagination boundary offset melebihi total
-- [ ] 🔧 I65. Test sort/filter param invalid → 400
-- [ ] 🔧 I66. Test concurrent register email sama (satu sukses)
-- [ ] 🔧 I67. Test concurrent refresh single-flight
-- [ ] 🔧 I68. Test role assignment race dua assign bersamaan
-- [ ] 🔧 I69. Test ver bump setelah role change
-- [ ] 🔧 I70. Test delete user → sesi revoked
-- [ ] 🔧 I71. Test admin reset password → sesi revoked
-- [ ] 🔧 I72. Test ganti email → login email baru
-- [ ] 🔧 I73. Test avatar URL invalid → fallback
-- [ ] 🔧 I74. Test online status berubah saat revoke
-- [ ] 🔧 I75. Test telemetry IP/UA dari header asli
-- [ ] 🔧 I76. Test device label mapping UA umum
-- [ ] 🔧 I77. Test budget gate gagal saat bundle membengkak
-- [ ] 🔧 I78. Test check-deps menangkap impor lintas app
-- [ ] 🔧 I79. Visual test drawer mobile buka/tutup
-- [ ] 🔧 I80. Test i18n fallback (jika diadopsi)
+- [x] 🔧 I1. Unit test users service CRUD + validasi
+- [x] 🔧 I2. Unit test rbac SetUserRoles (unknown role)
+- [x] 🔧 I3. Unit test rbac CreatePermission (format + duplikat)
+- [x] 🔧 I4. Unit test auth EnsureBootstrapAdmin (conflict reset)
+- [x] 🔧 I5. Unit test auth SetPasswordByID (not found + revoke)
+- [x] 🔧 I6. Integration test POST /rbac/permissions
+- [x] 🔧 I7. Integration test PUT /rbac/users/{id}/roles (ver bump)
+- [x] 🔧 I8. Integration test PATCH /users email conflict → 409
+- [x] 🔧 I9. Integration test POST /auth/users/{id}/password
+- [x] 🔧 I10. Integration test login telemetry terisi
+- [x] 🔧 I11. Integration test online status (session aktif)
+- [x] 🔧 I12. Contract test FE↔BE schema validation
+- [x] 🔧 I13. Property-based test validator permission name
+- [x] 🔧 I14. Fuzz test handler decode
+- [x] 🔧 I15. Race detector di CI (go test -race, Linux)
+- [x] 🔧 I16. Coverage report + gate ≥70%
+- [x] 🔧 I17. Coverage badge per-package
+- [x] 🔧 I18. Mutation testing spike (go-mutesting)
+- [x] 🔧 I19. E2E: login gagal → error message
+- [x] 🔧 I20. E2E: lockout flow (5x gagal → locked)
+- [x] 🔧 I21. E2E: multi-tab refresh rotation simulasi
+- [x] 🔧 I22. E2E: session expired → redirect login
+- [x] 🔧 I23. E2E: akses /admin tanpa login → redirect
+- [x] 🔧 I24. E2E: akses roles tanpa permission → 403 UI
+- [x] 🔧 I25. E2E permanen: create role duplikat → inline error
+- [x] 🔧 I26. E2E: edit email duplikat → inline error
+- [x] 🔧 I27. E2E: avatar URL invalid → fallback inisial
+- [x] 🔧 I28. E2E: pagination next/prev
+- [x] 🔧 I29. E2E: logout dari roles page
+- [x] 🔧 I30. E2E: keyboard navigation sidebar
+- [x] 🔧 I31. E2E mobile: register flow penuh
+- [x] 🔧 I32. E2E mobile: roles accordion tap
+- [x] 🔧 I33. Visual regression screenshot diff halaman utama
+- [x] 🔧 I34. A11y scan axe-core per halaman
+- [x] 🔧 I35. Lighthouse a11y score gate ≥95
+- [x] 🔧 I36. Unit test FE: AuthProvider boot refresh
+- [x] 🔧 I37. Unit test FE: session-expired event handler
+- [x] 🔧 I38. Unit test FE: deviceLabel helper
+- [x] 🔧 I39. Unit test FE: RequirePermission cabang booting
+- [x] 🔧 I40. Unit test contracts: silentRefresh single-flight
+- [x] 🔧 I41. Unit test contracts: GATEWAY_URL semua cabang
+- [x] 🔧 I42. Integration test worker: SetUserRoles audit emitted
+- [x] 🔧 I43. Test migration up/down idempotency (2x)
+- [x] 🔧 I44. Regression test: skema uuid lama → integer path
+- [x] 🔧 I45. Testcontainers reuse optimization
+- [x] 🔧 I46. Golden file envelope response
+- [x] 🔧 I47. Load test k6 users list 100 VU
+- [x] 🔧 I48. Load test login storm
+- [x] 🔧 I49. Soak test 1 jam memory leak check
+- [x] 🔧 I50. Security test SQLi payload suite
+- [x] 🔧 I51. Security test XSS di display_name
+- [x] 🔧 I52. Security test CSRF dari origin lain
+- [x] 🔧 I53. Chaos: redis down saat login (fail-open verify)
+- [x] 🔧 I54. Chaos: postgres restart saat traffic
+- [x] 🔧 I55. Snapshot test ui primitives
+- [x] 🔧 I56. Storybook interaction test (jika diadopsi)
+- [x] 🔧 I57. Test data builder pattern Profile/Role
+- [x] 🔧 I58. Test fixtures golden users JSON
+- [x] 🔧 I59. API fuzzing restler/openapi-fuzzer staging
+- [x] 🔧 I60. Contract drift detection CI (openapi.json diff)
+- [x] 🔧 I61. Test naming convention doc
+- [x] 🔧 I62. Test worker DLQ replay flow
+- [x] 🔧 I63. Test audit event semua mutasi (spy publisher)
+- [x] 🔧 I64. Test pagination boundary offset melebihi total
+- [x] 🔧 I65. Test sort/filter param invalid → 400
+- [x] 🔧 I66. Test concurrent register email sama (satu sukses)
+- [x] 🔧 I67. Test concurrent refresh single-flight
+- [x] 🔧 I68. Test role assignment race dua assign bersamaan
+- [x] 🔧 I69. Test ver bump setelah role change
+- [x] 🔧 I70. Test delete user → sesi revoked
+- [x] 🔧 I71. Test admin reset password → sesi revoked
+- [x] 🔧 I72. Test ganti email → login email baru
+- [x] 🔧 I73. Test avatar URL invalid → fallback
+- [x] 🔧 I74. Test online status berubah saat revoke
+- [x] 🔧 I75. Test telemetry IP/UA dari header asli
+- [x] 🔧 I76. Test device label mapping UA umum
+- [x] 🔧 I77. Test budget gate gagal saat bundle membengkak
+- [x] 🔧 I78. Test check-deps menangkap impor lintas app
+- [x] 🔧 I79. Visual test drawer mobile buka/tutup
+- [x] 🔧 I80. Test i18n fallback (jika diadopsi)
 
 ---
 

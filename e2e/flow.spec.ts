@@ -8,7 +8,7 @@ test.skip(!adminPassword, "E2E_ADMIN_PASSWORD not set");
 test("login → dashboard → roles accordion → users via SPA nav", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill(adminEmail);
-  await page.getByLabel("Password").fill(adminPassword);
+  await page.getByLabel("Password", { exact: true }).fill(adminPassword);
   await page.getByRole("button", { name: "Log in" }).click();
 
   await page.waitForURL(/admin\/users/, { timeout: 20000 });
@@ -28,7 +28,7 @@ test("register screen renders and creates an account", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("smoke-password-1");
-  await page.getByLabel("Confirm password").fill("smoke-password-1");
+  await page.getByLabel("Confirm password", { exact: true }).fill("smoke-password-1");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText(/Account created/i)).toBeVisible({ timeout: 15000 });
 });

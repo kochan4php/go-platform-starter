@@ -10,7 +10,7 @@ import { builtinModules } from "node:module";
 import { dirname, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = process.env.CHECK_DEPS_ROOT || fileURLToPath(new URL("..", import.meta.url));
 const exts = [".ts", ".tsx", ".mjs", ".js"];
 const nodeBuiltins = new Set(builtinModules);
 

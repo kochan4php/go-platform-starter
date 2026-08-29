@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type Mock, afterEach, expect, it, vi } from "vitest";
-import UsersPage from "./UsersPage";
+import UsersPage, { deviceLabel } from "./UsersPage";
 
 const getMock = vi.fn();
 const deleteMock = vi.fn();
@@ -40,6 +40,13 @@ function mount() {
     </QueryClientProvider>,
   );
 }
+
+it("maps common user agents to stable device labels", () => {
+  expect(deviceLabel("Mozilla/5.0 (iPhone) Version/18 Mobile Safari/604.1")).toContain("Safari");
+  expect(deviceLabel("Mozilla/5.0 (Windows NT 10.0) Chrome/140.0")).toContain("Windows");
+  expect(deviceLabel("Mozilla/5.0 (X11; Linux x86_64) Firefox/141.0")).toContain("Firefox");
+  expect(deviceLabel("")).toHaveLength(1);
+});
 
 it("renders the paginated table and deletes a profile", async () => {
   (getMock as Mock).mockImplementation(async (path: string) => ({
