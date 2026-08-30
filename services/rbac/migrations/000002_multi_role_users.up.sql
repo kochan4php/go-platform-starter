@@ -1,4 +1,7 @@
-ALTER TABLE rbac.user_roles DROP CONSTRAINT user_roles_pkey;
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
+ALTER TABLE rbac.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
 ALTER TABLE rbac.user_roles ADD PRIMARY KEY (user_id, role_id);
 
 CREATE TABLE rbac.user_versions (

@@ -1,3 +1,6 @@
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
 ALTER TABLE users.users
     ADD COLUMN IF NOT EXISTS password_history TEXT[] NOT NULL DEFAULT '{}',
     ADD COLUMN IF NOT EXISTS mfa_secret_enc TEXT NOT NULL DEFAULT '',

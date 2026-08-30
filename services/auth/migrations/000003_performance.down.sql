@@ -1,3 +1,6 @@
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
 DROP INDEX IF EXISTS auth.sessions_active_family_idx;
 DROP INDEX IF EXISTS auth.sessions_active_user_cover_idx;
 

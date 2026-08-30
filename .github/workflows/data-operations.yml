@@ -1,0 +1,39 @@
+name: Data operations
+
+on:
+  schedule:
+    - cron: "17 2 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: data-operations
+  cancel-in-progress: false
+
+jobs:
+  backup-restore-and-maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESTORE_TEST_DATABASE_URL: ${{ secrets.RESTORE_TEST_DATABASE_URL }}
+      BACKUP_DIR: ${{ runner.temp }}/backups
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL 17 client
+        if: ${{ env.DATABASE_URL != '' && env.RESTORE_TEST_DATABASE_URL != '' }}
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Back up and verify restore into disposable database
+        if: ${{ env.DATABASE_URL != '' && env.RESTORE_TEST_DATABASE_URL != '' }}
+        run: |
+          scripts/backup.sh
+          scripts/restore-test.sh
+
+      - name: Index health and vacuum/analyze maintenance
+        if: ${{ env.DATABASE_URL != '' }}
+        run: scripts/db-maintenance.sh
+
+      - name: Configuration notice
+        if: ${{ env.DATABASE_URL == '' || env.RESTORE_TEST_DATABASE_URL == '' }}
+        run: echo "Configure DATABASE_URL and RESTORE_TEST_DATABASE_URL repository secrets to activate weekly verification."

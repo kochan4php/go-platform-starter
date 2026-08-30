@@ -209,10 +209,12 @@ func TestFullMeshThroughGateway(t *testing.T) {
 			`{"auth":"%s","users":"%s","rbac":"%s"}`, baseAuth, baseUsers, baseRbac),
 	})
 
-	waitForHealth(t, baseAuth, 30*time.Second)
-	waitForHealth(t, baseUsers, 30*time.Second)
-	waitForHealth(t, baseRbac, 30*time.Second)
-	waitForHealth(t, baseGW, 30*time.Second)
+	// Windows Docker Desktop can cold-start the five compiled binaries slowly;
+	// the CI contract is health, not an arbitrary local boot-speed race.
+	waitForHealth(t, baseAuth, 60*time.Second)
+	waitForHealth(t, baseUsers, 60*time.Second)
+	waitForHealth(t, baseRbac, 60*time.Second)
+	waitForHealth(t, baseGW, 60*time.Second)
 
 	run(t, bins["rbac"], "-seed", common(nil))
 	run(t, bins["auth"], "-seed", common(map[string]string{
@@ -268,7 +270,9 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	}
 	defer db.Close()
 	var version int64
-	if err := db.QueryRow(`SELECT ver FROM rbac.user_versions WHERE user_id = $1`, wandaID).Scan(&version); err != nil || version != 1 {
+	// Registration assigns the default role at version 1; this replacement
+	// invalidates those claims and advances the version to 2.
+	if err := db.QueryRow(`SELECT ver FROM rbac.user_versions WHERE user_id = $1`, wandaID).Scan(&version); err != nil || version != 2 {
 		t.Fatalf("role assignment version = %d, err=%v", version, err)
 	}
 

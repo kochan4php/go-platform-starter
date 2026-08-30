@@ -43,6 +43,7 @@ x-go-env: &go-env
   DB_BOOT_RETRY_TIMEOUT: ${DB_BOOT_RETRY_TIMEOUT:-30s}
   DB_STATEMENT_TIMEOUT: ${DB_STATEMENT_TIMEOUT:-15s}
   DB_IDLE_TX_TIMEOUT: ${DB_IDLE_TX_TIMEOUT:-30s}
+  MIGRATION_WARN_AFTER: ${MIGRATION_WARN_AFTER:-30s}
   STREAM_MAXLEN: ${STREAM_MAXLEN:-100000}
   SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-20s}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -59,9 +60,6 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: app
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./postgres/observability.sql:/docker-entrypoint-initdb.d/20-observability.sql:ro
     command:
       - postgres
       - -c
@@ -74,6 +72,18 @@ services:
       - shared_preload_libraries=pg_stat_statements
       - -c
       - pg_stat_statements.track=all
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_timeout=${PG_ARCHIVE_TIMEOUT:-300s}
+      - -c
+      - archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - wal-archive:/wal-archive
+      - ./postgres/observability.sql:/docker-entrypoint-initdb.d/20-observability.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app"]
       interval: 5s
@@ -327,3 +337,4 @@ services:
 volumes:
   pgdata:
   backups:
+  wal-archive:

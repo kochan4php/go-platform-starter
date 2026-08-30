@@ -81,32 +81,38 @@ func NewService(db *gorm.DB, log Loggerish, pub Publisher) *Service {
 }
 
 func (s *Service) Seed(ctx context.Context) error {
+	return platform.RunSeedVersion(ctx, s.db, "rbac", "2026-08-29-permission-catalog-v1", func(tx *gorm.DB) error {
+		return s.seedCatalog(ctx, tx)
+	})
+}
+
+func (s *Service) seedCatalog(ctx context.Context, db *gorm.DB) error {
 	for _, p := range permissions.All() {
 		var row permissionRow
-		if err := s.db.WithContext(ctx).Where("name = ?", p).FirstOrCreate(&row, permissionRow{Name: p}).Error; err != nil {
+		if err := db.WithContext(ctx).Where("name = ?", p).FirstOrCreate(&row, permissionRow{Name: p}).Error; err != nil {
 			return err
 		}
 	}
 	admin := Role{Name: "admin", Description: "bootstrap super-role", Color: "#dc2626", Icon: "crown"}
-	if err := s.db.WithContext(ctx).Where("name = ?", "admin").FirstOrCreate(&admin).Error; err != nil {
+	if err := db.WithContext(ctx).Where("name = ?", "admin").FirstOrCreate(&admin).Error; err != nil {
 		return err
 	}
 	standard := Role{Name: "user", Description: "default registered-user role", Color: "#2563eb", Icon: "user"}
-	if err := s.db.WithContext(ctx).Where("name = ?", "user").FirstOrCreate(&standard).Error; err != nil {
+	if err := db.WithContext(ctx).Where("name = ?", "user").FirstOrCreate(&standard).Error; err != nil {
 		return err
 	}
 	var permissionRows []permissionRow
-	if err := s.db.WithContext(ctx).Find(&permissionRows).Error; err != nil {
+	if err := db.WithContext(ctx).Find(&permissionRows).Error; err != nil {
 		return err
 	}
 	for _, row := range permissionRows {
-		if err := s.db.WithContext(ctx).Exec(
+		if err := db.WithContext(ctx).Exec(
 			`INSERT INTO rbac.role_permissions (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING`,
 			admin.ID, row.ID).Error; err != nil {
 			return err
 		}
 	}
-	if err := s.db.WithContext(ctx).Exec(
+	if err := db.WithContext(ctx).Exec(
 		`INSERT INTO rbac.user_roles (user_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING`,
 		platform.BootstrapSub, admin.ID).Error; err != nil {
 		return err

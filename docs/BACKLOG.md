@@ -931,62 +931,62 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Data & Migrations
 
-- [ ] 🔧 L1. Migration lint CI (DROP tanpa IF EXISTS, dll)
-- [ ] 🔧 L2. Migration up test dari nol eksplisit di CI
-- [ ] 🔧 L3. Migration down test semua
-- [ ] 🔧 L4. Migration checksum verification (anti edit file yang sudah jalan)
-- [ ] 🔧 L5. Schema docs auto-generate dari information_schema
-- [ ] 🔧 L6. ERD auto-generate (dbml)
-- [ ] 🔧 L7. Data dictionary doc per tabel
-- [ ] 🔧 L8. COMMENT ON column + generate docs
-- [ ] 🔧 L9. Default value audit semua kolom
-- [ ] 🔧 L10. Constraint naming convention (ck_/fk_/uq_)
-- [ ] 🔧 L11. CHECK constraints (email format, status enum di DB level)
-- [ ] 🔧 L12. Postgres ENUM type untuk status
-- [ ] 🔧 L13. updated_at trigger otomatis DB-level
-- [ ] 🔧 L14. created_by/updated_by kolom
+- [x] 🔧 L1. Migration lint CI (DROP tanpa IF EXISTS, dll)
+- [x] 🔧 L2. Migration up test dari nol eksplisit di CI
+- [x] 🔧 L3. Migration down test semua
+- [x] 🔧 L4. Migration checksum verification (anti edit file yang sudah jalan)
+- [x] 🔧 L5. Schema docs auto-generate dari information_schema
+- [x] 🔧 L6. ERD auto-generate (dbml)
+- [x] 🔧 L7. Data dictionary doc per tabel
+- [x] 🔧 L8. COMMENT ON column + generate docs
+- [x] 🔧 L9. Default value audit semua kolom
+- [x] 🔧 L10. Constraint naming convention (ck_/fk_/uq_)
+- [x] 🔧 L11. CHECK constraints (email format, status enum di DB level)
+- [x] 🔧 L12. Postgres ENUM type untuk status
+- [x] 🔧 L13. updated_at trigger otomatis DB-level
+- [x] 🔧 L14. created_by/updated_by kolom
 - [ ] 🧭 L15. Soft delete deleted_at kolom (jika restore diinginkan)
-- [ ] 🔧 L16. Index bloat monitoring
-- [ ] 🔧 L17. Unused index cleanup job
-- [ ] 🔧 L18. Duplicate index detection
-- [ ] 🔧 L19. FK audit: semua relasi logis punya FK atau documented tanpa FK
-- [ ] 🔧 L20. ON DELETE behavior audit semua FK
-- [ ] 🔧 L21. Data type konsistensi TEXT vs VARCHAR
-- [ ] 🔧 L22. Collation + encoding standard doc
-- [ ] 🔧 L23. Audit TIMESTAMPTZ semua kolom waktu
-- [ ] 🔧 L24. Sequence gap monitoring
-- [ ] 🔧 L25. Identity cache size tuning
-- [ ] 🔧 L26. Migration dry-run (transaction + rollback)
-- [ ] 🔧 L27. Migration duration tracking + alert
-- [ ] 🔧 L28. Lock timeout config migration
-- [ ] 🔧 L29. CREATE INDEX CONCURRENTLY untuk tabel besar
-- [ ] 🔧 L30. Rollback playbook per-migration
-- [ ] 🔧 L31. Data backfill pattern batch
-- [ ] 🔧 L32. Backfill job framework worker
-- [ ] 🔧 L33. Schema registry doc single source
-- [ ] 🔧 L34. Schema drift detection antar environment
-- [ ] 🔧 L35. Backup restore verification mingguan
-- [ ] 🔧 L36. Point-in-time recovery (WAL archiving)
-- [ ] 🔧 L37. Data masking staging copy
-- [ ] 🔧 L38. Anonymized dataset generator dev
-- [ ] 🔧 L39. Seed data versioning idempotent
-- [ ] 🔧 L40. Seed idempotency audit semua seeder
-- [ ] 🔧 L41. Referential integrity report antar schema
-- [ ] 🔧 L42. Query review checklist PR yang ubah SQL
-- [ ] 🔧 L43. Slow query budget per-endpoint
-- [ ] 🔧 L44. Table growth projection doc
-- [ ] 🔧 L45. Archive strategy data lama
-- [ ] 🔧 L46. Archive purge automation
-- [ ] 🔧 L47. Unique constraint audit
-- [ ] 🔧 L48. Partial unique index (jika soft delete)
-- [ ] 🔧 L49. Generated columns (email_domain)
-- [ ] 🔧 L50. Full-text search index tsvector
-- [ ] 🔧 L51. Trigram index fuzzy search (pg_trgm)
-- [ ] 🔧 L52. JSONB metadata + GIN index
-- [ ] 🔧 L53. DB-level audit trigger
+- [x] 🔧 L16. Index bloat monitoring
+- [x] 🔧 L17. Unused index cleanup job
+- [x] 🔧 L18. Duplicate index detection
+- [x] 🔧 L19. FK audit: semua relasi logis punya FK atau documented tanpa FK
+- [x] 🔧 L20. ON DELETE behavior audit semua FK
+- [x] 🔧 L21. Data type konsistensi TEXT vs VARCHAR
+- [x] 🔧 L22. Collation + encoding standard doc
+- [x] 🔧 L23. Audit TIMESTAMPTZ semua kolom waktu
+- [x] 🔧 L24. Sequence gap monitoring
+- [x] 🔧 L25. Identity cache size tuning
+- [x] 🔧 L26. Migration dry-run (transaction + rollback)
+- [x] 🔧 L27. Migration duration tracking + alert
+- [x] 🔧 L28. Lock timeout config migration
+- [x] 🔧 L29. CREATE INDEX CONCURRENTLY untuk tabel besar
+- [x] 🔧 L30. Rollback playbook per-migration
+- [x] 🔧 L31. Data backfill pattern batch
+- [x] 🔧 L32. Backfill job framework worker
+- [x] 🔧 L33. Schema registry doc single source
+- [x] 🔧 L34. Schema drift detection antar environment
+- [x] 🔧 L35. Backup restore verification mingguan
+- [x] 🔧 L36. Point-in-time recovery (WAL archiving)
+- [x] 🔧 L37. Data masking staging copy
+- [x] 🔧 L38. Anonymized dataset generator dev
+- [x] 🔧 L39. Seed data versioning idempotent
+- [x] 🔧 L40. Seed idempotency audit semua seeder
+- [x] 🔧 L41. Referential integrity report antar schema
+- [x] 🔧 L42. Query review checklist PR yang ubah SQL
+- [x] 🔧 L43. Slow query budget per-endpoint
+- [x] 🔧 L44. Table growth projection doc
+- [x] 🔧 L45. Archive strategy data lama
+- [x] 🔧 L46. Archive purge automation
+- [x] 🔧 L47. Unique constraint audit
+- [x] 🔧 L48. Partial unique index (jika soft delete)
+- [x] 🔧 L49. Generated columns (email_domain)
+- [x] 🔧 L50. Full-text search index tsvector
+- [x] 🔧 L51. Trigram index fuzzy search (pg_trgm)
+- [x] 🔧 L52. JSONB metadata + GIN index
+- [x] 🔧 L53. DB-level audit trigger
 - [ ] 🧭 L54. Row-level security (multi-tenant)
-- [ ] 🔧 L55. Vacuum/analyze schedule automation
-- [ ] 🔧 L56. Migration style guide doc
+- [x] 🔧 L55. Vacuum/analyze schedule automation
+- [x] 🔧 L56. Migration style guide doc
 
 ---
 

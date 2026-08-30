@@ -1,3 +1,6 @@
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
 CREATE MATERIALIZED VIEW users.dashboard_stats AS
 SELECT
     1 AS id,

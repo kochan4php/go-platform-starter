@@ -1,3 +1,6 @@
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
 CREATE TABLE IF NOT EXISTS audit.processed_messages (
     message_id text PRIMARY KEY,
     processed_at timestamptz NOT NULL DEFAULT now()

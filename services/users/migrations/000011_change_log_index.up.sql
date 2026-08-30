@@ -1,0 +1,2 @@
+-- no-transaction: one concurrent index statement only
+CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_users_change_log_changed_at ON users.change_log (changed_at DESC);

@@ -2,6 +2,10 @@
 set -eu
 
 : "${RESTORE_TEST_DATABASE_URL:?set RESTORE_TEST_DATABASE_URL to an empty disposable database}"
+case "$(printf '%s' "$RESTORE_TEST_DATABASE_URL" | tr '[:upper:]' '[:lower:]')" in
+  *restore*|*test*|*disposable*) ;;
+  *) echo "refusing --clean restore without restore/test/disposable in target URL" >&2; exit 1 ;;
+esac
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 LATEST="$(find "$BACKUP_DIR" -type f -name 'postgres-*.dump' -print | sort | tail -1)"
 [ -n "$LATEST" ] || { echo "no postgres backup found" >&2; exit 1; }

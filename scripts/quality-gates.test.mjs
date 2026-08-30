@@ -42,3 +42,40 @@ test("import-boundary gate catches a cross-app import", (t) => {
     }),
   );
 });
+
+test("migration gate accepts paired, timeout-bounded migrations", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "starter-migrations-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const migrations = join(tmp, "services", "sample", "migrations");
+  mkdirSync(migrations, { recursive: true });
+  writeFileSync(
+    join(migrations, "000002_safe.up.sql"),
+    "SET lock_timeout = '5s'; SET statement_timeout = '5min'; CREATE TABLE sample.safe (id BIGINT);\n",
+  );
+  writeFileSync(join(migrations, "000002_safe.down.sql"), "DROP TABLE IF EXISTS sample.safe;\n");
+  const output = execFileSync(process.execPath, ["scripts/check-migrations.mjs", "lint"], {
+    cwd: process.cwd(),
+    env: { ...process.env, MIGRATION_ROOT: tmp },
+    encoding: "utf8",
+  });
+  assert.match(output, /migration lint OK/);
+});
+
+test("migration gate rejects destructive DROP without IF EXISTS", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "starter-migrations-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const migrations = join(tmp, "services", "sample", "migrations");
+  mkdirSync(migrations, { recursive: true });
+  writeFileSync(
+    join(migrations, "000002_unsafe.up.sql"),
+    "SET lock_timeout = '5s'; SET statement_timeout = '5min'; DROP TABLE sample.old;\n",
+  );
+  writeFileSync(join(migrations, "000002_unsafe.down.sql"), "DROP TABLE IF EXISTS sample.old;\n");
+  assert.throws(() =>
+    execFileSync(process.execPath, ["scripts/check-migrations.mjs", "lint"], {
+      cwd: process.cwd(),
+      env: { ...process.env, MIGRATION_ROOT: tmp },
+      stdio: "pipe",
+    }),
+  );
+});

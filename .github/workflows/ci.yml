@@ -39,6 +39,14 @@ jobs:
           node scripts/check-template-drift.mjs
           node scripts/check-architecture.mjs
 
+      - name: Migration lint, checksums, and immutable history
+        run: node scripts/check-migrations.mjs check "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+      - name: Migration up/down from an empty PostgreSQL 17 database
+        env:
+          TESTCONTAINERS_FORCE: "1"
+        run: go test -p=1 -count=1 -run '^TestMigrationsAreReversibleAndIdempotent$' ./services/auth/internal ./services/users/internal ./services/rbac/internal ./services/worker/internal
+
       - name: Validate YAML manifests
         run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
 
@@ -118,6 +126,36 @@ jobs:
           pnpm contracts
           pnpm test:contracts
           git diff --exit-code
+
+  schema-docs:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://app:app@127.0.0.1:5432/app?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Apply every schema from zero
+        run: go run ./cmd/migrateall
+      - name: Generated schema registry, DBML, and audit are fresh
+        run: go run ./cmd/dbdocs -check
 
   web-build:
     runs-on: ubuntu-latest

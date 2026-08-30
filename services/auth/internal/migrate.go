@@ -1,50 +1,10 @@
 package internal
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
-
+	"github.com/kochan4php/go-platform-starter/internal/platform"
 	migrations "github.com/kochan4php/go-platform-starter/services/auth/migrations"
 )
 
 func MigrateUp(databaseURL string) error {
-	src, err := iofs.New(migrations.FS, ".")
-	if err != nil {
-		return fmt.Errorf("migration source: %w", err)
-	}
-	m, err := migrate.NewWithSourceInstance("iofs", src, migrationURL(databaseURL))
-	if err != nil {
-		return fmt.Errorf("migrate init: %w", err)
-	}
-	defer m.Close()
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("migrate up: %w", err)
-	}
-	return nil
-}
-
-// trimScheme converts a postgres:// URL into the form golang-migrate's
-// database/postgres driver expects (it re-adds its own scheme prefix).
-func trimScheme(databaseURL string) string {
-	for _, p := range []string{"postgres://", "postgresql://", "pgx5://"} {
-		if len(databaseURL) >= len(p) && databaseURL[:len(p)] == p {
-			return databaseURL[len(p):]
-		}
-	}
-	return databaseURL
-}
-
-// migrationURL points golang-migrate at this service's own history table so
-// co-located services on one cluster never clobber each other's versions.
-func migrationURL(databaseURL string) string {
-	u := "postgres://" + trimScheme(databaseURL)
-	sep := "?"
-	if strings.Contains(u, "?") {
-		sep = "&"
-	}
-	return u + sep + "x-migrations-table=auth_migrations"
+	return platform.Migrate(databaseURL, migrations.FS, "auth_migrations")
 }

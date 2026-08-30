@@ -155,3 +155,24 @@ func TestAssignDefaultRoleIsIdempotent(t *testing.T) {
 		t.Fatalf("default role assignments = %d, want 1", count)
 	}
 }
+
+func TestSeedCatalogIsVersionedAndIdempotent(t *testing.T) {
+	svc, db, _ := newRBACFixture(t)
+	ctx := context.Background()
+	if err := svc.Seed(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Seed(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var versions, adminRoles int64
+	if err := db.Table("rbac.seed_history").Count(&versions).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Table("rbac.roles").Where("name = ?", "admin").Count(&adminRoles).Error; err != nil {
+		t.Fatal(err)
+	}
+	if versions != 1 || adminRoles != 1 {
+		t.Fatalf("seed versions=%d admin roles=%d, want 1/1", versions, adminRoles)
+	}
+}

@@ -1,3 +1,6 @@
+SET lock_timeout = '5s';
+SET statement_timeout = '5min';
+
 ALTER TABLE audit.event_outbox
     ADD COLUMN IF NOT EXISTS traceparent text NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS tracestate text NOT NULL DEFAULT '',

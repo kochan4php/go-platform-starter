@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-29T12:11:55.713094+00:00",
+  "generated_at": "2026-08-30T23:43:50.003654+00:00",
   "nodes": {
     "docs_backlog_architecture_scalability": {
-      "code_fingerprint": "44c31fe3cff91fde266befc5813e223bc928506c6943d2b67b24cd859ad09eee",
+      "code_fingerprint": "018cd3eefb48b09c3e163b3dfed1e8314ac621e77446a96e2aa11a654241646f",
       "label": "Backlog: Architecture & Scalability",
       "last": "2026-08-29T12:08:36.916480+00:00",
       "provenance": [
@@ -12,8 +12,56 @@
           "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
         }
       ],
-      "score": 0.99994684,
+      "score": 0.966320488,
       "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_backlog_data_migrations": {
+      "code_fingerprint": "018cd3eefb48b09c3e163b3dfed1e8314ac621e77446a96e2aa11a654241646f",
+      "label": "Backlog: Data & Migrations",
+      "last": "2026-08-30T23:41:07.641945+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T23:41:07.641945+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the Data & Migrations backlog"
+        }
+      ],
+      "score": 0.999956583,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_migrations": {
+      "code_fingerprint": "c74842b24396ac992fcd4f3f6936ad6cbb6e61ae3bdb7982daa19dd5687a9f23",
+      "label": "Migration Conventions",
+      "last": "2026-08-30T23:41:07.641945+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T23:41:07.641945+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the Data & Migrations backlog"
+        }
+      ],
+      "score": 0.999956583,
+      "source_file": "docs/MIGRATIONS.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "scripts_backup": {
+      "code_fingerprint": "9583728cf6e49c48145434847f9a6bb6d3dd46c734894c695e89f0f4d16ffb48",
+      "label": "backup.sh",
+      "last": "2026-08-30T23:41:07.641945+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T23:41:07.641945+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the Data & Migrations backlog"
+        }
+      ],
+      "score": 0.999956583,
+      "source_file": "scripts/backup.sh",
       "status": "tentative",
       "uses": 1
     }
