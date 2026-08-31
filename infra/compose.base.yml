@@ -36,6 +36,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 15
+      start_period: 10s
       start_interval: 1s
 
   redis:
@@ -48,6 +49,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+      start_period: 10s
       start_interval: 1s
 
   auth:
