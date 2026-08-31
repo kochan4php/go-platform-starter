@@ -1,8 +1,40 @@
 {
-  "generated_at": "2026-08-30T23:43:50.003654+00:00",
+  "generated_at": "2026-08-31T02:19:55.511317+00:00",
   "nodes": {
+    "docs_api_versioning": {
+      "code_fingerprint": "311412be8d12cb67ef81136fc9a15afa4532bfd9d2cb902a3186a47284759365",
+      "label": "API Versioning Policy",
+      "last": "2026-08-31T02:13:24.220626+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T02:13:24.220626+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the API & Contracts backlog"
+        }
+      ],
+      "score": 0.999895367,
+      "source_file": "docs/API_VERSIONING.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_backlog_api_contracts": {
+      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
+      "label": "Backlog: API & Contracts",
+      "last": "2026-08-31T02:13:24.220626+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T02:13:24.220626+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the API & Contracts backlog"
+        }
+      ],
+      "score": 0.999895367,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
     "docs_backlog_architecture_scalability": {
-      "code_fingerprint": "018cd3eefb48b09c3e163b3dfed1e8314ac621e77446a96e2aa11a654241646f",
+      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
       "label": "Backlog: Architecture & Scalability",
       "last": "2026-08-29T12:08:36.916480+00:00",
       "provenance": [
@@ -12,13 +44,13 @@
           "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
         }
       ],
-      "score": 0.966320488,
+      "score": 0.963903362,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_data_migrations": {
-      "code_fingerprint": "018cd3eefb48b09c3e163b3dfed1e8314ac621e77446a96e2aa11a654241646f",
+      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
       "label": "Backlog: Data & Migrations",
       "last": "2026-08-30T23:41:07.641945+00:00",
       "provenance": [
@@ -28,8 +60,24 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.999956583,
+      "score": 0.99745532,
       "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_contracts": {
+      "code_fingerprint": "5d903308da756156f76591ea431b4655f8ed95a92d51a00ec15af95e9d7f9c3a",
+      "label": "Contracts Pipeline (spec-first)",
+      "last": "2026-08-31T02:13:24.220626+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T02:13:24.220626+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the API & Contracts backlog"
+        }
+      ],
+      "score": 0.999895367,
+      "source_file": "docs/CONTRACTS.md",
       "status": "tentative",
       "uses": 1
     },
@@ -44,7 +92,7 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.999956583,
+      "score": 0.99745532,
       "source_file": "docs/MIGRATIONS.md",
       "status": "tentative",
       "uses": 1
@@ -60,8 +108,24 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.999956583,
+      "score": 0.99745532,
       "source_file": "scripts/backup.sh",
+      "status": "tentative",
+      "uses": 1
+    },
+    "services_gateway_internal_validation_newrequestvalidator": {
+      "code_fingerprint": "9314321e5e8cea2e999e78f7b3a8ae741d1f4b0b779bd2934f238f90a9fc3283",
+      "label": "NewRequestValidator()",
+      "last": "2026-08-31T02:13:24.220626+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T02:13:24.220626+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in the API & Contracts backlog"
+        }
+      ],
+      "score": 0.999895367,
+      "source_file": "services/gateway/internal/validation.go",
       "status": "tentative",
       "uses": 1
     }

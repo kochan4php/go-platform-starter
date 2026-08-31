@@ -35,6 +35,7 @@ type Profile struct {
 	Online         bool          `gorm:"-" json:"online"`
 	ActiveSessions int           `gorm:"-" json:"activeSessions"`
 	Roles          []RoleSummary `gorm:"-" json:"roles"`
+	Permissions    []string      `gorm:"-" json:"permissions"`
 }
 
 func (Profile) TableName() string { return "users.users" }

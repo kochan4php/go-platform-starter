@@ -51,8 +51,42 @@ paths:
                           items:
                             type: array
                             items: { $ref: "#/components/schemas/Permission" }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+
+  /rbac/permissions/bulk:
+    post:
+      operationId: bulkCreatePermissions
+      summary: create up to 100 permissions atomically
+      x-required-permission: "role:update:any"
+      x-request-body-limit: 16384
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  uniqueItems: true
+                  items: { type: string, minLength: 5, maxLength: 120, pattern: "^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$" }
+      responses:
+        "200": { description: processed, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "400": { description: invalid permission batch, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
   /rbac/permissions/{name}:
+    head:
+      operationId: permissionExists
+      summary: check whether a permission exists without returning a body
+      x-required-permission: "permission:read:any"
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string, maxLength: 120 } }
+      responses:
+        "204": { description: permission exists }
+        "404": { description: permission does not exist }
     delete:
       operationId: deletePermission
       summary: delete an unused permission from the catalog
@@ -153,6 +187,31 @@ paths:
       responses:
         "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
         "404": { description: unknown role, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /rbac/roles/{id}/users:
+    get:
+      operationId: listRoleUsers
+      summary: list user IDs assigned to a role
+      x-required-permission: "role:read:any"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { type: integer, format: int64 } }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
 
   /rbac/users/{id}/roles:
     get:

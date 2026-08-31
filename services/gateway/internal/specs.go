@@ -47,6 +47,8 @@ type Route struct {
 	CacheTTL       time.Duration
 	ConsumerQuota  int
 	RequestHeaders map[string]string
+	DeprecatedAt   int64
+	Sunset         string
 }
 
 // SpecRouteTable parses an upstream's OpenAPI YAML and produces the gateway-
@@ -65,7 +67,7 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 	for path, methods := range doc.Paths {
 		for method, op := range methods {
 			switch strings.ToUpper(method) {
-			case httpMethodsGet, httpMethodsPost, httpMethodsPut, httpMethodsPatch, httpMethodsDelete:
+			case httpMethodsGet, httpMethodsHead, httpMethodsPost, httpMethodsPut, httpMethodsPatch, httpMethodsDelete:
 			default:
 				continue
 			}
@@ -105,6 +107,10 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 				if v, ok := op["x-consumer-quota-per-minute"].(int); ok && v > 0 {
 					route.ConsumerQuota = v
 				}
+				if v, ok := op["x-deprecated-at"].(int); ok && v > 0 {
+					route.DeprecatedAt = int64(v)
+				}
+				route.Sunset, _ = op["x-sunset"].(string)
 				if headers, ok := op["x-request-headers"].(map[string]any); ok {
 					route.RequestHeaders = map[string]string{}
 					for name, value := range headers {
@@ -134,6 +140,7 @@ func SpecRouteTable(service, rawSpec string) ([]Route, error) {
 
 const (
 	httpMethodsGet    = "GET"
+	httpMethodsHead   = "HEAD"
 	httpMethodsPost   = "POST"
 	httpMethodsPut    = "PUT"
 	httpMethodsPatch  = "PATCH"

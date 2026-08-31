@@ -101,6 +101,28 @@ func (s *Service) attachManagementData(ctx context.Context, profiles []Profile) 
 			profiles[i].Roles = []RoleSummary{}
 		}
 	}
+
+	var grants []struct {
+		UserID int64
+		Name   string
+	}
+	if err := s.db.WithContext(ctx).Table("rbac.user_roles ur").
+		Distinct("ur.user_id, p.name").
+		Joins("JOIN rbac.role_permissions rp ON rp.role_id = ur.role_id").
+		Joins("JOIN rbac.permissions p ON p.id = rp.permission_id").
+		Where("ur.user_id IN ?", ids).Order("p.name ASC").Scan(&grants).Error; err != nil {
+		return
+	}
+	byUserPermissions := make(map[int64][]string, len(profiles))
+	for _, grant := range grants {
+		byUserPermissions[grant.UserID] = append(byUserPermissions[grant.UserID], grant.Name)
+	}
+	for i := range profiles {
+		profiles[i].Permissions = byUserPermissions[profiles[i].ID]
+		if profiles[i].Permissions == nil {
+			profiles[i].Permissions = []string{}
+		}
+	}
 }
 
 func (s *Service) Create(ctx context.Context, in Profile) (*Profile, error) {

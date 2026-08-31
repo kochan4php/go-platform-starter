@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * liveness-style demo endpoint proving spec → codegen → handler wiring
+         * @description liveness-style demo endpoint proving spec → codegen → handler wiring.
+         */
+        get: operations["ping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -13,7 +33,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** create credentials; emits user.created onto users.events */
+        /**
+         * create credentials; emits user.created onto users.events
+         * @description create credentials; emits user.created onto users.events.
+         */
         post: operations["register"];
         delete?: never;
         options?: never;
@@ -30,7 +53,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** uniform-401 login with lockout; mints access token + sets refresh cookie */
+        /**
+         * uniform-401 login with lockout; mints access token + sets refresh cookie
+         * @description uniform-401 login with lockout; mints access token + sets refresh cookie.
+         */
         post: operations["login"];
         delete?: never;
         options?: never;
@@ -47,7 +73,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** rotate the refresh cookie (reuse kills the family) and mint a new access token */
+        /**
+         * rotate the refresh cookie (reuse kills the family) and mint a new access token
+         * @description rotate the refresh cookie (reuse kills the family) and mint a new access token.
+         */
         post: operations["refresh"];
         delete?: never;
         options?: never;
@@ -64,7 +93,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** revoke the session carried by the refresh cookie and clear it */
+        /**
+         * revoke the session carried by the refresh cookie and clear it
+         * @description revoke the session carried by the refresh cookie and clear it.
+         */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -81,7 +113,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** create a time-limited TOTP enrollment and QR code */
+        /**
+         * create a time-limited TOTP enrollment and QR code
+         * @description create a time-limited TOTP enrollment and QR code.
+         */
         post: operations["beginMFA"];
         delete?: never;
         options?: never;
@@ -98,7 +133,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** verify TOTP and enable MFA for the authenticated user */
+        /**
+         * verify TOTP and enable MFA for the authenticated user
+         * @description verify TOTP and enable MFA for the authenticated user.
+         */
         post: operations["verifyMFA"];
         delete?: never;
         options?: never;
@@ -113,11 +151,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** active sessions of the authenticated user */
+        /**
+         * active sessions of the authenticated user
+         * @description active sessions of the authenticated user.
+         */
         get: operations["listSessions"];
         put?: never;
         post?: never;
-        /** revoke every other session of the authenticated user */
+        /**
+         * revoke every other session of the authenticated user
+         * @description revoke every other session of the authenticated user.
+         */
         delete: operations["revokeAllSessions"];
         options?: never;
         head?: never;
@@ -134,7 +178,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** revoke one session of the authenticated user */
+        /**
+         * revoke one session of the authenticated user
+         * @description revoke one session of the authenticated user.
+         */
         delete: operations["revokeSession"];
         options?: never;
         head?: never;
@@ -150,7 +197,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** always-200 password reset request (anti-enumeration) */
+        /**
+         * always-200 password reset request (anti-enumeration)
+         * @description always-200 password reset request (anti-enumeration).
+         */
         post: operations["forgotPassword"];
         delete?: never;
         options?: never;
@@ -167,7 +217,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** consume a single-use reset token, set new password, wipe all sessions */
+        /**
+         * consume a single-use reset token, set new password, wipe all sessions
+         * @description consume a single-use reset token, set new password, wipe all sessions.
+         */
         post: operations["resetPassword"];
         delete?: never;
         options?: never;
@@ -184,7 +237,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** validate a reset token without consuming its single-use grant */
+        /**
+         * validate a reset token without consuming its single-use grant
+         * @description validate a reset token without consuming its single-use grant.
+         */
         post: operations["validateResetToken"];
         delete?: never;
         options?: never;
@@ -201,7 +257,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** admin sets a new password for a user (revokes their sessions) */
+        /**
+         * admin sets a new password for a user (revokes their sessions)
+         * @description admin sets a new password for a user (revokes their sessions).
+         */
         post: operations["adminSetUserPassword"];
         delete?: never;
         options?: never;
@@ -218,7 +277,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** re-authenticate the current user before a sensitive admin action */
+        /**
+         * re-authenticate the current user before a sensitive admin action
+         * @description re-authenticate the current user before a sensitive admin action.
+         */
         post: operations["confirmPassword"];
         delete?: never;
         options?: never;
@@ -235,7 +297,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** change the authenticated user's password after verifying the old password */
+        /**
+         * change the authenticated user's password after verifying the old password
+         * @description change the authenticated user's password after verifying the old password.
+         */
         post: operations["changePassword"];
         delete?: never;
         options?: never;
@@ -250,11 +315,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** list active sessions for a managed user */
+        /**
+         * list active sessions for a managed user
+         * @description list active sessions for a managed user.
+         */
         get: operations["adminListUserSessions"];
         put?: never;
         post?: never;
-        /** force logout a managed user on every device */
+        /**
+         * force logout a managed user on every device
+         * @description force logout a managed user on every device.
+         */
         delete: operations["adminRevokeUserSessions"];
         options?: never;
         head?: never;
@@ -271,7 +342,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** revoke one active session for a managed user */
+        /**
+         * revoke one active session for a managed user
+         * @description revoke one active session for a managed user.
+         */
         delete: operations["adminRevokeUserSession"];
         options?: never;
         head?: never;
@@ -291,7 +365,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** activate/deactivate and lock/unlock a managed user */
+        /**
+         * activate/deactivate and lock/unlock a managed user
+         * @description activate/deactivate and lock/unlock a managed user.
+         */
         patch: operations["adminSetUserState"];
         trace?: never;
     };
@@ -302,7 +379,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Scalar UI over the aggregate spec */
+        /**
+         * Scalar UI over the aggregate spec
+         * @description Scalar UI over the aggregate spec.
+         */
         get: operations["scalarDocs"];
         put?: never;
         post?: never;
@@ -319,7 +399,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** aggregate OpenAPI document composed from every upstream at boot */
+        /**
+         * aggregate OpenAPI document composed from every upstream at boot
+         * @description aggregate OpenAPI document composed from every upstream at boot.
+         */
         get: operations["aggregateSpec"];
         put?: never;
         post?: never;
@@ -336,11 +419,37 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** the compile-time catalog persisted in the db */
+        /**
+         * the compile-time catalog persisted in the db
+         * @description the compile-time catalog persisted in the db.
+         */
         get: operations["listPermissions"];
         put?: never;
-        /** add a unique permission to the catalog */
+        /**
+         * add a unique permission to the catalog
+         * @description add a unique permission to the catalog.
+         */
         post: operations["createPermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rbac/permissions/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * create up to 100 permissions atomically
+         * @description create up to 100 permissions atomically.
+         */
+        post: operations["bulkCreatePermissions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -357,10 +466,17 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** delete an unused permission from the catalog */
+        /**
+         * delete an unused permission from the catalog
+         * @description delete an unused permission from the catalog.
+         */
         delete: operations["deletePermission"];
         options?: never;
-        head?: never;
+        /**
+         * check whether a permission exists without returning a body
+         * @description check whether a permission exists without returning a body.
+         */
+        head: operations["permissionExists"];
         patch?: never;
         trace?: never;
     };
@@ -371,8 +487,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * listRoles
+         * @description listRoles.
+         */
         get: operations["listRoles"];
         put?: never;
+        /**
+         * createRole
+         * @description createRole.
+         */
         post: operations["createRole"];
         delete?: never;
         options?: never;
@@ -390,11 +514,38 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
+        /**
+         * deleteRole
+         * @description deleteRole.
+         */
         delete: operations["deleteRole"];
         options?: never;
         head?: never;
-        /** rename/describe and/or sync the permission set; bumps affected users' ver */
+        /**
+         * rename/describe and/or sync the permission set; bumps affected users' ver
+         * @description rename/describe and/or sync the permission set; bumps affected users' ver.
+         */
         patch: operations["updateRole"];
+        trace?: never;
+    };
+    "/api/v1/rbac/roles/{id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * list user IDs assigned to a role
+         * @description list user IDs assigned to a role.
+         */
+        get: operations["listRoleUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/rbac/users/{id}/roles": {
@@ -404,9 +555,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** list roles assigned to a user */
+        /**
+         * list roles assigned to a user
+         * @description list roles assigned to a user.
+         */
         get: operations["getUserRoles"];
-        /** replace the role set assigned to a user (bumps their ver) */
+        /**
+         * replace the role set assigned to a user (bumps their ver)
+         * @description replace the role set assigned to a user (bumps their ver).
+         */
         put: operations["setUserRoles"];
         post?: never;
         delete?: never;
@@ -422,7 +579,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** internal API — perms[] + ver for a subject; requires the shared internal secret */
+        /**
+         * internal API — perms[] + ver for a subject; requires the shared internal secret
+         * @description internal API — perms[] + ver for a subject; requires the shared internal secret.
+         */
         get: operations["resolveClaims"];
         put?: never;
         post?: never;
@@ -439,7 +599,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** ws url + protocol version for the web client */
+        /**
+         * ws url + protocol version for the web client
+         * @description ws url + protocol version for the web client.
+         */
         get: operations["realtimeInfo"];
         put?: never;
         post?: never;
@@ -458,7 +621,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** validate and resize an avatar to fit within 512x512 */
+        /**
+         * validate and resize an avatar to fit within 512x512
+         * @description validate and resize an avatar to fit within 512x512.
+         */
         post: operations["resizeAvatar"];
         delete?: never;
         options?: never;
@@ -473,11 +639,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** the caller's profile, served purely from identity headers */
+        /**
+         * the caller's profile, served purely from identity headers
+         * @description the caller's profile, served purely from identity headers.
+         */
         get: operations["me"];
         put?: never;
         post?: never;
-        /** irreversibly erase the caller's personal data and revoke access */
+        /**
+         * irreversibly erase the caller's personal data and revoke access
+         * @description irreversibly erase the caller's personal data and revoke access.
+         */
         delete: operations["eraseMe"];
         options?: never;
         head?: never;
@@ -491,7 +663,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** download all personal data held by the platform */
+        /**
+         * download all personal data held by the platform
+         * @description download all personal data held by the platform.
+         */
         get: operations["exportMyData"];
         put?: never;
         post?: never;
@@ -508,10 +683,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** paginated profiles with validated server-side sorting */
+        /**
+         * paginated profiles with validated server-side sorting
+         * @description paginated profiles with validated server-side sorting.
+         */
         get: operations["listUsers"];
         put?: never;
-        /** provision a profile row for an existing sub */
+        /**
+         * provision a profile row for an existing sub
+         * @description provision a profile row for an existing sub.
+         */
         post: operations["createUserProfile"];
         delete?: never;
         options?: never;
@@ -526,7 +707,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** directory totals and seven-day registration series */
+        /**
+         * directory totals and seven-day registration series
+         * @description directory totals and seven-day registration series.
+         */
         get: operations["getUserStats"];
         put?: never;
         post?: never;
@@ -543,13 +727,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * getUser
+         * @description getUser.
+         */
         get: operations["getUser"];
         put?: never;
         post?: never;
-        /** soft-delete the profile row and emit user.deleted */
+        /**
+         * soft-delete the profile row and emit user.deleted
+         * @description soft-delete the profile row and emit user.deleted.
+         */
         delete: operations["deleteUser"];
         options?: never;
         head?: never;
+        /**
+         * updateUser
+         * @description updateUser.
+         */
         patch: operations["updateUser"];
         trace?: never;
     };
@@ -560,7 +755,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** paginated audit trail, newest first */
+        /**
+         * paginated audit trail, newest first
+         * @description paginated audit trail, newest first.
+         */
         get: operations["listAuditEntries"];
         put?: never;
         post?: never;
@@ -570,15 +768,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ping": {
+    "/api/v1/audit/viewer/export": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** liveness-style demo endpoint proving spec → codegen → handler wiring */
-        get: operations["ping"];
+        /**
+         * export up to 10000 filtered audit entries as CSV
+         * @description export up to 10000 filtered audit entries as CSV.
+         */
+        get: operations["exportAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/healthz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check process liveness
+         * @description Returns build identity; detail=1 adds runtime and environment metadata.
+         */
+        get: operations["healthz"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/readyz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check dependency readiness
+         * @description Returns 503 when any configured dependency or drain state is unhealthy.
+         */
+        get: operations["readyz"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read build identity
+         * @description Available on every service through the shared platform router.
+         */
+        get: operations["version"];
         put?: never;
         post?: never;
         delete?: never;
@@ -588,14 +849,129 @@ export interface paths {
         trace?: never;
     };
 }
-export type webhooks = Record<string, never>;
+export interface webhooks {
+    userCreated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A user was created
+         * @description At-least-once users.events delivery.
+         */
+        post: operations["onUserCreated"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    auditEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * An audit entry was emitted
+         * @description At-least-once audit.events delivery.
+         */
+        post: operations["onAuditEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
 export interface components {
     schemas: {
         EnvelopeMeta: {
+            /** @default 20 */
             limit: number;
+            /** @default 0 */
             offset: number;
             /** Format: int64 */
             total: number;
+            nextCursor?: string;
+            /** @default false */
+            estimated: boolean;
+            next?: string;
+            prev?: string;
+        };
+        /** @enum {string} */
+        ErrorCode: "bad_request" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "internal_server_error";
+        BulkResult: {
+            /** @default 0 */
+            processed: number;
+            /** @default 0 */
+            failed: number;
+            /** @default [] */
+            errors: string[];
+        };
+        AsyncOperation: {
+            id: string;
+            /**
+             * @default pending
+             * @enum {string}
+             */
+            status: "pending" | "running" | "succeeded" | "failed";
+            /** Format: uri */
+            statusUrl: string;
+        };
+        Health: {
+            /** @example alive */
+            status: string;
+            /** @example 0.1.0 */
+            version: string;
+            /** @example abc1234 */
+            commit: string;
+            /** @example go1.25.0 */
+            goVersion?: string;
+            /** @example production */
+            environment?: string;
+        };
+        EventEnvelope: components["schemas"]["UserCreatedEvent"] | components["schemas"]["UserDeletedEvent"] | components["schemas"]["AuditEntryEvent"];
+        UserCreatedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            event: "UserCreatedEvent";
+            payload: {
+                sub: number;
+                /** Format: email */
+                email: string;
+            };
+        };
+        UserDeletedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            event: "UserDeletedEvent";
+            payload: {
+                sub: number;
+            };
+        };
+        AuditEntryEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            event: "AuditEntryEvent";
+            payload: {
+                action: string;
+                entity: string;
+                entityId?: string;
+            };
         };
         EnvelopeOK: {
             success: boolean;
@@ -605,7 +981,7 @@ export interface components {
         };
         EnvelopeFail: {
             success: boolean;
-            message: string;
+            message: components["schemas"]["ErrorCode"];
             error: string;
         };
         Session: {
@@ -680,13 +1056,13 @@ export interface components {
             /** Format: email */
             email?: string;
             displayName?: string;
-            /** Format: uri */
             avatarUrl?: string;
             /** @enum {string} */
             status?: "active" | "inactive" | "deleted";
             /** Format: date-time */
             lockedUntil?: string | null;
             roles?: components["schemas"]["RoleSummary"][];
+            permissions?: string[];
             online?: boolean;
             activeSessions?: number;
             /** Format: date-time */
@@ -724,7 +1100,12 @@ export interface components {
             /** Format: email */
             email?: string;
             displayName?: string;
-            /** Format: uri */
+            avatarUrl?: string;
+        };
+        ProfileUpdateInput: {
+            /** Format: email */
+            email?: string;
+            displayName?: string;
             avatarUrl?: string;
         };
         AuditEntry: {
@@ -739,23 +1120,128 @@ export interface components {
             createdAt?: string;
         };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description Standard error envelope. */
+        Error: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "success": false,
+                 *       "message": "bad_request",
+                 *       "error": "request does not match the API contract"
+                 *     }
+                 */
+                "application/json": components["schemas"]["EnvelopeFail"];
+            };
+        };
+        /** @description Accepted for asynchronous processing. */
+        AsyncAccepted: {
+            headers: {
+                /** @description Operation status URL. */
+                Location?: string;
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "id": "op_123",
+                 *       "status": "pending",
+                 *       "statusUrl": "https://api.example.com/api/v1/operations/op_123"
+                 *     }
+                 */
+                "application/json": components["schemas"]["AsyncOperation"];
+            };
+        };
+    };
+    parameters: {
+        /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+        IdempotencyKey: string;
+        Limit: number;
+        Offset: number;
+        /** @description Opaque keyset cursor returned in meta.nextCursor. */
+        Cursor: string;
+        /** @description Allow-listed field; prefix with - for descending order. */
+        Sort: string;
+        /** @description Simple field filters use named query parameters; RSQL is deliberately unsupported. */
+        Filter: string;
+        /** @description Comma-separated sparse response fields. */
+        Fields: string;
+        /** @description Comma-separated related resources. */
+        Include: string;
+        Count: "exact" | "estimate" | "none";
+    };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Request limit for the current window. */
+        RateLimitLimit: number;
+        /** @description Requests remaining in the current window. */
+        RateLimitRemaining: number;
+        /** @description Seconds until the current window resets. */
+        RateLimitReset: number;
+        /** @description RFC 9745 deprecation timestamp. */
+        Deprecation: string;
+        /** @description HTTP date after which the operation may be removed. */
+        Sunset: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    register: {
+    ping: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        requestBody?: never;
+        responses: {
+            /** @description pong envelope */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "email": "user@example.com",
+                 *       "password": "examplexxxxx",
+                 *       "displayName": "example"
+                 *     }
+                 */
                 "application/json": components["schemas"]["RegisterInput"];
             };
         };
@@ -763,9 +1249,24 @@ export interface operations {
             /** @description created */
             201: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "email": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             /** Format: int64 */
@@ -778,23 +1279,46 @@ export interface operations {
             /** @description email already registered (documented enumeration trade — see PLAN risks) */
             409: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     login: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "email": "user@example.com",
+                 *       "password": "example",
+                 *       "otp": "123456"
+                 *     }
+                 */
                 "application/json": components["schemas"]["LoginInput"];
             };
         };
@@ -804,9 +1328,27 @@ export interface operations {
                 headers: {
                     /** @description refresh_token httpOnly cookie */
                     "Set-Cookie"?: string;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "accessToken": "example",
+                     *         "user": {
+                     *           "id": 1,
+                     *           "email": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             accessToken?: string;
@@ -822,18 +1364,34 @@ export interface operations {
             /** @description unknown/wrong/locked are indistinguishable (incl. timing) */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     refresh: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -842,9 +1400,23 @@ export interface operations {
             /** @description rotated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "accessToken": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             accessToken?: string;
@@ -855,18 +1427,34 @@ export interface operations {
             /** @description missing/invalid/replayed refresh token */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     logout: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -875,18 +1463,34 @@ export interface operations {
             /** @description logged out */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     beginMFA: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -895,23 +1499,44 @@ export interface operations {
             /** @description enrollment started */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     verifyMFA: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "code": "123456"
+                 *     }
+                 */
                 "application/json": {
                     code: string;
                 };
@@ -921,12 +1546,25 @@ export interface operations {
             /** @description MFA enabled */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     listSessions: {
@@ -941,9 +1579,41 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "id": 1,
+                     *             "userAgent": "example",
+                     *             "ip": "example",
+                     *             "deviceId": "example",
+                     *             "createdAt": "2026-01-01T00:00:00Z",
+                     *             "current": true
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             items?: components["schemas"]["Session"][];
@@ -952,6 +1622,7 @@ export interface operations {
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     revokeAllSessions: {
@@ -966,12 +1637,25 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     revokeSession: {
@@ -988,32 +1672,65 @@ export interface operations {
             /** @description revoked */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown session */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     forgotPassword: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "email": "user@example.com"
+                 *     }
+                 */
                 "application/json": components["schemas"]["ForgotInput"];
             };
         };
@@ -1021,23 +1738,45 @@ export interface operations {
             /** @description uniform response */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     resetPassword: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "token": "example",
+                 *       "newPassword": "examplexxxxx"
+                 *     }
+                 */
                 "application/json": components["schemas"]["ResetInput"];
             };
         };
@@ -1045,32 +1784,65 @@ export interface operations {
             /** @description password updated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description invalid/expired/consumed token or weak password */
             400: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     validateResetToken: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "token": "example"
+                 *     }
+                 */
                 "application/json": components["schemas"]["ResetTokenInput"];
             };
         };
@@ -1078,27 +1850,55 @@ export interface operations {
             /** @description token valid */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description invalid, expired, or consumed token */
             400: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     adminSetUserPassword: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 id: number;
             };
@@ -1106,6 +1906,11 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "newPassword": "examplexxxxx"
+                 *     }
+                 */
                 "application/json": {
                     newPassword: string;
                 };
@@ -1115,32 +1920,65 @@ export interface operations {
             /** @description password updated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description user not found */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     confirmPassword: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "password": "example"
+                 *     }
+                 */
                 "application/json": {
                     password: string;
                 };
@@ -1150,32 +1988,66 @@ export interface operations {
             /** @description confirmed */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description invalid password */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     changePassword: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "oldPassword": "example",
+                 *       "newPassword": "examplexxxxx"
+                 *     }
+                 */
                 "application/json": {
                     oldPassword: string;
                     newPassword: string;
@@ -1186,21 +2058,46 @@ export interface operations {
             /** @description changed and all sessions revoked */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description old password invalid */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     adminListUserSessions: {
@@ -1217,12 +2114,25 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     adminRevokeUserSessions: {
@@ -1239,12 +2149,25 @@ export interface operations {
             /** @description revoked */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     adminRevokeUserSession: {
@@ -1262,21 +2185,46 @@ export interface operations {
             /** @description revoked */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown session */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     adminSetUserState: {
@@ -1290,6 +2238,12 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "status": "active",
+                 *       "locked": true
+                 *     }
+                 */
                 "application/json": {
                     /** @enum {string} */
                     status?: "active" | "inactive";
@@ -1301,21 +2255,46 @@ export interface operations {
             /** @description updated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description user not found */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     scalarDocs: {
@@ -1330,10 +2309,16 @@ export interface operations {
             /** @description html */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            default: components["responses"]["Error"];
         };
     };
     aggregateSpec: {
@@ -1348,12 +2333,19 @@ export interface operations {
             /** @description json */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /** @example {} */
                     "application/json": Record<string, never>;
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     listPermissions: {
@@ -1368,27 +2360,66 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "name": "example",
+                     *             "createdAt": "2026-01-01T00:00:00Z",
+                     *             "roleCount": 1
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             items?: components["schemas"]["Permission"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
                         };
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     createPermission: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "name": "report:export:any"
+                 *     }
+                 */
                 "application/json": {
                     /** @example report:export:any */
                     name: string;
@@ -1399,30 +2430,137 @@ export interface operations {
             /** @description created (or already exists) */
             201: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description invalid name */
             400: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
             /** @description duplicate permission name */
             409: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
+        };
+    };
+    bulkCreatePermissions: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "names": [
+                 *         "user:read:any"
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    names: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description processed */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid permission batch */
+            400: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
         };
     };
     deletePermission: {
@@ -1439,30 +2577,105 @@ export interface operations {
             /** @description deleted */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown permission */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
             /** @description permission is in use */
             409: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
+        };
+    };
+    permissionExists: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description permission exists */
+            204: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description permission does not exist */
+            404: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
         };
     };
     listRoles: {
@@ -1477,9 +2690,47 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "id": 1,
+                     *             "name": "example",
+                     *             "description": "example",
+                     *             "color": "example",
+                     *             "icon": "example",
+                     *             "archived": true,
+                     *             "createdAt": "2026-01-01T00:00:00Z",
+                     *             "userCount": 1,
+                     *             "system": true,
+                     *             "permissions": [
+                     *               "example"
+                     *             ]
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             items?: components["schemas"]["Role"][];
@@ -1488,17 +2739,33 @@ export interface operations {
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     createRole: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "name": "example",
+                 *       "description": "example",
+                 *       "color": "#6366f1",
+                 *       "icon": "shield",
+                 *       "archived": false,
+                 *       "permissions": [
+                 *         "example"
+                 *       ]
+                 *     }
+                 */
                 "application/json": components["schemas"]["RoleInput"];
             };
         };
@@ -1506,9 +2773,34 @@ export interface operations {
             /** @description created */
             201: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "name": "example",
+                     *         "description": "example",
+                     *         "color": "example",
+                     *         "icon": "example",
+                     *         "archived": true,
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "userCount": 1,
+                     *         "system": true,
+                     *         "permissions": [
+                     *           "example"
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Role"];
                     };
@@ -1517,12 +2809,25 @@ export interface operations {
             /** @description duplicate role name */
             409: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     deleteRole: {
@@ -1541,21 +2846,46 @@ export interface operations {
             /** @description deleted */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown role */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     updateRole: {
@@ -1569,6 +2899,18 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "name": "example",
+                 *       "description": "example",
+                 *       "color": "#6366f1",
+                 *       "icon": "shield",
+                 *       "archived": false,
+                 *       "permissions": [
+                 *         "example"
+                 *       ]
+                 *     }
+                 */
                 "application/json": components["schemas"]["RoleInput"] & {
                     /** @description full replacement set; unknown permission -> 400 */
                     permissions?: string[];
@@ -1579,9 +2921,34 @@ export interface operations {
             /** @description updated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "name": "example",
+                     *         "description": "example",
+                     *         "color": "example",
+                     *         "icon": "example",
+                     *         "archived": true,
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "userCount": 1,
+                     *         "system": true,
+                     *         "permissions": [
+                     *           "example"
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Role"];
                     };
@@ -1590,21 +2957,102 @@ export interface operations {
             /** @description unknown permission in set */
             400: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
             /** @description unknown role */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRoleUsers: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ok */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           1
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: number[];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
         };
     };
     getUserRoles: {
@@ -1621,12 +3069,25 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     setUserRoles: {
@@ -1640,6 +3101,13 @@ export interface operations {
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "roleIds": [
+                 *         1
+                 *       ]
+                 *     }
+                 */
                 "application/json": {
                     roleIds: number[];
                 };
@@ -1649,21 +3117,46 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown role in set */
             400: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     resolveClaims: {
@@ -1680,9 +3173,26 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "perms": [
+                     *           "example"
+                     *         ],
+                     *         "ver": 1
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             perms?: string[];
@@ -1695,12 +3205,25 @@ export interface operations {
             /** @description missing/wrong internal secret */
             403: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     realtimeInfo: {
@@ -1715,9 +3238,24 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "wsUrl": "example",
+                     *         "protocol": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             wsUrl?: string;
@@ -1726,17 +3264,26 @@ export interface operations {
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     resizeAvatar: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "file": "avatar.jpg"
+                 *     }
+                 */
                 "multipart/form-data": {
                     /** Format: binary */
                     file: string;
@@ -1747,17 +3294,27 @@ export interface operations {
             /** @description resized JPEG */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /** @example avatar.jpg */
                     "image/jpeg": string;
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     me: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description related data; roles and permissions are included by default */
+                include?: "roles" | "permissions" | "roles,permissions";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1767,9 +3324,48 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    /** @description weak profile validator */
+                    ETag?: string;
+                    /** @description private 30-second cache policy */
+                    "Cache-Control"?: string;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "email": "user@example.com",
+                     *         "displayName": "example",
+                     *         "avatarUrl": "https://example.com/avatar.png",
+                     *         "status": "active",
+                     *         "lockedUntil": "2026-01-01T00:00:00Z",
+                     *         "roles": [
+                     *           {
+                     *             "id": 1,
+                     *             "name": "example"
+                     *           }
+                     *         ],
+                     *         "permissions": [
+                     *           "example"
+                     *         ],
+                     *         "online": true,
+                     *         "activeSessions": 1,
+                     *         "lastLoginAt": "2026-01-01T00:00:00Z",
+                     *         "lastLoginIp": "example",
+                     *         "lastLoginUserAgent": "example",
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "updatedAt": "2026-01-01T00:00:00Z"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Profile"];
                     };
@@ -1778,12 +3374,25 @@ export interface operations {
             /** @description no identity */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     eraseMe: {
@@ -1798,12 +3407,25 @@ export interface operations {
             /** @description erased */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     exportMyData: {
@@ -1819,12 +3441,25 @@ export interface operations {
             200: {
                 headers: {
                     "Content-Disposition"?: string;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     listUsers: {
@@ -1838,6 +3473,8 @@ export interface operations {
                 ids?: string;
                 /** @description comma-separated sparse fields */
                 fields?: string;
+                /** @description comma-separated related data */
+                include?: "roles" | "permissions" | "roles,permissions";
                 /** @description total-count strategy */
                 count?: "exact" | "estimate" | "none";
                 /** @description case-insensitive email/display-name search */
@@ -1858,9 +3495,57 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "id": 1,
+                     *             "email": "user@example.com",
+                     *             "displayName": "example",
+                     *             "avatarUrl": "https://example.com/avatar.png",
+                     *             "status": "active",
+                     *             "lockedUntil": "2026-01-01T00:00:00Z",
+                     *             "roles": [
+                     *               {
+                     *                 "id": 1,
+                     *                 "name": "example"
+                     *               }
+                     *             ],
+                     *             "permissions": [
+                     *               "example"
+                     *             ],
+                     *             "online": true,
+                     *             "activeSessions": 1,
+                     *             "lastLoginAt": "2026-01-01T00:00:00Z",
+                     *             "lastLoginIp": "example",
+                     *             "lastLoginUserAgent": "example",
+                     *             "createdAt": "2026-01-01T00:00:00Z",
+                     *             "updatedAt": "2026-01-01T00:00:00Z"
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             items?: components["schemas"]["Profile"][];
@@ -1869,17 +3554,29 @@ export interface operations {
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     createUserProfile: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
+                /**
+                 * @example {
+                 *       "id": 1,
+                 *       "email": "user@example.com",
+                 *       "displayName": "example",
+                 *       "avatarUrl": "https://example.com/avatar.png"
+                 *     }
+                 */
                 "application/json": components["schemas"]["ProfileInput"];
             };
         };
@@ -1887,9 +3584,44 @@ export interface operations {
             /** @description created */
             201: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "email": "user@example.com",
+                     *         "displayName": "example",
+                     *         "avatarUrl": "https://example.com/avatar.png",
+                     *         "status": "active",
+                     *         "lockedUntil": "2026-01-01T00:00:00Z",
+                     *         "roles": [
+                     *           {
+                     *             "id": 1,
+                     *             "name": "example"
+                     *           }
+                     *         ],
+                     *         "permissions": [
+                     *           "example"
+                     *         ],
+                     *         "online": true,
+                     *         "activeSessions": 1,
+                     *         "lastLoginAt": "2026-01-01T00:00:00Z",
+                     *         "lastLoginIp": "example",
+                     *         "lastLoginUserAgent": "example",
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "updatedAt": "2026-01-01T00:00:00Z"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Profile"];
                     };
@@ -1898,12 +3630,25 @@ export interface operations {
             /** @description profile already exists */
             409: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     getUserStats: {
@@ -1918,14 +3663,36 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "total": 1,
+                     *         "online": 1,
+                     *         "registrations": [
+                     *           {
+                     *             "day": "2026-01-01",
+                     *             "count": 1
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["UserStats"];
                     };
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     getUser: {
@@ -1942,9 +3709,44 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "email": "user@example.com",
+                     *         "displayName": "example",
+                     *         "avatarUrl": "https://example.com/avatar.png",
+                     *         "status": "active",
+                     *         "lockedUntil": "2026-01-01T00:00:00Z",
+                     *         "roles": [
+                     *           {
+                     *             "id": 1,
+                     *             "name": "example"
+                     *           }
+                     *         ],
+                     *         "permissions": [
+                     *           "example"
+                     *         ],
+                     *         "online": true,
+                     *         "activeSessions": 1,
+                     *         "lastLoginAt": "2026-01-01T00:00:00Z",
+                     *         "lastLoginIp": "example",
+                     *         "lastLoginUserAgent": "example",
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "updatedAt": "2026-01-01T00:00:00Z"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Profile"];
                     };
@@ -1953,12 +3755,25 @@ export interface operations {
             /** @description unknown */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     deleteUser: {
@@ -1975,21 +3790,46 @@ export interface operations {
             /** @description deleted */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             /** @description unknown */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     updateUser: {
@@ -2003,16 +3843,58 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProfileInput"];
+                /**
+                 * @example {
+                 *       "email": "user@example.com",
+                 *       "displayName": "example",
+                 *       "avatarUrl": "https://example.com/avatar.png"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ProfileUpdateInput"];
             };
         };
         responses: {
             /** @description updated */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "id": 1,
+                     *         "email": "user@example.com",
+                     *         "displayName": "example",
+                     *         "avatarUrl": "https://example.com/avatar.png",
+                     *         "status": "active",
+                     *         "lockedUntil": "2026-01-01T00:00:00Z",
+                     *         "roles": [
+                     *           {
+                     *             "id": 1,
+                     *             "name": "example"
+                     *           }
+                     *         ],
+                     *         "permissions": [
+                     *           "example"
+                     *         ],
+                     *         "online": true,
+                     *         "activeSessions": 1,
+                     *         "lastLoginAt": "2026-01-01T00:00:00Z",
+                     *         "lastLoginIp": "example",
+                     *         "lastLoginUserAgent": "example",
+                     *         "createdAt": "2026-01-01T00:00:00Z",
+                     *         "updatedAt": "2026-01-01T00:00:00Z"
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["Profile"];
                     };
@@ -2021,12 +3903,25 @@ export interface operations {
             /** @description unknown */
             404: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
     listAuditEntries: {
@@ -2036,6 +3931,10 @@ export interface operations {
                 offset?: number;
                 entity?: string;
                 entityId?: string;
+                actorSub?: string;
+                action?: string;
+                from?: string;
+                to?: string;
             };
             header?: never;
             path?: never;
@@ -2046,9 +3945,42 @@ export interface operations {
             /** @description ok */
             200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "id": 1,
+                     *             "actorSub": "example",
+                     *             "action": "example",
+                     *             "entity": "example",
+                     *             "entityId": "example",
+                     *             "meta": "example",
+                     *             "createdAt": "2026-01-01T00:00:00Z"
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: {
                             items?: components["schemas"]["AuditEntry"][];
@@ -2060,15 +3992,118 @@ export interface operations {
             /** @description missing internal secret */
             401: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
+            default: components["responses"]["Error"];
         };
     };
-    ping: {
+    exportAuditEntries: {
+        parameters: {
+            query?: {
+                entity?: string;
+                entityId?: string;
+                actorSub?: string;
+                action?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** @example example */
+                    "text/csv": string;
+                };
+            };
+            /** @description missing internal secret */
+            401: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    healthz: {
+        parameters: {
+            query?: {
+                detail?: 0 | 1;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description alive */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "ok",
+                     *       "data": {
+                     *         "status": "alive",
+                     *         "version": "0.1.0",
+                     *         "commit": "abc1234"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    readyz: {
         parameters: {
             query?: never;
             header?: never;
@@ -2077,14 +4112,121 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description pong envelope */
+            /** @description ready */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "ready",
+                     *       "data": {
+                     *         "postgres": {
+                     *           "status": "ok",
+                     *           "latencyMs": 1
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": components["schemas"]["EnvelopeOK"];
                 };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description build identity */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "ok",
+                     *       "data": {
+                     *         "version": "0.1.0",
+                     *         "commit": "abc1234"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    onUserCreated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "event": "user.created",
+                 *       "payload": {
+                 *         "sub": 42,
+                 *         "email": "user@example.com"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["UserCreatedEvent"];
+            };
+        };
+        responses: {
+            /** @description accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    onAuditEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "event": "audit.entry",
+                 *       "payload": {
+                 *         "action": "login",
+                 *         "entity": "user",
+                 *         "entityId": "42"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["AuditEntryEvent"];
+            };
+        };
+        responses: {
+            /** @description accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

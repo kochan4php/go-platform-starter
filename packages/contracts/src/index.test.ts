@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { resolveGatewayURL, setAccessToken, silentRefresh } from "./index";
+import { registerSchema, updateUserSchema } from "./schemas";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -35,4 +36,13 @@ it("coalesces concurrent silent refresh calls into one request", async () => {
 
   expect([first, second, third]).toEqual(["fresh-token", "fresh-token", "fresh-token"]);
   expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+it("generates runnable Zod request schemas from OpenAPI", () => {
+  expect(
+    registerSchema.safeParse({ email: "user@example.com", password: "long-enough-password" }).success,
+  ).toBe(true);
+  expect(registerSchema.safeParse({ email: "not-an-email", password: "short" }).success).toBe(false);
+  expect(updateUserSchema.safeParse({ displayName: "Updated" }).success).toBe(true);
+  expect(updateUserSchema.safeParse({ id: 42 }).success).toBe(false);
 });

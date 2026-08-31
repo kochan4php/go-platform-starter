@@ -35,9 +35,14 @@ paths:
       operationId: me
       summary: the caller's profile, served purely from identity headers
       x-auth: required
+      parameters:
+        - { name: include, in: query, description: related data; roles and permissions are included by default, schema: { type: string, enum: [roles, permissions, "roles,permissions"], default: "roles,permissions" } }
       responses:
         "200":
           description: ok
+          headers:
+            ETag: { description: weak profile validator, schema: { type: string } }
+            Cache-Control: { description: private 30-second cache policy, schema: { type: string } }
           content:
             application/json:
               schema:
@@ -102,6 +107,7 @@ paths:
         - { name: cursor, in: query, description: opaque keyset cursor for createdAt sorting, schema: { type: string, maxLength: 200 } }
         - { name: ids, in: query, description: comma-separated batch of at most 100 user IDs, schema: { type: string, maxLength: 2200 } }
         - { name: fields, in: query, description: comma-separated sparse fields, schema: { type: string, maxLength: 300 } }
+        - { name: include, in: query, description: comma-separated related data, schema: { type: string, enum: [roles, permissions, "roles,permissions"], default: "roles,permissions" } }
         - { name: count, in: query, description: total-count strategy, schema: { type: string, enum: [exact, estimate, none], default: exact } }
         - { name: q, in: query, description: case-insensitive email/display-name search, schema: { type: string, maxLength: 120 } }
         - { name: presence, in: query, schema: { type: string, enum: [online, offline] } }
@@ -176,7 +182,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ProfileInput" }
+            schema: { $ref: "#/components/schemas/ProfileUpdateInput" }
       responses:
         "200":
           description: updated
@@ -231,12 +237,15 @@ components:
         id: { type: integer, format: int64 }
         email: { type: string, format: email, maxLength: 254 }
         displayName: { type: string, maxLength: 120 }
-        avatarUrl: { type: string, format: uri, maxLength: 400, pattern: "^$|^https://" }
+        avatarUrl: { type: string, maxLength: 400, pattern: "^$|^https://" }
         status: { type: string, enum: [active, inactive, deleted] }
         lockedUntil: { type: string, format: date-time, nullable: true }
         roles:
           type: array
           items: { $ref: "#/components/schemas/RoleSummary" }
+        permissions:
+          type: array
+          items: { type: string, maxLength: 120 }
         online: { type: boolean }
         activeSessions: { type: integer }
         lastLoginAt: { type: string, format: date-time, nullable: true }
@@ -274,4 +283,12 @@ components:
         id: { type: integer, format: int64, description: existing subject id }
         email: { type: string, format: email, maxLength: 254 }
         displayName: { type: string, maxLength: 120 }
-        avatarUrl: { type: string, format: uri, maxLength: 400, pattern: "^$|^https://" }
+        avatarUrl: { type: string, maxLength: 400, pattern: "^$|^https://" }
+
+    ProfileUpdateInput:
+      type: object
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        displayName: { type: string, maxLength: 120 }
+        avatarUrl: { type: string, maxLength: 400, pattern: "^$|^https://" }

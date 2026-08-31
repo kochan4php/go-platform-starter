@@ -127,6 +127,9 @@ jobs:
           pnpm test:contracts
           git diff --exit-code
 
+      - name: API changelog and breaking-removal gate
+        run: node scripts/api-changelog.mjs "${{ github.event.pull_request.base.sha || github.event.before }}"
+
   schema-docs:
     runs-on: ubuntu-latest
     services:

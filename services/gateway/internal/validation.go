@@ -73,3 +73,37 @@ func (v *RequestValidator) Validate(service string, request *http.Request) error
 	request.Body = io.NopCloser(bytes.NewReader(body))
 	return err
 }
+
+// ValidateResponse is intentionally used by contract tests, not the hot path.
+func (v *RequestValidator) ValidateResponse(service string, request *http.Request, response *http.Response) error {
+	if v == nil {
+		return nil
+	}
+	router := v.routers[service]
+	if router == nil {
+		return fmt.Errorf("no validator for service %s", service)
+	}
+	check := request.Clone(request.Context())
+	check.URL.Path = strings.TrimPrefix(request.URL.Path, "/api/v1")
+	check.RequestURI = ""
+	route, params, err := router.FindRoute(check)
+	if err != nil {
+		return err
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	response.Body = io.NopCloser(bytes.NewReader(body))
+	input := &openapi3filter.RequestValidationInput{
+		Request: check, Route: route, PathParams: params,
+		Options: &openapi3filter.Options{AuthenticationFunc: openapi3filter.NoopAuthenticationFunc, MultiError: true},
+	}
+	return openapi3filter.ValidateResponse(request.Context(), &openapi3filter.ResponseValidationInput{
+		RequestValidationInput: input,
+		Status:                 response.StatusCode,
+		Header:                 response.Header,
+		Body:                   io.NopCloser(bytes.NewReader(body)),
+		Options:                input.Options,
+	})
+}

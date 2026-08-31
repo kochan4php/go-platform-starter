@@ -13,7 +13,7 @@
 		"format": "biome check --write .",
 		"test": "corepack pnpm -r --workspace-concurrency=1 test",
 		"test:gates": "node --test scripts/quality-gates.test.mjs",
-		"test:contracts": "node scripts/check-contracts.mjs",
+		"test:contracts": "spectral lint packages/contracts/gen/openapi.json && node scripts/check-contracts.mjs",
 		"test:coverage": "node scripts/check-coverage.mjs",
 		"build": "corepack pnpm -r --workspace-concurrency=1 build",
 		"check:budget": "corepack pnpm --filter web check:budget",
@@ -26,6 +26,7 @@
 		"@axe-core/playwright": "^4.10.2",
 		"@biomejs/biome": "^1.9.4",
 		"@playwright/test": "^1.49.0",
+		"@stoplight/spectral-cli": "^6.15.0",
 		"js-yaml": "^4.1.0"
 	}
 }

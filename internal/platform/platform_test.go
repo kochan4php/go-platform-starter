@@ -112,6 +112,15 @@ func TestListOKShape(t *testing.T) {
 	}
 }
 
+func TestPaginationLinks(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/items?limit=10&offset=10&q=a", nil)
+	meta := platform.Meta{Limit: 10, Offset: 10, Total: 25}
+	platform.SetPaginationLinks(req, &meta)
+	if meta.Next != "/items?limit=10&offset=20&q=a" || meta.Prev != "/items?limit=10&offset=0&q=a" {
+		t.Fatalf("links = next %q prev %q", meta.Next, meta.Prev)
+	}
+}
+
 func TestCorrelationIDMiddleware(t *testing.T) {
 	nextCalled := false
 	h := platform.CorrelationID(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -235,6 +244,21 @@ func TestReadyz(t *testing.T) {
 	}
 	if !strings.Contains(rec2.Body.String(), `"redis":{"error":"conn refused","latencyMs":`) {
 		t.Fatalf("body = %s", rec2.Body.String())
+	}
+}
+
+func TestHealthDetailAndVersion(t *testing.T) {
+	t.Setenv("APP_VERSION", "1.2.3")
+	t.Setenv("GIT_COMMIT", "abc123")
+	detail := httptest.NewRecorder()
+	platform.Healthz(detail, httptest.NewRequest(http.MethodGet, "/healthz?detail=1", nil))
+	if !strings.Contains(detail.Body.String(), `"goVersion"`) || !strings.Contains(detail.Body.String(), `"version":"1.2.3"`) {
+		t.Fatalf("detail health = %s", detail.Body.String())
+	}
+	version := httptest.NewRecorder()
+	platform.Version(version, httptest.NewRequest(http.MethodGet, "/version", nil))
+	if !strings.Contains(version.Body.String(), `"commit":"abc123"`) {
+		t.Fatalf("version = %s", version.Body.String())
 	}
 }
 

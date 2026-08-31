@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -74,5 +75,33 @@ paths:
 	request.Header.Set("Content-Type", "application/json")
 	if err := validator.Validate("test", request); err == nil {
 		t.Fatal("undeclared request body accepted")
+	}
+}
+
+func TestRuntimeResponseMatchesOpenAPI(t *testing.T) {
+	spec, err := os.ReadFile("../../auth/openapi.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	validator, err := NewRequestValidator(map[string][]byte{"auth": spec})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", nil)
+	valid := &http.Response{
+		StatusCode: http.StatusCreated,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(`{"success":true,"message":"created","data":{"id":1,"email":"user@example.com"}}`)),
+	}
+	if err := validator.ValidateResponse("auth", request, valid); err != nil {
+		t.Fatal(err)
+	}
+	invalid := &http.Response{
+		StatusCode: http.StatusCreated,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(`{}`)),
+	}
+	if err := validator.ValidateResponse("auth", request, invalid); err == nil {
+		t.Fatal("invalid runtime response accepted")
 	}
 }

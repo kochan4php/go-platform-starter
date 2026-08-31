@@ -49,7 +49,7 @@ func (h *Handlers) decode(r *http.Request, dst any) error {
 	return nil
 }
 
-func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Me(w http.ResponseWriter, r *http.Request, _ gen.MeParams) {
 	sub := SubFromContext(r)
 	if sub == "" {
 		platform.WriteError(w, h.log, platform.ErrUnauthorized("no identity headers"))
@@ -64,6 +64,14 @@ func (h *Handlers) Me(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		platform.WriteError(w, h.log, err)
+		return
+	}
+	etagBytes, _ := json.Marshal(p)
+	etag := fmt.Sprintf(`W/"%x"`, sha256.Sum256(etagBytes))
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "private, max-age=30")
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
 		return
 	}
 	platform.OK(w, http.StatusOK, "ok", p)
@@ -174,6 +182,7 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request, params gen.
 		last := items[len(items)-1]
 		meta.NextCursor = encodeListCursor(last.CreatedAt, last.ID)
 	}
+	platform.SetPaginationLinks(r, &meta)
 	projected, projectErr := sparseProfiles(items, r.URL.Query().Get("fields"))
 	if projectErr != nil {
 		platform.WriteError(w, h.log, projectErr)

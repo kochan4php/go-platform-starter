@@ -75,6 +75,14 @@ func TestPermissionAndRoleAssignmentIntegration(t *testing.T) {
 	if err := svc.CreatePermission(ctx, "report:export:any"); err == nil {
 		t.Fatal("duplicate permission accepted")
 	}
+	bulk, err := svc.CreatePermissions(ctx, []string{"report:export:any", "audit:export:any"})
+	if err != nil || len(bulk.Created) != 1 || len(bulk.Existing) != 1 {
+		t.Fatalf("bulk permissions = %#v, %v", bulk, err)
+	}
+	exists, err := svc.PermissionExists(ctx, "audit:export:any")
+	if err != nil || !exists {
+		t.Fatalf("permission exists = %v, %v", exists, err)
+	}
 	role, err := svc.CreateRole(ctx, roleBuilder("auditor", "report:export:any"))
 	if err != nil {
 		t.Fatalf("create role: %v", err)
@@ -87,6 +95,10 @@ func TestPermissionAndRoleAssignmentIntegration(t *testing.T) {
 	}
 	if err := svc.SetUserRoles(ctx, 42, []int64{role.ID}); err != nil {
 		t.Fatalf("replace role set: %v", err)
+	}
+	users, total, err := svc.ListRoleUsers(ctx, role.ID, 50, 0)
+	if err != nil || total != 1 || len(users) != 1 || users[0] != 42 {
+		t.Fatalf("role users = %#v total=%d err=%v", users, total, err)
 	}
 
 	var version int64

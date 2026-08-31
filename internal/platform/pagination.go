@@ -17,6 +17,32 @@ type Meta struct {
 	Total      int64  `json:"total"`
 	NextCursor string `json:"nextCursor,omitempty"`
 	Estimated  bool   `json:"estimated,omitempty"`
+	Next       string `json:"next,omitempty"`
+	Prev       string `json:"prev,omitempty"`
+}
+
+func SetPaginationLinks(r *http.Request, meta *Meta) {
+	link := func(offset int, cursor string) string {
+		u := *r.URL
+		q := u.Query()
+		if cursor != "" {
+			q.Set("cursor", cursor)
+			q.Del("offset")
+		} else {
+			q.Set("offset", strconv.Itoa(offset))
+			q.Del("cursor")
+		}
+		u.RawQuery = q.Encode()
+		return u.RequestURI()
+	}
+	if meta.NextCursor != "" {
+		meta.Next = link(0, meta.NextCursor)
+	} else if int64(meta.Offset+meta.Limit) < meta.Total {
+		meta.Next = link(meta.Offset+meta.Limit, "")
+	}
+	if meta.Offset > 0 {
+		meta.Prev = link(max(0, meta.Offset-meta.Limit), "")
+	}
 }
 
 type listData struct {

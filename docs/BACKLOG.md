@@ -992,66 +992,66 @@ by priority — baca seluruhnya lalu pilih.
 
 ## API & Contracts
 
-- [ ] 🔧 M1. OpenAPI description lengkap semua endpoint
-- [ ] 🔧 M2. Example request/response per endpoint
-- [ ] 🔧 M3. Operation tags grouping
-- [ ] 🔧 M4. Deprecated flag documentation
-- [ ] 🔧 M5. Spectral spec lint ruleset
-- [ ] 🔧 M6. Error response standard reference semua endpoint
-- [ ] 🔧 M7. Pagination component enforced semua list
-- [ ] 🔧 M8. Sorting parameter standard
-- [ ] 🔧 M9. Filtering standard (RSQL/JSONapi style)
-- [ ] 🔧 M10. Sparse fieldsets
-- [ ] 🔧 M11. Idempotency-Key header spec
-- [ ] 🔧 M12. Rate limit headers dokumentasi
+- [x] 🔧 M1. OpenAPI description lengkap semua endpoint
+- [x] 🔧 M2. Example request/response per endpoint
+- [x] 🔧 M3. Operation tags grouping
+- [x] 🔧 M4. Deprecated flag documentation
+- [x] 🔧 M5. Spectral spec lint ruleset
+- [x] 🔧 M6. Error response standard reference semua endpoint
+- [x] 🔧 M7. Pagination component enforced semua list
+- [x] 🔧 M8. Sorting parameter standard
+- [x] 🔧 M9. Filtering standard (RSQL/JSONapi style)
+- [x] 🔧 M10. Sparse fieldsets
+- [x] 🔧 M11. Idempotency-Key header spec
+- [x] 🔧 M12. Rate limit headers dokumentasi
 - [ ] 🧭 M13. ETag/If-Match optimistic locking spec
-- [ ] 🔧 M14. Bulk endpoint spec standard
+- [x] 🔧 M14. Bulk endpoint spec standard
 - [ ] 🧭 M15. Webhook subscription spec
-- [ ] 🔧 M16. Async operation spec (202 + status)
-- [ ] 🔧 M17. File upload spec (multipart)
-- [ ] 🔧 M18. Export/download spec
-- [ ] 🔧 M19. Health endpoint spec standard
-- [ ] 🔧 M20. Metrics endpoint excluded documented
+- [x] 🔧 M16. Async operation spec (202 + status)
+- [x] 🔧 M17. File upload spec (multipart)
+- [x] 🔧 M18. Export/download spec
+- [x] 🔧 M19. Health endpoint spec standard
+- [x] 🔧 M20. Metrics endpoint excluded documented
 - [ ] 🧭 M21. /v2 scaffold strategy doc
-- [ ] 🔧 M22. Deprecation sunset header middleware
-- [ ] 🔧 M23. API changelog dari spec diff
-- [ ] 🔧 M24. SDK versioning alignment
-- [ ] 🔧 M25. Runtime response validation test
-- [ ] 🔧 M26. Envelope message konsistensi bahasa
-- [ ] 🔧 M27. Error code enum terpusat
+- [x] 🔧 M22. Deprecation sunset header middleware
+- [x] 🔧 M23. API changelog dari spec diff
+- [x] 🔧 M24. SDK versioning alignment
+- [x] 🔧 M25. Runtime response validation test
+- [x] 🔧 M26. Envelope message konsistensi bahasa
+- [x] 🔧 M27. Error code enum terpusat
 - [ ] 🧭 M28. Error message multi-bahasa Accept-Language
 - [ ] 🧭 M29. Content negotiation XML (kemungkinan no)
-- [ ] 🔧 M30. HATEOAS ringan (next/prev url)
-- [ ] 🔧 M31. Cursor pagination spec + implementasi
-- [ ] 🔧 M32. Total count estimation mode
-- [ ] 🔧 M33. Include related (?include=roles)
-- [ ] 🔧 M34. Batch get endpoint
-- [ ] 🔧 M35. Search endpoint (?q= full text)
-- [ ] 🔧 M36. Audit viewer filter params spec
-- [ ] 🔧 M37. Audit viewer export endpoint
-- [ ] 🔧 M38. Session list endpoint users service
-- [ ] 🔧 M39. Revoke session per-session-id endpoint
-- [ ] 🔧 M40. Revoke all sessions per-user endpoint
-- [ ] 🔧 M41. User activation/deactivation endpoint
-- [ ] 🔧 M42. GET user's roles endpoint
-- [ ] 🔧 M43. Permission existence check (HEAD)
-- [ ] 🔧 M44. Bulk permission create
-- [ ] 🔧 M45. GET /roles/{id}/users
-- [ ] 🔧 M46. /me gabung profile + roles + permissions
-- [ ] 🔧 M47. /me cache headers
-- [ ] 🔧 M48. Health detail mode (?detail=1)
-- [ ] 🔧 M49. /version endpoint semua service
-- [ ] 🔧 M50. OpenAPI server URLs per-environment
-- [ ] 🔧 M51. Security scheme definitions lengkap
-- [ ] 🔧 M52. Spec link objects antar operation
-- [ ] 🔧 M53. Discriminator event payload types
-- [ ] 🔧 M54. Webhook spec (openapi webhooks)
-- [ ] 🔧 M55. Default value documentation
-- [ ] 🔧 M56. Nullable vs optional audit
-- [ ] 🔧 M57. ApiClient interface cleanup (hilangkan cast)
-- [ ] 🔧 M58. Codegen split output per-tag
-- [ ] 🔧 M59. Codegen zod schema untuk FE validation
-- [ ] 🔧 M60. Contracts tree-shakeable per-path export
+- [x] 🔧 M30. HATEOAS ringan (next/prev url)
+- [x] 🔧 M31. Cursor pagination spec + implementasi
+- [x] 🔧 M32. Total count estimation mode
+- [x] 🔧 M33. Include related (?include=roles)
+- [x] 🔧 M34. Batch get endpoint
+- [x] 🔧 M35. Search endpoint (?q= full text)
+- [x] 🔧 M36. Audit viewer filter params spec
+- [x] 🔧 M37. Audit viewer export endpoint
+- [x] 🔧 M38. Session list endpoint users service
+- [x] 🔧 M39. Revoke session per-session-id endpoint
+- [x] 🔧 M40. Revoke all sessions per-user endpoint
+- [x] 🔧 M41. User activation/deactivation endpoint
+- [x] 🔧 M42. GET user's roles endpoint
+- [x] 🔧 M43. Permission existence check (HEAD)
+- [x] 🔧 M44. Bulk permission create
+- [x] 🔧 M45. GET /roles/{id}/users
+- [x] 🔧 M46. /me gabung profile + roles + permissions
+- [x] 🔧 M47. /me cache headers
+- [x] 🔧 M48. Health detail mode (?detail=1)
+- [x] 🔧 M49. /version endpoint semua service
+- [x] 🔧 M50. OpenAPI server URLs per-environment
+- [x] 🔧 M51. Security scheme definitions lengkap
+- [x] 🔧 M52. Spec link objects antar operation
+- [x] 🔧 M53. Discriminator event payload types
+- [x] 🔧 M54. Webhook spec (openapi webhooks)
+- [x] 🔧 M55. Default value documentation
+- [x] 🔧 M56. Nullable vs optional audit
+- [x] 🔧 M57. ApiClient interface cleanup (hilangkan cast)
+- [x] 🔧 M58. Codegen split output per-tag
+- [x] 🔧 M59. Codegen zod schema untuk FE validation
+- [x] 🔧 M60. Contracts tree-shakeable per-path export
 
 ---
 

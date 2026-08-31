@@ -71,6 +71,11 @@ type CreatePermissionJSONBody struct {
 	Name string `json:"name"`
 }
 
+// BulkCreatePermissionsJSONBody defines parameters for BulkCreatePermissions.
+type BulkCreatePermissionsJSONBody struct {
+	Names []string `json:"names"`
+}
+
 // DeleteRoleParams defines parameters for DeleteRole.
 type DeleteRoleParams struct {
 	FallbackRoleId *int64 `form:"fallbackRoleId,omitempty" json:"fallbackRoleId,omitempty"`
@@ -88,6 +93,12 @@ type UpdateRoleJSONBody struct {
 	Permissions *[]string `json:"permissions,omitempty"`
 }
 
+// ListRoleUsersParams defines parameters for ListRoleUsers.
+type ListRoleUsersParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // SetUserRolesJSONBody defines parameters for SetUserRoles.
 type SetUserRolesJSONBody struct {
 	RoleIds []int64 `json:"roleIds"`
@@ -95,6 +106,9 @@ type SetUserRolesJSONBody struct {
 
 // CreatePermissionJSONRequestBody defines body for CreatePermission for application/json ContentType.
 type CreatePermissionJSONRequestBody CreatePermissionJSONBody
+
+// BulkCreatePermissionsJSONRequestBody defines body for BulkCreatePermissions for application/json ContentType.
+type BulkCreatePermissionsJSONRequestBody BulkCreatePermissionsJSONBody
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody = RoleInput
@@ -116,9 +130,15 @@ type ServerInterface interface {
 	// CreatePermission add a unique permission to the catalog
 	// (POST /rbac/permissions)
 	CreatePermission(w http.ResponseWriter, r *http.Request)
+	// BulkCreatePermissions create up to 100 permissions atomically
+	// (POST /rbac/permissions/bulk)
+	BulkCreatePermissions(w http.ResponseWriter, r *http.Request)
 	// DeletePermission delete an unused permission from the catalog
 	// (DELETE /rbac/permissions/{name})
 	DeletePermission(w http.ResponseWriter, r *http.Request, name string)
+	// PermissionExists check whether a permission exists without returning a body
+	// (HEAD /rbac/permissions/{name})
+	PermissionExists(w http.ResponseWriter, r *http.Request, name string)
 
 	// (GET /rbac/roles)
 	ListRoles(w http.ResponseWriter, r *http.Request)
@@ -131,6 +151,9 @@ type ServerInterface interface {
 	// UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 	// (PATCH /rbac/roles/{id})
 	UpdateRole(w http.ResponseWriter, r *http.Request, id int64)
+	// ListRoleUsers list user IDs assigned to a role
+	// (GET /rbac/roles/{id}/users)
+	ListRoleUsers(w http.ResponseWriter, r *http.Request, id int64, params ListRoleUsersParams)
 	// GetUserRoles list roles assigned to a user
 	// (GET /rbac/users/{id}/roles)
 	GetUserRoles(w http.ResponseWriter, r *http.Request, id int64)
@@ -161,9 +184,21 @@ func (_ Unimplemented) CreatePermission(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// BulkCreatePermissions create up to 100 permissions atomically
+// (POST /rbac/permissions/bulk)
+func (_ Unimplemented) BulkCreatePermissions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // DeletePermission delete an unused permission from the catalog
 // (DELETE /rbac/permissions/{name})
 func (_ Unimplemented) DeletePermission(w http.ResponseWriter, r *http.Request, name string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PermissionExists check whether a permission exists without returning a body
+// (HEAD /rbac/permissions/{name})
+func (_ Unimplemented) PermissionExists(w http.ResponseWriter, r *http.Request, name string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -185,6 +220,12 @@ func (_ Unimplemented) DeleteRole(w http.ResponseWriter, r *http.Request, id int
 // UpdateRole rename/describe and/or sync the permission set; bumps affected users' ver
 // (PATCH /rbac/roles/{id})
 func (_ Unimplemented) UpdateRole(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListRoleUsers list user IDs assigned to a role
+// (GET /rbac/roles/{id}/users)
+func (_ Unimplemented) ListRoleUsers(w http.ResponseWriter, r *http.Request, id int64, params ListRoleUsersParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -263,6 +304,20 @@ func (siw *ServerInterfaceWrapper) CreatePermission(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// BulkCreatePermissions operation middleware
+func (siw *ServerInterfaceWrapper) BulkCreatePermissions(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BulkCreatePermissions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DeletePermission operation middleware
 func (siw *ServerInterfaceWrapper) DeletePermission(w http.ResponseWriter, r *http.Request) {
 
@@ -280,6 +335,32 @@ func (siw *ServerInterfaceWrapper) DeletePermission(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeletePermission(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PermissionExists operation middleware
+func (siw *ServerInterfaceWrapper) PermissionExists(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PermissionExists(w, r, name)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -376,6 +457,61 @@ func (siw *ServerInterfaceWrapper) UpdateRole(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdateRole(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListRoleUsers operation middleware
+func (siw *ServerInterfaceWrapper) ListRoleUsers(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListRoleUsersParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "offset", r.URL.Query(), &params.Offset, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "offset"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRoleUsers(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -557,7 +693,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/rbac/permissions", wrapper.CreatePermission)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/rbac/permissions/bulk", wrapper.BulkCreatePermissions)
+	})
+	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/rbac/permissions/{name}", wrapper.DeletePermission)
+	})
+	r.Group(func(r chi.Router) {
+		r.Head(options.BaseURL+"/rbac/permissions/{name}", wrapper.PermissionExists)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/roles", wrapper.ListRoles)
@@ -570,6 +712,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/rbac/roles/{id}", wrapper.UpdateRole)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/rbac/roles/{id}/users", wrapper.ListRoleUsers)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rbac/users/{id}/roles", wrapper.GetUserRoles)

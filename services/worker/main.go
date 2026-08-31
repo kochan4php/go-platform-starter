@@ -177,6 +177,7 @@ func main() {
 	// Central audit view (PLAN item 74) — mounted under the gateway-facing
 	// /api/v1 prefix; the route registry guards it with audit:read:any.
 	router.Get("/api/v1/audit/viewer", internal.AuditViewer(db, cfg.InternalSecret))
+	router.Get("/api/v1/audit/viewer/export", internal.AuditExport(db, cfg.InternalSecret))
 
 	log.Info("worker listening (consumer in background)", "port", cfg.Port)
 	if err := platform.GracefulRun(":"+cfg.Port, router, func() {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -90,5 +91,16 @@ func TestAuditViewerPaginatesAndGuardsSecret(t *testing.T) {
 	}
 	if len(filteredEnv.Data.Items) != 0 || filteredEnv.Data.Meta.Total != 0 {
 		t.Fatalf("audit filter leaked unrelated rows: %s", filtered.Body.String())
+	}
+	if invalid := do("/api/v1/audit/viewer?from=not-a-date", secret); invalid.Code != http.StatusBadRequest {
+		t.Fatalf("invalid date filter status = %d", invalid.Code)
+	}
+
+	exportRequest := httptest.NewRequest(http.MethodGet, "/api/v1/audit/viewer/export?action=create", nil)
+	exportRequest.Header.Set("X-Internal-Secret", secret)
+	exportResponse := httptest.NewRecorder()
+	AuditExport(f.db, secret)(exportResponse, exportRequest)
+	if exportResponse.Code != http.StatusOK || exportResponse.Header().Get("Content-Type") != "text/csv; charset=utf-8" || !strings.Contains(exportResponse.Body.String(), "actorSub,action") {
+		t.Fatalf("audit export = %d %q", exportResponse.Code, exportResponse.Body.String())
 	}
 }

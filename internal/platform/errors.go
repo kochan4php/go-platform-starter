@@ -13,6 +13,20 @@ type AppError struct {
 	Detail  string
 }
 
+const (
+	ErrorBadRequest          = "bad_request"
+	ErrorUnauthorized        = "unauthorized"
+	ErrorForbidden           = "forbidden"
+	ErrorNotFound            = "not_found"
+	ErrorConflict            = "conflict"
+	ErrorInternalServerError = "internal_server_error"
+)
+
+var ErrorCodes = [...]string{
+	ErrorBadRequest, ErrorUnauthorized, ErrorForbidden,
+	ErrorNotFound, ErrorConflict, ErrorInternalServerError,
+}
+
 func (e *AppError) Error() string {
 	if e.Detail != "" {
 		return fmt.Sprintf("%s: %s", e.Message, e.Detail)
@@ -21,27 +35,27 @@ func (e *AppError) Error() string {
 }
 
 func ErrBadRequest(format string, a ...any) *AppError {
-	return &AppError{Status: http.StatusBadRequest, Message: "bad_request", Detail: fmt.Sprintf(format, a...)}
+	return &AppError{Status: http.StatusBadRequest, Message: ErrorBadRequest, Detail: fmt.Sprintf(format, a...)}
 }
 
 func ErrUnauthorized(detail string) *AppError {
-	return &AppError{Status: http.StatusUnauthorized, Message: "unauthorized", Detail: detail}
+	return &AppError{Status: http.StatusUnauthorized, Message: ErrorUnauthorized, Detail: detail}
 }
 
 func ErrForbidden(detail string) *AppError {
-	return &AppError{Status: http.StatusForbidden, Message: "forbidden", Detail: detail}
+	return &AppError{Status: http.StatusForbidden, Message: ErrorForbidden, Detail: detail}
 }
 
 func ErrNotFound(format string, a ...any) *AppError {
-	return &AppError{Status: http.StatusNotFound, Message: "not_found", Detail: fmt.Sprintf(format, a...)}
+	return &AppError{Status: http.StatusNotFound, Message: ErrorNotFound, Detail: fmt.Sprintf(format, a...)}
 }
 
 func ErrConflict(format string, a ...any) *AppError {
-	return &AppError{Status: http.StatusConflict, Message: "conflict", Detail: fmt.Sprintf(format, a...)}
+	return &AppError{Status: http.StatusConflict, Message: ErrorConflict, Detail: fmt.Sprintf(format, a...)}
 }
 
 func ErrInternal(err error) *AppError {
-	return &AppError{Status: http.StatusInternalServerError, Message: "internal_server_error", Detail: err.Error()}
+	return &AppError{Status: http.StatusInternalServerError, Message: ErrorInternalServerError, Detail: err.Error()}
 }
 
 func WriteError(w http.ResponseWriter, log *slog.Logger, err error) {
@@ -56,5 +70,5 @@ func WriteError(w http.ResponseWriter, log *slog.Logger, err error) {
 		return
 	}
 	log.Error("request failed", "err", err)
-	Fail(w, http.StatusInternalServerError, "internal_server_error", "")
+	Fail(w, http.StatusInternalServerError, ErrorInternalServerError, "")
 }

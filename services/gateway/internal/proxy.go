@@ -146,6 +146,9 @@ func ProxyHandler(deps ProxyDeps) func(http.Handler) http.Handler {
 				platform.Fail(w, http.StatusNotFound, "not_found", "no such route in the API registry")
 				return
 			}
+			if route.DeprecatedAt > 0 {
+				platform.Deprecation(w, route.DeprecatedAt, route.Sunset)
+			}
 			upstream, ok := proxies[route.Service]
 			if !ok {
 				platform.Fail(w, http.StatusNotFound, "not_found", fmt.Sprintf("no upstream %q", route.Service))

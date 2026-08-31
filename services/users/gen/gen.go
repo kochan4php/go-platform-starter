@@ -56,6 +56,27 @@ func (e ListUsersParamsLimit) Valid() bool {
 	}
 }
 
+// Defines values for ListUsersParamsInclude.
+const (
+	ListUsersParamsIncludePermissions      ListUsersParamsInclude = "permissions"
+	ListUsersParamsIncludeRoles            ListUsersParamsInclude = "roles"
+	ListUsersParamsIncludeRolespermissions ListUsersParamsInclude = "roles,permissions"
+)
+
+// Valid indicates whether the value is a known member of the ListUsersParamsInclude enum.
+func (e ListUsersParamsInclude) Valid() bool {
+	switch e {
+	case ListUsersParamsIncludePermissions:
+		return true
+	case ListUsersParamsIncludeRoles:
+		return true
+	case ListUsersParamsIncludeRolespermissions:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListUsersParamsCount.
 const (
 	Estimate ListUsersParamsCount = "estimate"
@@ -137,6 +158,27 @@ func (e ListUsersParamsOrder) Valid() bool {
 	}
 }
 
+// Defines values for MeParamsInclude.
+const (
+	MeParamsIncludePermissions      MeParamsInclude = "permissions"
+	MeParamsIncludeRoles            MeParamsInclude = "roles"
+	MeParamsIncludeRolespermissions MeParamsInclude = "roles,permissions"
+)
+
+// Valid indicates whether the value is a known member of the MeParamsInclude enum.
+func (e MeParamsInclude) Valid() bool {
+	switch e {
+	case MeParamsIncludePermissions:
+		return true
+	case MeParamsIncludeRoles:
+		return true
+	case MeParamsIncludeRolespermissions:
+		return true
+	default:
+		return false
+	}
+}
+
 // EnvelopeFail defines model for EnvelopeFail.
 type EnvelopeFail struct {
 	Error   string `json:"error"`
@@ -171,6 +213,7 @@ type Profile struct {
 	LastLoginUserAgent *string              `json:"lastLoginUserAgent,omitempty"`
 	LockedUntil        *time.Time           `json:"lockedUntil,omitempty"`
 	Online             *bool                `json:"online,omitempty"`
+	Permissions        *[]string            `json:"permissions,omitempty"`
 	Roles              *[]RoleSummary       `json:"roles,omitempty"`
 	Status             *ProfileStatus       `json:"status,omitempty"`
 	UpdatedAt          *time.Time           `json:"updatedAt,omitempty"`
@@ -187,6 +230,13 @@ type ProfileInput struct {
 
 	// Id existing subject id
 	Id int64 `json:"id"`
+}
+
+// ProfileUpdateInput defines model for ProfileUpdateInput.
+type ProfileUpdateInput struct {
+	AvatarUrl   *string              `json:"avatarUrl,omitempty"`
+	DisplayName *string              `json:"displayName,omitempty"`
+	Email       *openapi_types.Email `json:"email,omitempty"`
 }
 
 // RoleSummary defines model for RoleSummary.
@@ -219,6 +269,9 @@ type ListUsersParams struct {
 	// Fields comma-separated sparse fields
 	Fields *string `form:"fields,omitempty" json:"fields,omitempty"`
 
+	// Include comma-separated related data
+	Include *ListUsersParamsInclude `form:"include,omitempty" json:"include,omitempty"`
+
 	// Count total-count strategy
 	Count *ListUsersParamsCount `form:"count,omitempty" json:"count,omitempty"`
 
@@ -234,6 +287,9 @@ type ListUsersParams struct {
 
 // ListUsersParamsLimit defines parameters for ListUsers.
 type ListUsersParamsLimit int
+
+// ListUsersParamsInclude defines parameters for ListUsers.
+type ListUsersParamsInclude string
 
 // ListUsersParamsCount defines parameters for ListUsers.
 type ListUsersParamsCount string
@@ -252,6 +308,15 @@ type ResizeAvatarMultipartBody struct {
 	File openapi_types.File `json:"file"`
 }
 
+// MeParams defines parameters for Me.
+type MeParams struct {
+	// Include related data; roles and permissions are included by default
+	Include *MeParamsInclude `form:"include,omitempty" json:"include,omitempty"`
+}
+
+// MeParamsInclude defines parameters for Me.
+type MeParamsInclude string
+
 // CreateUserProfileJSONRequestBody defines body for CreateUserProfile for application/json ContentType.
 type CreateUserProfileJSONRequestBody = ProfileInput
 
@@ -259,7 +324,7 @@ type CreateUserProfileJSONRequestBody = ProfileInput
 type ResizeAvatarMultipartRequestBody ResizeAvatarMultipartBody
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
-type UpdateUserJSONRequestBody = ProfileInput
+type UpdateUserJSONRequestBody = ProfileUpdateInput
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -277,7 +342,7 @@ type ServerInterface interface {
 	EraseMe(w http.ResponseWriter, r *http.Request)
 	// Me the caller's profile, served purely from identity headers
 	// (GET /users/me)
-	Me(w http.ResponseWriter, r *http.Request)
+	Me(w http.ResponseWriter, r *http.Request, params MeParams)
 	// ExportMyData download all personal data held by the platform
 	// (GET /users/me/export)
 	ExportMyData(w http.ResponseWriter, r *http.Request)
@@ -325,7 +390,7 @@ func (_ Unimplemented) EraseMe(w http.ResponseWriter, r *http.Request) {
 
 // Me the caller's profile, served purely from identity headers
 // (GET /users/me)
-func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request, params MeParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -436,6 +501,19 @@ func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "fields"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "fields", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "include" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "include", r.URL.Query(), &params.Include, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "include"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "include", Err: err})
 		}
 		return
 	}
@@ -600,8 +678,27 @@ func (siw *ServerInterfaceWrapper) EraseMe(w http.ResponseWriter, r *http.Reques
 // Me operation middleware
 func (siw *ServerInterfaceWrapper) Me(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MeParams
+
+	// ------------- Optional query parameter "include" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "include", r.URL.Query(), &params.Include, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "include"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "include", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.Me(w, r)
+		siw.Handler.Me(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {

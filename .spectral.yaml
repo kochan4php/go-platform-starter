@@ -1,0 +1,11 @@
+extends: spectral:oas
+
+rules:
+  info-contact: off
+  operation-description: error
+  operation-operationId: error
+  operation-tags: error
+  operation-operationId-unique: error
+  path-params: error
+  oas3-valid-schema-example: error
+  oas3-unused-component: off

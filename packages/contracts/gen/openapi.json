@@ -1,15 +1,111 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "info": {
     "title": "platform aggregate API",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "The complete, gateway-facing platform contract. Service specs remain the source of truth."
   },
   "servers": [
     {
-      "url": "/"
+      "url": "http://127.0.0.1:8000",
+      "description": "development"
+    },
+    {
+      "url": "https://api.staging.example.com",
+      "description": "staging"
+    },
+    {
+      "url": "https://api.example.com",
+      "description": "production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "_template",
+      "description": "_template service operations."
+    },
+    {
+      "name": "auth",
+      "description": "auth service operations."
+    },
+    {
+      "name": "gateway",
+      "description": "gateway service operations."
+    },
+    {
+      "name": "rbac",
+      "description": "rbac service operations."
+    },
+    {
+      "name": "realtime",
+      "description": "realtime service operations."
+    },
+    {
+      "name": "users",
+      "description": "users service operations."
+    },
+    {
+      "name": "worker",
+      "description": "worker service operations."
+    },
+    {
+      "name": "template",
+      "description": "template operations."
+    },
+    {
+      "name": "platform",
+      "description": "Shared health and build endpoints."
     }
   ],
   "paths": {
+    "/api/v1/ping": {
+      "get": {
+        "operationId": "ping",
+        "summary": "liveness-style demo endpoint proving spec → codegen → handler wiring",
+        "tags": [
+          "template"
+        ],
+        "responses": {
+          "200": {
+            "description": "pong envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "description": "liveness-style demo endpoint proving spec → codegen → handler wiring.",
+        "deprecated": false
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "x-request-body-limit": 16384,
@@ -21,6 +117,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RegisterInput"
+              },
+              "example": {
+                "email": "user@example.com",
+                "password": "examplexxxxx",
+                "displayName": "example"
               }
             }
           }
@@ -54,6 +155,39 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "email": "example"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            },
+            "links": {
+              "GetCreatedUser": {
+                "operationId": "getUser",
+                "parameters": {
+                  "id": "$response.body#/data/id"
                 }
               }
             }
@@ -64,12 +198,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "create credentials; emits user.created onto users.events.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -83,6 +252,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginInput"
+              },
+              "example": {
+                "email": "user@example.com",
+                "password": "example",
+                "otp": "123456"
               }
             }
           }
@@ -96,6 +270,21 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             },
             "content": {
@@ -133,6 +322,17 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "accessToken": "example",
+                    "user": {
+                      "id": 1,
+                      "email": "example"
+                    }
+                  }
                 }
               }
             }
@@ -143,12 +343,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "uniform-401 login with lockout; mints access token + sets refresh cookie.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/refresh": {
@@ -180,7 +415,31 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "accessToken": "example"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -190,12 +449,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "rotate the refresh cookie (reuse kills the family) and mint a new access token.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -209,11 +503,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "revoke the session carried by the refresh cookie and clear it.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/mfa/enroll": {
@@ -233,11 +562,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "create a time-limited TOTP enrollment and QR code.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/mfa/verify": {
@@ -267,6 +631,9 @@
                     "maxLength": 6
                   }
                 }
+              },
+              "example": {
+                "code": "123456"
               }
             }
           }
@@ -278,11 +645,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "verify TOTP and enable MFA for the authenticated user.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/sessions": {
@@ -325,11 +727,61 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      {
+                        "id": 1,
+                        "userAgent": "example",
+                        "ip": "example",
+                        "deviceId": "example",
+                        "createdAt": "2026-01-01T00:00:00Z",
+                        "current": true
+                      }
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "active sessions of the authenticated user.",
+        "deprecated": false
       },
       "delete": {
         "operationId": "revokeAllSessions",
@@ -347,11 +799,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "revoke every other session of the authenticated user.",
+        "deprecated": false
       }
     },
     "/api/v1/auth/sessions/{id}": {
@@ -382,7 +864,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -392,11 +896,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "revoke one session of the authenticated user.",
+        "deprecated": false
       }
     },
     "/api/v1/auth/forgot": {
@@ -410,6 +944,9 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ForgotInput"
+              },
+              "example": {
+                "email": "user@example.com"
               }
             }
           }
@@ -421,12 +958,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "always-200 password reset request (anti-enumeration).",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/reset": {
@@ -440,6 +1012,10 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ResetInput"
+              },
+              "example": {
+                "token": "example",
+                "newPassword": "examplexxxxx"
               }
             }
           }
@@ -451,7 +1027,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -461,12 +1059,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "consume a single-use reset token, set new password, wipe all sessions.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/reset/validate": {
@@ -480,6 +1113,9 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ResetTokenInput"
+              },
+              "example": {
+                "token": "example"
               }
             }
           }
@@ -491,7 +1127,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -501,12 +1159,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "x-rate-limit-class": "strict"
+        "x-rate-limit-class": "strict",
+        "tags": [
+          "auth"
+        ],
+        "description": "validate a reset token without consuming its single-use grant.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/users/{id}/password": {
@@ -524,6 +1217,9 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
           }
         ],
         "requestBody": {
@@ -542,6 +1238,9 @@
                     "maxLength": 72
                   }
                 }
+              },
+              "example": {
+                "newPassword": "examplexxxxx"
               }
             }
           }
@@ -553,7 +1252,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -563,11 +1284,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "admin sets a new password for a user (revokes their sessions).",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/auth/confirm-password": {
@@ -597,6 +1353,9 @@
                     "maxLength": 72
                   }
                 }
+              },
+              "example": {
+                "password": "example"
               }
             }
           }
@@ -608,7 +1367,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -618,11 +1399,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "re-authenticate the current user before a sensitive admin action.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/password": {
@@ -659,6 +1475,10 @@
                     "maxLength": 72
                   }
                 }
+              },
+              "example": {
+                "oldPassword": "example",
+                "newPassword": "examplexxxxx"
               }
             }
           }
@@ -670,7 +1490,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -680,11 +1522,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "change the authenticated user's password after verifying the old password.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/auth/users/{id}/sessions": {
@@ -710,11 +1587,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "list active sessions for a managed user.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
         "operationId": "adminRevokeUserSessions",
@@ -738,11 +1650,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "force logout a managed user on every device.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/auth/users/{id}/sessions/{sessionId}": {
@@ -777,7 +1724,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -787,11 +1756,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "revoke one active session for a managed user.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/auth/users/{id}/state": {
@@ -829,6 +1833,10 @@
                     "type": "boolean"
                   }
                 }
+              },
+              "example": {
+                "status": "active",
+                "locked": true
               }
             }
           }
@@ -840,7 +1848,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -850,11 +1880,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "auth"
+        ],
+        "description": "activate/deactivate and lock/unlock a managed user.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/docs": {
@@ -863,9 +1928,34 @@
         "summary": "Scalar UI over the aggregate spec",
         "responses": {
           "200": {
-            "description": "html"
+            "description": "html",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "gateway"
+        ],
+        "description": "Scalar UI over the aggregate spec.",
+        "deprecated": false
       }
     },
     "/api/v1/docs/openapi.json": {
@@ -879,11 +1969,37 @@
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
+                },
+                "example": {}
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "gateway"
+        ],
+        "description": "aggregate OpenAPI document composed from every upstream at boot.",
+        "deprecated": false
       }
     },
     "/api/v1/rbac/permissions": {
@@ -910,6 +2026,9 @@
                     "example": "report:export:any"
                   }
                 }
+              },
+              "example": {
+                "name": "report:export:any"
               }
             }
           }
@@ -921,7 +2040,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -931,7 +2072,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -941,11 +2104,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "add a unique permission to the catalog.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       },
       "get": {
         "operationId": "listPermissions",
@@ -972,20 +2175,270 @@
                               "items": {
                                 "$ref": "#/components/schemas/Permission"
                               }
+                            },
+                            "meta": {
+                              "$ref": "#/components/schemas/EnvelopeMeta"
                             }
                           }
                         }
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      {
+                        "name": "example",
+                        "createdAt": "2026-01-01T00:00:00Z",
+                        "roleCount": 1
+                      }
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "the compile-time catalog persisted in the db.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rbac/permissions/bulk": {
+      "post": {
+        "operationId": "bulkCreatePermissions",
+        "summary": "create up to 100 permissions atomically",
+        "x-required-permission": "role:update:any",
+        "x-request-body-limit": 16384,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "names"
+                ],
+                "properties": {
+                  "names": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 5,
+                      "maxLength": 120,
+                      "pattern": "^[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+$"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "names": [
+                  "user:read:any"
+                ]
               }
             }
           }
-        }
+        },
+        "responses": {
+          "200": {
+            "description": "processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "description": "invalid permission batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "create up to 100 permissions atomically.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/rbac/permissions/{name}": {
+      "head": {
+        "operationId": "permissionExists",
+        "summary": "check whether a permission exists without returning a body",
+        "x-required-permission": "permission:read:any",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "permission exists",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "404": {
+            "description": "permission does not exist",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "check whether a permission exists without returning a body.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
       "delete": {
         "operationId": "deletePermission",
         "summary": "delete an unused permission from the catalog",
@@ -1008,7 +2461,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1018,7 +2493,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1028,11 +2525,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "delete an unused permission from the catalog.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/rbac/roles": {
@@ -1046,6 +2578,16 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoleInput"
+              },
+              "example": {
+                "name": "example",
+                "description": "example",
+                "color": "#6366f1",
+                "icon": "shield",
+                "archived": false,
+                "permissions": [
+                  "example"
+                ]
               }
             }
           }
@@ -1069,7 +2611,42 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "name": "example",
+                    "description": "example",
+                    "color": "example",
+                    "icon": "example",
+                    "archived": true,
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "userCount": 1,
+                    "system": true,
+                    "permissions": [
+                      "example"
+                    ]
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1079,11 +2656,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "summary": "createRole",
+        "description": "createRole.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       },
       "get": {
         "operationId": "listRoles",
@@ -1118,11 +2736,73 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      {
+                        "id": 1,
+                        "name": "example",
+                        "description": "example",
+                        "color": "example",
+                        "icon": "example",
+                        "archived": true,
+                        "createdAt": "2026-01-01T00:00:00Z",
+                        "userCount": 1,
+                        "system": true,
+                        "permissions": [
+                          "example"
+                        ]
+                      }
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "summary": "listRoles",
+        "description": "listRoles.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/rbac/roles/{id}": {
@@ -1167,6 +2847,16 @@
                     }
                   }
                 ]
+              },
+              "example": {
+                "name": "example",
+                "description": "example",
+                "color": "#6366f1",
+                "icon": "shield",
+                "archived": false,
+                "permissions": [
+                  "example"
+                ]
               }
             }
           }
@@ -1190,7 +2880,42 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "name": "example",
+                    "description": "example",
+                    "color": "example",
+                    "icon": "example",
+                    "archived": true,
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "userCount": 1,
+                    "system": true,
+                    "permissions": [
+                      "example"
+                    ]
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1200,7 +2925,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1210,11 +2957,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "rename/describe and/or sync the permission set; bumps affected users' ver.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
         "operationId": "deleteRole",
@@ -1245,7 +3027,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1255,11 +3059,168 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "summary": "deleteRole",
+        "description": "deleteRole.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rbac/roles/{id}/users": {
+      "get": {
+        "operationId": "listRoleUsers",
+        "summary": "list user IDs assigned to a role",
+        "x-required-permission": "role:read:any",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
             }
           }
-        }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeOK"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "format": "int64"
+                              }
+                            },
+                            "meta": {
+                              "$ref": "#/components/schemas/EnvelopeMeta"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      1
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "list user IDs assigned to a role.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/rbac/users/{id}/roles": {
@@ -1285,11 +3246,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "list roles assigned to a user.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
         "x-request-body-limit": 16384,
@@ -1327,6 +3323,11 @@
                     }
                   }
                 }
+              },
+              "example": {
+                "roleIds": [
+                  1
+                ]
               }
             }
           }
@@ -1338,7 +3339,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1348,11 +3371,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "replace the role set assigned to a user (bumps their ver).",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/rbac/internal/claims/{sub}": {
@@ -1360,7 +3418,11 @@
         "operationId": "resolveClaims",
         "summary": "internal API — perms[] + ver for a subject; requires the shared internal secret",
         "x-internal": true,
-        "security": [],
+        "security": [
+          {
+            "internalSecret": []
+          }
+        ],
         "parameters": [
           {
             "name": "sub",
@@ -1404,7 +3466,34 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "perms": [
+                      "example"
+                    ],
+                    "ver": 1
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1414,11 +3503,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "rbac"
+        ],
+        "description": "internal API — perms[] + ver for a subject; requires the shared internal secret.",
+        "deprecated": false
       }
     },
     "/api/v1/info": {
@@ -1455,11 +3574,49 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "wsUrl": "example",
+                    "protocol": "example"
+                  }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "realtime"
+        ],
+        "description": "ws url + protocol version for the web client.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/avatar/resize": {
@@ -1483,6 +3640,9 @@
                     "format": "binary"
                   }
                 }
+              },
+              "example": {
+                "file": "avatar.jpg"
               }
             }
           }
@@ -1495,11 +3655,47 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
-                }
+                },
+                "example": "avatar.jpg"
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "validate and resize an avatar to fit within 512x512.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       }
     },
     "/api/v1/users/me": {
@@ -1507,9 +3703,54 @@
         "operationId": "me",
         "summary": "the caller's profile, served purely from identity headers",
         "x-auth": "required",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "related data; roles and permissions are included by default",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "roles",
+                "permissions",
+                "roles,permissions"
+              ],
+              "default": "roles,permissions"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "ok",
+            "headers": {
+              "ETag": {
+                "description": "weak profile validator",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "private 30-second cache policy",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1526,6 +3767,34 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "email": "user@example.com",
+                    "displayName": "example",
+                    "avatarUrl": "https://example.com/avatar.png",
+                    "status": "active",
+                    "lockedUntil": "2026-01-01T00:00:00Z",
+                    "roles": [
+                      {
+                        "id": 1,
+                        "name": "example"
+                      }
+                    ],
+                    "permissions": [
+                      "example"
+                    ],
+                    "online": true,
+                    "activeSessions": 1,
+                    "lastLoginAt": "2026-01-01T00:00:00Z",
+                    "lastLoginIp": "example",
+                    "lastLoginUserAgent": "example",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "updatedAt": "2026-01-01T00:00:00Z"
+                  }
                 }
               }
             }
@@ -1536,11 +3805,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "the caller's profile, served purely from identity headers.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
         "operationId": "eraseMe",
@@ -1553,11 +3857,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "irreversibly erase the caller's personal data and revoke access.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/me/export": {
@@ -1573,17 +3912,50 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             },
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "download all personal data held by the platform.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users": {
@@ -1598,6 +3970,12 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProfileInput"
+              },
+              "example": {
+                "id": 1,
+                "email": "user@example.com",
+                "displayName": "example",
+                "avatarUrl": "https://example.com/avatar.png"
               }
             }
           }
@@ -1621,7 +3999,52 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "email": "user@example.com",
+                    "displayName": "example",
+                    "avatarUrl": "https://example.com/avatar.png",
+                    "status": "active",
+                    "lockedUntil": "2026-01-01T00:00:00Z",
+                    "roles": [
+                      {
+                        "id": 1,
+                        "name": "example"
+                      }
+                    ],
+                    "permissions": [
+                      "example"
+                    ],
+                    "online": true,
+                    "activeSessions": 1,
+                    "lastLoginAt": "2026-01-01T00:00:00Z",
+                    "lastLoginIp": "example",
+                    "lastLoginUserAgent": "example",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "updatedAt": "2026-01-01T00:00:00Z"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1631,11 +4054,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "provision a profile row for an existing sub.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
       },
       "get": {
         "operationId": "listUsers",
@@ -1689,6 +4152,20 @@
             "schema": {
               "type": "string",
               "maxLength": 300
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "comma-separated related data",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "roles",
+                "permissions",
+                "roles,permissions"
+              ],
+              "default": "roles,permissions"
             }
           },
           {
@@ -1807,11 +4284,82 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      {
+                        "id": 1,
+                        "email": "user@example.com",
+                        "displayName": "example",
+                        "avatarUrl": "https://example.com/avatar.png",
+                        "status": "active",
+                        "lockedUntil": "2026-01-01T00:00:00Z",
+                        "roles": [
+                          {
+                            "id": 1,
+                            "name": "example"
+                          }
+                        ],
+                        "permissions": [
+                          "example"
+                        ],
+                        "online": true,
+                        "activeSessions": 1,
+                        "lastLoginAt": "2026-01-01T00:00:00Z",
+                        "lastLoginIp": "example",
+                        "lastLoginUserAgent": "example",
+                        "createdAt": "2026-01-01T00:00:00Z",
+                        "updatedAt": "2026-01-01T00:00:00Z"
+                      }
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "paginated profiles with validated server-side sorting.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/stats": {
@@ -1843,11 +4391,55 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "total": 1,
+                    "online": 1,
+                    "registrations": [
+                      {
+                        "day": "2026-01-01",
+                        "count": 1
+                      }
+                    ]
+                  }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "directory totals and seven-day registration series.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/users/{id}": {
@@ -1884,7 +4476,52 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "email": "user@example.com",
+                    "displayName": "example",
+                    "avatarUrl": "https://example.com/avatar.png",
+                    "status": "active",
+                    "lockedUntil": "2026-01-01T00:00:00Z",
+                    "roles": [
+                      {
+                        "id": 1,
+                        "name": "example"
+                      }
+                    ],
+                    "permissions": [
+                      "example"
+                    ],
+                    "online": true,
+                    "activeSessions": 1,
+                    "lastLoginAt": "2026-01-01T00:00:00Z",
+                    "lastLoginIp": "example",
+                    "lastLoginUserAgent": "example",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "updatedAt": "2026-01-01T00:00:00Z"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1894,11 +4531,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "summary": "getUser",
+        "description": "getUser.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "patch": {
         "x-request-body-limit": 16384,
@@ -1920,7 +4593,12 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProfileInput"
+                "$ref": "#/components/schemas/ProfileUpdateInput"
+              },
+              "example": {
+                "email": "user@example.com",
+                "displayName": "example",
+                "avatarUrl": "https://example.com/avatar.png"
               }
             }
           }
@@ -1944,7 +4622,52 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "id": 1,
+                    "email": "user@example.com",
+                    "displayName": "example",
+                    "avatarUrl": "https://example.com/avatar.png",
+                    "status": "active",
+                    "lockedUntil": "2026-01-01T00:00:00Z",
+                    "roles": [
+                      {
+                        "id": 1,
+                        "name": "example"
+                      }
+                    ],
+                    "permissions": [
+                      "example"
+                    ],
+                    "online": true,
+                    "activeSessions": 1,
+                    "lastLoginAt": "2026-01-01T00:00:00Z",
+                    "lastLoginIp": "example",
+                    "lastLoginUserAgent": "example",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "updatedAt": "2026-01-01T00:00:00Z"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1954,11 +4677,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "summary": "updateUser",
+        "description": "updateUser.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
         "operationId": "deleteUser",
@@ -1982,7 +4741,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": "example"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -1992,11 +4773,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "users"
+        ],
+        "description": "soft-delete the profile row and emit user.deleted.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/audit/viewer": {
@@ -2039,6 +4855,38 @@
               "type": "string",
               "maxLength": 255
             }
+          },
+          {
+            "name": "actorSub",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         ],
         "responses": {
@@ -2071,7 +4919,50 @@
                       }
                     }
                   ]
+                },
+                "example": {
+                  "success": true,
+                  "message": "example",
+                  "data": {
+                    "items": [
+                      {
+                        "id": 1,
+                        "actorSub": "example",
+                        "action": "example",
+                        "entity": "example",
+                        "entityId": "example",
+                        "meta": "example",
+                        "createdAt": "2026-01-01T00:00:00Z"
+                      }
+                    ],
+                    "meta": {
+                      "limit": 20,
+                      "offset": 0,
+                      "total": 1,
+                      "nextCursor": "example",
+                      "estimated": false,
+                      "next": "example",
+                      "prev": "example"
+                    }
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
               }
             }
           },
@@ -2081,30 +4972,367 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "tags": [
+          "worker"
+        ],
+        "description": "paginated audit trail, newest first.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
-    "/api/v1/ping": {
+    "/api/v1/audit/viewer/export": {
       "get": {
-        "operationId": "ping",
-        "summary": "liveness-style demo endpoint proving spec → codegen → handler wiring",
-        "tags": [
-          "template"
+        "operationId": "exportAuditEntries",
+        "summary": "export up to 10000 filtered audit entries as CSV",
+        "x-required-permission": "audit:read:any",
+        "parameters": [
+          {
+            "name": "entity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          },
+          {
+            "name": "actorSub",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
         ],
         "responses": {
           "200": {
-            "description": "pong envelope",
+            "description": "CSV export",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            },
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "example"
+              }
+            }
+          },
+          "401": {
+            "description": "missing internal secret",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeFail"
+                },
+                "example": {
+                  "success": false,
+                  "message": "bad_request",
+                  "error": "example"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateLimitReset"
+              },
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "tags": [
+          "worker"
+        ],
+        "description": "export up to 10000 filtered audit entries as CSV.",
+        "deprecated": false,
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "tags": [
+          "platform"
+        ],
+        "summary": "Check process liveness",
+        "description": "Returns build identity; detail=1 adds runtime and environment metadata.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "detail",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ],
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "alive",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "ok",
+                  "data": {
+                    "status": "alive",
+                    "version": "0.1.0",
+                    "commit": "abc1234"
+                  }
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz",
+        "tags": [
+          "platform"
+        ],
+        "summary": "Check dependency readiness",
+        "description": "Returns 503 when any configured dependency or drain state is unhealthy.",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "ready",
+                  "data": {
+                    "postgres": {
+                      "status": "ok",
+                      "latencyMs": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "version",
+        "tags": [
+          "platform"
+        ],
+        "summary": "Read build identity",
+        "description": "Available on every service through the shared platform router.",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "build identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeOK"
+                },
+                "example": {
+                  "success": true,
+                  "message": "ok",
+                  "data": {
+                    "version": "0.1.0",
+                    "commit": "abc1234"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "userCreated": {
+      "post": {
+        "operationId": "onUserCreated",
+        "tags": [
+          "events"
+        ],
+        "summary": "A user was created",
+        "description": "At-least-once users.events delivery.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreatedEvent"
+              },
+              "example": {
+                "event": "user.created",
+                "payload": {
+                  "sub": 42,
+                  "email": "user@example.com"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "accepted"
+          }
+        }
+      }
+    },
+    "auditEntry": {
+      "post": {
+        "operationId": "onAuditEntry",
+        "tags": [
+          "events"
+        ],
+        "summary": "An audit entry was emitted",
+        "description": "At-least-once audit.events delivery.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditEntryEvent"
+              },
+              "example": {
+                "event": "audit.entry",
+                "payload": {
+                  "action": "login",
+                  "entity": "user",
+                  "entityId": "42"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "accepted"
           }
         }
       }
@@ -2121,14 +5349,228 @@
         ],
         "properties": {
           "limit": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1,
+            "default": 20
           },
           "offset": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
           },
           "total": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "estimated": {
+            "type": "boolean",
+            "default": false
+          },
+          "next": {
+            "type": "string"
+          },
+          "prev": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "bad_request",
+          "unauthorized",
+          "forbidden",
+          "not_found",
+          "conflict",
+          "internal_server_error"
+        ]
+      },
+      "BulkResult": {
+        "type": "object",
+        "required": [
+          "processed",
+          "failed"
+        ],
+        "properties": {
+          "processed": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "errors": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AsyncOperation": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "statusUrl"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "default": "pending"
+          },
+          "statusUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "commit"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "alive"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          },
+          "commit": {
+            "type": "string",
+            "example": "abc1234"
+          },
+          "goVersion": {
+            "type": "string",
+            "example": "go1.25.0"
+          },
+          "environment": {
+            "type": "string",
+            "example": "production"
+          }
+        }
+      },
+      "EventEnvelope": {
+        "type": "object",
+        "required": [
+          "event",
+          "payload"
+        ],
+        "discriminator": {
+          "propertyName": "event"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/UserCreatedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/UserDeletedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AuditEntryEvent"
+          }
+        ]
+      },
+      "UserCreatedEvent": {
+        "type": "object",
+        "required": [
+          "event",
+          "payload"
+        ],
+        "properties": {
+          "event": {
+            "const": "user.created"
+          },
+          "payload": {
+            "type": "object",
+            "required": [
+              "sub",
+              "email"
+            ],
+            "properties": {
+              "sub": {
+                "type": "integer"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          }
+        }
+      },
+      "UserDeletedEvent": {
+        "type": "object",
+        "required": [
+          "event",
+          "payload"
+        ],
+        "properties": {
+          "event": {
+            "const": "user.deleted"
+          },
+          "payload": {
+            "type": "object",
+            "required": [
+              "sub"
+            ],
+            "properties": {
+              "sub": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "AuditEntryEvent": {
+        "type": "object",
+        "required": [
+          "event",
+          "payload"
+        ],
+        "properties": {
+          "event": {
+            "const": "audit.entry"
+          },
+          "payload": {
+            "type": "object",
+            "required": [
+              "action",
+              "entity"
+            ],
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "entityId": {
+                "type": "string"
+              }
+            }
           }
         }
       },
@@ -2164,8 +5606,7 @@
             "type": "boolean"
           },
           "message": {
-            "type": "string",
-            "maxLength": 255
+            "$ref": "#/components/schemas/ErrorCode"
           },
           "error": {
             "type": "string",
@@ -2412,7 +5853,6 @@
           },
           "avatarUrl": {
             "type": "string",
-            "format": "uri",
             "maxLength": 400,
             "pattern": "^$|^https://"
           },
@@ -2433,6 +5873,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleSummary"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 120
             }
           },
           "online": {
@@ -2541,7 +5988,26 @@
           },
           "avatarUrl": {
             "type": "string",
-            "format": "uri",
+            "maxLength": 400,
+            "pattern": "^$|^https://"
+          }
+        }
+      },
+      "ProfileUpdateInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "avatarUrl": {
+            "type": "string",
             "maxLength": 400,
             "pattern": "^$|^https://"
           }
@@ -2576,6 +6042,182 @@
             "format": "date-time"
           }
         }
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "description": "Unique key for replay-safe POST requests; retained for 24 hours.",
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "description": "Opaque keyset cursor returned in meta.nextCursor.",
+        "schema": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "Sort": {
+        "name": "sort",
+        "in": "query",
+        "description": "Allow-listed field; prefix with - for descending order.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Filter": {
+        "name": "filter",
+        "in": "query",
+        "description": "Simple field filters use named query parameters; RSQL is deliberately unsupported.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Fields": {
+        "name": "fields",
+        "in": "query",
+        "description": "Comma-separated sparse response fields.",
+        "schema": {
+          "type": "string",
+          "maxLength": 300
+        }
+      },
+      "Include": {
+        "name": "include",
+        "in": "query",
+        "description": "Comma-separated related resources.",
+        "schema": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "Count": {
+        "name": "count",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "estimate",
+            "none"
+          ],
+          "default": "exact"
+        }
+      }
+    },
+    "headers": {
+      "RateLimitLimit": {
+        "description": "Request limit for the current window.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "RateLimitRemaining": {
+        "description": "Requests remaining in the current window.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "RateLimitReset": {
+        "description": "Seconds until the current window resets.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "Deprecation": {
+        "description": "RFC 9745 deprecation timestamp.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Sunset": {
+        "description": "HTTP date after which the operation may be removed.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Standard error envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/EnvelopeFail"
+            },
+            "example": {
+              "success": false,
+              "message": "bad_request",
+              "error": "request does not match the API contract"
+            }
+          }
+        }
+      },
+      "AsyncAccepted": {
+        "description": "Accepted for asynchronous processing.",
+        "headers": {
+          "Location": {
+            "description": "Operation status URL.",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AsyncOperation"
+            },
+            "example": {
+              "id": "op_123",
+              "status": "pending",
+              "statusUrl": "https://api.example.com/api/v1/operations/op_123"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "refreshCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refresh_token"
+      },
+      "internalSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Secret"
       }
     }
   }

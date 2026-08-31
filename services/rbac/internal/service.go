@@ -147,6 +147,55 @@ func (s *Service) CreatePermission(ctx context.Context, name string) error {
 	return nil
 }
 
+type BulkPermissionResult struct {
+	Created  []string `json:"created"`
+	Existing []string `json:"existing"`
+}
+
+func (s *Service) CreatePermissions(ctx context.Context, names []string) (BulkPermissionResult, error) {
+	for i := range names {
+		names[i] = strings.ToLower(strings.TrimSpace(names[i]))
+	}
+	names = uniqueStrings(names)
+	if len(names) == 0 || len(names) > 100 {
+		return BulkPermissionResult{}, platform.ErrBadRequest("names must contain 1..100 unique permissions")
+	}
+	for _, name := range names {
+		if !validPermissionName(name) {
+			return BulkPermissionResult{}, platform.ErrBadRequest("invalid permission %q", name)
+		}
+	}
+	result := BulkPermissionResult{Created: []string{}, Existing: []string{}}
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, name := range names {
+			insert := tx.Exec(`INSERT INTO rbac.permissions (name) VALUES (?) ON CONFLICT (name) DO NOTHING`, name)
+			if insert.Error != nil {
+				return insert.Error
+			}
+			if insert.RowsAffected == 0 {
+				result.Existing = append(result.Existing, name)
+			} else {
+				result.Created = append(result.Created, name)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return BulkPermissionResult{}, err
+	}
+	if len(result.Created) > 0 {
+		s.audit(ctx, "bulk_create", "permission", "", map[string]any{"names": result.Created})
+		permissionCreatedTotal.Add(float64(len(result.Created)))
+	}
+	return result, nil
+}
+
+func (s *Service) PermissionExists(ctx context.Context, name string) (bool, error) {
+	var count int64
+	err := s.db.WithContext(ctx).Table("rbac.permissions").Where("name = ?", strings.ToLower(strings.TrimSpace(name))).Count(&count).Error
+	return count > 0, err
+}
+
 func (s *Service) DeletePermission(ctx context.Context, name string) error {
 	var used int64
 	if err := s.db.WithContext(ctx).Table("rbac.role_permissions rp").
@@ -544,6 +593,17 @@ func (s *Service) GetUserRoles(ctx context.Context, userID int64) ([]Role, error
 		roles[i].System = roles[i].Name == "admin"
 	}
 	return roles, err
+}
+
+func (s *Service) ListRoleUsers(ctx context.Context, roleID int64, limit, offset int) ([]int64, int64, error) {
+	query := s.db.WithContext(ctx).Table("rbac.user_roles").Where("role_id = ?", roleID)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	var ids []int64
+	err := query.Order("user_id ASC").Limit(limit).Offset(offset).Pluck("user_id", &ids).Error
+	return ids, total, err
 }
 
 func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error) {

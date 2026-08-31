@@ -1,4 +1,4 @@
-import createFetchClient from "openapi-fetch";
+import createFetchClient, { type Client } from "openapi-fetch";
 import type { paths } from "./gen";
 
 /**
@@ -59,13 +59,7 @@ export function decodeClaims(token: string): TokenClaims | undefined {
   }
 }
 
-export interface ApiClient {
-  GET: ReturnType<typeof createFetchClient<paths>>["GET"];
-  POST: ReturnType<typeof createFetchClient<paths>>["POST"];
-  PATCH: ReturnType<typeof createFetchClient<paths>>["PATCH"];
-  PUT: ReturnType<typeof createFetchClient<paths>>["PUT"];
-  DELETE: ReturnType<typeof createFetchClient<paths>>["DELETE"];
-}
+export type ApiClient = Client<paths>;
 
 export interface CreateClientOptions {
   /** Gateway origin, e.g. http://127.0.0.1:8000 */
@@ -202,7 +196,7 @@ export function createApiClient(opts: CreateClientOptions = {}): ApiClient {
     },
   });
 
-  return client as unknown as ApiClient;
+  return client;
 }
 
 interface Breadcrumb {

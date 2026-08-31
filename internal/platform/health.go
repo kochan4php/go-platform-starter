@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -31,9 +32,21 @@ func Drain(w http.ResponseWriter, r *http.Request) {
 	OK(w, http.StatusOK, "draining", map[string]string{"status": "draining"})
 }
 
-func Healthz(w http.ResponseWriter, _ *http.Request) {
-	OK(w, http.StatusOK, "ok", map[string]string{
+func Healthz(w http.ResponseWriter, r *http.Request) {
+	data := map[string]string{
 		"status": "alive", "version": buildValue("APP_VERSION", "dev"), "commit": buildValue("GIT_COMMIT", "unknown"),
+	}
+	if r.URL.Query().Get("detail") == "1" {
+		data["goVersion"] = runtime.Version()
+		data["environment"] = buildValue("APP_ENV", "development")
+	}
+	OK(w, http.StatusOK, "ok", data)
+}
+
+func Version(w http.ResponseWriter, _ *http.Request) {
+	OK(w, http.StatusOK, "ok", map[string]string{
+		"version": buildValue("APP_VERSION", "dev"),
+		"commit":  buildValue("GIT_COMMIT", "unknown"),
 	})
 }
 

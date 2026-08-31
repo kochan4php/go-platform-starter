@@ -17,6 +17,10 @@ paths:
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
         - { name: entity, in: query, schema: { type: string, maxLength: 120 } }
         - { name: entityId, in: query, schema: { type: string, maxLength: 255 } }
+        - { name: actorSub, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: action, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
       responses:
         "200":
           description: ok
@@ -34,6 +38,28 @@ paths:
                             type: array
                             items: { $ref: "#/components/schemas/AuditEntry" }
                           meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+        "401": { description: missing internal secret, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /audit/viewer/export:
+    get:
+      operationId: exportAuditEntries
+      summary: export up to 10000 filtered audit entries as CSV
+      x-required-permission: "audit:read:any"
+      parameters:
+        - { name: entity, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: entityId, in: query, schema: { type: string, maxLength: 255 } }
+        - { name: actorSub, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: action, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        "200":
+          description: CSV export
+          headers:
+            Content-Disposition: { schema: { type: string } }
+          content:
+            text/csv:
+              schema: { type: string }
         "401": { description: missing internal secret, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
 
 components:

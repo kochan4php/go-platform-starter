@@ -245,7 +245,11 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 			}
 			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(limit))
 			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(res.Remaining))
+			resetSeconds := max(1, int((res.ResetAfter+time.Second-1)/time.Second))
+			w.Header().Set("X-RateLimit-Reset", strconv.Itoa(resetSeconds))
 			if res.Allowed == 0 {
+				retrySeconds := max(1, int((res.RetryAfter+time.Second-1)/time.Second))
+				w.Header().Set("Retry-After", strconv.Itoa(retrySeconds))
 				platform.Fail(w, http.StatusTooManyRequests, "rate_limited", "too many requests")
 				return
 			}
