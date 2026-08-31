@@ -1,0 +1,6 @@
+-w /etc/ssh/sshd_config -p wa -k platform-ssh
+-w /etc/ssh/sshd_config.d/ -p wa -k platform-ssh
+-w /etc/docker/daemon.json -p wa -k platform-docker
+-w /srv/go-platform/ -p wa -k platform-deploy
+-w /etc/sudoers -p wa -k platform-privilege
+-w /etc/sudoers.d/ -p wa -k platform-privilege

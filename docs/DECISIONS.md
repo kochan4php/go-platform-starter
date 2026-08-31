@@ -15,6 +15,9 @@ own source documents.
 | 2026-08-31 | Pair/mob work is opt-in with explicit roles | accepted | [Collaboration guide](COLLABORATION.md) |
 | 2026-08-31 | CI/CD uses protected promotion, Kustomize, and hosted runners by default | accepted | [CI/CD controls](CI_CD.md) |
 | 2026-08-31 | Repository remains a path-gated monorepo | accepted | [ADR-0005](adr/0005-monorepo-delivery.md) |
+| 2026-08-31 | Container auto-update is rejected; signed promotion gates remain mandatory | accepted | [Infra and operations](INFRA_OPS.md#backup-secrets-and-immutable-releases) |
+| 2026-08-31 | GitHub Pages hosts the public status snapshot outside the production VPS | accepted | [Infra and operations](INFRA_OPS.md#availability-residency-and-communication) |
+| 2026-08-31 | Air-gapped on-premises export is a supported deployment variant | accepted | [Infra and operations](INFRA_OPS.md#portability-and-air-gapped-operation) |
 
 Open product decisions remain visible and unchecked in `docs/BACKLOG.md`; they
 are not silently converted into implementation policy.

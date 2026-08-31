@@ -14,14 +14,24 @@
 
 ```sh
 BACKUP_DIR=/encrypted/backups \
-POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-REDIS_BACKUP_PASSWORD="$REDIS_BACKUP_PASSWORD" \
-./scripts/backup.sh
+AGE_RECIPIENT="$AGE_BACKUP_RECIPIENT" \
+DATABASE_URL="$DATABASE_URL" \
+REDIS_ADDR=127.0.0.1:6379 \
+REDIS_USERNAME=backup \
+REDIS_PASSWORD="$REDIS_BACKUP_PASSWORD" \
+./scripts/encrypted-backup.sh
 ```
 
 Verify a new non-empty PostgreSQL archive and Redis snapshot, checksums, owner
 permissions, encryption at rest, and off-host replication. Monitoring must page
 when no successful backup arrives within 26 hours.
+
+Decrypt only in a disposable, access-controlled restore directory:
+
+```sh
+age -d -i /secure/offline-backup.agekey go-platform-<timestamp>.tar.age |
+  tar -x -C ./backups
+```
 
 ## Restore rehearsal
 
@@ -32,6 +42,10 @@ BACKUP_DIR=./backups \
 RESTORE_TEST_DATABASE_URL='postgres://app:app@127.0.0.1:55433/restore_test?sslmode=disable' \
 ./scripts/restore-test.sh
 ```
+
+Once per quarter, use `scripts/quarterly-restore-drill.sh` instead; it appends
+timing evidence to `backups/restore-drills.csv`. The scheduled weekly CI restore
+is an additional regression check, not a substitute for operator-owned evidence.
 
 Validate migrations/checksums, row-count invariants, login, profile/RBAC reads,
 stream consumption, audit append, and the absence of production outbound email

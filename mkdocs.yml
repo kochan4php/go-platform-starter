@@ -60,11 +60,14 @@ nav:
       - Definition of done: DOD.md
       - Learning: LEARNING.md
   - Operations:
+      - Infra and VPS operations: INFRA_OPS.md
+      - Public status: STATUS.md
       - Runbook: RUNBOOK.md
       - On-call: ONCALL.md
       - Incident response: INCIDENT_RESPONSE.md
       - Incident timeline template: templates/INCIDENT_TIMELINE.md
       - Postmortem template: templates/POSTMORTEM.md
+      - Maintenance template: templates/MAINTENANCE.md
       - Backup and restore: BACKUP_RESTORE.md
       - Capacity and cost: OPERATIONS.md
       - Observability: OBSERVABILITY.md

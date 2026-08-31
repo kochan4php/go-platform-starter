@@ -76,11 +76,29 @@ Test public DNS/TLS, gateway health, auth readiness, and the dedicated synthetic
 credential. Do not reset a real user's password. Restore the route or rotate
 only the synthetic secret. Resolve after five consecutive successful probes.
 
-## HostDiskSpaceLow
+## HostDiskUsageHigh / HostDiskSpaceCritical
 
 Locate the growing filesystem and verify Loki/Docker/backup retention. Remove
 only confirmed disposable data or expand the volume. Never delete database or
 Redis files manually. Resolve above 20% free space.
+
+## HostMemoryPressure
+
+Check per-container memory, swap activity, OOM events, and request concurrency.
+Stop a leak or abusive workload before increasing memory; scale vertically when
+the working set is legitimate. Resolve above 20% available memory for 30 minutes.
+
+## HostCPUHigh
+
+Correlate CPU with request rate, throttling, database work, and background jobs.
+Rate-limit abusive traffic, reduce nonessential workers, or scale according to
+the capacity playbook. Resolve below 70% for 30 minutes.
+
+## DNSResolutionFailed
+
+Compare both external resolvers, authoritative nameservers, DNSSEC, and the
+application hostname from a second network. Fail over only to a pre-validated
+target and avoid repeated record changes. Resolve after five successful probes.
 
 ## CertificateExpiresSoon
 

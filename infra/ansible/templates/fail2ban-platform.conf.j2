@@ -1,0 +1,14 @@
+[sshd]
+enabled = true
+port = {{ platform_ssh_port }}
+maxretry = 4
+bantime = 1h
+
+[go-platform-auth]
+enabled = true
+filter = go-platform-auth
+logpath = /var/log/nginx/access.log
+port = http,https
+findtime = 10m
+maxretry = 10
+bantime = 1h

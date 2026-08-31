@@ -3,6 +3,7 @@ name: Data operations
 on:
   schedule:
     - cron: "17 2 * * 0"
+    - cron: "29 3 1 1,4,7,10 *"
   workflow_dispatch:
 
 concurrency:
@@ -37,3 +38,29 @@ jobs:
       - name: Configuration notice
         if: ${{ env.DATABASE_URL == '' || env.RESTORE_TEST_DATABASE_URL == '' }}
         run: echo "Configure DATABASE_URL and RESTORE_TEST_DATABASE_URL repository secrets to activate weekly verification."
+
+  quarterly-restore-drill:
+    if: github.event.schedule == '29 3 1 1,4,7,10 *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESTORE_TEST_DATABASE_URL: ${{ secrets.RESTORE_TEST_DATABASE_URL }}
+      BACKUP_DIR: /tmp/go-platform-quarterly-restore
+      RESTORE_DRILL_LOG: /tmp/go-platform-quarterly-restore/restore-drills.csv
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require configured drill targets
+        run: test -n "$DATABASE_URL" && test -n "$RESTORE_TEST_DATABASE_URL"
+      - name: Install PostgreSQL 17 client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Back up and run timed restore drill
+        run: |
+          scripts/backup.sh
+          scripts/quarterly-restore-drill.sh
+      - name: Preserve drill evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarterly-restore-drill-${{ github.run_id }}
+          path: /tmp/go-platform-quarterly-restore/restore-drills.csv
+          retention-days: 365

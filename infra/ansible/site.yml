@@ -1,0 +1,197 @@
+---
+- name: Bootstrap and harden go-platform VPS
+  hosts: all
+  become: true
+  gather_facts: true
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service: { name: ssh, state: restarted }
+    - name: Restart fail2ban
+      ansible.builtin.service: { name: fail2ban, state: restarted }
+    - name: Restart Docker
+      ansible.builtin.service: { name: docker, state: restarted }
+    - name: Restart auditd
+      ansible.builtin.service: { name: auditd, state: restarted }
+    - name: Reload systemd
+      ansible.builtin.systemd: { daemon_reload: true }
+    - name: Restart CrowdSec
+      ansible.builtin.service: { name: crowdsec, state: restarted }
+
+  tasks:
+    - name: Refuse globally exposed SSH
+      ansible.builtin.assert:
+        that:
+          - platform_admin_cidrs | length > 0
+          - "'0.0.0.0/0' not in platform_admin_cidrs"
+          - "'::/0' not in platform_admin_cidrs"
+        fail_msg: platform_admin_cidrs must restrict SSH to trusted networks
+
+    - name: Install baseline packages
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+        name:
+          - auditd
+          - chrony
+          - docker.io
+          - docker-compose-v2
+          - fail2ban
+          - logrotate
+          - prometheus-node-exporter
+          - unattended-upgrades
+          - ufw
+        state: present
+
+    - name: Create administrative user
+      ansible.builtin.user:
+        name: "{{ platform_admin_user }}"
+        groups: sudo
+        append: true
+        shell: /bin/bash
+        create_home: true
+      when: platform_admin_user != 'root'
+
+    - name: Install SSH hardening after administrative key is present
+      ansible.builtin.template:
+        src: ssh-hardening.conf.j2
+        dest: /etc/ssh/sshd_config.d/60-go-platform.conf
+        owner: root
+        group: root
+        mode: "0644"
+      when: not platform_image_build | bool
+      notify: Restart SSH
+
+    - name: Install managed configuration
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - { src: fail2ban-platform.conf.j2, dest: /etc/fail2ban/jail.d/go-platform.conf }
+        - { src: fail2ban-auth.conf.j2, dest: /etc/fail2ban/filter.d/go-platform-auth.conf }
+        - { src: daemon.json.j2, dest: /etc/docker/daemon.json }
+        - { src: sysctl.conf.j2, dest: /etc/sysctl.d/99-go-platform.conf }
+        - { src: logrotate.j2, dest: /etc/logrotate.d/go-platform }
+        - { src: audit.rules.j2, dest: /etc/audit/rules.d/go-platform.rules }
+      notify:
+        - Restart fail2ban
+        - Restart Docker
+        - Restart auditd
+
+    - name: Apply kernel tuning
+      ansible.builtin.command: sysctl --system
+      changed_when: false
+
+    - name: Configure swap file
+      ansible.builtin.command: "fallocate -l {{ platform_swap_mb }}M /swapfile"
+      args: { creates: /swapfile }
+      when: platform_swap_mb | int > 0
+
+    - name: Protect swap file
+      ansible.builtin.file:
+        path: /swapfile
+        owner: root
+        group: root
+        mode: "0600"
+      when: platform_swap_mb | int > 0
+
+    - name: Format new swap file
+      ansible.builtin.command: mkswap /swapfile
+      when: platform_swap_mb | int > 0 and ansible_swaptotal_mb == 0
+      changed_when: true
+
+    - name: Enable swap
+      ansible.builtin.command: swapon /swapfile
+      when: platform_swap_mb | int > 0 and ansible_swaptotal_mb == 0
+      changed_when: true
+
+    - name: Persist swap
+      ansible.posix.mount:
+        path: none
+        src: /swapfile
+        fstype: swap
+        opts: sw
+        state: present
+      when: platform_swap_mb | int > 0
+
+    - name: Install systemd units and cleanup command
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: go-platform.service.j2, dest: /etc/systemd/system/go-platform.service, mode: "0644" }
+        - { src: docker-cleanup.service.j2, dest: /etc/systemd/system/go-platform-docker-cleanup.service, mode: "0644" }
+        - { src: docker-cleanup.timer.j2, dest: /etc/systemd/system/go-platform-docker-cleanup.timer, mode: "0644" }
+      notify: Reload systemd
+
+    - name: Allow SSH only from administrative networks
+      community.general.ufw:
+        rule: allow
+        port: "{{ platform_ssh_port }}"
+        proto: tcp
+        src: "{{ item }}"
+      loop: "{{ platform_admin_cidrs }}"
+      when: not platform_image_build | bool
+
+    - name: Allow public HTTP and HTTPS
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: ["80", "443"]
+      when: not platform_image_build | bool
+
+    - name: Enforce inbound firewall policy
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+      when: not platform_image_build | bool
+
+    - name: Enable host services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - auditd
+        - chrony
+        - docker
+        - fail2ban
+        - prometheus-node-exporter
+        - unattended-upgrades
+        - go-platform-docker-cleanup.timer
+
+    - name: Enable Compose auto-start after application configuration exists
+      ansible.builtin.systemd:
+        name: go-platform.service
+        enabled: true
+      when: platform_enable_app_service | bool
+
+    - name: Check optional CrowdSec packages
+      ansible.builtin.command: dpkg-query -W crowdsec crowdsec-firewall-bouncer-iptables
+      changed_when: false
+      when: platform_crowdsec_enabled | bool
+
+    - name: Configure CrowdSec nginx acquisition
+      ansible.builtin.template:
+        src: crowdsec-acquis.yaml.j2
+        dest: /etc/crowdsec/acquis.d/go-platform.yaml
+        owner: root
+        group: root
+        mode: "0644"
+      when: platform_crowdsec_enabled | bool
+      notify: Restart CrowdSec
+
+    - name: Enable CrowdSec and its firewall bouncer
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: [crowdsec, crowdsec-firewall-bouncer]
+      when: platform_crowdsec_enabled | bool

@@ -305,33 +305,24 @@ services:
       web-admin-users: { condition: service_healthy }
       web-admin-roles: { condition: service_healthy }
 
-  postgres-backup:
-    image: postgres:17-alpine
+  encrypted-backup:
+    build:
+      context: ..
+      dockerfile: infra/backup/Dockerfile
     <<: *svc
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/app?sslmode=disable
+      REDIS_ADDR: redis:6379
+      REDIS_USERNAME: backup
+      REDIS_PASSWORD: ${REDIS_BACKUP_PASSWORD:?set REDIS_BACKUP_PASSWORD}
+      AGE_RECIPIENT: ${AGE_BACKUP_RECIPIENT:?set AGE_BACKUP_RECIPIENT}
       BACKUP_DIR: /backups
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
-    volumes:
-      - ../scripts:/scripts:ro
-      - backups:/backups
+    volumes: [backups:/backups]
     entrypoint: ["/bin/sh", "-ec"]
-    command: ["while true; do /scripts/backup.sh; sleep $${BACKUP_INTERVAL_SECONDS:-86400}; done"]
+    command: ["while true; do /scripts/encrypted-backup.sh; sleep $${BACKUP_INTERVAL_SECONDS:-86400}; done"]
     depends_on:
       postgres: { condition: service_healthy }
-
-  redis-backup:
-    image: redis:7-alpine
-    <<: *svc
-    environment:
-      REDISCLI_AUTH: ${REDIS_BACKUP_PASSWORD:?set REDIS_BACKUP_PASSWORD}
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
-    volumes:
-      - backups:/backups
-    entrypoint: ["/bin/sh", "-ec"]
-    command:
-      - while true; do redis-cli -h redis --user backup --rdb "/backups/redis-$$(date -u +%Y%m%dT%H%M%SZ).rdb"; find /backups -name 'redis-*.rdb' -mtime +$${BACKUP_RETENTION_DAYS} -delete; sleep $${BACKUP_INTERVAL_SECONDS:-86400}; done
-    depends_on:
       redis: { condition: service_healthy }
 
 volumes:

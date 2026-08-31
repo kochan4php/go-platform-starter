@@ -35,11 +35,31 @@ groups:
         for: 10m
         labels: { severity: warning }
         annotations: { summary: "Mail queue is not draining" }
-      - alert: HostDiskSpaceLow
+      - alert: HostDiskUsageHigh
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 0.20
+        for: 15m
+        labels: { severity: warning }
+        annotations: { summary: "Host disk usage exceeds 80%", runbook_url: "docs/ONCALL.md#hostdiskusagehigh--hostdiskspacecritical" }
+      - alert: HostDiskSpaceCritical
         expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 0.15
         for: 15m
         labels: { severity: critical }
-        annotations: { summary: "Host disk has less than 15% free" }
+        annotations: { summary: "Host disk has less than 15% free", runbook_url: "docs/ONCALL.md#hostdiskusagehigh--hostdiskspacecritical" }
+      - alert: HostMemoryPressure
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.15
+        for: 15m
+        labels: { severity: warning }
+        annotations: { summary: "Host has less than 15% memory available", runbook_url: "docs/ONCALL.md#hostmemorypressure" }
+      - alert: HostCPUHigh
+        expr: 1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.85
+        for: 15m
+        labels: { severity: warning }
+        annotations: { summary: "Host CPU usage exceeds 85% for 15 minutes", runbook_url: "docs/ONCALL.md#hostcpuhigh" }
+      - alert: DNSResolutionFailed
+        expr: probe_success{job="dns-health"} == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: "Authoritative DNS resolution probe failed", runbook_url: "docs/ONCALL.md#dnsresolutionfailed" }
       - alert: CertificateExpiresSoon
         expr: probe_ssl_earliest_cert_expiry - time() < 14 * 24 * 3600
         for: 1h

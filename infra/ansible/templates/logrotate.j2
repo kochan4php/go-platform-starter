@@ -1,0 +1,10 @@
+/var/log/go-platform/*.log /var/log/nginx/*.log /var/log/fail2ban.log /var/log/crowdsec.log {
+  daily
+  rotate 14
+  compress
+  delaycompress
+  missingok
+  notifempty
+  copytruncate
+  create 0640 root adm
+}

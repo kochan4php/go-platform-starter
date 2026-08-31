@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: ^infra/secrets/.*\.ya?ml$
+    age: age1replace-with-production-recipient
+    encrypted_regex: '^(data|stringData|password|secret|token|key)$'

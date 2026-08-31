@@ -10,6 +10,7 @@ Secret examples are always masked; the real values must come from the deployment
 | `ACCESS_TTL_MINUTES` | no | `30` | `services/auth/.env.example` | — |
 | `ADMIN_BOOTSTRAP_PASSWORD` | no | `<secret>` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | Random password is generated into this file by deploy.sh; printed once at first seed and changeable later through the normal reset flow. |
 | `ADMIN_EMAIL` | no | `admin@example.com / admin@example.local` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | --- bootstrap admin (first deploy) ---------------------------------------- |
+| `AGE_BACKUP_RECIPIENT` | yes | `age1replace-with-production-recipient` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | set AGE_BACKUP_RECIPIENT |
 | `APP_PUBLIC_URL` | no | `http://127.0.0.1:5173` | `services/auth/.env.example` | — |
 | `APP_VERSION` | no | `dev` | `infra/go.env`<br>`infra/compose.prod.yml` | — |
 | `BACKUP_INTERVAL_SECONDS` | no | `86400` | `infra/compose.prod.yml` | — |

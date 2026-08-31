@@ -53,3 +53,26 @@ tests:
         exp_alerts:
           - exp_labels: { severity: critical, stream: "mail.jobs" }
             exp_annotations: { summary: "Worker dead-letter queue contains messages" }
+
+  - name: host capacity warnings require sustained pressure
+    interval: 1m
+    input_series:
+      - series: 'node_filesystem_avail_bytes{instance="vps-1",device="/dev/sda1",mountpoint="/",fstype="ext4"}'
+        values: '19x20'
+      - series: 'node_filesystem_size_bytes{instance="vps-1",device="/dev/sda1",mountpoint="/",fstype="ext4"}'
+        values: '100x20'
+      - series: 'node_memory_MemAvailable_bytes{instance="vps-1"}'
+        values: '10x20'
+      - series: 'node_memory_MemTotal_bytes{instance="vps-1"}'
+        values: '100x20'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: HostDiskUsageHigh
+        exp_alerts:
+          - exp_labels: { severity: warning, instance: "vps-1", device: "/dev/sda1", mountpoint: "/", fstype: "ext4" }
+            exp_annotations: { summary: "Host disk usage exceeds 80%", runbook_url: "docs/ONCALL.md#hostdiskusagehigh--hostdiskspacecritical" }
+      - eval_time: 20m
+        alertname: HostMemoryPressure
+        exp_alerts:
+          - exp_labels: { severity: warning, instance: "vps-1" }
+            exp_annotations: { summary: "Host has less than 15% memory available", runbook_url: "docs/ONCALL.md#hostmemorypressure" }

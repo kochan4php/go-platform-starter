@@ -1174,62 +1174,62 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Infra & Ops
 
-- [ ] 🔧 F1. Terraform/Opentofu provisi VPS
-- [ ] 🔧 F2. Ansible bootstrap VPS playbook
-- [ ] 🔧 F3. Firewall script (hanya 80/443/SSH)
-- [ ] 🔧 F4. SSH hardening guide (key-only, fail2ban)
-- [ ] 🔧 F5. fail2ban config auth endpoint
-- [ ] 🔧 F6. CrowdSec IP blocklist integration
-- [ ] 🔧 F7. node_exporter + VPS dashboards
-- [ ] 🔧 F8. Disk alert 80% + auto-clean docker cron
-- [ ] 🔧 F9. Memory alert + swap config doc
-- [ ] 🔧 F10. CPU alert sustained high
-- [ ] 🔧 F11. Logrotate semua log VPS
-- [ ] 🔧 F12. Unattended-upgrades security patches
-- [ ] 🔧 F13. Kernel sysctl tuning (somaxconn, file-max)
-- [ ] 🔧 F14. chrony time sync (JWT exp critical)
-- [ ] 🔧 F15. DNS health check + failover doc
+- [x] 🔧 F1. Terraform/Opentofu provisi VPS
+- [x] 🔧 F2. Ansible bootstrap VPS playbook
+- [x] 🔧 F3. Firewall script (hanya 80/443/SSH)
+- [x] 🔧 F4. SSH hardening guide (key-only, fail2ban)
+- [x] 🔧 F5. fail2ban config auth endpoint
+- [x] 🔧 F6. CrowdSec IP blocklist integration
+- [x] 🔧 F7. node_exporter + VPS dashboards
+- [x] 🔧 F8. Disk alert 80% + auto-clean docker cron
+- [x] 🔧 F9. Memory alert + swap config doc
+- [x] 🔧 F10. CPU alert sustained high
+- [x] 🔧 F11. Logrotate semua log VPS
+- [x] 🔧 F12. Unattended-upgrades security patches
+- [x] 🔧 F13. Kernel sysctl tuning (somaxconn, file-max)
+- [x] 🔧 F14. chrony time sync (JWT exp critical)
+- [x] 🔧 F15. DNS health check + failover doc
 - [ ] 🧭 F16. Cloudflare setup guide (proxy + cache)
 - [ ] 🧭 F17. Cloudflare WAF rules auth endpoint
-- [ ] 🔧 F18. DDoS mitigation doc
+- [x] 🔧 F18. DDoS mitigation doc
 - [ ] 🧭 F19. Multi-VPS load balancer setup
 - [ ] 🧭 F20. Database VPS terpisah
 - [ ] 🧭 F21. Redis VPS terpisah
 - [ ] 🧭 F22. Backup VPS offsite (restic)
-- [ ] 🔧 F23. Backup encryption at rest
-- [ ] 🔧 F24. Restore drill kuartalan
+- [x] 🔧 F23. Backup encryption at rest
+- [x] 🔧 F24. Restore drill kuartalan
 - [ ] 🧭 F25. Immutable infrastructure path
-- [ ] 🔧 F26. Packer golden image VPS
-- [ ] 🔧 F27. Zero-downtime VPS deploy (blue-green port swap)
-- [ ] 🔧 F28. Health-check LB removal
-- [ ] 🔧 F29. Systemd unit compose auto-start
-- [ ] 🔧 F30. Docker daemon.json tuning
-- [ ] 🧭 F31. Watchtower container auto-update
-- [ ] 🔧 F32. Registry mirror pull cepat
-- [ ] 🔧 F33. IPv6 support doc
-- [ ] 🔧 F34. Internal DNS coredns service names
-- [ ] 🔧 F35. Secrets disk encryption (age/sops)
-- [ ] 🔧 F36. VPS access audit log
-- [ ] 🔧 F37. Bastion/jump host pattern
+- [x] 🔧 F26. Packer golden image VPS
+- [x] 🔧 F27. Zero-downtime VPS deploy (blue-green port swap)
+- [x] 🔧 F28. Health-check LB removal
+- [x] 🔧 F29. Systemd unit compose auto-start
+- [x] 🔧 F30. Docker daemon.json tuning
+- [x] 🧭 F31. Watchtower container auto-update
+- [x] 🔧 F32. Registry mirror pull cepat
+- [x] 🔧 F33. IPv6 support doc
+- [x] 🔧 F34. Internal DNS coredns service names
+- [x] 🔧 F35. Secrets disk encryption (age/sops)
+- [x] 🔧 F36. VPS access audit log
+- [x] 🔧 F37. Bastion/jump host pattern
 - [ ] 🧭 F38. Tailscale/wireguard admin access
-- [ ] 🔧 F39. VPS resource dashboard
-- [ ] 🔧 F40. VPS sizing recommendation per user count
-- [ ] 🔧 F41. Cost estimasi bulanan per skala
-- [ ] 🔧 F42. Scale-up playbook vertikal
-- [ ] 🔧 F43. Scale-out playbook multi-VPS
-- [ ] 🔧 F44. Migration path VPS → K8s
-- [ ] 🔧 F45. CIS hardening benchmark VPS
-- [ ] 🔧 F46. VPS compromise incident response
-- [ ] 🔧 F47. Data residency region VPS
-- [ ] 🔧 F48. SLA uptime target doc
-- [ ] 🔧 F49. Maintenance window + announcement template
-- [ ] 🔧 F50. Vendor lock-in assessment
-- [ ] 🔧 F51. Exit strategy doc
-- [ ] 🔧 F52. Documentation portal terpusat
-- [ ] 🧭 F53. Public status page
-- [ ] 🧭 F54. On-prem air-gapped variant
-- [ ] 🔧 F55. ARM VPS support (multi-arch build)
-- [ ] 🔧 F56. Multi-arch image build CI (amd64+arm64)
+- [x] 🔧 F39. VPS resource dashboard
+- [x] 🔧 F40. VPS sizing recommendation per user count
+- [x] 🔧 F41. Cost estimasi bulanan per skala
+- [x] 🔧 F42. Scale-up playbook vertikal
+- [x] 🔧 F43. Scale-out playbook multi-VPS
+- [x] 🔧 F44. Migration path VPS → K8s
+- [x] 🔧 F45. CIS hardening benchmark VPS
+- [x] 🔧 F46. VPS compromise incident response
+- [x] 🔧 F47. Data residency region VPS
+- [x] 🔧 F48. SLA uptime target doc
+- [x] 🔧 F49. Maintenance window + announcement template
+- [x] 🔧 F50. Vendor lock-in assessment
+- [x] 🔧 F51. Exit strategy doc
+- [x] 🔧 F52. Documentation portal terpusat
+- [x] 🧭 F53. Public status page
+- [x] 🧭 F54. On-prem air-gapped variant
+- [x] 🔧 F55. ARM VPS support (multi-arch build)
+- [x] 🔧 F56. Multi-arch image build CI (amd64+arm64)
 
 ---
 

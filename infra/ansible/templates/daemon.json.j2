@@ -1,0 +1,10 @@
+{
+  "log-driver": "local",
+  "log-opts": { "max-size": "10m", "max-file": "3" },
+  "live-restore": true,
+  "userland-proxy": false,
+  "ipv6": {{ platform_ipv6_enabled | bool | lower }},{% if platform_ipv6_enabled | bool %}
+  "fixed-cidr-v6": "{{ platform_ipv6_cidr }}",{% endif %}
+  "default-address-pools": [{ "base": "172.30.0.0/16", "size": 24 }]{% if platform_registry_mirrors | length > 0 %},
+  "registry-mirrors": {{ platform_registry_mirrors | to_json }}{% endif %}
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly safe Docker cleanup
+
+[Timer]
+OnCalendar=Sun *-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=20m
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,7 @@
+upstream go_platform_gateway {
+    zone go_platform_gateway 64k;
+    least_conn;
+    server 10.20.0.20:8000 max_fails=2 fail_timeout=10s;
+    server 10.20.0.21:8000 max_fails=2 fail_timeout=10s;
+    keepalive 32;
+}

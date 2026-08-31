@@ -34,6 +34,9 @@ on:
       - "package.json"
       - "apps/*/package.json"
       - "packages/*/package.json"
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -66,18 +69,23 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: go mod download
       - run: python -m pip install -r requirements-docs.txt
+      - name: Generate external status snapshot
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          STATUS_ENDPOINTS: ${{ vars.STATUS_ENDPOINTS }}
+        run: node scripts/generate-status.mjs
       - name: Generated references and links
         run: |
           node scripts/generate-docs.mjs --check
           node scripts/check-docs.mjs
       - run: mkdocs build --strict
-      - if: github.event_name == 'push'
+      - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

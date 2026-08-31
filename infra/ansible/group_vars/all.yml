@@ -1,0 +1,11 @@
+platform_admin_user: platform
+platform_ssh_port: 22
+platform_admin_cidrs:
+  - 203.0.113.10/32
+platform_swap_mb: 2048
+platform_registry_mirrors: []
+platform_crowdsec_enabled: false
+platform_ipv6_enabled: true
+platform_ipv6_cidr: fd00:17:17::/64
+platform_image_build: false
+platform_enable_app_service: false
