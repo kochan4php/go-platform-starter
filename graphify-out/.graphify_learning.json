@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T07:50:04.441979+00:00",
+  "generated_at": "2026-08-31T07:55:50.796547+00:00",
   "nodes": {
     "_github_workflows_ci_security_job": {
       "code_fingerprint": "2ab9e78d9b7b0597e0543bb385cecd233a289aa4b90fd11f22617c49b86e381a",
@@ -12,7 +12,7 @@
           "q": "ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
         }
       ],
-      "score": 0.999970951,
+      "score": 0.999878336,
       "source_file": ".github/workflows/ci.yml",
       "status": "tentative",
       "uses": 1
@@ -20,18 +20,23 @@
     "_github_workflows_ci_workflow": {
       "code_fingerprint": "2ab9e78d9b7b0597e0543bb385cecd233a289aa4b90fd11f22617c49b86e381a",
       "label": "CI Workflow",
-      "last": "2026-08-31T07:48:15.812198+00:00",
+      "last": "2026-08-31T07:55:20.322499+00:00",
       "provenance": [
+        {
+          "date": "2026-08-31T07:55:20.322499+00:00",
+          "outcome": "useful",
+          "q": "periksa deploy.yml dari .github/workflows, terdapat warning ini Context access might be invalid: UAT_URL"
+        },
         {
           "date": "2026-08-31T07:48:15.812198+00:00",
           "outcome": "useful",
           "q": "ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
         }
       ],
-      "score": 0.999970951,
+      "score": 1.999870187,
       "source_file": ".github/workflows/ci.yml",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 2
     },
     "docs_adr_0001_fresh_build_pivot": {
       "code_fingerprint": "2105d3e96f8e61a129d725342cb196ea7df03092897551bf5da5f7b2008a935d",
@@ -44,7 +49,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "docs/adr/0001-fresh-build-pivot.md",
       "status": "tentative",
       "uses": 1
@@ -60,7 +65,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.994612663,
+      "score": 0.994520545,
       "source_file": "docs/API_VERSIONING.md",
       "status": "tentative",
       "uses": 1
@@ -76,7 +81,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.994612663,
+      "score": 0.994520545,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -92,7 +97,7 @@
           "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
         }
       ],
-      "score": 0.958810813,
+      "score": 0.958722011,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -108,7 +113,7 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.992185508,
+      "score": 0.992093615,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -124,7 +129,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -140,7 +145,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.994612663,
+      "score": 0.994520545,
       "source_file": "docs/CONTRACTS.md",
       "status": "tentative",
       "uses": 1
@@ -156,7 +161,7 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.992185508,
+      "score": 0.992093615,
       "source_file": "docs/MIGRATIONS.md",
       "status": "tentative",
       "uses": 1
@@ -172,7 +177,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "docs/ONBOARDING.md",
       "status": "tentative",
       "uses": 1
@@ -188,7 +193,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "docs/ONCALL.md",
       "status": "tentative",
       "uses": 1
@@ -204,7 +209,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "docs/TESTING.md",
       "status": "tentative",
       "uses": 1
@@ -220,7 +225,7 @@
           "q": "sekarang kerjakan semua fitur BACKLOG.md untuk kategori CI/CD & Release dengan tipe Engineering. lalu kerjakan juga C9, C10, C11, C12, C35, C39, C47, C48 dan C52 juga ikut dikerjakan."
         }
       ],
-      "score": 0.996683562,
+      "score": 0.996591252,
       "source_file": "docs/DOD.md",
       "status": "tentative",
       "uses": 1
@@ -236,8 +241,24 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.992185508,
+      "score": 0.992093615,
       "source_file": "scripts/backup.sh",
+      "status": "tentative",
+      "uses": 1
+    },
+    "scripts_deploy": {
+      "code_fingerprint": "6bbe3e62b9e4595d1268e4e78d95e322839225cdabf45617c6db68779e8b3c32",
+      "label": "deploy.sh",
+      "last": "2026-08-31T07:55:20.322499+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T07:55:20.322499+00:00",
+          "outcome": "useful",
+          "q": "periksa deploy.yml dari .github/workflows, terdapat warning ini Context access might be invalid: UAT_URL"
+        }
+      ],
+      "score": 0.999991851,
+      "source_file": "scripts/deploy.sh",
       "status": "tentative",
       "uses": 1
     },
@@ -252,7 +273,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.995521727,
+      "score": 0.995429525,
       "source_file": "SECURITY.md",
       "status": "tentative",
       "uses": 1
@@ -268,7 +289,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.994612663,
+      "score": 0.994520545,
       "source_file": "services/gateway/internal/validation.go",
       "status": "tentative",
       "uses": 1
