@@ -1,0 +1,90 @@
+site_name: go-platform-starter
+site_description: Architecture, API, operations, security, and governance documentation
+site_url: https://kochan4php.github.io/go-platform-starter/
+repo_url: https://github.com/kochan4php/go-platform-starter
+edit_uri: edit/main/docs/
+theme:
+  name: readthedocs
+  locale: en
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+exclude_docs: |
+  BACKLOG.md
+  archive/
+  !templates/
+nav:
+  - Home: index.md
+  - Start:
+      - Onboarding: ONBOARDING.md
+      - Authentication UX: AUTH_UX.md
+      - FAQ: FAQ.md
+      - Troubleshooting: TROUBLESHOOTING.md
+      - Glossary: GLOSSARY.md
+  - Architecture:
+      - Overview: ARCHITECTURE.md
+      - Detailed diagrams: DIAGRAMS.md
+      - Scalability: ARCHITECTURE_SCALABILITY.md
+      - Scaling operations: SCALING.md
+      - Query keys: QUERY_KEYS.md
+      - ADR index: adr/README.md
+      - Fresh-build pivot: adr/0001-fresh-build-pivot.md
+      - Integer identities: adr/0002-integer-identities.md
+      - Users ownership: adr/0003-users-table-ownership.md
+      - Migration baseline: adr/0004-consolidated-migration-baseline.md
+  - API and data:
+      - API standards: API_CONTRACTS.md
+      - Curl examples: API_EXAMPLES.md
+      - Contracts: CONTRACTS.md
+      - API versioning: API_VERSIONING.md
+      - Schema audit: API_SCHEMA_AUDIT.md
+      - Migrations: MIGRATIONS.md
+      - Data engineering: DATA_MIGRATIONS.md
+      - Data reference: data/README.md
+      - Data audit: data/AUDIT.md
+      - Data schema: data/SCHEMA.md
+      - Upgrade guide: UPGRADING.md
+  - Engineering:
+      - Engineering guide: ENGINEERING_GUIDE.md
+      - Testing: TESTING.md
+      - Performance: PERFORMANCE.md
+      - Bundle report: performance/BUNDLE_REPORT.md
+      - Load testing: performance/K6.md
+      - Reliability: RELIABILITY.md
+      - Definition of done: DOD.md
+      - Learning: LEARNING.md
+  - Operations:
+      - Runbook: RUNBOOK.md
+      - On-call: ONCALL.md
+      - Incident response: INCIDENT_RESPONSE.md
+      - Incident timeline template: templates/INCIDENT_TIMELINE.md
+      - Postmortem template: templates/POSTMORTEM.md
+      - Backup and restore: BACKUP_RESTORE.md
+      - Capacity and cost: OPERATIONS.md
+      - Observability: OBSERVABILITY.md
+      - Published ports: reference/PORTS.md
+      - Environment variables: reference/ENVIRONMENT.md
+  - Security:
+      - Security posture: SECURITY.md
+      - Threat model: THREAT_MODEL.md
+      - Secrets: SECRETS.md
+      - Token policy: TOKEN_POLICY.md
+      - Pentest checklist: PENTEST_CHECKLIST.md
+      - Break glass: BREAK_GLASS.md
+  - Governance:
+      - Contributing: https://github.com/kochan4php/go-platform-starter/blob/main/CONTRIBUTING.md
+      - Repository governance: https://github.com/kochan4php/go-platform-starter/blob/main/GOVERNANCE.md
+      - Support: https://github.com/kochan4php/go-platform-starter/blob/main/SUPPORT.md
+      - Code of Conduct: https://github.com/kochan4php/go-platform-starter/blob/main/CODE_OF_CONDUCT.md
+      - Decisions: DECISIONS.md
+      - Ownership: OWNERSHIP.md
+      - Collaboration: COLLABORATION.md
+      - Release: RELEASE.md
+      - Documentation versioning: VERSIONING.md
+      - Snapshot 0.1: versions/0.1.md
+      - Dependency licenses: DEPENDENCY_LICENSES.md
+      - Archive policy: ARCHIVE_POLICY.md

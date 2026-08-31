@@ -1,0 +1,11 @@
+* @kochan4php
+
+/services/auth/ @kochan4php
+/services/gateway/ @kochan4php
+/services/rbac/ @kochan4php
+/services/users/ @kochan4php
+/services/worker/ @kochan4php
+/services/realtime/ @kochan4php
+/infra/ @kochan4php
+/docs/ @kochan4php
+/*.md @kochan4php

@@ -45,7 +45,7 @@ flowchart LR
 erDiagram
     auth_users ||--o{ auth_sessions : "sessions"
     users_profiles {
-        uuid id PK
+        bigint id PK
         text display_name
     }
     rbac_roles ||--o{ rbac_role_permissions : ""
@@ -64,6 +64,10 @@ erDiagram
 | `audit` | append-only trail (**worker-only writer**) | business data |
 
 Cross-service writes are forbidden; lifecycle rides events instead.
+
+The detailed worker/realtime, authentication, registration, token rotation,
+session-state, stream-flow, and trust-boundary views live in
+[DIAGRAMS.md](DIAGRAMS.md).
 
 ## Streams & topics
 

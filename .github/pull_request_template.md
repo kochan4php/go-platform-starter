@@ -3,6 +3,19 @@
 - [ ] Tests cover the changed behavior.
 - [ ] Documentation and generated artifacts are current.
 
+## Release notes draft
+
+Category: `added | changed | fixed | deprecated | removed | security | none`
+
+<!-- One user/operator-facing sentence. Use "none" only for invisible maintenance. -->
+
+## Impact and delivery
+
+- Risk and affected owners:
+- Rollout/feature flag:
+- Rollback or forward-fix:
+- API/data/security/observability impact:
+
 ## SQL / migration review
 
 - [ ] No existing applied migration was edited; a new numbered up/down pair was added.

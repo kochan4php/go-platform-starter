@@ -39,7 +39,7 @@ pnpm check:budget   # host bundle-size gate
 | --- | --- | --- |
 | **dev** (native processes) | Fastest loop: `go run` for every service plus vite dev servers with hot reload. Logs under `tmp/dev/logs/`. | `./scripts/dev-all.sh` (stop: `down`) |
 | **lab** (docker) | The whole mesh in containers on your machine; every port published, debug logging, console mailer. Best for integration debugging close to production topology. | `./scripts/deploy-lab.sh` |
-| **uat / demo / prod** | VPS deployments behind the edge nginx, isolated by project name and env file. | see [Deployment](#deployment) below |
+| **uat / demo / prod** | VPS deployments behind the edge nginx, isolated by project name and env file. | follow the [upgrade and deployment guide](UPGRADING.md) |
 
 ### Native dev loop (recommended for daily work)
 

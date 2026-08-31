@@ -5,6 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+test("documentation gate accepts generated references and local links", () => {
+  execFileSync(process.execPath, ["scripts/generate-docs.mjs", "--check"], { stdio: "pipe" });
+  const output = execFileSync(process.execPath, ["scripts/check-docs.mjs"], { encoding: "utf8" });
+  assert.match(output, /docs OK/);
+});
+
 test("contract drift gate accepts the committed frontend/OpenAPI surface", () => {
   const output = execFileSync(process.execPath, ["scripts/check-contracts.mjs"], { encoding: "utf8" });
   assert.match(output, /contracts OK/);

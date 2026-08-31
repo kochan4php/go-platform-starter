@@ -1,6 +1,10 @@
 # ADR-0001: Fresh-build pivot — Go microservices + microfrontend monorepo
 
-Status: accepted · Date: 2026-08-24 · Supersedes: all pre-wipe ADRs and PLAN v5 (parity-based)
+Status: accepted
+Date: 2026-08-24
+Deciders: repository owner and platform maintainers
+Supersedes: all pre-wipe ADRs and PLAN v5 (parity-based)
+Superseded by: none
 
 ## Context
 

@@ -1,5 +1,15 @@
 # go-platform-starter
 
+[![CI](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml)
+[![Coverage](docs/testing/badges/coverage.svg)](docs/TESTING.md)
+![Go 1.27](https://img.shields.io/badge/go-1.27-00ADD8?logo=go&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+![Users dashboard](docs/assets/dashboard.png)
+
+[Watch the 7-second quickstart](docs/assets/quickstart.webm) ·
+[Browse the documentation portal](https://kochan4php.github.io/go-platform-starter/)
+
 A production-shaped **Go microservices platform** behind a single Go gateway,
 with a **React micro-frontend shell** — one Go module, one pnpm workspace,
 spec-first OpenAPI contracts. Defaults sized for ~100k users. Every deployable

@@ -1057,57 +1057,57 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Docs & Governance
 
-- [ ] 🔧 N1. README badges (CI/coverage/Go version/license)
-- [ ] 🔧 N2. README screenshot/GIF dashboard
-- [ ] 🔧 N3. README quickstart video
-- [ ] 🔧 N4. ADR 0002+: integer ids, users table move, consolidated migrations
-- [ ] 🔧 N5. ADR supercede/link mechanism
-- [ ] 🔧 N6. SECURITY.md public disclosure
-- [ ] 🔧 N7. CONTRIBUTING.md
-- [ ] 🧭 N8. CODE_OF_CONDUCT.md
-- [ ] 🔧 N9. GOVERNANCE.md
-- [ ] 🔧 N10. SUPPORT.md
-- [ ] 🔧 N11. FAQ.md
-- [ ] 🔧 N12. TROUBLESHOOTING.md
-- [ ] 🔧 N13. RUNBOOK.md operasional
-- [ ] 🔧 N14. BACKUP_RESTORE.md
-- [ ] 🔧 N15. RELEASE.md proses rilis
-- [ ] 🔧 N16. TESTING.md strategi lengkap
-- [ ] 🔧 N17. PERFORMANCE.md gabungan hasil ukur
-- [ ] 🔧 N18. DECISIONS log ringkas
-- [ ] 🔧 N19. Diagram detail worker + realtime
-- [ ] 🔧 N20. Sequence diagram auth flow
-- [ ] 🔧 N21. Sequence diagram register + materialize
-- [ ] 🔧 N22. Sequence diagram refresh rotation
-- [ ] 🔧 N23. State diagram session lifecycle
-- [ ] 🔧 N24. Contoh curl per endpoint di docs
-- [ ] 🔧 N25. Glossary istilah domain
-- [ ] 🔧 N26. Port table auto-generate dari compose
-- [ ] 🔧 N27. Env var reference auto-generate
-- [ ] 🔧 N28. Docs versioning snapshot
-- [ ] 🧭 N29. Docs portal (mkdocs material/docusaurus)
-- [ ] 🔧 N31. CHANGELOG.md generated + committed
-- [ ] 🔧 N32. Release notes draft di PR
-- [ ] 🔧 N33. Migration guide antar minor
-- [ ] 🔧 N34. Upgrade guide lab/uat/prod step-by-step
-- [ ] 🔧 N35. Capacity planning worksheet
-- [ ] 🔧 N36. Cost estimation per environment
-- [ ] 🔧 N37. Dependency licenses summary
-- [ ] 🔧 N38. Data flow diagram semua stream
-- [ ] 🔧 N39. Trust boundaries diagram
-- [ ] 🔧 N40. Threat model per service
-- [ ] 🔧 N41. Incident response playbook
+- [x] 🔧 N1. README badges (CI/coverage/Go version/license)
+- [x] 🔧 N2. README screenshot/GIF dashboard
+- [x] 🔧 N3. README quickstart video
+- [x] 🔧 N4. ADR 0002+: integer ids, users table move, consolidated migrations
+- [x] 🔧 N5. ADR supercede/link mechanism
+- [x] 🔧 N6. SECURITY.md public disclosure
+- [x] 🔧 N7. CONTRIBUTING.md
+- [x] 🧭 N8. CODE_OF_CONDUCT.md
+- [x] 🔧 N9. GOVERNANCE.md
+- [x] 🔧 N10. SUPPORT.md
+- [x] 🔧 N11. FAQ.md
+- [x] 🔧 N12. TROUBLESHOOTING.md
+- [x] 🔧 N13. RUNBOOK.md operasional
+- [x] 🔧 N14. BACKUP_RESTORE.md
+- [x] 🔧 N15. RELEASE.md proses rilis
+- [x] 🔧 N16. TESTING.md strategi lengkap
+- [x] 🔧 N17. PERFORMANCE.md gabungan hasil ukur
+- [x] 🔧 N18. DECISIONS log ringkas
+- [x] 🔧 N19. Diagram detail worker + realtime
+- [x] 🔧 N20. Sequence diagram auth flow
+- [x] 🔧 N21. Sequence diagram register + materialize
+- [x] 🔧 N22. Sequence diagram refresh rotation
+- [x] 🔧 N23. State diagram session lifecycle
+- [x] 🔧 N24. Contoh curl per endpoint di docs
+- [x] 🔧 N25. Glossary istilah domain
+- [x] 🔧 N26. Port table auto-generate dari compose
+- [x] 🔧 N27. Env var reference auto-generate
+- [x] 🔧 N28. Docs versioning snapshot
+- [x] 🧭 N29. Docs portal (mkdocs material/docusaurus)
+- [x] 🔧 N31. CHANGELOG.md generated + committed
+- [x] 🔧 N32. Release notes draft di PR
+- [x] 🔧 N33. Migration guide antar minor
+- [x] 🔧 N34. Upgrade guide lab/uat/prod step-by-step
+- [x] 🔧 N35. Capacity planning worksheet
+- [x] 🔧 N36. Cost estimation per environment
+- [x] 🔧 N37. Dependency licenses summary
+- [x] 🔧 N38. Data flow diagram semua stream
+- [x] 🔧 N39. Trust boundaries diagram
+- [x] 🔧 N40. Threat model per service
+- [x] 🔧 N41. Incident response playbook
 - [ ] 🧭 N42. On-call rotation doc
-- [ ] 🔧 N43. Service ownership matrix
-- [ ] 🔧 N44. Definition of done per tipe work
-- [ ] 🔧 N45. Coding standards Go + TS
-- [ ] 🔧 N46. Naming conventions doc
-- [ ] 🔧 N47. Git workflow doc
-- [ ] 🔧 N48. Code review guidelines
-- [ ] 🧭 N49. Pair/mob programming guide
-- [ ] 🔧 N50. Knowledge sharing cadence
-- [ ] 🔧 N51. Learning resources list
-- [ ] 🔧 N52. Archive policy docs lama
+- [x] 🔧 N43. Service ownership matrix
+- [x] 🔧 N44. Definition of done per tipe work
+- [x] 🔧 N45. Coding standards Go + TS
+- [x] 🔧 N46. Naming conventions doc
+- [x] 🔧 N47. Git workflow doc
+- [x] 🔧 N48. Code review guidelines
+- [x] 🧭 N49. Pair/mob programming guide
+- [x] 🔧 N50. Knowledge sharing cadence
+- [x] 🔧 N51. Learning resources list
+- [x] 🔧 N52. Archive policy docs lama
 
 ---
 

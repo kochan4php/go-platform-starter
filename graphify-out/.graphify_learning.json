@@ -1,6 +1,22 @@
 {
-  "generated_at": "2026-08-31T02:19:55.511317+00:00",
+  "generated_at": "2026-08-31T03:12:08.304054+00:00",
   "nodes": {
+    "docs_adr_0001_fresh_build_pivot": {
+      "code_fingerprint": "2105d3e96f8e61a129d725342cb196ea7df03092897551bf5da5f7b2008a935d",
+      "label": "ADR-0001: Fresh-build Pivot",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
+      "source_file": "docs/adr/0001-fresh-build-pivot.md",
+      "status": "tentative",
+      "uses": 1
+    },
     "docs_api_versioning": {
       "code_fingerprint": "311412be8d12cb67ef81136fc9a15afa4532bfd9d2cb902a3186a47284759365",
       "label": "API Versioning Policy",
@@ -12,13 +28,13 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.999895367,
+      "score": 0.999058041,
       "source_file": "docs/API_VERSIONING.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_api_contracts": {
-      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
+      "code_fingerprint": "6de4f9f5ad5d30c71a16014aa21d4682aaf42e581dfc4c2c63c778ee469f43d4",
       "label": "Backlog: API & Contracts",
       "last": "2026-08-31T02:13:24.220626+00:00",
       "provenance": [
@@ -28,13 +44,13 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.999895367,
+      "score": 0.999058041,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_architecture_scalability": {
-      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
+      "code_fingerprint": "6de4f9f5ad5d30c71a16014aa21d4682aaf42e581dfc4c2c63c778ee469f43d4",
       "label": "Backlog: Architecture & Scalability",
       "last": "2026-08-29T12:08:36.916480+00:00",
       "provenance": [
@@ -44,13 +60,13 @@
           "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
         }
       ],
-      "score": 0.963903362,
+      "score": 0.963096176,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_data_migrations": {
-      "code_fingerprint": "68840dbb7608e0f5a694fdc97bf771f74e1505dd8d58c1156f2fa57f70b9d67f",
+      "code_fingerprint": "6de4f9f5ad5d30c71a16014aa21d4682aaf42e581dfc4c2c63c778ee469f43d4",
       "label": "Backlog: Data & Migrations",
       "last": "2026-08-30T23:41:07.641945+00:00",
       "provenance": [
@@ -60,7 +76,23 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.99745532,
+      "score": 0.996620037,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_backlog_docs_governance": {
+      "code_fingerprint": "6de4f9f5ad5d30c71a16014aa21d4682aaf42e581dfc4c2c63c778ee469f43d4",
+      "label": "Backlog: Docs & Governance",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -76,7 +108,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.999895367,
+      "score": 0.999058041,
       "source_file": "docs/CONTRACTS.md",
       "status": "tentative",
       "uses": 1
@@ -92,8 +124,56 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.99745532,
+      "score": 0.996620037,
       "source_file": "docs/MIGRATIONS.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_onboarding": {
+      "code_fingerprint": "22995196a5f752c6a8da67b9424afcbecc4b1e3eb668dffdd74b173ecf3cccc5",
+      "label": "Onboarding Guide",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
+      "source_file": "docs/ONBOARDING.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_oncall_on_call_alert_runbook": {
+      "code_fingerprint": "e7141f0336210d718002061ac78b91f4f8f57aa252e2c105c7449e7743b3ce51",
+      "label": "On-call alert runbook",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
+      "source_file": "docs/ONCALL.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_testing_testing_qa": {
+      "code_fingerprint": "10b62b72d7fb9a3c0ce0ced71bbe458dc8907f9bb4af48a08437cc9c93ee7c0d",
+      "label": "Testing & QA",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
+      "source_file": "docs/TESTING.md",
       "status": "tentative",
       "uses": 1
     },
@@ -108,8 +188,24 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.99745532,
+      "score": 0.996620037,
       "source_file": "scripts/backup.sh",
+      "status": "tentative",
+      "uses": 1
+    },
+    "security_security_policy": {
+      "code_fingerprint": "675f147dfc6194481cba7fc54b984f01c5d318fe810c9586e67f48ca0d878ad5",
+      "label": "Security policy",
+      "last": "2026-08-31T03:10:20.484560+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T03:10:20.484560+00:00",
+          "outcome": "useful",
+          "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
+        }
+      ],
+      "score": 0.999971168,
+      "source_file": "SECURITY.md",
       "status": "tentative",
       "uses": 1
     },
@@ -124,7 +220,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.999895367,
+      "score": 0.999058041,
       "source_file": "services/gateway/internal/validation.go",
       "status": "tentative",
       "uses": 1

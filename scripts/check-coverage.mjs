@@ -124,6 +124,12 @@ const changedRows = rows.filter((row) => {
 });
 const changedScore = score(changedRows);
 const overall = score(rows);
+{
+  const value = overall.percent.toFixed(1);
+  const color = overall.percent >= minimum ? "2f855a" : overall.percent >= 50 ? "b7791f" : "c53030";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="20" role="img" aria-label="coverage ${value}%"><rect width="88" height="20" fill="#374151"/><rect x="88" width="72" height="20" fill="#${color}"/><g fill="#fff" font-family="Verdana,sans-serif" font-size="11"><text x="8" y="14">coverage</text><text x="101" y="14">${value}%</text></g></svg>\n`;
+  writeFileSync(join(badgeDir, "coverage.svg"), svg);
+}
 console.log(
   `coverage report: ${overall.percent.toFixed(1)}% overall; ${byPackage.size} package badges generated`,
 );
