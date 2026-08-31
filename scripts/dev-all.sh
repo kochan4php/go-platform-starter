@@ -60,10 +60,6 @@ MANAGED_PORTS=(8000 8081 8082 8083 8084 8085 8086 5173 5174 5175 5176)
 WIN=0
 command -v powershell.exe > /dev/null 2>&1 && WIN=1
 
-# Resolve pnpm: use it directly if on PATH, otherwise fall back to npx pnpm.
-PNPM="pnpm"
-command -v pnpm > /dev/null 2>&1 || PNPM="npx --yes pnpm"
-
 log() { printf '\033[1;36m[dev]\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m[dev] FATAL: %s\033[0m\n' "$*" >&2; exit 1; }
 
@@ -235,7 +231,9 @@ launch_gateway() {
 
 launch_web() {
   local name="$1" port="$2"
-  (cd "$ROOT/apps/$name" && $PNPM exec vite --host 127.0.0.1 --port "$port" --strictPort > "$LOG_DIR/$name.log" 2>&1) &
+  local vite="$ROOT/apps/$name/node_modules/.bin/vite"
+  [ -x "$vite" ] || die "frontend dependencies missing — run: corepack pnpm install"
+  (cd "$ROOT/apps/$name" && "$vite" --host 127.0.0.1 --port "$port" --strictPort > "$LOG_DIR/$name.log" 2>&1) &
   PIDS+=($!)
   log "web app $name -> :$port"
 }
