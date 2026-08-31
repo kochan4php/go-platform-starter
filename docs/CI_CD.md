@@ -49,6 +49,10 @@ Environment secrets are `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, and
 repository cannot create reviewer rules itself, so an owner must configure and
 verify these rules in GitHub Settings before the first promotion.
 
+Set repository variables `UAT_URL`, `DEMO_URL`, and `PROD_URL` for the scheduled
+drift matrix. They are looked up by matrix key and may be omitted only when that
+environment is intentionally excluded from drift checks.
+
 A merge to `main` queues UAT automatically. Demo queues nightly. Production is
 manual-only. GitHub environment review remains the approval gate before scoped
 secrets are released. `scripts/promote.sh` then checks the freeze calendar,

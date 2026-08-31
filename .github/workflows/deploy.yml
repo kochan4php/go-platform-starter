@@ -68,13 +68,15 @@ jobs:
       matrix:
         include:
           - environment: uat
-            url: ${{ vars.UAT_URL }}
+            url_variable: UAT_URL
           - environment: demo
-            url: ${{ vars.DEMO_URL }}
+            url_variable: DEMO_URL
           - environment: prod
-            url: ${{ vars.PROD_URL }}
+            url_variable: PROD_URL
     steps:
       - uses: actions/checkout@v4
       - name: Compare deployed revision with main
-        if: matrix.url != ''
-        run: ./scripts/check-deploy-drift.sh "${{ matrix.url }}" "${{ github.sha }}"
+        env:
+          DEPLOYED_URL: ${{ vars[matrix.url_variable] }}
+        if: env.DEPLOYED_URL != ''
+        run: ./scripts/check-deploy-drift.sh "$DEPLOYED_URL" "${{ github.sha }}"
