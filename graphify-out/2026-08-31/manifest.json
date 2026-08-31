@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "renovate.json": {
-    "mtime": 1788149823.0206077,
-    "seen": 1788150203.0303862,
-    "ast_hash": "72c250c7771ef41bb3497c196839bfb3",
+    "mtime": 1788161742.333825,
+    "seen": 1788161763.051659,
+    "ast_hash": "dd3dc75090011d9c5dbba1dba7392978",
     "semantic_hash": ""
   },
   "scripts/check-budget.mjs": {
@@ -2526,57 +2526,57 @@
     "semantic_hash": ""
   },
   "docs/testing/badges/internal-platform.svg": {
-    "mtime": 1788149871.2349699,
-    "seen": 1788150203.058251,
-    "ast_hash": "e6df7ba9e5793d016c1f76b140fda643",
+    "mtime": 1788161710.985542,
+    "seen": 1788161763.085817,
+    "ast_hash": "31e52f6eba3ccc7952dd59355d4cec1d",
     "semantic_hash": ""
   },
   "docs/testing/badges/internal-testutil.svg": {
-    "mtime": 1788149871.235978,
-    "seen": 1788150203.0582523,
-    "ast_hash": "25f92755ba0e97e2f429ea4e850e6b91",
+    "mtime": 1788161712.2682965,
+    "seen": 1788161763.0858183,
+    "ast_hash": "3a837a1a27b215ef1110e104f36d2702",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-auth-internal.svg": {
-    "mtime": 1788149871.235978,
-    "seen": 1788150203.0582533,
-    "ast_hash": "b925a3c651bac38a4bfb51754a38b470",
+    "mtime": 1788161713.5641904,
+    "seen": 1788161763.0858197,
+    "ast_hash": "1939c4d823756a8dac93b6428d8091b5",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-gateway-internal.svg": {
-    "mtime": 1788149871.235978,
-    "seen": 1788150203.0582542,
-    "ast_hash": "2555ed244eea4dfc32dcc54a5ed738f1",
+    "mtime": 1788161714.8341928,
+    "seen": 1788161763.0858207,
+    "ast_hash": "2fbfe0bd32e8d526f4dded8f9f2a5467",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-gateway.svg": {
-    "mtime": 1788149871.235978,
-    "seen": 1788150203.0582554,
-    "ast_hash": "afbfe46f580e331e35da720e4b1e9252",
+    "mtime": 1788161716.0574038,
+    "seen": 1788161763.0858216,
+    "ast_hash": "8463d0971828a7b839550945eeeff605",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-rbac-internal.svg": {
-    "mtime": 1788149871.235978,
-    "seen": 1788150203.0582564,
-    "ast_hash": "211250ae567bbd24aa2bbea3205ca980",
+    "mtime": 1788161717.2853458,
+    "seen": 1788161763.0858228,
+    "ast_hash": "8a47979e853f2789e9d1d9857451955f",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-realtime-internal.svg": {
-    "mtime": 1788149871.2369716,
-    "seen": 1788150203.0582573,
-    "ast_hash": "5d028d7bbaf3fec691d74ad2e8f9c26c",
+    "mtime": 1788161718.5107422,
+    "seen": 1788161763.085824,
+    "ast_hash": "557784020fed6b48ab7d16ef08e799e2",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-users-internal.svg": {
-    "mtime": 1788149871.2369716,
-    "seen": 1788150203.0582595,
-    "ast_hash": "45194f4397334e680854cf6055e0bf8b",
+    "mtime": 1788161719.7200878,
+    "seen": 1788161763.085825,
+    "ast_hash": "33b956a7c7f55b613cbcf5f849d1fad6",
     "semantic_hash": ""
   },
   "docs/testing/badges/services-worker-internal.svg": {
-    "mtime": 1788149871.2369716,
-    "seen": 1788150203.0582602,
-    "ast_hash": "a2de8bfe765b3885694362474944db23",
+    "mtime": 1788161720.9971583,
+    "seen": 1788161763.0858264,
+    "ast_hash": "6128930ff48b4e39a0d96b0dcfeed48a",
     "semantic_hash": ""
   },
   "e2e/qa.spec.ts-snapshots/mobile-drawer-closed-mobile-chromium.png": {
@@ -3432,9 +3432,9 @@
     "semantic_hash": ""
   },
   "docs/testing/badges/coverage.svg": {
-    "mtime": 1788149871.2565987,
-    "seen": 1788150203.0582497,
-    "ast_hash": "d8e717c09dd677cf2b1284c4edb71b05",
+    "mtime": 1788161709.7166567,
+    "seen": 1788161763.085815,
+    "ast_hash": "ae6a8e9d5c909001778ec5af5d9d1d7e",
     "semantic_hash": ""
   },
   "docs/assets/quickstart.webm": {
@@ -3669,18 +3669,6 @@
     "mtime": 1788150109.0803182,
     "seen": 1788150203.0581608,
     "ast_hash": "1347633cdf7cdcb2168d61093630d5ae",
-    "semantic_hash": ""
-  },
-  "docs/testing/badges/cmd-dbdocs.svg": {
-    "mtime": 1788149871.2349699,
-    "seen": 1788150203.058248,
-    "ast_hash": "7a40694957ec027366b241c62b137706",
-    "semantic_hash": ""
-  },
-  "docs/testing/badges/services-scheduler.svg": {
-    "mtime": 1788149871.2369716,
-    "seen": 1788150203.0582583,
-    "ast_hash": "8e44fd409e3ab643e00d5e3d6735dcee",
     "semantic_hash": ""
   }
 }
