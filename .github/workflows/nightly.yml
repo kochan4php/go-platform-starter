@@ -1,0 +1,59 @@
+name: Nightly quality
+
+on:
+  schedule:
+    - cron: "7 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-quality
+  cancel-in-progress: true
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Full unit and race suite
+        run: |
+          go test -count=1 ./...
+          go test -race -count=1 ./internal/platform ./services/auth/internal ./services/users/internal ./services/rbac/internal ./services/worker/internal
+          pnpm test
+      - name: Browser suite against the real mesh
+        env:
+          E2E_ADMIN_EMAIL: admin@example.local
+          E2E_ADMIN_PASSWORD: e2e-root-access-2026!
+        run: scripts/e2e-mesh.sh ci
+      - name: Start disposable lab for load and chaos
+        run: scripts/deploy-lab.sh
+      - name: Load test
+        run: docker run --rm --network host -v "$PWD/scripts/k6:/scripts:ro" grafana/k6:latest run /scripts/performance.js
+      - name: Staging-only chaos drills
+        env:
+          APP_ENV: staging
+          COMPOSE_FILE: infra/compose.base.yml:infra/compose.lab.yml
+          COMPOSE_PROJECT_NAME: go-platform-lab
+        run: |
+          scripts/chaos-qa.sh redis
+          scripts/chaos-qa.sh postgres
+      - name: Quarantine policy
+        run: node scripts/check-quarantine.mjs
+      - name: Stop disposable lab
+        if: always()
+        run: scripts/deploy-lab.sh --down

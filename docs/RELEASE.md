@@ -30,6 +30,10 @@ automatically run down migrations. A hotfix branches from the released tag,
 adds a regression test, passes normal gates, and returns through `main`; no
 force-pushed or unreviewed release tags.
 
+Release candidates are annotated `vX.Y.Z-rc.N` tags created only by the manual
+Release workflow after protected-environment approval. Promote the same image
+digests through UAT before publishing the final semantic tag.
+
 After production, verify health, 5xx/p95, login, stream lag, DLQ, audit writes,
 and error budget. Link the release to its deploy annotation and incident if one
 occurred.

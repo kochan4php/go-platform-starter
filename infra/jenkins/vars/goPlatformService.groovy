@@ -8,6 +8,7 @@ def call(Map cfg = [:]) {
         options {
             timestamps()
             disableConcurrentBuilds()
+            buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
         }
 
         environment {
@@ -15,14 +16,18 @@ def call(Map cfg = [:]) {
         }
 
         stages {
-            stage('Lint') {
-                steps {
-                    sh 'make lint'
-                }
-            }
-            stage('Test') {
-                steps {
-                    sh 'make build test'
+            stage('Quality') {
+                parallel {
+                    stage('Lint') {
+                        steps {
+                            sh 'make lint'
+                        }
+                    }
+                    stage('Test') {
+                        steps {
+                            sh 'make build test'
+                        }
+                    }
                 }
             }
             stage('Contracts are fresh') {
@@ -34,15 +39,32 @@ def call(Map cfg = [:]) {
                 }
             }
             stage('Docker build') {
+                when {
+                    anyOf {
+                        buildingTag()
+                        changeset "services/${component}/**"
+                        changeset 'internal/**'
+                        changeset 'go.*'
+                    }
+                }
                 steps {
                     sh "docker build -t ${imageRepo}:${env.BUILD_NUMBER} -f services/${component}/Dockerfile ."
                 }
             }
             stage('Push') {
-                when { branch 'main' }
+                when {
+                    allOf {
+                        branch 'main'
+                        anyOf {
+                            changeset "services/${component}/**"
+                            changeset 'internal/**'
+                            changeset 'go.*'
+                        }
+                    }
+                }
                 steps {
                     withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-                        sh 'echo $REG_PASS | docker login ghcr.io -u $REG_USER --password-stdin'
+                        sh 'set +x; echo "$REG_PASS" | docker login ghcr.io -u "$REG_USER" --password-stdin'
                         sh "docker tag ${imageRepo}:${env.BUILD_NUMBER} ${imageRepo}:latest"
                         sh "docker push ${imageRepo}:${env.BUILD_NUMBER}"
                         sh "docker push ${imageRepo}:latest"

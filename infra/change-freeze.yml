@@ -1,0 +1,7 @@
+windows: []
+
+# Add UTC windows only after change-management approval, for example:
+# - name: year-end
+#   startsAt: 2026-12-20T00:00:00Z
+#   endsAt: 2027-01-05T00:00:00Z
+#   environments: [uat, demo, prod]

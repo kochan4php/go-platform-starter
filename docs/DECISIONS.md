@@ -13,6 +13,8 @@ own source documents.
 | 2026-08-31 | Documentation portal uses MkDocs core and its built-in theme | accepted | [Documentation versioning](VERSIONING.md) |
 | 2026-08-31 | Contributor Covenant governs community behavior | accepted | [Code of Conduct](https://github.com/kochan4php/go-platform-starter/blob/main/CODE_OF_CONDUCT.md) |
 | 2026-08-31 | Pair/mob work is opt-in with explicit roles | accepted | [Collaboration guide](COLLABORATION.md) |
+| 2026-08-31 | CI/CD uses protected promotion, Kustomize, and hosted runners by default | accepted | [CI/CD controls](CI_CD.md) |
+| 2026-08-31 | Repository remains a path-gated monorepo | accepted | [ADR-0005](adr/0005-monorepo-delivery.md) |
 
 Open product decisions remain visible and unchecked in `docs/BACKLOG.md`; they
 are not silently converted into implementation policy.

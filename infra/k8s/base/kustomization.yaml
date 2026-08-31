@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../services/auth/deploy/k8s/deployment.yaml
+  - ../../../services/auth/deploy/k8s/service.yaml
+  - ../../../services/auth/deploy/k8s/hpa.yaml
+  - ../../../services/users/deploy/k8s/deployment.yaml
+  - ../../../services/users/deploy/k8s/service.yaml
+  - ../../../services/users/deploy/k8s/hpa.yaml
+  - ../../../services/rbac/deploy/k8s/deployment.yaml
+  - ../../../services/rbac/deploy/k8s/service.yaml
+  - ../../../services/rbac/deploy/k8s/hpa.yaml
+  - ../../../services/worker/deploy/k8s/deployment.yaml
+  - ../../../services/worker/deploy/k8s/service.yaml
+  - ../../../services/worker/deploy/k8s/hpa.yaml
+  - ../../../services/realtime/deploy/k8s/deployment.yaml
+  - ../../../services/realtime/deploy/k8s/service.yaml
+  - ../../../services/realtime/deploy/k8s/hpa.yaml
+  - ../../../services/realtime/deploy/k8s/pdb.yaml
+  - ../../../services/scheduler/deploy/k8s/deployment.yaml
+  - ../../../services/scheduler/deploy/k8s/service.yaml
+  - ../../../services/gateway/deploy/k8s/deployment.yaml
+  - ../../../services/gateway/deploy/k8s/service.yaml
+  - ../../../services/gateway/deploy/k8s/hpa.yaml
+  - ../../../apps/web/deploy/k8s/deployment.yaml
+  - ../../../apps/web/deploy/k8s/service.yaml
+  - ../../../apps/web/deploy/k8s/hpa.yaml
+  - ../../../apps/web-auth/deploy/k8s/deployment.yaml
+  - ../../../apps/web-auth/deploy/k8s/service.yaml
+  - ../../../apps/web-auth/deploy/k8s/hpa.yaml
+  - ../../../apps/web-admin-users/deploy/k8s/deployment.yaml
+  - ../../../apps/web-admin-users/deploy/k8s/service.yaml
+  - ../../../apps/web-admin-users/deploy/k8s/hpa.yaml
+  - ../../../apps/web-admin-roles/deploy/k8s/deployment.yaml
+  - ../../../apps/web-admin-roles/deploy/k8s/service.yaml
+  - ../../../apps/web-admin-roles/deploy/k8s/hpa.yaml

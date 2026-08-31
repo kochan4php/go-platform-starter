@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+set -eu
+
+ZERO=0000000000000000000000000000000000000000
+command -v gitleaks >/dev/null 2>&1 || { echo "push rejected: gitleaks is required on the Git server" >&2; exit 1; }
+
+while read -r old new ref; do
+  [ "$new" = "$ZERO" ] && {
+    case "$ref" in refs/tags/v*) echo "push rejected: release tags cannot be deleted" >&2; exit 1 ;; esac
+    continue
+  }
+  case "$ref" in
+    refs/tags/v*)
+      [ "$old" = "$ZERO" ] || { echo "push rejected: release tags are immutable" >&2; exit 1; }
+      [ "$(git cat-file -t "$new")" = tag ] || { echo "push rejected: release tags must be annotated" >&2; exit 1; }
+      ;;
+  esac
+  if [ "$old" = "$ZERO" ]; then RANGE="$new"; else RANGE="$old..$new"; fi
+  gitleaks git . --redact --log-opts="$RANGE"
+done

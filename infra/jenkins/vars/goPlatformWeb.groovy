@@ -8,6 +8,7 @@ def call(Map cfg = [:]) {
         options {
             timestamps()
             disableConcurrentBuilds()
+            buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
         }
 
         environment {
@@ -20,14 +21,18 @@ def call(Map cfg = [:]) {
                     sh 'corepack enable && pnpm install --frozen-lockfile'
                 }
             }
-            stage('Lint') {
-                steps {
-                    sh 'pnpm lint'
-                }
-            }
-            stage('Test') {
-                steps {
-                    sh 'pnpm test'
+            stage('Quality') {
+                parallel {
+                    stage('Lint') {
+                        steps {
+                            sh 'pnpm lint'
+                        }
+                    }
+                    stage('Test') {
+                        steps {
+                            sh 'pnpm test'
+                        }
+                    }
                 }
             }
             stage('Build + budget') {
@@ -38,15 +43,32 @@ def call(Map cfg = [:]) {
                 }
             }
             stage('Docker build') {
+                when {
+                    anyOf {
+                        buildingTag()
+                        changeset "apps/${component}/**"
+                        changeset 'packages/**'
+                        changeset 'pnpm-lock.yaml'
+                    }
+                }
                 steps {
                     sh "docker build -t ${imageRepo}:${env.BUILD_NUMBER} -f apps/${component}/Dockerfile ."
                 }
             }
             stage('Push') {
-                when { branch 'main' }
+                when {
+                    allOf {
+                        branch 'main'
+                        anyOf {
+                            changeset "apps/${component}/**"
+                            changeset 'packages/**'
+                            changeset 'pnpm-lock.yaml'
+                        }
+                    }
+                }
                 steps {
                     withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-                        sh 'echo $REG_PASS | docker login ghcr.io -u $REG_USER --password-stdin'
+                        sh 'set +x; echo "$REG_PASS" | docker login ghcr.io -u "$REG_USER" --password-stdin'
                         sh "docker tag ${imageRepo}:${env.BUILD_NUMBER} ${imageRepo}:latest"
                         sh "docker push ${imageRepo}:${env.BUILD_NUMBER}"
                         sh "docker push ${imageRepo}:latest"

@@ -1,0 +1,145 @@
+name: Preview environments
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened, closed]
+  workflow_dispatch:
+    inputs:
+      pull_request:
+        description: Pull request number
+        required: true
+        type: number
+      action:
+        description: Create/update or destroy
+        required: true
+        type: choice
+        options: [up, down]
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number || inputs.pull_request }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'up') ||
+      (github.event_name == 'pull_request' && github.event.action != 'closed' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'preview'))
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: auth
+            file: services/auth/Dockerfile
+          - component: users
+            file: services/users/Dockerfile
+          - component: rbac
+            file: services/rbac/Dockerfile
+          - component: worker
+            file: services/worker/Dockerfile
+          - component: realtime
+            file: services/realtime/Dockerfile
+          - component: scheduler
+            file: services/scheduler/Dockerfile
+          - component: gateway
+            file: services/gateway/Dockerfile
+          - component: web
+            file: apps/web/Dockerfile
+          - component: web-auth
+            file: apps/web-auth/Dockerfile
+          - component: web-admin-users
+            file: apps/web-admin-users/Dockerfile
+          - component: web-admin-roles
+            file: apps/web-admin-roles/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.component }}:pr-${{ github.event.pull_request.number || inputs.pull_request }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.component }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.component }}:buildcache,mode=max
+
+  preview:
+    needs: build
+    if: >-
+      always() &&
+      (needs.build.result == 'success' || github.event.action == 'closed' ||
+       (github.event_name == 'workflow_dispatch' && inputs.action == 'down')) &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.pull_request.head.repo.full_name == github.repository &&
+        (github.event.action == 'closed' ||
+         contains(github.event.pull_request.labels.*.name, 'preview'))))
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: https://pr-${{ github.event.pull_request.number || inputs.pull_request }}.${{ vars.PREVIEW_DOMAIN }}
+    env:
+      PR: ${{ github.event.pull_request.number || inputs.pull_request }}
+      ACTION: ${{ github.event_name == 'workflow_dispatch' && inputs.action || github.event.action == 'closed' && 'down' || 'up' }}
+      NAMESPACE: preview-pr-${{ github.event.pull_request.number || inputs.pull_request }}
+      DOMAIN: pr-${{ github.event.pull_request.number || inputs.pull_request }}.${{ vars.PREVIEW_DOMAIN }}
+      IMAGE_OWNER: ${{ github.repository_owner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - uses: imranismail/setup-kustomize@v2
+      - name: Configure cluster access
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.PREVIEW_KUBECONFIG }}
+        run: |
+          install -m 700 -d ~/.kube
+          printf '%s\n' "$KUBECONFIG_CONTENT" > ~/.kube/config
+          chmod 600 ~/.kube/config
+      - name: Destroy closed preview
+        if: env.ACTION == 'down'
+        run: kubectl delete namespace "$NAMESPACE" --ignore-not-found --wait=false
+      - name: Deploy or refresh preview
+        if: env.ACTION == 'up'
+        working-directory: infra/k8s/overlays/preview
+        env:
+          PREVIEW_SECRETS: ${{ secrets.PREVIEW_SECRETS_YAML }}
+        run: |
+          test -n "$PREVIEW_SECRETS"
+          kustomize edit set namespace "$NAMESPACE"
+          for component in auth users rbac worker realtime scheduler gateway web web-auth web-admin-users web-admin-roles; do
+            kustomize edit set image "ghcr.io/kochan4php/$component:latest=ghcr.io/$IMAGE_OWNER/$component:pr-$PR"
+          done
+          sed -i "s/preview.invalid/$DOMAIN/g" ingress.yaml
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          printf '%s\n' "$PREVIEW_SECRETS" | kubectl -n "$NAMESPACE" apply -f -
+          kustomize build --load-restrictor LoadRestrictionsNone . | kubectl apply -f -
+          kubectl -n "$NAMESPACE" rollout status deployment/gateway --timeout=5m
+          kubectl -n "$NAMESPACE" rollout status deployment/web --timeout=5m
+      - name: Publish preview link
+        if: env.ACTION == 'up' && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview
+          message: "Preview: https://pr-${{ env.PR }}.${{ vars.PREVIEW_DOMAIN }}"
+
+  delete-branch:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete merged same-repository branch
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/$BRANCH" || true

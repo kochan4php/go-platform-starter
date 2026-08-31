@@ -1113,62 +1113,62 @@ by priority — baca seluruhnya lalu pilih.
 
 ## CI/CD & Release
 
-- [ ] 🔧 C1. CI job matrix parallel (go/web/e2e/security)
-- [ ] 🔧 C2. Concurrency cancel superseded runs
-- [ ] 🔧 C3. Verify go build cache hit rate
-- [ ] 🔧 C4. Verify pnpm store cache hit
-- [ ] 🔧 C5. BuildKit registry cache backend
-- [ ] 🔧 C6. Test shards paralel per-package
-- [ ] 🔧 C7. Flaky test detector (re-run + label)
-- [ ] 🔧 C8. Branch protection + required checks doc
-- [ ] 🧭 C9. Environment protection rules (manual approval uat/demo)
-- [ ] 🧭 C10. Auto-deploy uat after merge main
-- [ ] 🧭 C11. Auto-deploy demo nightly
-- [ ] 🧭 C12. Prod deploy approval gate
-- [ ] 🔧 C13. Pre-deploy backup otomatis
-- [ ] 🔧 C14. Post-deploy smoke otomatis
-- [ ] 🔧 C15. Rollback otomatis saat smoke gagal
-- [ ] 🔧 C16. Deploy notification Slack/Discord
-- [ ] 🔧 C17. Verify release-please berjalan
-- [ ] 🔧 C18. Changelog per-component
-- [ ] 🔧 C19. Image tag semver + latest + sha
-- [ ] 🔧 C20. GitHub release dengan artifacts
-- [ ] 🔧 C21. Jenkins parallel stage lint+test
-- [ ] 🔧 C22. Jenkins lockable resource per-env
-- [ ] 🔧 C23. Jenkins credentials masked best practice
-- [ ] 🔧 C24. Jenkins build discarder policy
-- [ ] 🔧 C25. Jenkins skip docker saat docs-only change
-- [ ] 🔧 C26. CI path filters (skip go job saat docs only)
-- [ ] 🔧 C27. Draft PR subset checks
-- [ ] 🔧 C28. Nightly full suite (load + chaos)
-- [ ] 🔧 C29. Renovate PR automerge scheduled
-- [ ] 🔧 C30. JUnit test report publishing
-- [ ] 🔧 C31. Flaky test quarantine folder
-- [ ] 🔧 C32. Coverage diff comment di PR
-- [ ] 🔧 C33. Bundle size diff comment di PR
-- [ ] 🔧 C34. Lighthouse CI comment di PR
-- [ ] 🧭 C35. Preview environment per-PR
-- [ ] 🔧 C36. Preview auto-destroy setelah merge
+- [x] 🔧 C1. CI job matrix parallel (go/web/e2e/security)
+- [x] 🔧 C2. Concurrency cancel superseded runs
+- [x] 🔧 C3. Verify go build cache hit rate
+- [x] 🔧 C4. Verify pnpm store cache hit
+- [x] 🔧 C5. BuildKit registry cache backend
+- [x] 🔧 C6. Test shards paralel per-package
+- [x] 🔧 C7. Flaky test detector (re-run + label)
+- [x] 🔧 C8. Branch protection + required checks doc
+- [x] 🧭 C9. Environment protection rules (manual approval uat/demo)
+- [x] 🧭 C10. Auto-deploy uat after merge main
+- [x] 🧭 C11. Auto-deploy demo nightly
+- [x] 🧭 C12. Prod deploy approval gate
+- [x] 🔧 C13. Pre-deploy backup otomatis
+- [x] 🔧 C14. Post-deploy smoke otomatis
+- [x] 🔧 C15. Rollback otomatis saat smoke gagal
+- [x] 🔧 C16. Deploy notification Slack/Discord
+- [x] 🔧 C17. Verify release-please berjalan
+- [x] 🔧 C18. Changelog per-component
+- [x] 🔧 C19. Image tag semver + latest + sha
+- [x] 🔧 C20. GitHub release dengan artifacts
+- [x] 🔧 C21. Jenkins parallel stage lint+test
+- [x] 🔧 C22. Jenkins lockable resource per-env
+- [x] 🔧 C23. Jenkins credentials masked best practice
+- [x] 🔧 C24. Jenkins build discarder policy
+- [x] 🔧 C25. Jenkins skip docker saat docs-only change
+- [x] 🔧 C26. CI path filters (skip go job saat docs only)
+- [x] 🔧 C27. Draft PR subset checks
+- [x] 🔧 C28. Nightly full suite (load + chaos)
+- [x] 🔧 C29. Renovate PR automerge scheduled
+- [x] 🔧 C30. JUnit test report publishing
+- [x] 🔧 C31. Flaky test quarantine folder
+- [x] 🔧 C32. Coverage diff comment di PR
+- [x] 🔧 C33. Bundle size diff comment di PR
+- [x] 🔧 C34. Lighthouse CI comment di PR
+- [x] 🧭 C35. Preview environment per-PR
+- [x] 🔧 C36. Preview auto-destroy setelah merge
 - [ ] 🧭 C37. GitOps (Argo CD evaluasi)
-- [ ] 🔧 C38. Kustomize overlay per-env
-- [ ] 🧭 C39. Helm chart evaluasi
-- [ ] 🔧 C40. Secret scanning pre-receive hook
-- [ ] 🔧 C41. Auto-delete merged branches
-- [ ] 🔧 C42. Protected version tags
-- [ ] 🔧 C43. Registry retention policy old tags
-- [ ] 🔧 C44. Registry vulnerability rescan scheduled
-- [ ] 🔧 C45. Provenance attestation (SLSA)
-- [ ] 🔧 C46. Deploy drift detection
-- [ ] 🧭 C47. Runbook automation evaluasi
-- [ ] 🧭 C48. Change freeze calendar
-- [ ] 🔧 C49. Deploy audit (who/when/what)
-- [ ] 🔧 C50. Rollback dry-run mode
-- [ ] 🔧 C51. Monorepo decision doc
-- [ ] 🧭 C52. Self-hosted runner build lambat
-- [ ] 🔧 C53. Test impact analysis (jalankan terdampak saja)
-- [ ] 🔧 C54. Release candidate process (rc tag)
-- [ ] 🔧 C55. Hotfix branch workflow doc
-- [ ] 🔧 C56. Feature branch environment on-demand
+- [x] 🔧 C38. Kustomize overlay per-env
+- [x] 🧭 C39. Helm chart evaluasi
+- [x] 🔧 C40. Secret scanning pre-receive hook
+- [x] 🔧 C41. Auto-delete merged branches
+- [x] 🔧 C42. Protected version tags
+- [x] 🔧 C43. Registry retention policy old tags
+- [x] 🔧 C44. Registry vulnerability rescan scheduled
+- [x] 🔧 C45. Provenance attestation (SLSA)
+- [x] 🔧 C46. Deploy drift detection
+- [x] 🧭 C47. Runbook automation evaluasi
+- [x] 🧭 C48. Change freeze calendar
+- [x] 🔧 C49. Deploy audit (who/when/what)
+- [x] 🔧 C50. Rollback dry-run mode
+- [x] 🔧 C51. Monorepo decision doc
+- [x] 🧭 C52. Self-hosted runner build lambat
+- [x] 🔧 C53. Test impact analysis (jalankan terdampak saja)
+- [x] 🔧 C54. Release candidate process (rc tag)
+- [x] 🔧 C55. Hotfix branch workflow doc
+- [x] 🔧 C56. Feature branch environment on-demand
 
 ---
 

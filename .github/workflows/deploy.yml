@@ -1,0 +1,80 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected target environment
+        required: true
+        type: choice
+        options: [uat, demo, prod]
+      revision:
+        description: Commit, tag, or branch to promote
+        required: false
+        default: origin/main
+      dry_run:
+        description: Validate and print the promotion plan only
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event_name == 'push' && 'uat' || github.event_name == 'schedule' && 'demo' || inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event_name == 'push' && 'uat' || github.event_name == 'schedule' && 'demo' || inputs.environment }}
+      url: ${{ vars.DEPLOY_URL }}
+    env:
+      TARGET: ${{ github.event_name == 'push' && 'uat' || github.event_name == 'schedule' && 'demo' || inputs.environment }}
+      REVISION: ${{ github.event_name == 'workflow_dispatch' && inputs.revision || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure pinned SSH host identity
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Promote with backup, smoke, audit, and rollback
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PATH_ON_HOST: ${{ vars.DEPLOY_PATH }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          printf -v remote_command 'cd %q && ./scripts/promote.sh %q %q' "$PATH_ON_HOST" "$TARGET" "$REVISION"
+          test -z "$DRY_RUN" || remote_command="$remote_command --dry-run"
+          ssh -i ~/.ssh/id_ed25519 "$USER@$HOST" "$remote_command"
+
+  drift:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: uat
+            url: ${{ vars.UAT_URL }}
+          - environment: demo
+            url: ${{ vars.DEMO_URL }}
+          - environment: prod
+            url: ${{ vars.PROD_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare deployed revision with main
+        if: matrix.url != ''
+        run: ./scripts/check-deploy-drift.sh "${{ matrix.url }}" "${{ github.sha }}"

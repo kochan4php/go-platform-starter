@@ -10,6 +10,7 @@ export default defineConfig({
   timeout: 30_000,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["junit", { outputFile: "test-results/playwright.xml" }]] : "list",
   use: {
     baseURL,
     headless: true,

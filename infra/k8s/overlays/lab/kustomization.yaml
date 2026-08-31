@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: go-platform-lab
+resources:
+  - ../../base
+  - namespace.yaml
+replicas:
+  - count: 1
+    name: auth
+  - count: 1
+    name: users
+  - count: 1
+    name: rbac
+  - count: 1
+    name: worker
+  - count: 1
+    name: realtime
+  - count: 1
+    name: scheduler
+  - count: 1
+    name: gateway

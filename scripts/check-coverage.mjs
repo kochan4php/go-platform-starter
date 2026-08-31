@@ -124,6 +124,11 @@ const changedRows = rows.filter((row) => {
 });
 const changedScore = score(changedRows);
 const overall = score(rows);
+mkdirSync(join(root, "coverage"), { recursive: true });
+writeFileSync(
+  join(root, "coverage", "summary.md"),
+  `## Go coverage\n\n| Scope | Coverage | Gate |\n| --- | ---: | ---: |\n| Overall | ${overall.percent.toFixed(1)}% | informational |\n| Changed production code | ${changed.length ? `${changedScore.percent.toFixed(1)}%` : "n/a"} | ${minimum}% |\n`,
+);
 {
   const value = overall.percent.toFixed(1);
   const color = overall.percent >= minimum ? "2f855a" : overall.percent >= 50 ? "b7791f" : "c53030";

@@ -36,6 +36,7 @@ nav:
       - Integer identities: adr/0002-integer-identities.md
       - Users ownership: adr/0003-users-table-ownership.md
       - Migration baseline: adr/0004-consolidated-migration-baseline.md
+      - Monorepo delivery: adr/0005-monorepo-delivery.md
   - API and data:
       - API standards: API_CONTRACTS.md
       - Curl examples: API_EXAMPLES.md
@@ -50,6 +51,7 @@ nav:
       - Upgrade guide: UPGRADING.md
   - Engineering:
       - Engineering guide: ENGINEERING_GUIDE.md
+      - CI/CD and release controls: CI_CD.md
       - Testing: TESTING.md
       - Performance: PERFORMANCE.md
       - Bundle report: performance/BUNDLE_REPORT.md

@@ -1,0 +1,3 @@
+@Library('go-platform')
+
+goPlatformDeploy()

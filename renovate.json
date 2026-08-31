@@ -7,16 +7,29 @@
 	],
 	"labels": ["dependencies"],
 	"rangeStrategy": "bump",
+	"schedule": ["before 05:00 on monday through friday"],
+	"timezone": "Asia/Jakarta",
+	"dependencyDashboard": true,
+	"prConcurrentLimit": 5,
 	"packageRules": [
 		{
-			"description": "batch Go dependency upgrades into one PR",
+			"description": "Batch Go dependency upgrades",
 			"matchManagers": ["gomod"],
 			"groupName": "go deps"
 		},
 		{
-			"description": "batch web dependency upgrades into one PR",
+			"description": "Batch web dependency upgrades",
 			"matchManagers": ["npm"],
 			"groupName": "web deps"
+		},
+		{
+			"description": "Automerge low-risk non-major updates after required checks",
+			"matchUpdateTypes": ["digest", "patch", "minor"],
+			"matchDepTypes": ["devDependencies", "github-actions"],
+			"automerge": true,
+			"automergeType": "pr",
+			"platformAutomerge": true,
+			"minimumReleaseAge": "3 days"
 		}
 	]
 }

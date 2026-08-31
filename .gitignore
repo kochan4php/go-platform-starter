@@ -2,6 +2,7 @@
 bin/
 coverage.out
 coverage/
+backups/
 *.test
 
 # Node

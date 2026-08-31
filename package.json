@@ -23,7 +23,8 @@
 		"check:migrations": "node scripts/check-migrations.mjs check",
 		"docs:gen": "node scripts/generate-docs.mjs",
 		"docs:check": "node scripts/generate-docs.mjs --check && node scripts/check-docs.mjs",
-		"docs:record": "node scripts/record-quickstart.mjs"
+		"docs:record": "node scripts/record-quickstart.mjs",
+		"check:ci": "node scripts/check-ci-config.mjs && node scripts/check-quarantine.mjs"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.10.2",

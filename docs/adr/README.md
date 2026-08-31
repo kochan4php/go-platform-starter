@@ -27,3 +27,4 @@ reaffirmation in the decision log.
 | [0002](0002-integer-identities.md) | accepted | Integer identities at persistence boundaries |
 | [0003](0003-users-table-ownership.md) | accepted | User profile data owned by users schema |
 | [0004](0004-consolidated-migration-baseline.md) | accepted | Consolidated migration baseline before first release |
+| [0005](0005-monorepo-delivery.md) | accepted | Monorepo with path-aware component delivery |

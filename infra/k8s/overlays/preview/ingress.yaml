@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: platform
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [preview.invalid]
+      secretName: preview-tls
+  rules:
+    - host: preview.invalid
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: gateway, port: { number: 80 } }
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service: { name: gateway, port: { number: 80 } }
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service: { name: gateway, port: { number: 80 } }
+          - path: /healthz
+            pathType: Exact
+            backend:
+              service: { name: gateway, port: { number: 80 } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { number: 80 } }

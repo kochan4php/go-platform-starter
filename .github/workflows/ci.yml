@@ -5,7 +5,30 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.impact.outputs.go }}
+      web: ${{ steps.impact.outputs.web }}
+      e2e: ${{ steps.impact.outputs.e2e }}
+      security: ${{ steps.impact.outputs.security }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: impact
+        run: node scripts/ci-changes.mjs "${{ github.event.pull_request.base.sha || github.event.before }}"
+
   commitlint:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -16,15 +39,21 @@ jobs:
       - uses: wagoid/commitlint-github-action@v6
 
   go:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      - id: setup-go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+
+      - name: Go cache result
+        run: echo "setup-go cache hit = ${{ steps.setup-go.outputs.cache-hit }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Lint (golangci-lint)
         uses: golangci/golangci-lint-action@v8
@@ -35,45 +64,55 @@ jobs:
         run: make build
 
       - name: Architecture fitness and template drift
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           node scripts/check-template-drift.mjs
           node scripts/check-architecture.mjs
 
       - name: Migration lint, checksums, and immutable history
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: node scripts/check-migrations.mjs check "${{ github.event.pull_request.base.sha || github.event.before }}"
 
       - name: Migration up/down from an empty PostgreSQL 17 database
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         env:
           TESTCONTAINERS_FORCE: "1"
         run: go test -p=1 -count=1 -run '^TestMigrationsAreReversibleAndIdempotent$' ./services/auth/internal ./services/users/internal ./services/rbac/internal ./services/worker/internal
 
       - name: Validate YAML manifests
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
 
+      - name: Validate GitHub Actions semantics
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+
       - name: Validate Prometheus config and alert thresholds
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           docker run --rm -v "$PWD/infra/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:latest check config /etc/prometheus/prometheus.yml
           docker run --rm -v "$PWD/infra/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:latest test rules /etc/prometheus/alerts.test.yml
 
-      - name: Test (container tests included; Docker is available on runners)
-        run: make test
-
       - name: Race detector (Linux, concurrency-sensitive packages)
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: go test -race -count=1 ./internal/platform ./services/auth/internal ./services/users/internal ./services/rbac/internal ./services/worker/internal
 
       - name: Fuzz smoke (validators and request decoders)
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           go test ./services/rbac/internal -run '^$' -fuzz FuzzPermissionNameGrammar -fuzztime 5s
           go test ./services/users/internal -run '^$' -fuzz FuzzHandlerDecode -fuzztime 5s
           go test ./services/users/internal -run '^$' -fuzz FuzzUserOrderClauseNeverIncludesInput -fuzztime 5s
 
       - name: Coverage report + changed-code gate (>=70%)
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         env:
           COVERAGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           COVERAGE_MIN: 70
         run: node scripts/check-coverage.mjs
 
       - name: Upload coverage report and per-package badges
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         uses: actions/upload-artifact@v4
         with:
           name: go-coverage
@@ -81,18 +120,73 @@ jobs:
             coverage/go.out
             docs/testing/badges/
 
+      - name: Coverage diff PR comment
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.draft == false && hashFiles('coverage/summary.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: go-coverage
+          path: coverage/summary.md
+
       - name: Hot-path benchmark smoke
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: go test ./internal/platform ./services/users/internal -run '^$' -bench . -benchtime=100ms -benchmem
 
       - name: Generated code is fresh
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           make contracts SVC=_template
           git diff --exit-code
 
       - name: Zero-downtime migration policy
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: scripts/check-migration-safety.sh "${{ github.event.pull_request.base.sha || github.event.before }}"
 
+  go-test:
+    needs: [changes, go]
+    if: >-
+      needs.changes.outputs.go == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: platform
+            packages: ./internal/platform ./internal/testutil
+          - shard: auth
+            packages: ./services/auth/...
+          - shard: users
+            packages: ./services/users/...
+          - shard: rbac
+            packages: ./services/rbac/...
+          - shard: worker
+            packages: ./services/worker/...
+          - shard: edge
+            packages: ./services/gateway/... ./services/realtime/... ./services/scheduler/...
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - id: test
+        name: Test shard with one flaky retry
+        env:
+          TESTCONTAINERS_FORCE: "1"
+        run: node scripts/run-with-retry.mjs --report "test-results/go-${{ matrix.shard }}.json" -- go test -count=1 ${{ matrix.packages }}
+      - if: steps.test.outputs.flaky == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, labels: ['flaky-test']})
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-test-${{ matrix.shard }}
+          path: test-results/
+
   web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +198,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
+
+      - id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: echo "pnpm store cache hit = ${{ steps.pnpm-cache.outputs.cache-hit }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -116,21 +218,36 @@ jobs:
         run: pnpm check:deps
 
       - name: Quality gate regression tests
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: pnpm test:gates
 
       - name: Test (Vitest + RTL)
-        run: pnpm test
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        id: web-test
+        run: node scripts/run-with-retry.mjs --report test-results/web.json -- pnpm test
+
+      - if: steps.web-test.outputs.flaky == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, labels: ['flaky-test']})
 
       - name: Contracts are fresh
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: |
           pnpm contracts
           pnpm test:contracts
           git diff --exit-code
 
       - name: API changelog and breaking-removal gate
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         run: node scripts/api-changelog.mjs "${{ github.event.pull_request.base.sha || github.event.before }}"
 
   schema-docs:
+    needs: changes
+    if: >-
+      needs.changes.outputs.go == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -162,7 +279,8 @@ jobs:
 
   web-build:
     runs-on: ubuntu-latest
-    needs: web
+    needs: [changes, web]
+    if: needs.changes.outputs.web == 'true' && needs.web.result == 'success'
     strategy:
       fail-fast: false
       matrix:
@@ -182,15 +300,34 @@ jobs:
       - name: Bundle-size budget
         if: matrix.app == 'web'
         run: pnpm check:budget
+      - name: Bundle-size PR comment
+        if: always() && matrix.app == 'web' && github.event_name == 'pull_request' && hashFiles('apps/web/dist/bundle-summary.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: bundle-size
+          path: apps/web/dist/bundle-summary.md
       - name: Lighthouse performance budget
-        if: matrix.app == 'web'
+        if: matrix.app == 'web' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
         uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: apps/web/lighthouserc.json
+      - name: Create Lighthouse summary
+        if: matrix.app == 'web' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+        run: node scripts/lighthouse-summary.mjs
+      - name: Lighthouse PR comment
+        if: matrix.app == 'web' && github.event_name == 'pull_request' && github.event.pull_request.draft == false
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: lighthouse
+          path: lighthouse-results/summary.md
 
   docker-build:
     runs-on: ubuntu-latest
-    needs: [go, web-build]
+    needs: [changes, go, web-build]
+    if: >-
+      always() && needs.changes.outputs.go == 'true' && needs.go.result == 'success' &&
+      (needs.web-build.result == 'success' || needs.web-build.result == 'skipped') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     strategy:
       fail-fast: false
       matrix:
@@ -209,7 +346,12 @@ jobs:
   playwright:
     # Full-journey smoke against the real mesh (PLAN item 67).
     runs-on: ubuntu-latest
-    needs: [go, web]
+    needs: [changes, go, web]
+    if: >-
+      always() && needs.changes.outputs.e2e == 'true' &&
+      (needs.go.result == 'success' || needs.go.result == 'skipped') &&
+      (needs.web.result == 'success' || needs.web.result == 'skipped') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     steps:
       - uses: actions/checkout@v4
 
@@ -246,7 +388,20 @@ jobs:
           name: playwright-artifacts
           path: test-results/
 
+      - name: Publish JUnit test report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Playwright JUnit
+          path: test-results/playwright.xml
+          reporter: java-junit
+          fail-on-empty: false
+
   security:
+    needs: changes
+    if: >-
+      needs.changes.outputs.security == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

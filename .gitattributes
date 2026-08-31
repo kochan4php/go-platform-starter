@@ -5,3 +5,5 @@ graphify-out/memory/*.md text eol=lf
 graphify-out/reflections/*.md text eol=lf
 graphify-out/2026-08-29/*.json text eol=lf
 graphify-out/2026-08-29/*.md text eol=lf
+graphify-out/*/*.json text eol=lf
+graphify-out/*/*.md text eol=lf
