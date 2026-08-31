@@ -958,7 +958,7 @@ export default function UsersPage() {
             <summary className="cursor-pointer list-none rounded-lg border border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]">
               Columns
             </summary>
-            <div className="absolute right-0 top-full z-30 mt-2 w-52 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-2xl">
+            <div className="absolute right-0 top-full z-[var(--z-dropdown)] mt-2 w-52 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-2xl">
               {(Object.keys(DEFAULT_COLUMNS) as ColumnKey[]).map((key) => (
                 <label key={key} className="flex items-center justify-between gap-3 py-1 text-xs capitalize">
                   {columnLabel(key)}
@@ -1076,7 +1076,7 @@ export default function UsersPage() {
         <div className="relative -mx-2 max-h-[60vh] overflow-auto" aria-busy={users.isFetching}>
           {users.isFetching ? (
             <div
-              className="sticky left-0 top-0 z-30 flex h-1 w-full overflow-hidden"
+              className="sticky left-0 top-0 z-[var(--z-dropdown)] flex h-1 w-full overflow-hidden"
               aria-label="Refreshing users"
             >
               <span className="w-full animate-pulse bg-[var(--color-accent)]" />
@@ -1100,7 +1100,7 @@ export default function UsersPage() {
                 <col key={key} style={{ width: columnWidths[key] }} />
               ))}
             </colgroup>
-            <thead className="sticky top-0 z-10 bg-[var(--color-surface)]">
+            <thead className="sticky top-0 z-[var(--z-sticky)] bg-[var(--color-surface)]">
               <tr>
                 {visibleColumns.select ? (
                   <ResizableHeader
@@ -1382,7 +1382,7 @@ export default function UsersPage() {
                           <summary className="cursor-pointer text-[var(--color-muted)]">
                             <ExpandableText text={u.lastLoginIp || "—"} max={22} />
                           </summary>
-                          <p className="absolute z-30 mt-1 w-48 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-xl">
+                          <p className="absolute z-[var(--z-dropdown)] mt-1 w-48 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-xl">
                             {ipDescription(u.lastLoginIp)}
                           </p>
                         </details>
@@ -1397,7 +1397,7 @@ export default function UsersPage() {
                       </Td>
                     ) : null}
                     {visibleColumns.actions ? (
-                      <Td className="sticky right-0 z-10 bg-[var(--color-surface)]">
+                      <Td className="sticky right-0 z-[var(--z-sticky)] bg-[var(--color-surface)]">
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"
@@ -1573,7 +1573,7 @@ function ResizableHeader({
 }) {
   return (
     <th
-      className={`relative px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)] ${column === "actions" ? "sticky right-0 z-20 bg-[var(--color-surface)]" : ""}`}
+      className={`relative px-4 py-3 text-left text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-muted)] ${column === "actions" ? "sticky right-0 z-[var(--z-hover)] bg-[var(--color-surface)]" : ""}`}
     >
       {children ?? label}
       <span
@@ -2076,6 +2076,7 @@ function ProfileModal({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
+  const confirm = useConfirm();
   const history = useQuery({
     queryKey: ["user", profile.id, "audit"],
     queryFn: async () => {
@@ -2094,8 +2095,8 @@ function ProfileModal({
     displayName !== profile.displayName ||
     avatarUrl !== profile.avatarUrl ||
     newPassword !== "";
-  const requestClose = () => {
-    if (!dirty || window.confirm("Discard unsaved changes?")) onClose();
+  const requestClose = async () => {
+    if (!dirty || (await confirm("Discard unsaved changes?", "Your edits will not be saved."))) onClose();
   };
 
   const save = useMutation({

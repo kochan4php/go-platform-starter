@@ -20,6 +20,10 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"correctness": {
+				"useExhaustiveDependencies": "error",
+				"useHookAtTopLevel": "error"
+			},
 			"style": {
 				"useNodejsImportProtocol": "error"
 			}

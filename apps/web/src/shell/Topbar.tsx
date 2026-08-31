@@ -1,9 +1,10 @@
-import { usePreferences } from "@starter/ui";
-import { useEffect, useState } from "react";
+import { LocaleSwitch, usePreferences } from "@starter/ui";
+import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../auth-context";
 import { useStored, useToast } from "../lib/ui";
 import { EnvBadge } from "./EnvBadge";
-import { ALL_NAV_ITEMS, ENV } from "./nav-config";
+import { ENV, routeMeta } from "./nav-config";
 
 interface TopbarProps {
   theme: "dark" | "light";
@@ -14,25 +15,18 @@ interface TopbarProps {
 
 function useBreadcrumb() {
   const { pathname } = useLocation();
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments.length === 0) return [{ label: "Admin", href: "/admin/users" }];
   const crumbs = [{ label: "Admin", href: "/admin/users" }];
-  const match = ALL_NAV_ITEMS.find((n) => n.to.endsWith(segments[segments.length - 1] ?? ""));
-  crumbs.push({ label: match?.label ?? "Dashboard", href: "" });
+  const meta = routeMeta(pathname);
+  crumbs.push({ label: meta.label, href: "" });
   return crumbs;
 }
 
 export function Topbar({ theme, busy, onToggleTheme, onOpenPalette }: TopbarProps) {
   const crumbs = useBreadcrumb();
-  const [now, setNow] = useState(() => new Date());
   const [density, setDensity] = useStored<"compact" | "comfortable">("ui-density", "comfortable");
   const toast = useToast();
   const { timeZone } = usePreferences();
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
+  const { lastHeartbeatAt } = useAuth();
 
   useEffect(() => {
     const onToggle = () => {
@@ -84,9 +78,17 @@ export function Topbar({ theme, busy, onToggleTheme, onOpenPalette }: TopbarProp
           {busy ? "syncing" : "synced"}
         </output>
         <span className="hidden font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)] sm:inline">
-          updated {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone })}
+          session{" "}
+          {lastHeartbeatAt
+            ? new Date(lastHeartbeatAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone,
+              })
+            : "pending"}
         </span>
         <EnvBadge env={ENV} />
+        <LocaleSwitch />
 
         <button
           type="button"

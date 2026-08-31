@@ -53,6 +53,7 @@ nav:
       - Engineering guide: ENGINEERING_GUIDE.md
       - CI/CD and release controls: CI_CD.md
       - Testing: TESTING.md
+      - Frontend engineering: FRONTEND_ENGINEERING.md
       - Performance: PERFORMANCE.md
       - Bundle report: performance/BUNDLE_REPORT.md
       - Load testing: performance/K6.md

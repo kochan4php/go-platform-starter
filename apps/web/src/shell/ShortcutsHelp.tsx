@@ -31,7 +31,7 @@ export function ShortcutsHelp({ onClose }: ShortcutsHelpProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Keyboard shortcuts"
-      className="ui-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center p-4 backdrop-blur-[6px]"
+      className="ui-modal-backdrop fixed inset-0 z-[var(--z-toast)] flex items-center justify-center p-4 backdrop-blur-[6px]"
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();

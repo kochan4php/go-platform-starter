@@ -36,3 +36,4 @@ graphify-out/.graphify_python
 graphify-out/.graphify_root
 graphify-out/graph.html
 .cache
+.pnpm-store

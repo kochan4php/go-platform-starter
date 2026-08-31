@@ -1235,70 +1235,70 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Frontend Engineering
 
-- [ ] 🔧 Q1. State management audit doc (context vs query vs URL)
-- [ ] 🔧 Q2. Error boundary granular per-card
-- [ ] 🔧 Q3. Suspense boundary granular per-widget
-- [ ] 🔧 Q4. Progressive loading pattern
-- [ ] 🧭 Q5. react-hook-form + zod resolver evaluasi
-- [ ] 🔧 Q6. Zod schema share dari openapi codegen
-- [ ] 🔧 Q7. axe-core CI scan per halaman
-- [ ] 🔧 Q8. Skip-to-content link
-- [ ] 🔧 Q9. Landmark regions audit lengkap
-- [ ] 🔧 Q10. Form error announcement a11y
-- [ ] 🔧 Q11. Table caption + scope a11y
-- [ ] 🔧 Q12. Color contrast token audit
-- [ ] 🔧 Q13. Screen reader testing doc
-- [ ] 🧭 Q14. i18n framework (lingui/react-i18next)
-- [ ] 🧭 Q15. i18n bahasa Indonesia default + EN
-- [ ] 🧭 Q16. i18n pluralization + date format
-- [ ] 🧭 Q17. Design tokens single source (Figma style)
-- [ ] 🔧 Q18. Dark/light theme implementasi penuh
-- [ ] 🔧 Q19. Theme system preference detection
-- [ ] 🧭 Q20. Framer-motion evaluasi
-- [ ] 🔧 Q21. Page enter stagger konsisten
-- [ ] 🔧 Q22. Button press scale micro-interaction
-- [ ] 🔧 Q23. Skeleton component library lengkap
-- [ ] 🔧 Q24. Icon weight konsistensi phosphor
-- [ ] 🔧 Q25. Typography clamp audit konsisten
-- [ ] 🔧 Q26. Spacing 4/8px grid audit
-- [ ] 🔧 Q27. Z-index scale token terpusat
-- [ ] 🔧 Q28. Breakpoint dokumentasi konsisten
-- [ ] 🔧 Q29. Container query per-komponen
-- [ ] 🔧 Q30. Print-friendly dashboard
-- [ ] 🔧 Q31. 404 custom page
-- [ ] 🔧 Q32. Offline detection UI
-- [ ] 🧭 Q33. PWA manifest + service worker
-- [ ] 🔧 Q34. PWA offline fallback page
-- [ ] 🧭 Q35. Web push notification
-- [ ] 🧭 Q36. Privacy-friendly analytics
-- [ ] 🧭 Q37. Feature flags client hook
-- [ ] 🧭 Q38. A/B testing infra
-- [ ] 🔧 Q39. Memo audit list render
-- [ ] 🔧 Q40. useTransition filter berat
-- [ ] 🔧 Q41. React compiler rules lint
-- [ ] 🔧 Q42. Zod safeParse API response
-- [ ] 🔧 Q43. AppError class discrimination
-- [ ] 🔧 Q44. Retry policy per-query exposure
-- [ ] 🔧 Q45. Auth context reducer pattern
-- [ ] 🔧 Q46. Session heartbeat visual indicator
-- [ ] 🔧 Q47. Multi-tab BroadcastChannel sync
-- [ ] 🔧 Q48. Route guard composition (perm + role + custom)
-- [ ] 🔧 Q49. Breadcrumb dari route meta
-- [ ] 🔧 Q50. Promise-based confirm dialog provider
-- [ ] 🔧 Q51. Copy-to-clipboard hook + toast
-- [ ] 🔧 Q52. useDebounce/useThrottle hooks
-- [ ] 🔧 Q53. useLocalStorage hook SSR-safe
-- [ ] 🔧 Q54. useMediaQuery hook
-- [ ] 🔧 Q55. Virtual list hook tabel besar
-- [ ] 🔧 Q56. Drag-and-drop reorder
-- [ ] 🔧 Q57. Date picker component filter range
-- [ ] 🔧 Q58. File dropzone component
-- [ ] 🔧 Q59. Image lightbox component
-- [ ] 🔧 Q60. Empty component variant ilustrasi
-- [ ] 🔧 Q61. Stat card trend arrow component
-- [ ] 🔧 Q62. Timeline component audit
-- [ ] 🔧 Q63. Badge variants lengkap
-- [ ] 🔧 Q64. Tooltip component library konsisten
+- [x] 🔧 Q1. State management audit doc (context vs query vs URL)
+- [x] 🔧 Q2. Error boundary granular per-card
+- [x] 🔧 Q3. Suspense boundary granular per-widget
+- [x] 🔧 Q4. Progressive loading pattern
+- [x] 🧭 Q5. react-hook-form + zod resolver evaluasi
+- [x] 🔧 Q6. Zod schema share dari openapi codegen
+- [x] 🔧 Q7. axe-core CI scan per halaman
+- [x] 🔧 Q8. Skip-to-content link
+- [x] 🔧 Q9. Landmark regions audit lengkap
+- [x] 🔧 Q10. Form error announcement a11y
+- [x] 🔧 Q11. Table caption + scope a11y
+- [x] 🔧 Q12. Color contrast token audit
+- [x] 🔧 Q13. Screen reader testing doc
+- [x] 🧭 Q14. i18n framework (lingui/react-i18next)
+- [x] 🧭 Q15. i18n bahasa Indonesia default + EN
+- [x] 🧭 Q16. i18n pluralization + date format
+- [x] 🧭 Q17. Design tokens single source (Figma style)
+- [x] 🔧 Q18. Dark/light theme implementasi penuh
+- [x] 🔧 Q19. Theme system preference detection
+- [x] 🧭 Q20. Framer-motion evaluasi
+- [x] 🔧 Q21. Page enter stagger konsisten
+- [x] 🔧 Q22. Button press scale micro-interaction
+- [x] 🔧 Q23. Skeleton component library lengkap
+- [x] 🔧 Q24. Icon weight konsistensi phosphor
+- [x] 🔧 Q25. Typography clamp audit konsisten
+- [x] 🔧 Q26. Spacing 4/8px grid audit
+- [x] 🔧 Q27. Z-index scale token terpusat
+- [x] 🔧 Q28. Breakpoint dokumentasi konsisten
+- [x] 🔧 Q29. Container query per-komponen
+- [x] 🔧 Q30. Print-friendly dashboard
+- [x] 🔧 Q31. 404 custom page
+- [x] 🔧 Q32. Offline detection UI
+- [x] 🧭 Q33. PWA manifest + service worker
+- [x] 🔧 Q34. PWA offline fallback page
+- [x] 🧭 Q35. Web push notification
+- [x] 🧭 Q36. Privacy-friendly analytics
+- [x] 🧭 Q37. Feature flags client hook
+- [x] 🧭 Q38. A/B testing infra
+- [x] 🔧 Q39. Memo audit list render
+- [x] 🔧 Q40. useTransition filter berat
+- [x] 🔧 Q41. React compiler rules lint
+- [x] 🔧 Q42. Zod safeParse API response
+- [x] 🔧 Q43. AppError class discrimination
+- [x] 🔧 Q44. Retry policy per-query exposure
+- [x] 🔧 Q45. Auth context reducer pattern
+- [x] 🔧 Q46. Session heartbeat visual indicator
+- [x] 🔧 Q47. Multi-tab BroadcastChannel sync
+- [x] 🔧 Q48. Route guard composition (perm + role + custom)
+- [x] 🔧 Q49. Breadcrumb dari route meta
+- [x] 🔧 Q50. Promise-based confirm dialog provider
+- [x] 🔧 Q51. Copy-to-clipboard hook + toast
+- [x] 🔧 Q52. useDebounce/useThrottle hooks
+- [x] 🔧 Q53. useLocalStorage hook SSR-safe
+- [x] 🔧 Q54. useMediaQuery hook
+- [x] 🔧 Q55. Virtual list hook tabel besar
+- [x] 🔧 Q56. Drag-and-drop reorder
+- [x] 🔧 Q57. Date picker component filter range
+- [x] 🔧 Q58. File dropzone component
+- [x] 🔧 Q59. Image lightbox component
+- [x] 🔧 Q60. Empty component variant ilustrasi
+- [x] 🔧 Q61. Stat card trend arrow component
+- [x] 🔧 Q62. Timeline component audit
+- [x] 🔧 Q63. Badge variants lengkap
+- [x] 🔧 Q64. Tooltip component library konsisten
 
 ---
 

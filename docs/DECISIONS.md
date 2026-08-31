@@ -18,6 +18,9 @@ own source documents.
 | 2026-08-31 | Container auto-update is rejected; signed promotion gates remain mandatory | accepted | [Infra and operations](INFRA_OPS.md#backup-secrets-and-immutable-releases) |
 | 2026-08-31 | GitHub Pages hosts the public status snapshot outside the production VPS | accepted | [Infra and operations](INFRA_OPS.md#availability-residency-and-communication) |
 | 2026-08-31 | Air-gapped on-premises export is a supported deployment variant | accepted | [Infra and operations](INFRA_OPS.md#portability-and-air-gapped-operation) |
+| 2026-08-31 | Frontend uses native controlled forms, typed native-Intl i18n, and CSS motion | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#language-design-and-motion-decisions) |
+| 2026-08-31 | Minimal PWA and runtime flags are accepted; Web Push and A/B testing are deferred behind explicit product and privacy gates | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#pwa-privacy-and-experiments) |
+| 2026-08-31 | Biome is the sole frontend linter; ESLint/React Compiler lint packages are prohibited by supply-chain policy | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#shared-component-and-hook-inventory) |
 
 Open product decisions remain visible and unchecked in `docs/BACKLOG.md`; they
 are not silently converted into implementation policy.

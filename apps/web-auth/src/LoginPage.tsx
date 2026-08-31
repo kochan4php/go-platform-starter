@@ -1,3 +1,4 @@
+import { loginSchema } from "@starter/contracts/schemas";
 import { Alert, Card } from "@starter/ui";
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import AuthFrame from "./AuthFrame";
@@ -76,7 +77,11 @@ export default function LoginPage({
     event.preventDefault();
     setTouched(true);
     draft.normalize();
-    if (!emailValid || !password || lockSeconds > 0) return;
+    const payload = loginSchema.pick({ password: true, otp: true }).safeParse({
+      password,
+      ...(mfaRequired ? { otp } : {}),
+    });
+    if (!emailValid || !payload.success || lockSeconds > 0) return;
     setBusy(true);
     setError("");
     try {

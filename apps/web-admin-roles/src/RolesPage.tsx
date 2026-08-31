@@ -18,7 +18,7 @@ import {
   useToast,
 } from "@starter/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { type PermissionInfo, type Role, api } from "./api-client";
 
 type Profile = {
@@ -673,11 +673,17 @@ function PermissionMatrix({
     <Card>
       <div className="overflow-auto">
         <table className="w-full min-w-[680px] text-sm">
+          <caption className="sr-only">Permissions assigned to each role</caption>
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-[var(--color-surface)] px-3 py-3 text-left">Permission</th>
+              <th
+                scope="col"
+                className="sticky left-0 z-[var(--z-sticky)] bg-[var(--color-surface)] px-3 py-3 text-left"
+              >
+                Permission
+              </th>
               {roles.map((role) => (
-                <th key={role.id} className="px-3 py-3 text-center">
+                <th scope="col" key={role.id} className="px-3 py-3 text-center">
                   {role.name}
                 </th>
               ))}
@@ -686,7 +692,10 @@ function PermissionMatrix({
           <tbody>
             {permissions.map((permission) => (
               <tr key={permission.name} className="border-t border-[var(--color-line)]">
-                <th className="sticky left-0 z-10 bg-[var(--color-surface)] px-3 py-3 text-left font-mono text-xs">
+                <th
+                  scope="row"
+                  className="sticky left-0 z-[var(--z-sticky)] bg-[var(--color-surface)] px-3 py-3 text-left font-mono text-xs"
+                >
                   <Tooltip label={permissionDescription(permission.name)}>
                     <a href={`${permissionRoute(permission.name)}#${permission.name}`}>{permission.name}</a>
                   </Tooltip>
@@ -747,6 +756,7 @@ function RoleModal({
   const [archived, setArchived] = useState(initial.archived);
   const [selected, setSelected] = useState<string[]>(initial.permissions);
   const [permissionSearch, setPermissionSearch] = useState("");
+  const [filterPending, startFilterTransition] = useTransition();
   const [newPermission, setNewPermission] = useState("");
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -946,11 +956,14 @@ function RoleModal({
           title="Permissions"
           description="Search by resource, action, or scope. Group switches update the complete set."
         >
-          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]" aria-busy={filterPending}>
             <Input
               type="search"
               value={permissionSearch}
-              onChange={(event) => setPermissionSearch(event.target.value.toLowerCase())}
+              onChange={(event) => {
+                const value = event.target.value.toLowerCase();
+                startFilterTransition(() => setPermissionSearch(value));
+              }}
               placeholder="Search permissions"
               aria-label="Search permissions"
             />

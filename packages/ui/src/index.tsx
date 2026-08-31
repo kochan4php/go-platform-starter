@@ -31,6 +31,34 @@ export {
   type UserPreferences,
 } from "./ui-system";
 
+export {
+  AccessibleTable,
+  DateRangePicker,
+  EmptyState,
+  FileDropzone,
+  FormErrorSummary,
+  I18nProvider,
+  ImageLightbox,
+  LocaleSwitch,
+  ProgressiveContent,
+  ReorderList,
+  SkeletonCard,
+  SkeletonList,
+  SkeletonTable,
+  StatTrend,
+  Timeline,
+  WidgetBoundary,
+  WidgetSuspense,
+  useDebouncedValue,
+  useFeatureFlag,
+  useI18n,
+  useLocalStorage,
+  useMediaQuery,
+  useThrottledValue,
+  useVirtualList,
+  type Locale,
+} from "./frontend";
+
 type Variant = "primary" | "ghost" | "danger";
 
 const variantClass: Record<Variant, string> = {
@@ -247,11 +275,14 @@ export function ModalActions({ children }: { children: ReactNode }) {
 export function Badge({
   children,
   tone = "neutral",
-}: { children: ReactNode; tone?: "neutral" | "accent" | "danger" }) {
+}: { children: ReactNode; tone?: "neutral" | "accent" | "danger" | "success" | "warning" | "info" }) {
   const tones = {
     neutral: "border-[var(--color-line)] text-[var(--color-muted)]",
     accent: "border-[var(--color-accent)]/40 text-[var(--color-accent)]",
     danger: "border-[var(--color-danger)]/40 text-[var(--color-danger)]",
+    success: "border-[var(--color-success)]/40 text-[var(--color-success)]",
+    warning: "border-[var(--color-warning)]/40 text-[var(--color-warning)]",
+    info: "border-[var(--color-info)]/40 text-[var(--color-info)]",
   } as const;
   return (
     <span
@@ -279,7 +310,7 @@ export function Avatar({
       aria-label={alt || undefined}
       aria-hidden={!alt || undefined}
       style={{ backgroundColor: `hsl(${hue} 42% 84%)`, color: `hsl(${hue} 52% 24%)` }}
-      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold uppercase transition-transform hover:z-20 hover:scale-150"
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold uppercase transition-transform hover:z-[var(--z-hover)] hover:scale-150"
     >
       {text.charAt(0) || "?"}
     </span>
@@ -397,7 +428,7 @@ export function Tooltip({
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-[var(--color-ink)] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${placement}`}
+        className={`pointer-events-none absolute z-[var(--z-tooltip)] whitespace-nowrap rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-[var(--color-ink)] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${placement}`}
       >
         {label}
         {kbd ? <span className="ml-1.5 text-[var(--color-muted)]">{kbd}</span> : null}
@@ -422,7 +453,7 @@ export function ExpandableText({
           {value.slice(0, max)}…
         </span>
       </summary>
-      <span className="absolute left-0 top-full z-30 mt-1 block min-w-48 max-w-md break-words rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-2 font-mono text-[11px] shadow-xl">
+      <span className="absolute left-0 top-full z-[var(--z-dropdown)] mt-1 block min-w-48 max-w-md break-words rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] p-2 font-mono text-[11px] shadow-xl">
         {value}
       </span>
     </details>

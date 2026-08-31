@@ -1,3 +1,4 @@
+import { registerSchema } from "@starter/contracts/schemas";
 import { Card } from "@starter/ui";
 import { type FormEvent, useMemo, useState } from "react";
 import AuthFrame from "./AuthFrame";
@@ -25,7 +26,7 @@ export default function RegisterPage() {
   const [done, setDone] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const emailValid = validEmail(draft.email);
-  const strongEnough = validPassword(password);
+  const strongEnough = registerSchema.shape.password.safeParse(password).success && validPassword(password);
   const matches = Boolean(confirm) && confirm === password;
 
   const errors = useMemo(() => {
@@ -43,7 +44,13 @@ export default function RegisterPage() {
     event.preventDefault();
     setTouched(true);
     draft.normalize();
-    if (!emailValid || !strongEnough || !matches) return;
+    if (
+      !registerSchema.pick({ password: true }).safeParse({ password }).success ||
+      !emailValid ||
+      !strongEnough ||
+      !matches
+    )
+      return;
     setBusy(true);
     setError("");
     try {

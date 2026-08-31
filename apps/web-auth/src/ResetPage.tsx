@@ -1,3 +1,4 @@
+import { resetPasswordSchema, validateResetTokenSchema } from "@starter/contracts/schemas";
 import { Card, SkeletonBlock, SkeletonLine } from "@starter/ui";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import AuthFrame from "./AuthFrame";
@@ -22,12 +23,13 @@ export default function ResetPage() {
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
   const [redirectIn, setRedirectIn] = useState(3);
-  const strongEnough = validPassword(newPassword);
+  const strongEnough =
+    resetPasswordSchema.shape.newPassword.safeParse(newPassword).success && validPassword(newPassword);
   const matches = Boolean(confirm) && confirm === newPassword;
 
   useEffect(() => {
     let active = true;
-    if (!token) {
+    if (!validateResetTokenSchema.safeParse({ token }).success) {
       setTokenState("invalid");
       return;
     }
@@ -64,7 +66,7 @@ export default function ResetPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setTouched(true);
-    if (tokenState !== "valid" || !strongEnough || !matches) return;
+    if (!resetPasswordSchema.safeParse({ token, newPassword }).success || !strongEnough || !matches) return;
     setBusy(true);
     setError("");
     try {

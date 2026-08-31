@@ -25,7 +25,7 @@ export {
 
 // Host-only additions: theme toggle, gateway health, scroll lock helpers
 // that are not needed by remotes.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Theme = "dark" | "light";
 const THEME_KEY = "starter-theme";
@@ -36,18 +36,35 @@ function applyTheme(t: Theme) {
 }
 
 export function useTheme(): [Theme, (t: Theme) => void] {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "dark";
+  const [selected, setSelected] = useState<Theme | null>(() => {
+    if (typeof window === "undefined") return null;
     const saved = window.localStorage.getItem(THEME_KEY) as Theme | null;
-    return saved === "light" ? "light" : "dark";
+    return saved === "light" || saved === "dark" ? saved : null;
   });
+  const [system, setSystem] = useState<Theme>(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark",
+  );
+  const theme = selected ?? system;
 
   useEffect(() => {
     applyTheme(theme);
-    window.localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
-  return [theme, setTheme];
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const update = () => setSystem(media.matches ? "light" : "dark");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  const choose = useCallback((next: Theme) => {
+    setSelected(next);
+    window.localStorage.setItem(THEME_KEY, next);
+  }, []);
+
+  return [theme, choose];
 }
 
 export type HealthState = "ok" | "down" | "unknown";

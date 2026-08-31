@@ -1,52 +1,82 @@
 {
-  "annotations": { "list": [] },
-  "editable": false,
-  "panels": [
-    {
-      "title": "CPU used",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
-      "targets": [{ "expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "{{instance}}" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
-    },
-    {
-      "title": "Memory used",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
-      "targets": [{ "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "{{instance}}" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
-    },
-    {
-      "title": "Filesystem used",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
-      "targets": [{ "expr": "100 * (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"})", "legendFormat": "{{instance}} {{mountpoint}}" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
-    },
-    {
-      "title": "Network throughput",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "targets": [
-        { "expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m])", "legendFormat": "{{instance}} receive" },
-        { "expr": "rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m])", "legendFormat": "{{instance}} transmit" }
-      ],
-      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
-    },
-    {
-      "title": "Load average",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "targets": [{ "expr": "node_load5", "legendFormat": "{{instance}}" }],
-      "fieldConfig": { "defaults": {}, "overrides": [] }
-    }
-  ],
-  "refresh": "30s",
-  "schemaVersion": 39,
-  "tags": ["vps", "node-exporter"],
-  "templating": { "list": [] },
-  "time": { "from": "now-6h", "to": "now" },
-  "title": "VPS resources",
-  "uid": "vps-resources",
-  "version": 1
+	"annotations": { "list": [] },
+	"editable": false,
+	"panels": [
+		{
+			"title": "CPU used",
+			"type": "timeseries",
+			"gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+			"targets": [
+				{
+					"expr": "100 * (1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
+					"legendFormat": "{{instance}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": { "unit": "percent", "min": 0, "max": 100 },
+				"overrides": []
+			}
+		},
+		{
+			"title": "Memory used",
+			"type": "timeseries",
+			"gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+			"targets": [
+				{
+					"expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+					"legendFormat": "{{instance}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": { "unit": "percent", "min": 0, "max": 100 },
+				"overrides": []
+			}
+		},
+		{
+			"title": "Filesystem used",
+			"type": "timeseries",
+			"gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+			"targets": [
+				{
+					"expr": "100 * (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"})",
+					"legendFormat": "{{instance}} {{mountpoint}}"
+				}
+			],
+			"fieldConfig": {
+				"defaults": { "unit": "percent", "min": 0, "max": 100 },
+				"overrides": []
+			}
+		},
+		{
+			"title": "Network throughput",
+			"type": "timeseries",
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+			"targets": [
+				{
+					"expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m])",
+					"legendFormat": "{{instance}} receive"
+				},
+				{
+					"expr": "rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m])",
+					"legendFormat": "{{instance}} transmit"
+				}
+			],
+			"fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
+		},
+		{
+			"title": "Load average",
+			"type": "timeseries",
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+			"targets": [{ "expr": "node_load5", "legendFormat": "{{instance}}" }],
+			"fieldConfig": { "defaults": {}, "overrides": [] }
+		}
+	],
+	"refresh": "30s",
+	"schemaVersion": 39,
+	"tags": ["vps", "node-exporter"],
+	"templating": { "list": [] },
+	"time": { "from": "now-6h", "to": "now" },
+	"title": "VPS resources",
+	"uid": "vps-resources",
+	"version": 1
 }

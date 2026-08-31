@@ -6,7 +6,10 @@ import { AuthProvider, useAuth } from "./auth-context";
 
 afterEach(cleanup);
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 it("boots an anonymous tab from the refresh cookie", async () => {
   const payload = btoa(
@@ -54,4 +57,29 @@ it("keeps the current screen available behind an expired-session re-auth gate", 
 
   act(() => window.dispatchEvent(new Event("starter:session-expired")));
   expect(screen.getByText("admin@example.com:true").textContent).toBe("admin@example.com:true");
+});
+
+it("synchronizes logout received from another tab", () => {
+  let receive: ((event: MessageEvent<{ type: "logout" }>) => void) | null = null;
+  class FakeChannel {
+    set onmessage(listener: ((event: MessageEvent<{ type: "logout" }>) => void) | null) {
+      receive = listener;
+    }
+    postMessage() {}
+    close() {}
+  }
+  vi.stubGlobal("BroadcastChannel", FakeChannel);
+  function Probe() {
+    const { user } = useAuth();
+    return <p>{user?.email ?? "anonymous"}</p>;
+  }
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthProvider initialUser={{ id: "7", email: "admin@example.com", perms: [], ver: 1 }}>
+        <Probe />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+  act(() => receive?.({ data: { type: "logout" } } as MessageEvent<{ type: "logout" }>));
+  expect(screen.getByText("anonymous")).toBeTruthy();
 });

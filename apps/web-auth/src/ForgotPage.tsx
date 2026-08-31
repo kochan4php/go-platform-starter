@@ -1,3 +1,4 @@
+import { forgotPasswordSchema } from "@starter/contracts/schemas";
 import { Button, Card, Spinner } from "@starter/ui";
 import { type FormEvent, useEffect, useState } from "react";
 import AuthFrame from "./AuthFrame";
@@ -10,7 +11,6 @@ import {
   authNavigate,
   normalizeEmail,
   useEmailDraft,
-  validEmail,
 } from "./auth-ui";
 
 const RESEND_SECONDS = 30;
@@ -22,7 +22,7 @@ export default function ForgotPage() {
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const emailValid = validEmail(draft.email);
+  const emailValid = forgotPasswordSchema.shape.email.safeParse(normalizeEmail(draft.email)).success;
 
   useEffect(() => {
     if (cooldown <= 0) return;

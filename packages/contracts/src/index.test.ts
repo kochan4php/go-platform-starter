@@ -1,6 +1,13 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { resolveGatewayURL, setAccessToken, silentRefresh } from "./index";
-import { registerSchema, updateUserSchema } from "./schemas";
+import {
+  AppError,
+  resolveGatewayURL,
+  safeApiData,
+  setAccessToken,
+  shouldRetryQuery,
+  silentRefresh,
+} from "./index";
+import { loginSchema, registerSchema, updateUserSchema } from "./schemas";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -45,4 +52,15 @@ it("generates runnable Zod request schemas from OpenAPI", () => {
   expect(registerSchema.safeParse({ email: "not-an-email", password: "short" }).success).toBe(false);
   expect(updateUserSchema.safeParse({ displayName: "Updated" }).success).toBe(true);
   expect(updateUserSchema.safeParse({ id: 42 }).success).toBe(false);
+});
+
+it("validates API data and discriminates retryable failures", () => {
+  expect(safeApiData(loginSchema, { email: "user@example.com", password: "valid-password" })).toEqual({
+    email: "user@example.com",
+    password: "valid-password",
+  });
+  expect(() => safeApiData(loginSchema, { email: "invalid" })).toThrow(AppError);
+  expect(shouldRetryQuery(0, new AppError("unavailable", "retry", 503))).toBe(true);
+  expect(shouldRetryQuery(0, new AppError("forbidden", "stop", 403))).toBe(false);
+  expect(shouldRetryQuery(2, new Error("retry limit"))).toBe(false);
 });

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
-import RequirePermission from "./RequirePermission";
+import RequirePermission, { AccessGuard } from "./RequirePermission";
 import { AuthProvider, type SessionUser } from "./auth-context";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -46,4 +46,29 @@ it("blocks authenticated users without the permission", () => {
 it("renders children when the claim is present", () => {
   mount({ id: "s1", email: "a@b.c", perms: ["user:read:any"], ver: 1 }, "user:read:any");
   expect(screen.getByText("protected-content")).toBeTruthy();
+});
+
+it("composes role and custom guards", () => {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthProvider
+        initialUser={{ id: "s1", email: "a@b.c", perms: ["user:read:any"], roles: ["admin"], ver: 2 }}
+      >
+        <MemoryRouter initialEntries={["/admin/users"]}>
+          <Routes>
+            <Route path="/admin/403" element={<p>access-denied-page</p>} />
+            <Route
+              path="/admin/users"
+              element={
+                <AccessGuard permissions={["user:read:any"]} roles={["admin"]} when={(user) => user.ver >= 2}>
+                  <p>composed-content</p>
+                </AccessGuard>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+  expect(screen.getByText("composed-content")).toBeTruthy();
 });

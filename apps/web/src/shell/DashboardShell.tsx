@@ -194,7 +194,7 @@ function DashboardShellContent({ children }: { children: ReactNode }) {
           type="button"
           aria-label="Close navigation"
           onClick={() => setMenuOpen(false)}
-          className="ui-modal-backdrop fixed inset-0 z-30 backdrop-blur-[6px] lg:hidden"
+          className="ui-modal-backdrop fixed inset-0 z-[var(--z-dropdown)] backdrop-blur-[6px] lg:hidden"
         />
       ) : null}
 
@@ -270,7 +270,7 @@ const Sidebar = forwardRef<
       ref={ref}
       aria-label="Primary navigation"
       tabIndex={-1}
-      className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-[var(--color-line)] bg-[var(--color-surface)] transition-all duration-300 lg:static lg:z-auto lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-[var(--z-floating)] flex h-full flex-col border-r border-[var(--color-line)] bg-[var(--color-surface)] transition-all duration-300 lg:static lg:z-auto lg:translate-x-0 ${
         collapsed ? "w-[68px] px-3" : "w-[248px] px-6"
       } py-6 ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
     >
@@ -521,7 +521,7 @@ function ScrollProgressRail({ targetRef }: { targetRef: RefObject<HTMLElement | 
   }, [targetRef]);
   if (progress <= 0) return null;
   return (
-    <div className="pointer-events-none fixed left-0 top-0 z-30 h-0.5 w-full bg-transparent">
+    <div className="pointer-events-none fixed left-0 top-0 z-[var(--z-dropdown)] h-0.5 w-full bg-transparent">
       <div
         className="h-full bg-[var(--color-accent)] transition-[width] duration-150"
         style={{ width: `${Math.round(progress * 100)}%` }}
@@ -605,7 +605,7 @@ function WhatsNew() {
     setOpen(false);
   };
   return (
-    <div className="ui-modal-backdrop fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-[6px]">
+    <div className="ui-modal-backdrop fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 backdrop-blur-[6px]">
       <dialog
         open
         aria-labelledby="whats-new-title"

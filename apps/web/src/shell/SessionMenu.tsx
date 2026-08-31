@@ -38,7 +38,7 @@ export function SessionMenu({ collapsed }: { collapsed: boolean }) {
             {initials}
           </span>
         </summary>
-        <div className="absolute bottom-full left-0 z-30 mb-2 w-56 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-2xl">
+        <div className="absolute bottom-full left-0 z-[var(--z-dropdown)] mb-2 w-56 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-2xl">
           <p className="truncate px-3 py-2 text-sm font-semibold">{user.email}</p>
           <p className="px-3 font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)]">
             v{user.ver} · {user.perms.length} perms
@@ -95,7 +95,7 @@ export function SessionMenu({ collapsed }: { collapsed: boolean }) {
           <path d="m4 6 4 4 4-4" />
         </svg>
       </summary>
-      <div className="absolute bottom-full left-0 right-0 z-30 mb-2 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-2xl">
+      <div className="absolute bottom-full left-0 right-0 z-[var(--z-dropdown)] mb-2 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-2xl">
         <button
           type="button"
           onClick={() => go("/admin/settings#profile")}

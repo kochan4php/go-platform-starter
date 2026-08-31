@@ -1,12 +1,39 @@
-import { GATEWAY_URL, getAccessToken, getDeviceID } from "@starter/contracts";
-import { Button, Card, Field, Input, SkeletonBlock, SkeletonLine, usePreferences } from "@starter/ui";
+import {
+  AppError,
+  GATEWAY_URL,
+  apiEnvelopeSchema,
+  getAccessToken,
+  getDeviceID,
+  shouldRetryQuery,
+} from "@starter/contracts";
+import {
+  Button,
+  Card,
+  Field,
+  I18nProvider,
+  Input,
+  SkeletonBlock,
+  SkeletonLine,
+  WidgetBoundary,
+  WidgetSuspense,
+  useI18n,
+  usePreferences,
+} from "@starter/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type FormEvent, Suspense, lazy, useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { RemoteErrorBoundary } from "./RemoteErrorBoundary";
 import RequirePermission from "./RequirePermission";
 import { AuthProvider, useAuth } from "./auth-context";
-import { ConfirmProvider, DrawerProvider, ToastProvider, useStored, useTheme, useToast } from "./lib/ui";
+import {
+  ConfirmProvider,
+  DrawerProvider,
+  ToastProvider,
+  useConfirm,
+  useStored,
+  useTheme,
+  useToast,
+} from "./lib/ui";
 import { DashboardShell } from "./shell/DashboardShell";
 
 const LoginPage = lazy(() => import("web_auth/LoginPage"));
@@ -17,7 +44,7 @@ const UsersPage = lazy(() => import("web_admin_users/UsersPage"));
 const RolesPage = lazy(() => import("web_admin_roles/RolesPage"));
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 10 * 60_000 } },
+  defaultOptions: { queries: { retry: shouldRetryQuery, staleTime: 30_000, gcTime: 10 * 60_000 } },
 });
 
 interface LoginResult {
@@ -36,40 +63,52 @@ async function secureRequest(path: string, init: RequestInit = {}) {
       ...init.headers,
     },
   });
-  const body = (await response.json().catch(() => ({}))) as {
-    message?: string;
-    error?: { message?: string };
-    data?: unknown;
-  };
-  if (!response.ok) throw new Error(body.error?.message ?? body.message ?? "Request failed");
-  return body.data;
+  const raw: unknown = await response.json().catch(() => ({}));
+  if (!response.ok) throw AppError.fromResponse(response.status, raw);
+  const parsed = apiEnvelopeSchema.safeParse(raw);
+  if (!parsed.success)
+    throw new AppError("invalid_response", "Server response did not match its contract", 502);
+  return parsed.data.data;
 }
 
 function AdminRoutes() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <Routes>
-        <Route
-          path="/admin/users"
-          element={
-            <RequirePermission perm="user:read:any">
-              <UsersPage />
-            </RequirePermission>
-          }
-        />
-        <Route
-          path="/admin/roles"
-          element={
-            <RequirePermission perm="role:read:any">
-              <RolesPage />
-            </RequirePermission>
-          }
-        />
-        <Route path="/admin/403" element={<ForbiddenPage />} />
-        <Route path="/admin/settings" element={<SettingsPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Suspense>
+    <Routes>
+      <Route
+        path="/admin/users"
+        element={
+          <RequirePermission perm="user:read:any">
+            <WidgetBoundary title="User directory unavailable">
+              <WidgetSuspense label="Loading user directory">
+                <UsersPage />
+              </WidgetSuspense>
+            </WidgetBoundary>
+          </RequirePermission>
+        }
+      />
+      <Route
+        path="/admin/roles"
+        element={
+          <RequirePermission perm="role:read:any">
+            <WidgetBoundary title="Roles unavailable">
+              <WidgetSuspense label="Loading roles">
+                <RolesPage />
+              </WidgetSuspense>
+            </WidgetBoundary>
+          </RequirePermission>
+        }
+      />
+      <Route path="/admin/403" element={<ForbiddenPage />} />
+      <Route
+        path="/admin/settings"
+        element={
+          <WidgetBoundary title="Settings unavailable">
+            <SettingsPage />
+          </WidgetBoundary>
+        }
+      />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 
@@ -136,11 +175,18 @@ function ForbiddenPage() {
 
 function NotFoundPage() {
   const { user } = useAuth();
+  const { locale } = useI18n();
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
       <p className="font-mono text-5xl font-extrabold tracking-tighter text-[var(--color-line)]">404</p>
-      <h2 className="text-xl font-bold tracking-tight">Page not found</h2>
-      <p className="text-sm text-[var(--color-muted)]">The page you are looking for does not exist.</p>
+      <h2 className="text-xl font-bold tracking-tight">
+        {locale === "id" ? "Halaman tidak ditemukan" : "Page not found"}
+      </h2>
+      <p className="text-sm text-[var(--color-muted)]">
+        {locale === "id"
+          ? "Halaman yang Anda cari tidak tersedia."
+          : "The page you are looking for does not exist."}
+      </p>
       <Link
         viewTransition
         to={user ? "/admin/users" : "/login"}
@@ -156,6 +202,7 @@ function SettingsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const { timeZone, setTimeZone, soundEnabled, setSoundEnabled } = usePreferences();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -266,8 +313,12 @@ function SettingsPage() {
   }
 
   async function eraseAccount() {
-    if (!window.confirm("Permanently erase this account and revoke every session? This cannot be undone."))
-      return;
+    const approved = await confirm(
+      "Erase this account?",
+      "This permanently removes the account and revokes every session. It cannot be undone.",
+      { danger: true, label: "Erase account" },
+    );
+    if (!approved) return;
     try {
       await secureRequest("/users/me", { method: "DELETE" });
       await logout();
@@ -353,75 +404,79 @@ function SettingsPage() {
           </Button>
         </form>
       </Card>
-      <Card title="Authenticator MFA">
-        {!mfa ? (
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="max-w-xl text-sm text-[var(--color-muted)]">
-              Add a time-based one-time password from your authenticator app to every login.
-            </p>
-            <Button type="button" disabled={mfaBusy} onClick={beginMFA}>
-              {mfaBusy ? "Preparing..." : "Set up authenticator"}
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={verifyMFA} className="grid gap-5 sm:grid-cols-[256px_1fr]">
-            <img
-              src={mfa.qrDataUrl}
-              width="256"
-              height="256"
-              alt="Authenticator enrollment QR code"
-              className="rounded-xl border border-[var(--color-line)]"
-            />
-            <div className="space-y-4">
-              <p className="text-sm text-[var(--color-muted)]">
-                Scan the QR code, or enter this secret manually: <code>{mfa.secret}</code>
+      <WidgetBoundary title="MFA settings unavailable">
+        <Card title="Authenticator MFA">
+          {!mfa ? (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="max-w-xl text-sm text-[var(--color-muted)]">
+                Add a time-based one-time password from your authenticator app to every login.
               </p>
-              <Field label="Six-digit code">
-                <Input
-                  required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  value={mfaCode}
-                  onChange={(event) => setMFACode(event.target.value.replace(/\D/g, ""))}
-                />
-              </Field>
-              <Button disabled={mfaBusy || mfaCode.length !== 6}>
-                {mfaBusy ? "Verifying..." : "Enable MFA"}
+              <Button type="button" disabled={mfaBusy} onClick={beginMFA}>
+                {mfaBusy ? "Preparing..." : "Set up authenticator"}
               </Button>
             </div>
-          </form>
-        )}
-      </Card>
-      <Card title="Active sessions">
-        {sessions.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted)]">No active session details are available.</p>
-        ) : (
-          <ul className="divide-y divide-[var(--color-line)]">
-            {sessions.map((session) => (
-              <li
-                key={session.id}
-                className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">
-                    {session.current ? "This device" : session.deviceId || "Unknown device"}
-                  </p>
-                  <p className="truncate text-xs text-[var(--color-muted)]">
-                    {session.ip} · {session.userAgent || "Unknown browser"}
-                  </p>
-                </div>
-                {!session.current ? (
-                  <Button type="button" variant="danger" onClick={() => revokeSession(session.id)}>
-                    Revoke
-                  </Button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+          ) : (
+            <form onSubmit={verifyMFA} className="grid gap-5 sm:grid-cols-[256px_1fr]">
+              <img
+                src={mfa.qrDataUrl}
+                width="256"
+                height="256"
+                alt="Authenticator enrollment QR code"
+                className="rounded-xl border border-[var(--color-line)]"
+              />
+              <div className="space-y-4">
+                <p className="text-sm text-[var(--color-muted)]">
+                  Scan the QR code, or enter this secret manually: <code>{mfa.secret}</code>
+                </p>
+                <Field label="Six-digit code">
+                  <Input
+                    required
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    value={mfaCode}
+                    onChange={(event) => setMFACode(event.target.value.replace(/\D/g, ""))}
+                  />
+                </Field>
+                <Button disabled={mfaBusy || mfaCode.length !== 6}>
+                  {mfaBusy ? "Verifying..." : "Enable MFA"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </Card>
+      </WidgetBoundary>
+      <WidgetBoundary title="Session list unavailable">
+        <Card title="Active sessions">
+          {sessions.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted)]">No active session details are available.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--color-line)]">
+              {sessions.map((session) => (
+                <li
+                  key={session.id}
+                  className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {session.current ? "This device" : session.deviceId || "Unknown device"}
+                    </p>
+                    <p className="truncate text-xs text-[var(--color-muted)]">
+                      {session.ip} · {session.userAgent || "Unknown browser"}
+                    </p>
+                  </div>
+                  {!session.current ? (
+                    <Button type="button" variant="danger" onClick={() => revokeSession(session.id)}>
+                      Revoke
+                    </Button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </WidgetBoundary>
       <Card title="Data & privacy">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="max-w-xl text-sm text-[var(--color-muted)]">
@@ -569,25 +624,27 @@ export default function App() {
   }
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <ConfirmProvider>
-          <DrawerProvider>
-            <AuthProvider>
-              <BrowserRouter>
-                <a
-                  href="#main-content"
-                  className="fixed left-3 top-3 z-[300] -translate-y-20 rounded-lg bg-[var(--color-ink)] px-3 py-2 text-sm font-semibold text-[var(--color-canvas)] transition-transform focus:translate-y-0"
-                >
-                  Skip to content
-                </a>
-                <div className="min-h-screen w-full max-w-full overflow-x-hidden">
-                  <Root />
-                </div>
-              </BrowserRouter>
-            </AuthProvider>
-          </DrawerProvider>
-        </ConfirmProvider>
-      </ToastProvider>
+      <I18nProvider defaultLocale="id">
+        <ToastProvider>
+          <ConfirmProvider>
+            <DrawerProvider>
+              <AuthProvider>
+                <BrowserRouter>
+                  <a
+                    href="#main-content"
+                    className="fixed left-3 top-3 z-[var(--z-skip)] -translate-y-20 rounded-lg bg-[var(--color-ink)] px-3 py-2 text-sm font-semibold text-[var(--color-canvas)] transition-transform focus:translate-y-0"
+                  >
+                    Skip to content
+                  </a>
+                  <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+                    <Root />
+                  </div>
+                </BrowserRouter>
+              </AuthProvider>
+            </DrawerProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

@@ -51,6 +51,7 @@
 	--color-danger: #ff6b5e;
 	--color-success: #65d6a2;
 	--color-warning: #f0bd63;
+	--color-info: #38bdf8;
 	--color-hover: rgba(245, 244, 239, 0.06);
 	--color-selected: rgba(216, 243, 79, 0.1);
 	--color-skeleton: rgba(245, 244, 239, 0.07);
@@ -65,6 +66,27 @@
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	--radius-card: 18px;
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+	--z-base: 0;
+	--z-raised: 1;
+	--z-decorative: 3;
+	--z-local: 5;
+	--z-sticky: 10;
+	--z-hover: 20;
+	--z-dropdown: 30;
+	--z-floating: 40;
+	--z-tooltip: 50;
+	--z-drawer: 80;
+	--z-overlay: 100;
+	--z-modal: 110;
+	--z-toast: 120;
+	--z-command: 200;
+	--z-skip: 300;
 }
 
 /* Light theme token swap (D10/D11). Transitions are 220ms to feel soft. */
@@ -80,6 +102,7 @@
 	--color-danger: #ff6b5e;
 	--color-success: #65d6a2;
 	--color-warning: #f0bd63;
+	--color-info: #38bdf8;
 	--color-hover: rgba(245, 244, 239, 0.06);
 	--color-selected: rgba(216, 243, 79, 0.1);
 	--color-skeleton: rgba(245, 244, 239, 0.07);
@@ -97,10 +120,11 @@
 	--color-ink: #29271f;
 	--color-muted: #706b60;
 	--color-line: rgba(58, 54, 43, 0.15);
-	--color-accent: #6f8c25;
+	--color-accent: #58751a;
 	--color-danger: #b84c42;
 	--color-success: #287159;
 	--color-warning: #96631b;
+	--color-info: #0369a1;
 	--color-hover: rgba(80, 72, 52, 0.075);
 	--color-selected: rgba(111, 140, 37, 0.12);
 	--color-skeleton: rgba(64, 59, 46, 0.09);
@@ -140,6 +164,18 @@ button:disabled {
 
 table {
 	width: 100%;
+}
+
+.ui-container {
+	container-type: inline-size;
+	container-name: ui-component;
+}
+
+@container ui-component (max-width: 32rem) {
+	.ui-container-stack {
+		display: grid;
+		grid-template-columns: 1fr;
+	}
 }
 
 :focus-visible {
@@ -225,7 +261,7 @@ table {
 	.ui-auth-state {
 		position: absolute;
 		top: 50%;
-		z-index: 1;
+		z-index: var(--z-raised);
 		transform: translateY(-50%);
 	}
 
@@ -271,7 +307,7 @@ table {
 		position: absolute;
 		right: 0.45rem;
 		top: 0.35rem;
-		z-index: 3;
+		z-index: var(--z-decorative);
 		display: grid;
 		min-width: 2.75rem;
 		min-height: 2.75rem;
@@ -443,7 +479,7 @@ table {
 	}
 
 	.ui-modal-root {
-		@apply fixed inset-0 z-[100] grid place-items-center overflow-hidden p-0 sm:p-6;
+		@apply fixed inset-0 z-[var(--z-overlay)] grid place-items-center overflow-hidden p-0 sm:p-6;
 		width: 100vw;
 		min-height: 100dvh;
 		isolation: isolate;
@@ -506,7 +542,7 @@ table {
 	}
 
 	.ui-modal-actions {
-		@apply sticky bottom-0 z-10 -mx-5 -mb-5 mt-6 flex justify-end gap-2 border-t border-[var(--color-line)] px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6;
+		@apply sticky bottom-0 z-[var(--z-sticky)] -mx-5 -mb-5 mt-6 flex justify-end gap-2 border-t border-[var(--color-line)] px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6;
 		background: color-mix(in srgb, var(--color-surface) 94%, transparent);
 		backdrop-filter: blur(14px);
 	}
@@ -637,7 +673,7 @@ table {
 	.ui-auth-sticky-actions {
 		position: sticky;
 		bottom: 0;
-		z-index: 5;
+		z-index: var(--z-local);
 		margin-inline: -0.35rem;
 		padding: 0.75rem 0.35rem max(0.75rem, env(safe-area-inset-bottom));
 		background: color-mix(in srgb, var(--color-surface) 94%, transparent);
@@ -705,6 +741,21 @@ table {
 
 .animate-fade-up {
 	animation: ui-fade-up 220ms ease-out both;
+}
+
+.animate-fade-up > :nth-child(2) {
+	animation: ui-fade-up 220ms ease-out both;
+	animation-delay: 40ms;
+}
+
+.animate-fade-up > :nth-child(3) {
+	animation: ui-fade-up 220ms ease-out both;
+	animation-delay: 80ms;
+}
+
+.animate-fade-up > :nth-child(n + 4) {
+	animation: ui-fade-up 220ms ease-out both;
+	animation-delay: 120ms;
 }
 
 @keyframes ui-navigation-progress {
@@ -797,6 +848,9 @@ table {
 		background: white !important;
 		color: black !important;
 	}
+	main {
+		overflow: visible !important;
+	}
 	table {
 		border-collapse: collapse;
 		width: 100%;
@@ -828,6 +882,7 @@ table {
 	.animate-ui-marquee,
 	.animate-slide-in-right,
 	.animate-fade-up,
+	.animate-fade-up > *,
 	.animate-pulse-accent,
 	.animate-brand-dot,
 	.sidebar-active-indicator,

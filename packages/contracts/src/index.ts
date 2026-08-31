@@ -1,5 +1,6 @@
 import createFetchClient, { type Client } from "openapi-fetch";
 import type { paths } from "./gen";
+export { AppError, apiEnvelopeSchema, safeApiData, shouldRetryQuery } from "./runtime";
 
 /**
  * Token storage policy (PLAN item 69, docs/TOKEN_POLICY.md): the access token
@@ -214,12 +215,7 @@ function addBreadcrumb(type: Breadcrumb["type"], target: string) {
 
 function telemetryTarget(target: EventTarget | null): string {
   if (!(target instanceof Element)) return "unknown";
-  return (
-    target.closest<HTMLElement>("[data-telemetry]")?.dataset.telemetry ??
-    target.closest<HTMLElement>("[aria-label]")?.getAttribute("aria-label") ??
-    target.closest<HTMLElement>("[id]")?.id ??
-    target.tagName.toLowerCase()
-  );
+  return target.closest<HTMLElement>("[data-telemetry]")?.dataset.telemetry ?? target.tagName.toLowerCase();
 }
 
 export function reportFrontendError(

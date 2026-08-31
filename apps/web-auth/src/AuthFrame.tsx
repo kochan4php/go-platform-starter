@@ -89,7 +89,7 @@ export default function AuthFrame({ page, children }: { page: AuthPage; children
     >
       <div className="relative mx-auto grid min-h-screen max-w-[1400px] grid-cols-12">
         <div className="col-span-12 flex min-w-0 flex-col px-5 py-6 sm:px-8 sm:py-8 md:px-12 lg:col-span-7 lg:px-14 lg:py-14">
-          <header className="relative z-10 flex items-center justify-between">
+          <header className="relative z-[var(--z-sticky)] flex items-center justify-between">
             <BrandMark
               href="/"
               tooltip={`Platform Console v${version}`}

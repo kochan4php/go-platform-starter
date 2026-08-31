@@ -1,8 +1,10 @@
+import { useI18n } from "@starter/ui";
 import { useEffect, useState } from "react";
 import { useOnline } from "../lib/ui";
 
 export function OfflineBanner() {
   const online = useOnline();
+  const { t } = useI18n();
   if (online) return null;
   return (
     // biome-ignore lint/a11y/useSemanticElements: <output> is for command output; this is a banner with live status
@@ -11,7 +13,7 @@ export function OfflineBanner() {
       aria-live="polite"
       className="ui-status-banner border-b px-4 py-2 text-center text-xs font-medium"
     >
-      You are offline — some features may be unavailable.
+      {t("status.offline")}
     </div>
   );
 }

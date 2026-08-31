@@ -162,7 +162,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
 
   return (
     <div
-      className="ui-modal-backdrop fixed inset-0 z-[200] flex items-start justify-center p-4 pt-[10vh] backdrop-blur-[6px]"
+      className="ui-modal-backdrop fixed inset-0 z-[var(--z-command)] flex items-start justify-center p-4 pt-[10vh] backdrop-blur-[6px]"
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();

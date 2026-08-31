@@ -16,7 +16,7 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label="Mobile navigation"
-      className="ui-mobile-nav fixed inset-x-0 bottom-0 z-30 grid border-t border-[var(--color-line)] bg-[var(--color-surface)]/95 px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md lg:hidden"
+      className="ui-mobile-nav fixed inset-x-0 bottom-0 z-[var(--z-dropdown)] grid border-t border-[var(--color-line)] bg-[var(--color-surface)]/95 px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md lg:hidden"
       style={{ gridTemplateColumns: `repeat(${items.length + 1}, minmax(0, 1fr))` }}
     >
       {items.map((item) => {

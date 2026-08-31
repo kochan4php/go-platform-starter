@@ -85,7 +85,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed bottom-5 right-5 z-[100] flex max-w-sm flex-col gap-2"
+        className="pointer-events-none fixed bottom-5 right-5 z-[var(--z-overlay)] flex max-w-sm flex-col gap-2"
       >
         {items.map((t) => (
           <div
@@ -228,7 +228,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {state
         ? createPortal(
-            <div className="ui-modal-backdrop fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-[6px]">
+            <div className="ui-modal-backdrop fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 backdrop-blur-[6px]">
               <div
                 ref={dialogRef}
                 tabIndex={-1}
@@ -342,7 +342,7 @@ export function DrawerProvider({ children }: { children: ReactNode }) {
       {children}
       {state
         ? createPortal(
-            <div className="fixed inset-0 z-[80] flex">
+            <div className="fixed inset-0 z-[var(--z-drawer)] flex">
               <button
                 type="button"
                 aria-label="Close drawer"
@@ -595,7 +595,7 @@ export function ScrollToTop({
         if (targetRef?.current) targetRef.current.scrollTo({ top: 0, behavior: "smooth" });
         else window.scrollTo({ top: 0, behavior: "smooth" });
       }}
-      className="fixed bottom-20 right-4 z-40 flex size-9 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-elevated)]/90 text-[var(--color-muted)] shadow-lg backdrop-blur transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] lg:bottom-5 lg:right-5"
+      className="fixed bottom-20 right-4 z-[var(--z-floating)] flex size-9 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-elevated)]/90 text-[var(--color-muted)] shadow-lg backdrop-blur transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] lg:bottom-5 lg:right-5"
     >
       <svg
         viewBox="0 0 16 16"

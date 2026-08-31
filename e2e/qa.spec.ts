@@ -13,6 +13,18 @@ async function login(page: Page, email = adminEmail, password = adminPassword) {
   await page.waitForURL(/\/admin\//, { timeout: 15_000 });
 }
 
+async function expectNoAxeViolations(page: Page) {
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+}
+
+test("public pages pass automated accessibility checks", async ({ page }) => {
+  for (const path of ["/login", "/register", "/forgot", "/reset", "/missing"]) {
+    await page.goto(path);
+    await expectNoAxeViolations(page);
+  }
+});
+
 test("failed login exposes an accessible error and lockout stays uniform", async ({ page, request }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill(`missing-${Date.now()}@example.local`);
@@ -116,13 +128,17 @@ test("directory pagination, keyboard navigation, visual baseline, and a11y", asy
   await expect(page.locator(":focus")).toBeVisible();
   await expect(page).toHaveScreenshot("users-directory.png", { fullPage: true });
 
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations).toEqual([]);
+  await expectNoAxeViolations(page);
 
   const next = page.getByRole("button", { name: "Next" });
   if (await next.isEnabled()) {
     await next.click();
     await page.getByRole("button", { name: "Previous" }).click();
+  }
+
+  for (const path of ["/admin/roles", "/admin/settings", "/admin/403"]) {
+    await page.goto(path);
+    await expectNoAxeViolations(page);
   }
 });
 

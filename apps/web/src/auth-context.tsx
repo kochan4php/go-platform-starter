@@ -1,11 +1,21 @@
 import { GATEWAY_URL, decodeClaims, getAccessToken, setAccessToken, silentRefresh } from "@starter/contracts";
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 
 export interface SessionUser {
   id: string;
   email: string;
   perms: string[];
+  roles?: string[];
   ver: number;
 }
 
@@ -14,8 +24,43 @@ interface AuthState {
   /** True until the initial refresh-cookie bootstrap has settled. */
   booting: boolean;
   sessionExpired: boolean;
+  lastHeartbeatAt: number | null;
   login(accessToken: string, user: SessionUser): void;
   logout(): Promise<void>;
+}
+
+interface AuthSession {
+  user: SessionUser | null;
+  booting: boolean;
+  sessionExpired: boolean;
+  lastHeartbeatAt: number | null;
+}
+
+type AuthAction =
+  | { type: "restored"; user: SessionUser | null; at: number | null }
+  | { type: "login"; user: SessionUser; at: number }
+  | { type: "heartbeat"; at: number }
+  | { type: "expired" }
+  | { type: "logout" };
+
+function authReducer(state: AuthSession, action: AuthAction): AuthSession {
+  switch (action.type) {
+    case "restored":
+      return {
+        ...state,
+        user: action.user,
+        booting: false,
+        lastHeartbeatAt: action.at,
+      };
+    case "login":
+      return { user: action.user, booting: false, sessionExpired: false, lastHeartbeatAt: action.at };
+    case "heartbeat":
+      return { ...state, sessionExpired: false, lastHeartbeatAt: action.at };
+    case "expired":
+      return { ...state, booting: false, sessionExpired: true };
+    case "logout":
+      return { user: null, booting: false, sessionExpired: false, lastHeartbeatAt: null };
+  }
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -28,10 +73,36 @@ export function AuthProvider({
   /** Test/dev seeding; production sessions bootstrap via the refresh cookie. */
   initialUser?: SessionUser | null;
 }) {
-  const [user, setUser] = useState<SessionUser | null>(initialUser ?? null);
-  const [booting, setBooting] = useState(initialUser == null);
-  const [sessionExpired, setSessionExpired] = useState(false);
+  const [state, dispatch] = useReducer(authReducer, {
+    user: initialUser ?? null,
+    booting: initialUser == null,
+    sessionExpired: false,
+    lastHeartbeatAt: null,
+  });
+  const channel = useRef<BroadcastChannel | null>(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const next = new BroadcastChannel("starter:session");
+    channel.current = next;
+    next.onmessage = (
+      event: MessageEvent<{ type: "login"; token: string; user: SessionUser } | { type: "logout" }>,
+    ) => {
+      if (event.data.type === "login") {
+        setAccessToken(event.data.token);
+        dispatch({ type: "login", user: event.data.user, at: Date.now() });
+      } else {
+        setAccessToken(undefined);
+        dispatch({ type: "logout" });
+        queryClient.clear();
+      }
+    };
+    return () => {
+      channel.current = null;
+      next.close();
+    };
+  }, [queryClient]);
 
   // Session restore (PLAN item 69): the access token lives in memory and dies
   // with the page; the httpOnly refresh cookie is what survives a reload. One
@@ -45,15 +116,24 @@ export function AuthProvider({
       .then((token) => {
         if (cancelled || !token) return;
         const claims = decodeClaims(token);
-        setUser({
-          id: claims?.sub ?? "",
-          email: claims?.email ?? "",
-          perms: claims?.perms ?? [],
-          ver: claims?.ver ?? 0,
+        if (!claims?.sub) {
+          setAccessToken(undefined);
+          dispatch({ type: "restored", user: null, at: null });
+          return;
+        }
+        dispatch({
+          type: "restored",
+          at: Date.now(),
+          user: {
+            id: claims.sub,
+            email: claims.email ?? "",
+            perms: claims.perms ?? [],
+            ver: claims.ver ?? 0,
+          },
         });
       })
       .finally(() => {
-        if (!cancelled) setBooting(false);
+        if (!cancelled && !getAccessToken()) dispatch({ type: "restored", user: null, at: null });
       });
     return () => {
       cancelled = true;
@@ -64,28 +144,29 @@ export function AuthProvider({
   useEffect(() => {
     const onExpired = () => {
       setAccessToken(undefined);
-      setSessionExpired(true);
+      dispatch({ type: "expired" });
     };
     window.addEventListener("starter:session-expired", onExpired);
     return () => window.removeEventListener("starter:session-expired", onExpired);
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!state.user) return;
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
       void silentRefresh(GATEWAY_URL).then((token) => {
         if (!token) window.dispatchEvent(new Event("starter:session-expired"));
+        else dispatch({ type: "heartbeat", at: Date.now() });
       });
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [user]);
+  }, [state.user]);
 
   const login = useCallback((accessToken: string, u: SessionUser) => {
     setAccessToken(accessToken);
-    setUser(u);
-    setSessionExpired(false);
+    dispatch({ type: "login", user: u, at: Date.now() });
+    channel.current?.postMessage({ type: "login", token: accessToken, user: u });
   }, []);
 
   const logout = useCallback(async () => {
@@ -95,15 +176,12 @@ export function AuthProvider({
       headers: { Authorization: `Bearer ${getAccessToken() ?? ""}` },
     }).catch(() => undefined);
     setAccessToken(undefined);
-    setUser(null);
-    setSessionExpired(false);
+    dispatch({ type: "logout" });
+    channel.current?.postMessage({ type: "logout" });
     queryClient.clear();
   }, [queryClient]);
 
-  const value = useMemo(
-    () => ({ user, booting, sessionExpired, login, logout }),
-    [user, booting, sessionExpired, login, logout],
-  );
+  const value = useMemo(() => ({ ...state, login, logout }), [state, login, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
