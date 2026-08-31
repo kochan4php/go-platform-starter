@@ -55,4 +55,4 @@ services:
     volumes:
       # Same-origin /api proxy so every bundle reaches the gateway without
       # rebuilds (runtime config.js takes over once images include it).
-      - ./lab/web.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./lab/web.nginx.conf:/etc/nginx/templates/default.conf.template:ro

@@ -4,14 +4,17 @@ WORKDIR /src
 RUN corepack enable
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    pnpm fetch --frozen-lockfile
+
 COPY scripts ./scripts
 COPY packages ./packages
 COPY apps/web ./apps/web
 # aggregate spec composes from every service's openapi.yaml
 COPY services ./services
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile \
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    pnpm install --offline --frozen-lockfile \
  && pnpm contracts \
  && pnpm --filter web build
 

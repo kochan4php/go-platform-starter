@@ -58,12 +58,12 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8081"
-      APP_PUBLIC_URL: http://127.0.0.1:5173
+      APP_PUBLIC_URL: http://127.0.0.1:${LAB_WEB_PORT:-5173}
       RBAC_INTERNAL_URL: http://rbac:8083
       # Interpolated from the caller so deploy-lab / CI can pin credentials.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-local-root-access-2026!}
-    ports: ["8081:8081"]
+    ports: ["${LAB_AUTH_PORT:-8081}:8081"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -74,7 +74,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8082"
-    ports: ["8082:8082"]
+    ports: ["${LAB_USERS_PORT:-8082}:8082"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -85,7 +85,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8083"
-    ports: ["8083:8083"]
+    ports: ["${LAB_RBAC_PORT:-8083}:8083"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -97,7 +97,7 @@ services:
     environment:
       PORT: "8084"
       MAILER_DRIVER: console
-    ports: ["8084:8084"]
+    ports: ["${LAB_WORKER_PORT:-8084}:8084"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -108,7 +108,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8085"
-    ports: ["8085:8085"]
+    ports: ["${LAB_REALTIME_PORT:-8085}:8085"]
     depends_on:
       redis: { condition: service_healthy }
 
@@ -119,7 +119,7 @@ services:
     environment:
       PORT: "8086"
       SCHEDULED_JOBS: ${SCHEDULED_JOBS:-[]}
-    ports: ["8086:8086"]
+    ports: ["${LAB_SCHEDULER_PORT:-8086}:8086"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -130,7 +130,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8000"
-      TRUSTED_DOMAINS: http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176
+      TRUSTED_DOMAINS: http://127.0.0.1:${LAB_WEB_PORT:-5173},http://127.0.0.1:${LAB_WEB_AUTH_PORT:-5174},http://127.0.0.1:${LAB_WEB_ADMIN_USERS_PORT:-5175},http://127.0.0.1:${LAB_WEB_ADMIN_ROLES_PORT:-5176}
       UPSTREAMS: '{"auth":"http://auth:8081","users":"http://users:8082","rbac":"http://rbac:8083","worker":"http://worker:8084"}'
     # Host side shifts automatically when another project owns 8000.
     ports: ["${LAB_GATEWAY_PORT:-8010}:8000"]
@@ -143,26 +143,26 @@ services:
   web:
     <<: *runtime
     build: { context: .., dockerfile: apps/web/Dockerfile }
-    ports: ["5173:8080"]
+    ports: ["${LAB_WEB_PORT:-5173}:8080"]
     environment:
-      REMOTE_AUTH_URL: http://127.0.0.1:5174/assets/remoteEntry.js
-      REMOTE_ADMIN_USERS_URL: http://127.0.0.1:5175/assets/remoteEntry.js
-      REMOTE_ADMIN_ROLES_URL: http://127.0.0.1:5176/assets/remoteEntry.js
+      REMOTE_AUTH_URL: http://127.0.0.1:${LAB_WEB_AUTH_PORT:-5174}/assets/remoteEntry.js
+      REMOTE_ADMIN_USERS_URL: http://127.0.0.1:${LAB_WEB_ADMIN_USERS_PORT:-5175}/assets/remoteEntry.js
+      REMOTE_ADMIN_ROLES_URL: http://127.0.0.1:${LAB_WEB_ADMIN_ROLES_PORT:-5176}/assets/remoteEntry.js
 
   web-auth:
     <<: *runtime
     build: { context: .., dockerfile: apps/web-auth/Dockerfile }
-    ports: ["5174:8080"]
+    ports: ["${LAB_WEB_AUTH_PORT:-5174}:8080"]
 
   web-admin-users:
     <<: *runtime
     build: { context: .., dockerfile: apps/web-admin-users/Dockerfile }
-    ports: ["5175:8080"]
+    ports: ["${LAB_WEB_ADMIN_USERS_PORT:-5175}:8080"]
 
   web-admin-roles:
     <<: *runtime
     build: { context: .., dockerfile: apps/web-admin-roles/Dockerfile }
-    ports: ["5176:8080"]
+    ports: ["${LAB_WEB_ADMIN_ROLES_PORT:-5176}:8080"]
 
 volumes:
   pgdata:

@@ -13,6 +13,8 @@ const required = [
   "infra/k8s/overlays/uat/kustomization.yaml",
   "infra/k8s/overlays/demo/kustomization.yaml",
   "infra/k8s/overlays/prod/kustomization.yaml",
+  "scripts/check-deploy-config.sh",
+  "scripts/deploy-prod.sh",
   "hooks/pre-receive",
   "docs/CI_CD.md",
   "version.txt",
@@ -24,6 +26,7 @@ const markers = {
     "run-with-retry.mjs",
     "sticky-pull-request-comment",
     "test-reporter",
+    "check-deploy-config.sh",
   ],
   ".github/workflows/deploy.yml": ["environment:", "promote.sh", "workflow_dispatch"],
   ".github/workflows/supply-chain.yml": [

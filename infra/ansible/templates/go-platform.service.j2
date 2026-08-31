@@ -7,6 +7,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+Environment=COMPOSE_PROFILES=backup
 WorkingDirectory=/srv/go-platform
 ExecStart=/usr/bin/docker compose --env-file infra/.env.production -f infra/compose.prod.yml up -d --remove-orphans
 ExecStop=/usr/bin/docker compose --env-file infra/.env.production -f infra/compose.prod.yml down

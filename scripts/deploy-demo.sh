@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # DEMO deploy: stakeholder-facing playground for a VPS. Reads infra/.env.demo
-# (template: infra/.env.demo.example). Mailer defaults to console so nothing
+# (template: infra/.env.production.example; set STACK_ENV=demo). Mailer defaults to console so nothing
 # real is ever sent.
 #
 #   sudo DOMAIN=demo.example.com ./scripts/deploy-demo.sh   # first deploy

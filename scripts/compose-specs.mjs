@@ -462,5 +462,6 @@ for (const [schemaName, schema] of Object.entries(merged.components.schemas).sor
   }
 }
 audit.push("");
+mkdirSync(join(root, "docs"), { recursive: true });
 writeFileSync(join(root, "docs", "API_SCHEMA_AUDIT.md"), audit.join("\n"));
 console.log(`composed ${Object.keys(merged.paths).length} paths -> packages/contracts/gen/openapi.json`);

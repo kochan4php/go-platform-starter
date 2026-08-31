@@ -12,16 +12,24 @@ case "$TARGET" in uat|demo|prod) ;; *) echo "usage: promote.sh uat|demo|prod REV
 cd "$ROOT"
 node scripts/check-change-freeze.mjs "$TARGET"
 PREVIOUS="$(git rev-parse HEAD)"
-ENV_FILE="${ENV_FILE:-$ROOT/infra/.env.$TARGET}"
-BACKUP_DIR="${BACKUP_DIR:-$ROOT/backups/$TARGET}"
-
-if [ "$DRY_RUN" = "1" ]; then
-  printf 'dry-run: %s %s -> %s; backup=%s; smoke+rollback enabled\n' "$TARGET" "$PREVIOUS" "$REVISION" "$BACKUP_DIR"
-  exit 0
+if [ -z "${ENV_FILE:-}" ]; then
+  if [ "$TARGET" = "prod" ]; then
+    ENV_FILE="$ROOT/infra/.env.production"
+    [ -f "$ENV_FILE" ] || [ ! -f "$ROOT/infra/.env.prod" ] || ENV_FILE="$ROOT/infra/.env.prod"
+  else
+    ENV_FILE="$ROOT/infra/.env.$TARGET"
+  fi
 fi
+BACKUP_DIR="${BACKUP_DIR:-$ROOT/backups/$TARGET}"
 
 git fetch origin --tags
 RESOLVED="$(git rev-parse "$REVISION^{commit}")"
+
+if [ "$DRY_RUN" = "1" ]; then
+  ENV_FILE="$ENV_FILE" ./scripts/deploy.sh "$TARGET" --no-pull --check
+  printf 'dry-run: %s %s -> %s; backup=%s; smoke+rollback enabled\n' "$TARGET" "$PREVIOUS" "$RESOLVED" "$BACKUP_DIR"
+  exit 0
+fi
 
 mkdir -p "$BACKUP_DIR"
 if [ -f "$ENV_FILE" ] && docker compose --env-file "$ENV_FILE" -f infra/compose.prod.yml ps --status running postgres --quiet | grep -q .; then
@@ -51,7 +59,10 @@ ENV_FILE="$ENV_FILE" ./scripts/deploy.sh "$TARGET" --no-pull
 DOMAIN="$(sed -n 's/^DOMAIN=//p' "$ENV_FILE" | head -1)"
 SCHEME=http
 grep -q '^PUBLIC_WS_URL=wss://' "$ENV_FILE" && SCHEME=https
-./scripts/smoke-deploy.sh "$SCHEME://$DOMAIN"
+EDGE_PORT="$(sed -n 's/^EDGE_PORT=//p' "$ENV_FILE" | head -1)"
+PORT_SUFFIX=""
+[ "$SCHEME" != "http" ] || [ "${EDGE_PORT:-80}" = "80" ] || PORT_SUFFIX=":$EDGE_PORT"
+./scripts/smoke-deploy.sh "$SCHEME://$DOMAIN$PORT_SUFFIX"
 trap - ERR
 audit succeeded "$RESOLVED"
 notify succeeded "$RESOLVED"

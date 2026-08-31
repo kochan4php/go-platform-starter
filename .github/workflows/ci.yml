@@ -406,6 +406,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate every deployment target
+        run: ./scripts/check-deploy-config.sh
+
       - name: Trivy vulnerability + misconfig scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:

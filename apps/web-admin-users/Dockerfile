@@ -4,6 +4,9 @@ WORKDIR /src
 RUN corepack enable
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    pnpm fetch --frozen-lockfile
+
 COPY scripts ./scripts
 COPY packages ./packages
 COPY apps/web-admin-users ./apps/web-admin-users
@@ -14,9 +17,10 @@ COPY services ./services
 ARG REMOTE_BASE=/
 ENV REMOTE_BASE=${REMOTE_BASE}
 
-# Cache the pnpm store across builds: manifest changes no longer re-download
-# the whole dependency tree over slow links.
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile  && pnpm contracts  && pnpm --filter web-admin-users build
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    pnpm install --offline --frozen-lockfile \
+ && pnpm contracts \
+ && pnpm --filter web-admin-users build
 
 FROM nginxinc/nginx-unprivileged:alpine
 ENV NGINX_GZIP_LEVEL=5

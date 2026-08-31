@@ -10,8 +10,8 @@ Secret examples are always masked; the real values must come from the deployment
 | `ACCESS_TTL_MINUTES` | no | `30` | `services/auth/.env.example` | — |
 | `ADMIN_BOOTSTRAP_PASSWORD` | no | `<secret>` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | Random password is generated into this file by deploy.sh; printed once at first seed and changeable later through the normal reset flow. |
 | `ADMIN_EMAIL` | no | `admin@example.com / admin@example.local` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | --- bootstrap admin (first deploy) ---------------------------------------- |
-| `AGE_BACKUP_RECIPIENT` | yes | `age1replace-with-production-recipient` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | set AGE_BACKUP_RECIPIENT |
-| `APP_PUBLIC_URL` | no | `http://127.0.0.1:5173` | `services/auth/.env.example` | — |
+| `AGE_BACKUP_RECIPIENT` | no | `age1replace-with-production-recipient` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | — |
+| `APP_PUBLIC_URL` | yes | `https://example.com / http://127.0.0.1:5173` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.prod.yml` | Browser-facing auth URL. Switch to https:// after TLS is enabled. set APP_PUBLIC_URL |
 | `APP_VERSION` | no | `dev` | `infra/go.env`<br>`infra/compose.prod.yml` | — |
 | `BACKUP_INTERVAL_SECONDS` | no | `86400` | `infra/compose.prod.yml` | — |
 | `BACKUP_RETENTION_DAYS` | no | `14` | `infra/compose.prod.yml` | — |
@@ -30,7 +30,8 @@ Secret examples are always masked; the real values must come from the deployment
 | `DB_STATEMENT_TIMEOUT` | no | `15s` | `infra/compose.prod.yml` | — |
 | `DEBUG_REQUEST_TOKEN` | no | `—` | `infra/compose.prod.yml` | — |
 | `DLQ_MAX_DEPTH` | no | `10000` | `infra/compose.prod.yml` | — |
-| `DOMAIN` | yes | `example.com` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | Public hostname clients use. Also becomes the nginx server_name. set DOMAIN |
+| `DOMAIN` | no | `example.com` | `infra/.env.production.example` | Public hostname clients use. Also becomes the nginx server_name. |
+| `EDGE_PORT` | no | `80` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | Host port for the plain HTTP edge listener. |
 | `GATEWAY_MIDDLEWARES` | no | `rate-limit,body-guard,proxy` | `services/gateway/.env.example` | — |
 | `GIT_COMMIT` | no | `local / unknown` | `infra/go.env`<br>`infra/compose.prod.yml` | — |
 | `GOGC` | no | `100` | `infra/compose.prod.yml` | — |
@@ -39,9 +40,19 @@ Secret examples are always masked; the real values must come from the deployment
 | `HIBP_API_URL` | no | `https://api.pwnedpasswords.com/range` | `services/auth/.env.example` | — |
 | `HIBP_TIMEOUT` | no | `3s` | `services/auth/.env.example` | — |
 | `INTERNAL_SECRET` | yes | `<secret>` | `infra/.env.production.example`<br>`infra/go.env`<br>`services/gateway/.env.example`<br>`services/rbac/.env.example`<br>`services/users/.env.example`<br>`services/worker/.env.example`<br>`infra/compose.prod.yml` | set INTERNAL_SECRET |
+| `LAB_AUTH_PORT` | no | `8081` | `infra/compose.base.yml` | — |
 | `LAB_GATEWAY_PORT` | no | `8010` | `infra/compose.base.yml`<br>`infra/compose.lab.yml` | — |
 | `LAB_PG_PORT` | no | `55432` | `infra/compose.base.yml` | — |
+| `LAB_RBAC_PORT` | no | `8083` | `infra/compose.base.yml` | — |
+| `LAB_REALTIME_PORT` | no | `8085` | `infra/compose.base.yml` | — |
 | `LAB_REDIS_PORT` | no | `56380` | `infra/compose.base.yml` | — |
+| `LAB_SCHEDULER_PORT` | no | `8086` | `infra/compose.base.yml` | — |
+| `LAB_USERS_PORT` | no | `8082` | `infra/compose.base.yml` | — |
+| `LAB_WEB_ADMIN_ROLES_PORT` | no | `5176` | `infra/compose.base.yml` | — |
+| `LAB_WEB_ADMIN_USERS_PORT` | no | `5175` | `infra/compose.base.yml` | — |
+| `LAB_WEB_AUTH_PORT` | no | `5174` | `infra/compose.base.yml` | — |
+| `LAB_WEB_PORT` | no | `5173` | `infra/compose.base.yml` | — |
+| `LAB_WORKER_PORT` | no | `8084` | `infra/compose.base.yml` | — |
 | `LOG_LEVEL` | no | `info` | `infra/go.env`<br>`services/_template/.env.example`<br>`services/auth/.env.example`<br>`services/gateway/.env.example`<br>`services/rbac/.env.example`<br>`services/realtime/.env.example`<br>`services/scheduler/.env.example`<br>`services/users/.env.example`<br>`services/worker/.env.example`<br>`infra/compose.prod.yml` | — |
 | `LOGIN_LOCK_MINUTES` | no | `15` | `services/auth/.env.example` | — |
 | `LOGIN_MAX_ATTEMPTS` | no | `5` | `services/auth/.env.example` | — |
