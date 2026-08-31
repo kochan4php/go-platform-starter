@@ -3,7 +3,7 @@ type: "query"
 date: "2026-08-31T07:48:15.812198+00:00"
 question: "ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
 contributor: "graphify"
-outcome: "corrected"
+outcome: "useful"
 source_nodes: ["CI: security (Trivy + Semgrep) job", "CI Workflow", ".github/workflows/supply-chain.yml"]
 ---
 
@@ -15,7 +15,7 @@ Expanded from graph vocabulary: [trivy, action, supply, chain, workflow, vulnera
 
 ## Outcome
 
-- Signal: corrected
+- Signal: useful
 
 ## Source Nodes
 

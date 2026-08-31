@@ -20,7 +20,7 @@
 - auth-ui.tsx
 - auth service (base mesh)
 - ui/package.json
-- DashboardShell.test.tsx
+- schemas.ts
 - ProxyHandler
 - resilientTransport
 - UsersPage.tsx
@@ -54,7 +54,7 @@
 - go-platform-starter README Overview
 - dependencies
 - devDependencies
-- useToast
+- DashboardShell.test.tsx
 - DoD Evidence Checklist
 - BACKLOG (1.202 improvement items)
 - compilerOptions
@@ -73,7 +73,7 @@
 - dbdocs/main.go
 - remotes.d.ts
 - index.ts
-- mailer.go
+- useToast
 - Handlers
 - main.tsx
 - auth
@@ -83,7 +83,7 @@
 - rbac Deployment
 - users Deployment
 - scripts
-- schemas.ts
+- mailer.go
 - ListUsersParams
 - gen.d.ts
 - check-deps.mjs
@@ -126,7 +126,7 @@
 - @testing-library/react
 - auth/internal/handlers.go
 - @types/react-dom
-- HandlerWithOptions
+- .ListUsers
 - otel-collector service
 - deploy-demo.sh
 - deploy-uat.sh
@@ -172,13 +172,13 @@
 - promote.sh
 - openapi-fuzz.mjs
 - TestDatabaseTimeoutsPreserveDSN
-- contextLevelHandler
+- debugRequest
 - check-change-freeze.mjs
 - backup.sh
 - check-migration-safety.sh
 - log/slog.Logger
 - restore-test.sh
-- FrontendErrors
+- webhook.go
 - check-ci-config.mjs
 - Q: Implement all Engineering items I1-I80 in the Testing & QA category of docs/BACKLOG.md
 - ci-changes.mjs
@@ -197,9 +197,9 @@
 - Q: Implement all Engineering items in the Data & Migrations backlog
 - RunBackfill
 - Frequently asked questions
-- .ListUsers
+- validateProfileFields
 - pull_request_template.md
-- webhook.go
+- HandlerWithOptions
 - check-quarantine.mjs
 - lighthouse-summary.mjs
 - rbac
@@ -224,12 +224,12 @@
 - component-changelog.mjs
 - index.md
 - Q: Implement all Engineering items in the API & Contracts backlog
-- debugRequest
+- recordBuildInfo
 - API_SCHEMA_AUDIT.md
 - Q: ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found
-- validateProfileFields
+- contextLevelHandler
 - check-docs.mjs
-- recordBuildInfo
+- FrontendErrors
 - [Unreleased]
 - deploy-audit.mjs
 - Q: Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49
@@ -256,7 +256,7 @@
 - UnescapedCookieParamError
 - vitest
 - UnmarshalingParamError
-- jsdom
+- terser
 
 ## God Nodes (most connected - your core abstractions)
 1. `WriteError()` - 51 edges
@@ -346,9 +346,9 @@ Nodes (37): auth service (base mesh), gateway service (base mesh), postgres serv
 Cohesion: 0.06
 Nodes (36): description, devDependencies, jsdom, react, react-dom, @testing-library/react, @types/react, @types/react-dom (+28 more)
 
-### Community 10 - "DashboardShell.test.tsx"
-Cohesion: 0.16
-Nodes (10): CommandPalette(), CommandPaletteProps, fuzzy(), PaletteItem, MobileBottomNav(), mobileLabel(), ALL_NAV_ITEMS, ROWS (+2 more)
+### Community 10 - "schemas.ts"
+Cohesion: 0.11
+Nodes (18): resolveGatewayURL(), adminSetUserPasswordSchema, adminSetUserStateSchema, bulkCreatePermissionsSchema, changePasswordSchema, confirmPasswordSchema, createPermissionSchema, createRoleSchema (+10 more)
 
 ### Community 11 - "ProxyHandler"
 Cohesion: 0.14
@@ -480,11 +480,11 @@ Nodes (15): dependencies, @phosphor-icons/react, react, react-dom, react-router-
 
 ### Community 43 - "devDependencies"
 Cohesion: 0.13
-Nodes (15): devDependencies, msw, @originjs/vite-plugin-federation, tailwindcss, terser, typescript, vite, @vitejs/plugin-react (+7 more)
+Nodes (15): devDependencies, jsdom, msw, @originjs/vite-plugin-federation, tailwindcss, typescript, vite, @vitejs/plugin-react (+7 more)
 
-### Community 44 - "useToast"
-Cohesion: 0.18
-Nodes (11): RoleModal(), Probe(), SessionMenu(), timezoneOptions(), useConfirm(), useDrawer(), useToast(), first (+3 more)
+### Community 44 - "DashboardShell.test.tsx"
+Cohesion: 0.16
+Nodes (10): CommandPalette(), CommandPaletteProps, fuzzy(), PaletteItem, MobileBottomNav(), mobileLabel(), ALL_NAV_ITEMS, ROWS (+2 more)
 
 ### Community 45 - "DoD Evidence Checklist"
 Cohesion: 0.12
@@ -558,9 +558,9 @@ Nodes (7): Document, web_admin_roles/RolesPage, web_admin_users/UsersPage, web_a
 Cohesion: 0.10
 Nodes (19): api, CopyErrorButton(), Props, RemoteErrorBoundary, State, addBreadcrumb(), ApiClient, Breadcrumb (+11 more)
 
-### Community 63 - "mailer.go"
-Cohesion: 0.20
-Nodes (10): net/smtp.Auth, BuildMIME(), Mail, Mailer, NewMailer(), TestBuildMIME(), ConsoleMailer, FallbackMailer (+2 more)
+### Community 63 - "useToast"
+Cohesion: 0.18
+Nodes (11): RoleModal(), Probe(), SessionMenu(), timezoneOptions(), useConfirm(), useDrawer(), useToast(), first (+3 more)
 
 ### Community 64 - "Handlers"
 Cohesion: 0.10
@@ -598,9 +598,9 @@ Nodes (7): users Deployment, users HorizontalPodAutoscaler, users migrate Job, u
 Cohesion: 0.33
 Nodes (6): scripts, build, check:budget, dev, preview, test
 
-### Community 73 - "schemas.ts"
-Cohesion: 0.11
-Nodes (18): resolveGatewayURL(), adminSetUserPasswordSchema, adminSetUserStateSchema, bulkCreatePermissionsSchema, changePasswordSchema, confirmPasswordSchema, createPermissionSchema, createRoleSchema (+10 more)
+### Community 73 - "mailer.go"
+Cohesion: 0.20
+Nodes (10): net/smtp.Auth, BuildMIME(), Mail, Mailer, NewMailer(), TestBuildMIME(), ConsoleMailer, FallbackMailer (+2 more)
 
 ### Community 74 - "ListUsersParams"
 Cohesion: 0.15
@@ -714,9 +714,9 @@ Nodes (12): Backup, Backup and restore, Disaster recovery, Policy, Restore rehea
 Cohesion: 0.17
 Nodes (10): ctxKeyHash, forgotInput, loginInput, registerInput, resetInput, RequireSessionIdentity(), clientIP(), ctxKeySub (+2 more)
 
-### Community 116 - "HandlerWithOptions"
-Cohesion: 0.43
-Nodes (8): chi.Router, ChiServerOptions, MiddlewareFunc, ServerInterface, Handler(), HandlerFromMux(), HandlerFromMuxWithBaseURL(), HandlerWithOptions()
+### Community 116 - ".ListUsers"
+Cohesion: 0.31
+Nodes (5): ListOK(), SetPaginationLinks(), listData, Meta, ListRoleUsersParams
 
 ### Community 142 - "testing.T"
 Cohesion: 0.09
@@ -818,9 +818,9 @@ Nodes (4): base, crashes, payloads, spec
 Cohesion: 0.40
 Nodes (3): FeatureEnabled(), TestDatabaseTimeoutsPreserveDSN(), TestFeatureEnabled()
 
-### Community 188 - "contextLevelHandler"
+### Community 188 - "debugRequest"
 Cohesion: 0.21
-Nodes (9): log/slog.Attr, log/slog.Handler, log/slog.Level, log/slog.LevelVar, log/slog.Record, levelName(), maskPII(), scrubLogAttr() (+1 more)
+Nodes (9): log/slog.Level, log/slog.Record, levelName(), maskPII(), DebugRequest(), debugRequest(), TestDebugRequestRejectsInvalidToken(), TestDebugRequestRequiresOperatorToken() (+1 more)
 
 ### Community 189 - "check-change-freeze.mjs"
 Cohesion: 0.50
@@ -830,9 +830,9 @@ Nodes (3): active, config, now
 Cohesion: 0.11
 Nodes (19): log/slog.Logger, NewLogger(), parseLogLevel(), withBaseLogger(), chi.Router, NewRouter(), SweepSessions(), RegisterSessionMetrics() (+11 more)
 
-### Community 195 - "FrontendErrors"
-Cohesion: 0.60
-Nodes (3): frontendError, FrontendErrors(), validFrontendError()
+### Community 195 - "webhook.go"
+Cohesion: 0.29
+Nodes (7): net/http.Client, HTTPWebhookProvider, recordingWebhook, WebhookDelivery, WebhookProvider, allowedWebhookHost(), NewHTTPWebhookProvider()
 
 ### Community 196 - "check-ci-config.mjs"
 Cohesion: 0.50
@@ -894,17 +894,17 @@ Nodes (3): RunBackfill(), TestRunBackfillRejectsInvalidCount(), TestRunBackfillS
 Cohesion: 0.13
 Nodes (13): ADR-0003: Move profile data to the users schema, Consequences, Context, Decision, Can I edit an existing migration?, Frequently asked questions, How are generated files handled?, Is multi-region enabled? (+5 more)
 
-### Community 217 - ".ListUsers"
-Cohesion: 0.31
-Nodes (5): ListOK(), SetPaginationLinks(), listData, Meta, ListRoleUsersParams
+### Community 217 - "validateProfileFields"
+Cohesion: 0.32
+Nodes (6): testing.F, FuzzHandlerDecode(), FuzzUserOrderClauseNeverIncludesInput(), FuzzValidateProfileFields(), TestProfileSecurityValidation(), validateProfileFields()
 
 ### Community 218 - "pull_request_template.md"
 Cohesion: 0.40
 Nodes (4): Change, Impact and delivery, Release notes draft, SQL / migration review
 
-### Community 219 - "webhook.go"
-Cohesion: 0.29
-Nodes (7): net/http.Client, HTTPWebhookProvider, recordingWebhook, WebhookDelivery, WebhookProvider, allowedWebhookHost(), NewHTTPWebhookProvider()
+### Community 219 - "HandlerWithOptions"
+Cohesion: 0.43
+Nodes (8): chi.Router, ChiServerOptions, MiddlewareFunc, ServerInterface, Handler(), HandlerFromMux(), HandlerFromMuxWithBaseURL(), HandlerWithOptions()
 
 ### Community 222 - "rbac"
 Cohesion: 0.14
@@ -954,25 +954,25 @@ Nodes (24): API contract standards, Platform and event surface, Requests and col
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Implement all Engineering items in the API & Contracts backlog, Source Nodes
 
-### Community 244 - "debugRequest"
-Cohesion: 0.47
-Nodes (5): DebugRequest(), debugRequest(), TestDebugRequestRejectsInvalidToken(), TestDebugRequestRequiresOperatorToken(), TestLogPIIMasking()
+### Community 244 - "recordBuildInfo"
+Cohesion: 0.40
+Nodes (3): recordAPIError(), recordBuildInfo(), TestRuntimeProcessAndBuildCollectorsAreRegistered()
 
 ### Community 246 - "Q: ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found, Source Nodes
 
-### Community 247 - "validateProfileFields"
-Cohesion: 0.32
-Nodes (6): testing.F, FuzzHandlerDecode(), FuzzUserOrderClauseNeverIncludesInput(), FuzzValidateProfileFields(), TestProfileSecurityValidation(), validateProfileFields()
+### Community 247 - "contextLevelHandler"
+Cohesion: 0.38
+Nodes (5): log/slog.Attr, log/slog.Handler, log/slog.LevelVar, scrubLogAttr(), contextLevelHandler
 
 ### Community 248 - "check-docs.mjs"
 Cohesion: 0.29
 Nodes (5): failures, ignored, readme, required, root
 
-### Community 249 - "recordBuildInfo"
-Cohesion: 0.40
-Nodes (3): recordAPIError(), recordBuildInfo(), TestRuntimeProcessAndBuildCollectorsAreRegistered()
+### Community 249 - "FrontendErrors"
+Cohesion: 0.60
+Nodes (3): frontendError, FrontendErrors(), validFrontendError()
 
 ### Community 250 - "[Unreleased]"
 Cohesion: 0.40
@@ -1029,9 +1029,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Security Posture` connect `Security Posture` to `index.md`?**
   _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Why does `SecurityHeaders()` connect `.Refresh` to `Security Posture`, `net/http.Handler`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Why does `Security Headers Policy` connect `Security Posture` to `.Refresh`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
   _1035 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Service` be split into smaller, more focused modules?**
