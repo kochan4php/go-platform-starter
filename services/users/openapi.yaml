@@ -155,6 +155,198 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/UserStats" }
 
+  /users/product/overview:
+    get:
+      operationId: productOverview
+      summary: aggregate product dashboard counters and registration series
+      x-required-permission: "user:read:any"
+      x-cache-ttl: 15s
+      responses:
+        "200": { description: product overview, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/records:
+    get:
+      operationId: listProductRecords
+      summary: list typed product workflows visible to the caller
+      x-auth: required
+      parameters:
+        - { name: kind, in: query, schema: { $ref: "#/components/schemas/ProductKind" } }
+        - { name: status, in: query, schema: { type: string, maxLength: 40 } }
+        - { name: q, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        "200":
+          description: visible records
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/EnvelopeOK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: "#/components/schemas/ProductRecord" }
+                          meta: { $ref: "#/components/schemas/EnvelopeMeta" }
+    post:
+      operationId: createProductRecord
+      summary: create a notification, workflow, integration, preference, or report schedule
+      x-auth: required
+      x-idempotency-key: supported
+      x-request-body-limit: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductRecordInput" }
+      responses:
+        "201": { description: created; secret is returned once for token-bearing records, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/records/{id}:
+    patch:
+      operationId: updateProductRecord
+      summary: update product workflow status and payload
+      x-auth: required
+      x-request-body-limit: 65536
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductRecordUpdate" }
+      responses:
+        "200": { description: updated, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: unknown or inaccessible record, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+    delete:
+      operationId: deleteProductRecord
+      summary: delete a caller-owned or administratively managed product record
+      x-auth: required
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }]
+      responses:
+        "200": { description: deleted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/search:
+    get:
+      operationId: searchProduct
+      summary: global search across profiles and accessible product resources
+      x-auth: required
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 120 } }
+      responses:
+        "200": { description: ranked search results, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/analytics:
+    get:
+      operationId: productAnalytics
+      summary: activity heatmap, role usage, login risk, and usage metering
+      x-required-permission: "user:read:any"
+      responses:
+        "200": { description: analytics snapshot, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/permissions/simulate:
+    post:
+      operationId: simulatePermission
+      summary: explain whether roles or a live delegation grant a permission
+      x-required-permission: "role:read:any"
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [userId, permission]
+              properties:
+                userId: { type: integer, format: int64, minimum: 1 }
+                permission: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        "200": { description: decision and grant sources, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/presence:
+    get:
+      operationId: productPresence
+      summary: privacy-safe public presence aggregate for authenticated clients
+      x-auth: required
+      x-cache-ttl: 10s
+      responses:
+        "200": { description: aggregate online and total counts, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/product/invitations/verify:
+    post:
+      operationId: verifyInvitation
+      summary: consume an invitation and return its pre-approved registration attributes
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenInput" }
+      responses:
+        "200": { description: invitation accepted, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "400": { description: invalid or expired invitation, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /users/me/email-change:
+    post:
+      operationId: requestEmailChange
+      summary: send a single-use verification link before changing the caller email
+      x-auth: required
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+      responses:
+        "202": { description: verification queued, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/email-change/verify:
+    post:
+      operationId: verifyEmailChange
+      summary: consume an email-change token and atomically replace the identity email
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenInput" }
+      responses:
+        "200": { description: email changed, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/me/deletion:
+    post:
+      operationId: requestAccountDeletion
+      summary: schedule account erasure after a 30-day grace period and revoke sessions
+      x-auth: required
+      x-rate-limit-class: strict
+      responses:
+        "202": { description: deletion scheduled and restoration link queued, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /users/deletion/restore:
+    post:
+      operationId: restoreAccountDeletion
+      summary: restore an account during its 30-day deletion grace period
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenInput" }
+      responses:
+        "200": { description: account restored, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
   /users/{id}:
     get:
       operationId: getUser
@@ -292,3 +484,49 @@ components:
         email: { type: string, format: email, maxLength: 254 }
         displayName: { type: string, maxLength: 120 }
         avatarUrl: { type: string, maxLength: 400, pattern: "^$|^https://" }
+
+    ProductKind:
+      type: string
+      enum: [notification, invitation, access_request, delegation, api_key, webhook, scheduled_report, saved_view, role_template, compliance_report, branding, domain, billing_usage, broadcast, chat_message, onboarding, retention, consumer_quota, email_change, account_deletion]
+
+    ProductRecord:
+      type: object
+      required: [id, kind, ownerId, name, status, payload, createdAt, updatedAt]
+      properties:
+        id: { type: integer, format: int64 }
+        kind: { $ref: "#/components/schemas/ProductKind" }
+        ownerId: { type: integer, format: int64 }
+        subjectId: { type: integer, format: int64, nullable: true }
+        name: { type: string }
+        status: { type: string }
+        payload: { type: object, additionalProperties: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProductRecordInput:
+      type: object
+      additionalProperties: false
+      required: [kind, name, payload]
+      properties:
+        kind: { $ref: "#/components/schemas/ProductKind" }
+        subjectId: { type: integer, format: int64, minimum: 1, nullable: true }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, maxLength: 40, default: active }
+        payload: { type: object, additionalProperties: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+
+    ProductRecordUpdate:
+      type: object
+      additionalProperties: false
+      required: [status, payload]
+      properties:
+        status: { type: string, minLength: 1, maxLength: 40 }
+        payload: { type: object, additionalProperties: true }
+
+    TokenInput:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { type: string, minLength: 20, maxLength: 512 }

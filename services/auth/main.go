@@ -25,6 +25,10 @@ var specFS embed.FS
 var strictPaths = map[string]bool{
 	"/register": true, "/login": true, "/refresh": true,
 	"/forgot": true, "/reset": true, "/reset/validate": true,
+	"/magic-link": true, "/magic-link/consume": true,
+	"/oauth/google/start": true, "/oauth/google/callback": true,
+	"/oauth/github/start": true, "/oauth/github/callback": true,
+	"/recovery-codes": true,
 }
 
 func main() {

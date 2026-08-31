@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T19:05:45.192038+00:00",
+  "generated_at": "2026-08-31T23:58:09.683502+00:00",
   "nodes": {
     "_github_workflows_ci_security_job": {
       "code_fingerprint": "12df14fae806c887e8a1f77dd27b8ce06627a05bdfd963b619f1750d98388008",
@@ -12,7 +12,7 @@
           "q": "ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
         }
       ],
-      "score": 0.989188497,
+      "score": 0.984558381,
       "source_file": ".github/workflows/ci.yml",
       "status": "tentative",
       "uses": 1
@@ -33,7 +33,7 @@
           "q": "ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found"
         }
       ],
-      "score": 1.978489296,
+      "score": 1.969228537,
       "source_file": ".github/workflows/ci.yml",
       "status": "preferred",
       "uses": 2
@@ -49,7 +49,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
       "source_file": "docs/adr/0001-fresh-build-pivot.md",
       "status": "tentative",
       "uses": 1
@@ -65,13 +65,29 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.983887987,
+      "score": 0.979282681,
       "source_file": "docs/API_VERSIONING.md",
       "status": "tentative",
       "uses": 1
     },
+    "docs_backlog": {
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
+      "label": "BACKLOG (1.202 improvement items)",
+      "last": "2026-08-31T19:09:29.445999+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T19:09:29.445999+00:00",
+          "outcome": "useful",
+          "q": "bagian Product / Roadmap di docs/BACKLOG.md itu untuk apa?"
+        }
+      ],
+      "score": 0.995378969,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
     "docs_backlog_api_contracts": {
-      "code_fingerprint": "b0eace2cba8b0fffb7aff8cbeb5bea3350f76be08834dc080768d0e6af95329c",
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
       "label": "Backlog: API & Contracts",
       "last": "2026-08-31T02:13:24.220626+00:00",
       "provenance": [
@@ -81,13 +97,13 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.983887987,
+      "score": 0.979282681,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_architecture_scalability": {
-      "code_fingerprint": "b0eace2cba8b0fffb7aff8cbeb5bea3350f76be08834dc080768d0e6af95329c",
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
       "label": "Backlog: Architecture & Scalability",
       "last": "2026-08-29T12:08:36.916480+00:00",
       "provenance": [
@@ -97,13 +113,13 @@
           "q": "Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md"
         }
       ],
-      "score": 0.94847218,
+      "score": 0.944032645,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_data_migrations": {
-      "code_fingerprint": "b0eace2cba8b0fffb7aff8cbeb5bea3350f76be08834dc080768d0e6af95329c",
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
       "label": "Backlog: Data & Migrations",
       "last": "2026-08-30T23:41:07.641945+00:00",
       "provenance": [
@@ -113,13 +129,13 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.981487003,
+      "score": 0.976892935,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
     },
     "docs_backlog_docs_governance": {
-      "code_fingerprint": "b0eace2cba8b0fffb7aff8cbeb5bea3350f76be08834dc080768d0e6af95329c",
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
       "label": "Backlog: Docs & Governance",
       "last": "2026-08-31T03:10:20.484560+00:00",
       "provenance": [
@@ -129,7 +145,23 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
+      "source_file": "docs/BACKLOG.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_backlog_product_roadmap": {
+      "code_fingerprint": "00147821580c0e49cc8064e60306ceacd14feaba1afe4ef5940dd2425fd3ce6a",
+      "label": "Backlog: Product / Roadmap",
+      "last": "2026-08-31T19:09:29.445999+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-31T19:09:29.445999+00:00",
+          "outcome": "useful",
+          "q": "bagian Product / Roadmap di docs/BACKLOG.md itu untuk apa?"
+        }
+      ],
+      "score": 0.995378969,
       "source_file": "docs/BACKLOG.md",
       "status": "tentative",
       "uses": 1
@@ -145,7 +177,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.983887987,
+      "score": 0.979282681,
       "source_file": "docs/CONTRACTS.md",
       "status": "tentative",
       "uses": 1
@@ -161,7 +193,7 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.981487003,
+      "score": 0.976892935,
       "source_file": "docs/MIGRATIONS.md",
       "status": "tentative",
       "uses": 1
@@ -177,7 +209,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
       "source_file": "docs/ONBOARDING.md",
       "status": "tentative",
       "uses": 1
@@ -193,7 +225,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
       "source_file": "docs/ONCALL.md",
       "status": "tentative",
       "uses": 1
@@ -209,7 +241,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
       "source_file": "docs/TESTING.md",
       "status": "tentative",
       "uses": 1
@@ -225,7 +257,7 @@
           "q": "sekarang kerjakan semua fitur BACKLOG.md untuk kategori CI/CD & Release dengan tipe Engineering. lalu kerjakan juga C9, C10, C11, C12, C35, C39, C47, C48 dan C52 juga ikut dikerjakan."
         }
       ],
-      "score": 0.985936556,
+      "score": 0.981321661,
       "source_file": "docs/DOD.md",
       "status": "tentative",
       "uses": 1
@@ -241,7 +273,7 @@
           "q": "Implement all Engineering items in the Data & Migrations backlog"
         }
       ],
-      "score": 0.981487003,
+      "score": 0.976892935,
       "source_file": "scripts/backup.sh",
       "status": "tentative",
       "uses": 1
@@ -257,7 +289,7 @@
           "q": "periksa deploy.yml dari .github/workflows, terdapat warning ini Context access might be invalid: UAT_URL"
         }
       ],
-      "score": 0.989300798,
+      "score": 0.984670156,
       "source_file": "scripts/deploy.sh",
       "status": "tentative",
       "uses": 1
@@ -273,7 +305,7 @@
           "q": "Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49"
         }
       ],
-      "score": 0.984787248,
+      "score": 0.980177733,
       "source_file": "SECURITY.md",
       "status": "tentative",
       "uses": 1
@@ -289,7 +321,7 @@
           "q": "Implement all Engineering items in the API & Contracts backlog"
         }
       ],
-      "score": 0.983887987,
+      "score": 0.979282681,
       "source_file": "services/gateway/internal/validation.go",
       "status": "tentative",
       "uses": 1

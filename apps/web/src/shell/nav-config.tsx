@@ -1,4 +1,4 @@
-import { Key, SlidersHorizontal, UsersThree } from "@phosphor-icons/react";
+import { Gauge, Key, SlidersHorizontal, UsersThree } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 declare global {
@@ -44,6 +44,13 @@ export const NAV_GROUPS: NavGroup[] = [
         Icon: Key,
         shortcut: "g r",
         keywords: ["rbac", "access", "perms"],
+      },
+      {
+        to: "/admin/product",
+        label: "Product Console",
+        Icon: Gauge,
+        shortcut: "g p",
+        keywords: ["roadmap", "audit", "analytics", "invites", "reports"],
       },
     ],
   },

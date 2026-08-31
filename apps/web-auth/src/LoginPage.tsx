@@ -2,7 +2,7 @@ import { loginSchema } from "@starter/contracts/schemas";
 import { Alert, Card } from "@starter/ui";
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import AuthFrame from "./AuthFrame";
-import { type AuthApiError, login } from "./api";
+import { type AuthApiError, login, requestMagicLink, startOAuth } from "./api";
 import {
   AuthInput,
   ErrorSummary,
@@ -37,10 +37,11 @@ export default function LoginPage({
   const [mfaRequired, setMFARequired] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [alternativeBusy, setAlternativeBusy] = useState(false);
   const [touched, setTouched] = useState(false);
   const [attempts, setAttempts] = useState(MAX_ATTEMPTS);
   const [lockSeconds, setLockSeconds] = useState(0);
-  const [notice] = useState(() => {
+  const [notice, setNotice] = useState(() => {
     const message = sessionStorage.getItem("auth:notice") ?? "";
     sessionStorage.removeItem("auth:notice");
     return message;
@@ -111,6 +112,31 @@ export default function LoginPage({
     }
   }
 
+  async function sendMagicLink() {
+    setTouched(true);
+    if (!emailValid) return;
+    setAlternativeBusy(true);
+    try {
+      await requestMagicLink(normalizeEmail(draft.email));
+      setError("");
+      setNotice("Check your email for a 15-minute sign-in link.");
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally {
+      setAlternativeBusy(false);
+    }
+  }
+
+  async function startOAuthLogin(provider: "google" | "github") {
+    setAlternativeBusy(true);
+    try {
+      window.location.assign(await startOAuth(provider));
+    } catch (caught) {
+      setError((caught as Error).message);
+      setAlternativeBusy(false);
+    }
+  }
+
   const form = (
     <Card>
       <form
@@ -150,18 +176,18 @@ export default function LoginPage({
         {mfaRequired ? (
           <AuthInput
             id="login-otp"
-            label="Authenticator code"
+            label="Authenticator or recovery code"
             icon="token"
             type="text"
             name="one-time-code"
             autoComplete="one-time-code"
-            inputMode="numeric"
+            inputMode="text"
             value={otp}
-            maxLength={6}
-            placeholder="123456"
-            onChange={(event) => setOTP(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            error={touched && otp.length !== 6 ? "Enter all six digits" : undefined}
-            valid={otp.length === 6}
+            maxLength={64}
+            placeholder="123456 or rc_…"
+            onChange={(event) => setOTP(event.target.value.replace(/\s/g, "").slice(0, 64))}
+            error={touched && otp.length < 6 ? "Enter a six-digit code or recovery code" : undefined}
+            valid={otp.length >= 6}
           />
         ) : null}
         {error ? <Alert message={error} /> : null}
@@ -177,7 +203,7 @@ export default function LoginPage({
         <div className="ui-auth-sticky-actions flex items-center justify-between gap-4 pt-1">
           <SubmitButton
             busy={busy}
-            disabled={!emailValid || !password || (mfaRequired && otp.length !== 6) || lockSeconds > 0}
+            disabled={!emailValid || !password || (mfaRequired && otp.length < 6) || lockSeconds > 0}
           >
             {mode === "reauth" ? "Continue" : "Log in"}
           </SubmitButton>
@@ -191,6 +217,34 @@ export default function LoginPage({
             </a>
           ) : null}
         </div>
+        {mode === "page" ? (
+          <div className="mt-4 grid gap-2 border-t border-[var(--color-line)] pt-4 sm:grid-cols-3">
+            <button
+              type="button"
+              disabled={alternativeBusy || !emailValid}
+              onClick={() => void sendMagicLink()}
+              className="ui-button"
+            >
+              Email link
+            </button>
+            <button
+              type="button"
+              disabled={alternativeBusy}
+              onClick={() => void startOAuthLogin("google")}
+              className="ui-button"
+            >
+              Google
+            </button>
+            <button
+              type="button"
+              disabled={alternativeBusy}
+              onClick={() => void startOAuthLogin("github")}
+              className="ui-button"
+            >
+              GitHub
+            </button>
+          </div>
+        ) : null}
       </form>
     </Card>
   );

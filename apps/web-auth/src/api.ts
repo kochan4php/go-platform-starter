@@ -32,9 +32,34 @@ export async function register(email: string, password: string): Promise<{ id: n
   return data?.data as { id: number; email: string };
 }
 
+export async function verifyInvitation(
+  token: string,
+): Promise<{ name: string; attributes: { email?: string } }> {
+  const { data, error, response } = await api.POST("/api/v1/users/product/invitations/verify", {
+    body: { token },
+  });
+  if (error) throw apiError(error, response);
+  return data?.data as { name: string; attributes: { email?: string } };
+}
+
 export async function forgot(email: string): Promise<void> {
   const { error, response } = await api.POST("/api/v1/auth/forgot", { body: { email } });
   if (error) throw apiError(error, response);
+}
+
+export async function requestMagicLink(email: string): Promise<void> {
+  const { error, response } = await api.POST("/api/v1/auth/magic-link", { body: { email } });
+  if (error) throw apiError(error, response);
+}
+
+export async function startOAuth(provider: "google" | "github"): Promise<string> {
+  const { data, error, response } = await api.GET("/api/v1/auth/oauth/{provider}/start", {
+    params: { path: { provider } },
+  });
+  if (error) throw apiError(error, response);
+  const payload = data?.data as { authorizationUrl?: string } | undefined;
+  if (!payload?.authorizationUrl) throw new Error("OAuth provider returned no authorization URL");
+  return payload.authorizationUrl;
 }
 
 export async function validateReset(token: string): Promise<void> {

@@ -25,7 +25,7 @@ interface AuthState {
   booting: boolean;
   sessionExpired: boolean;
   lastHeartbeatAt: number | null;
-  login(accessToken: string, user: SessionUser): void;
+  login(accessToken: string, user: SessionUser, options?: { broadcast?: boolean }): void;
   logout(): Promise<void>;
 }
 
@@ -109,6 +109,9 @@ export function AuthProvider({
   // silent refresh at boot decides whether a session exists.
   useEffect(() => {
     if (initialUser != null) return;
+    sessionStorage.removeItem("auth:impersonator");
+    sessionStorage.removeItem("auth:original-token");
+    sessionStorage.removeItem("auth:original-user");
     let cancelled = false;
     // Single-flight: StrictMode (and any duplicate callers) share ONE refresh
     // call, so cookie rotation can never be mistaken for token reuse.
@@ -154,6 +157,7 @@ export function AuthProvider({
     if (!state.user) return;
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
+      if (sessionStorage.getItem("auth:impersonator")) return;
       void silentRefresh(GATEWAY_URL).then((token) => {
         if (!token) window.dispatchEvent(new Event("starter:session-expired"));
         else dispatch({ type: "heartbeat", at: Date.now() });
@@ -163,10 +167,11 @@ export function AuthProvider({
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [state.user]);
 
-  const login = useCallback((accessToken: string, u: SessionUser) => {
+  const login = useCallback((accessToken: string, u: SessionUser, options?: { broadcast?: boolean }) => {
     setAccessToken(accessToken);
     dispatch({ type: "login", user: u, at: Date.now() });
-    channel.current?.postMessage({ type: "login", token: accessToken, user: u });
+    if (options?.broadcast !== false)
+      channel.current?.postMessage({ type: "login", token: accessToken, user: u });
   }, []);
 
   const logout = useCallback(async () => {

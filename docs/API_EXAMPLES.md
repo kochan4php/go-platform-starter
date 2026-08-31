@@ -25,7 +25,7 @@ curl --fail-with-body --request POST \
   'http://127.0.0.1:8010/api/v1/auth/login' \
   --header 'Idempotency-Key: <unique-request-id>' \
   --header 'Content-Type: application/json' \
-  --data '{"email":"user@example.com","password":"example","otp":"123456"}'
+  --data '{"email":"user@example.com","password":"example","otp":"example"}'
 ```
 
 ### refresh
@@ -70,6 +70,80 @@ curl --fail-with-body --request POST \
   --header 'Idempotency-Key: <unique-request-id>' \
   --header 'Content-Type: application/json' \
   --data '{"code":"123456"}'
+```
+
+### generateRecoveryCodes
+
+replace and return ten single-use MFA recovery codes exactly once
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/auth/recovery-codes' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>'
+```
+
+### loginHistory
+
+the authenticated user's privacy-bounded login history and risk scores
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/auth/login-history' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### impersonateUser
+
+mint a read-only 15-minute audited support token for a managed user
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/auth/impersonate/1' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>'
+```
+
+### requestMagicLink
+
+always queue a single-use passwordless login link when the account exists
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/auth/magic-link' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"email":"user@example.com"}'
+```
+
+### consumeMagicLink
+
+consume a passwordless login token and create a normal rotating session
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/auth/magic-link/consume' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"token":"example"}'
+```
+
+### startOAuth
+
+create a short-lived OAuth state and return the provider authorization URL
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/auth/oauth/1/start'
+```
+
+### finishOAuth
+
+validate OAuth state, exchange the code, and create or link the user session
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/auth/oauth/1/callback?code=example&state=example'
 ```
 
 ### listSessions
@@ -510,6 +584,164 @@ directory totals and seven-day registration series
 curl --fail-with-body --request GET \
   'http://127.0.0.1:8010/api/v1/users/stats' \
   --header 'Authorization: Bearer <access-token>'
+```
+
+### productOverview
+
+aggregate product dashboard counters and registration series
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/users/product/overview' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### listProductRecords
+
+list typed product workflows visible to the caller
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/users/product/records' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### createProductRecord
+
+create a notification, workflow, integration, preference, or report schedule
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/product/records' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"kind":"notification","subjectId":1,"name":"example","status":"active","payload":{},"expiresAt":"2026-01-01T00:00:00Z"}'
+```
+
+### updateProductRecord
+
+update product workflow status and payload
+
+```sh
+curl --fail-with-body --request PATCH \
+  'http://127.0.0.1:8010/api/v1/users/product/records/1' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"status":"example","payload":{}}'
+```
+
+### deleteProductRecord
+
+delete a caller-owned or administratively managed product record
+
+```sh
+curl --fail-with-body --request DELETE \
+  'http://127.0.0.1:8010/api/v1/users/product/records/1' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### searchProduct
+
+global search across profiles and accessible product resources
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/users/product/search?q=example' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### productAnalytics
+
+activity heatmap, role usage, login risk, and usage metering
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/users/product/analytics' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### simulatePermission
+
+explain whether roles or a live delegation grant a permission
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/product/permissions/simulate' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"userId":1,"permission":"example"}'
+```
+
+### productPresence
+
+privacy-safe public presence aggregate for authenticated clients
+
+```sh
+curl --fail-with-body --request GET \
+  'http://127.0.0.1:8010/api/v1/users/product/presence' \
+  --header 'Authorization: Bearer <access-token>'
+```
+
+### verifyInvitation
+
+consume an invitation and return its pre-approved registration attributes
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/product/invitations/verify' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"token":"examplexxxxxxxxxxxxx"}'
+```
+
+### requestEmailChange
+
+send a single-use verification link before changing the caller email
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/me/email-change' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"email":"user@example.com"}'
+```
+
+### verifyEmailChange
+
+consume an email-change token and atomically replace the identity email
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/email-change/verify' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"token":"examplexxxxxxxxxxxxx"}'
+```
+
+### requestAccountDeletion
+
+schedule account erasure after a 30-day grace period and revoke sessions
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/me/deletion' \
+  --header 'Authorization: Bearer <access-token>' \
+  --header 'Idempotency-Key: <unique-request-id>'
+```
+
+### restoreAccountDeletion
+
+restore an account during its 30-day deletion grace period
+
+```sh
+curl --fail-with-body --request POST \
+  'http://127.0.0.1:8010/api/v1/users/deletion/restore' \
+  --header 'Idempotency-Key: <unique-request-id>' \
+  --header 'Content-Type: application/json' \
+  --data '{"token":"examplexxxxxxxxxxxxx"}'
 ```
 
 ### getUser

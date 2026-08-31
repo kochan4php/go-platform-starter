@@ -1,8 +1,8 @@
 import { registerSchema } from "@starter/contracts/schemas";
 import { Card } from "@starter/ui";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import AuthFrame from "./AuthFrame";
-import { register } from "./api";
+import { register, verifyInvitation } from "./api";
 import {
   AuthInput,
   ErrorSummary,
@@ -25,9 +25,24 @@ export default function RegisterPage() {
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [invitation, setInvitation] = useState("");
+  const invitationStarted = useRef(false);
   const emailValid = validEmail(draft.email);
   const strongEnough = registerSchema.shape.password.safeParse(password).success && validPassword(password);
   const matches = Boolean(confirm) && confirm === password;
+
+  useEffect(() => {
+    if (invitationStarted.current) return;
+    invitationStarted.current = true;
+    const token = new URLSearchParams(window.location.search).get("token");
+    if (!token) return;
+    void verifyInvitation(token)
+      .then((result) => {
+        if (result.attributes.email) draft.setEmail(result.attributes.email);
+        setInvitation(result.name || "Invitation accepted");
+      })
+      .catch((caught) => setError((caught as Error).message || "Invitation is invalid or expired"));
+  }, [draft]);
 
   const errors = useMemo(() => {
     const items: Array<{ field: string; message: string }> = [];
@@ -75,6 +90,9 @@ export default function RegisterPage() {
       </h1>
       <div className="mt-10 max-w-md sm:mt-12">
         <Card>
+          {invitation && !done ? (
+            <p className="mb-4 text-sm font-semibold text-[var(--color-accent)]">{invitation}</p>
+          ) : null}
           {done ? (
             <SuccessPanel title="Account created" message="Your email is ready on the login screen.">
               <a

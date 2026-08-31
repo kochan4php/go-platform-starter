@@ -1,5 +1,8 @@
+import { GATEWAY_URL, decodeClaims, silentRefresh } from "@starter/contracts";
 import { useI18n } from "@starter/ui";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { type SessionUser, useAuth } from "../auth-context";
 import { useOnline } from "../lib/ui";
 
 export function OfflineBanner() {
@@ -59,6 +62,54 @@ export function SessionExpiringBanner() {
   return (
     <div role="alert" className="ui-status-banner border-b px-4 py-2 text-center text-xs font-medium">
       Session expiring — please save your work.
+    </div>
+  );
+}
+
+export function ImpersonationBanner() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const actor = sessionStorage.getItem("auth:impersonator");
+  if (!actor) return null;
+
+  const exit = async () => {
+    const token = sessionStorage.getItem("auth:original-token");
+    const rawUser = sessionStorage.getItem("auth:original-user");
+    if (!token || !rawUser) return;
+    let user: SessionUser;
+    try {
+      user = JSON.parse(rawUser) as SessionUser;
+    } catch {
+      sessionStorage.removeItem("auth:impersonator");
+      return;
+    }
+    const refreshed = await silentRefresh(GATEWAY_URL).catch(() => undefined);
+    const claims = refreshed ? decodeClaims(refreshed) : undefined;
+    const restored = claims?.sub
+      ? {
+          ...user,
+          id: claims.sub,
+          email: claims.email ?? user.email,
+          perms: claims.perms ?? [],
+          ver: claims.ver ?? 0,
+        }
+      : user;
+    sessionStorage.removeItem("auth:impersonator");
+    sessionStorage.removeItem("auth:original-token");
+    sessionStorage.removeItem("auth:original-user");
+    login(refreshed ?? token, restored, { broadcast: false });
+    navigate("/admin/product", { replace: true });
+  };
+
+  return (
+    <div
+      role="alert"
+      className="ui-status-banner flex items-center justify-center gap-3 border-b px-4 py-2 text-xs font-medium"
+    >
+      Read-only support session started by user {actor}.
+      <button type="button" className="underline" onClick={() => void exit()}>
+        Exit impersonation
+      </button>
     </div>
   );
 }

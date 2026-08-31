@@ -51,6 +51,7 @@ nav:
       - Upgrade guide: UPGRADING.md
   - Engineering:
       - Engineering guide: ENGINEERING_GUIDE.md
+      - Product roadmap: PRODUCT_ROADMAP.md
       - CI/CD and release controls: CI_CD.md
       - Testing: TESTING.md
       - Frontend engineering: FRONTEND_ENGINEERING.md

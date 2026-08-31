@@ -21,6 +21,7 @@ own source documents.
 | 2026-08-31 | Frontend uses native controlled forms, typed native-Intl i18n, and CSS motion | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#language-design-and-motion-decisions) |
 | 2026-08-31 | Minimal PWA and runtime flags are accepted; Web Push and A/B testing are deferred behind explicit product and privacy gates | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#pwa-privacy-and-experiments) |
 | 2026-08-31 | Biome is the sole frontend linter; ESLint/React Compiler lint packages are prohibited by supply-chain policy | accepted | [Frontend engineering](FRONTEND_ENGINEERING.md#shared-component-and-hook-inventory) |
+| 2026-09-01 | Product workflows use typed records, explainable risk scoring, deployment-scoped branding/domain policy, informational billing, and REST/CLI automation | accepted | [Product roadmap](PRODUCT_ROADMAP.md#accepted-product-decisions) |
 
-Open product decisions remain visible and unchecked in `docs/BACKLOG.md`; they
-are not silently converted into implementation policy.
+Open product decisions remain visible and unchecked in `docs/BACKLOG.md`; resolved
+decisions are linked to implementation policy rather than silently assumed.

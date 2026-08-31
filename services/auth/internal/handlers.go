@@ -36,7 +36,7 @@ type registerInput struct {
 type loginInput struct {
 	Email    string `json:"email" validate:"required,max=254"`
 	Password string `json:"password" validate:"required,max=72"`
-	OTP      string `json:"otp" validate:"omitempty,len=6,numeric"`
+	OTP      string `json:"otp" validate:"omitempty,min=6,max=64"`
 }
 
 type forgotInput struct {

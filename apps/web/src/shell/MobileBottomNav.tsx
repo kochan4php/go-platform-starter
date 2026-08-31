@@ -12,7 +12,7 @@ export function MobileBottomNav({
   menuButtonRef: RefObject<HTMLButtonElement | null>;
 }) {
   const { pathname } = useLocation();
-  const items = ALL_NAV_ITEMS.slice(0, 4);
+  const items = ALL_NAV_ITEMS.slice(0, 3);
   return (
     <nav
       aria-label="Mobile navigation"

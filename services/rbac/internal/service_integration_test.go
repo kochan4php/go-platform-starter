@@ -168,6 +168,39 @@ func TestAssignDefaultRoleIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestResolveClaimsIncludesOnlyLiveDelegations(t *testing.T) {
+	svc, db, _ := newRBACFixture(t)
+	ctx := context.Background()
+	if err := db.Exec(`CREATE SCHEMA IF NOT EXISTS users;
+		CREATE TABLE users.product_records (
+			kind TEXT NOT NULL, subject_id BIGINT, status TEXT NOT NULL,
+			expires_at TIMESTAMPTZ, payload JSONB NOT NULL
+		)`).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Exec(`INSERT INTO users.product_records (kind, subject_id, status, expires_at, payload) VALUES
+		('delegation', 42, 'active', now() + interval '1 hour', '{"permission":"report:export:any"}'),
+		('delegation', 42, 'active', now() - interval '1 hour', '{"permission":"expired:read:any"}')`).Error; err != nil {
+		t.Fatal(err)
+	}
+	claims, err := svc.ResolveClaims(ctx, "42")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(claims.Perms, "report:export:any") || contains(claims.Perms, "expired:read:any") {
+		t.Fatalf("delegated permissions = %#v", claims.Perms)
+	}
+}
+
+func contains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
 func TestSeedCatalogIsVersionedAndIdempotent(t *testing.T) {
 	svc, db, _ := newRBACFixture(t)
 	ctx := context.Background()

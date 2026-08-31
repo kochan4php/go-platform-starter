@@ -13,8 +13,9 @@ import {
 } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth-context";
+import { secureRequest } from "../lib/api";
 import { ScrollToTop, useGatewayHealth, useOnline, useStored, useTheme, useToast } from "../lib/ui";
-import { OfflineBanner, SessionExpiringBanner } from "./Banners";
+import { ImpersonationBanner, OfflineBanner, SessionExpiringBanner } from "./Banners";
 import { CommandPalette } from "./CommandPalette";
 import { EnvBadge } from "./EnvBadge";
 import { MobileBottomNav } from "./MobileBottomNav";
@@ -56,6 +57,25 @@ function DashboardShellContent({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const busy = useIsFetching() + useIsMutating() > 0;
+  const [branding, setBranding] = useState({ name: "Platform Console", logoUrl: "" });
+
+  useEffect(() => {
+    void secureRequest<{
+      items?: Array<{ payload?: { name?: string; accent?: string; logoUrl?: string } }>;
+    }>("/users/product/records?kind=branding&limit=1")
+      .then(({ items }) => {
+        const payload = items?.[0]?.payload;
+        if (!payload) return;
+        const name = payload.name?.trim().slice(0, 80) || "Platform Console";
+        const logoUrl = payload.logoUrl?.startsWith("https://") ? payload.logoUrl : "";
+        if (payload.accent && CSS.supports("color", payload.accent)) {
+          document.documentElement.style.setProperty("--color-accent", payload.accent);
+        }
+        document.title = `${name} · Dashboard`;
+        setBranding({ name, logoUrl });
+      })
+      .catch(() => undefined);
+  }, []);
 
   const toggleCollapse = useCallback(() => setCollapsed(!collapsed), [collapsed, setCollapsed]);
 
@@ -204,15 +224,17 @@ function DashboardShellContent({ children }: { children: ReactNode }) {
         collapsed={collapsed}
         onToggleCollapse={toggleCollapse}
         onClose={() => setMenuOpen(false)}
+        branding={branding}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <OfflineBanner />
         <SessionExpiringBanner />
+        <ImpersonationBanner />
 
         {/* compact mobile identity bar; navigation lives at the bottom */}
         <div className="flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-3 lg:hidden">
-          <BrandMark busy={busy} />
+          <BrandMark busy={busy} name={branding.name} logoUrl={branding.logoUrl} />
           <EnvBadge env={ENV} />
         </div>
 
@@ -260,8 +282,9 @@ const Sidebar = forwardRef<
     collapsed: boolean;
     onToggleCollapse(): void;
     onClose(): void;
+    branding: { name: string; logoUrl: string };
   }
->(function Sidebar({ open, collapsed, onToggleCollapse, onClose }, ref) {
+>(function Sidebar({ open, collapsed, onToggleCollapse, onClose, branding }, ref) {
   const health = useGatewayHealth();
   const busy = useIsFetching() + useIsMutating() > 0;
 
@@ -275,7 +298,13 @@ const Sidebar = forwardRef<
       } py-6 ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
     >
       <div className={`flex items-center justify-between ${collapsed ? "flex-col gap-3" : ""}`}>
-        <BrandMark collapsed={collapsed} tooltip="Platform Console" busy={busy} />
+        <BrandMark
+          collapsed={collapsed}
+          tooltip={branding.name}
+          busy={busy}
+          name={branding.name}
+          logoUrl={branding.logoUrl}
+        />
         <button
           type="button"
           aria-label="Close navigation"

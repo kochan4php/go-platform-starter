@@ -307,12 +307,14 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 }
 
 func (s *Service) Login(ctx context.Context, email, password, userAgent, ip string, device ...string) (result *AuthResult, resultErr error) {
+	var historyUser *User
 	defer func() {
 		outcome := "success"
 		if resultErr != nil {
 			outcome = "fail"
 		}
 		loginsTotal.WithLabelValues(outcome).Inc()
+		s.recordLoginEvent(ctx, historyUser, ip, userAgent, resultErr)
 	}()
 	email = lower(email)
 	if err := s.checkAccountRate(ctx, email); err != nil {
@@ -334,6 +336,7 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 	} else if err != nil {
 		return nil, err
 	}
+	historyUser = u
 
 	if u.Status != "active" || (u.LockedUntil != nil && u.LockedUntil.After(s.now())) {
 		return nil, ErrBadCredentials()
@@ -348,7 +351,7 @@ func (s *Service) Login(ctx context.Context, email, password, userAgent, ip stri
 			_ = s.db.Model(&User{}).Where("id = ?", u.ID).Update("password_hash", upgraded).Error
 		}
 	}
-	if err := s.verifyMFA(u, otp); err != nil {
+	if err := s.verifyMFA(ctx, u, otp); err != nil {
 		s.recordFailedAttempt(ctx, u, ip, userAgent)
 		s.auditAuth(ctx, "mfa.failed", strconv.FormatInt(u.ID, 10), map[string]any{"ip": ip})
 		return nil, err

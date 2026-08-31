@@ -1304,61 +1304,61 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Product / Roadmap
 
-- [ ] 🔧 R1. Profil self-service page (edit nama, avatar, ganti password)
-- [ ] 🔧 R2. Sesi saya page (device list + revoke)
-- [ ] 🔧 R3. Audit viewer admin UI (endpoint sudah ada)
-- [ ] 🔧 R4. Dashboard overview page agregat
-- [ ] 🔧 R5. Grafik registrasi harian
-- [ ] 🧭 R6. In-app notification center
-- [ ] 🧭 R7. Email digest mingguan (worker job)
-- [ ] 🧭 R8. User invitation flow (email invite link)
-- [ ] 🧭 R9. Bulk invite CSV
-- [ ] 🔧 R10. User import/export
-- [ ] 🔧 R11. Role templates library
-- [ ] 🧭 R12. Permission request workflow (approval)
-- [ ] 🧭 R13. Approval inbox admin
-- [ ] 🧭 R14. Delegation akses sementara
-- [ ] 🧭 R15. User impersonation (ter-audit)
-- [ ] 🔧 R16. Audit log viewer filter + export lengkap
-- [ ] 🔧 R17. Session management page user sendiri
-- [ ] 🧭 R18. Account deletion self-service (grace period)
-- [ ] 🧭 R19. Email change self-service (verifikasi)
-- [ ] 🔧 R20. Password change self-service
-- [ ] 🧭 R21. Two-factor auth setup page
-- [ ] 🔧 R22. Recovery codes generation
-- [ ] 🔧 R23. Login history page user
-- [ ] 🔧 R24. Realtime admin dashboard (user online live)
-- [ ] 🧭 R25. Broadcast message ke user online
-- [ ] 🧭 R26. Chat/notification antar user
-- [ ] 🔧 R27. Presence API publik
-- [ ] 🔧 R28. API playground di docs (Scalar try-it)
-- [ ] 🧭 R29. API key management page
-- [ ] 🧭 R30. Webhook management page
-- [ ] 🔧 R31. Audit export scheduled email
-- [ ] 🔧 R32. User activity heatmap
-- [ ] 🔧 R33. Role usage analytics
-- [ ] 🔧 R34. Permission simulation tool
-- [ ] 🧭 R35. Compliance report generator
-- [ ] 🔧 R36. Data retention settings page
-- [ ] 🧭 R37. Branding customization per deployment
-- [ ] 🧭 R38. Custom domain per tenant
-- [ ] 🧭 R39. Onboarding wizard user baru
-- [ ] 🧭 R40. Guided tour dashboard
-- [ ] 🔧 R41. Global search lintar resource
-- [ ] 🔧 R42. Saved views/filters
-- [ ] 🔧 R43. Scheduled reports
+- [x] 🔧 R1. Profil self-service page (edit nama, avatar, ganti password)
+- [x] 🔧 R2. Sesi saya page (device list + revoke)
+- [x] 🔧 R3. Audit viewer admin UI (endpoint sudah ada)
+- [x] 🔧 R4. Dashboard overview page agregat
+- [x] 🔧 R5. Grafik registrasi harian
+- [x] 🧭 R6. In-app notification center
+- [x] 🧭 R7. Email digest mingguan (worker job)
+- [x] 🧭 R8. User invitation flow (email invite link)
+- [x] 🧭 R9. Bulk invite CSV
+- [x] 🔧 R10. User import/export
+- [x] 🔧 R11. Role templates library
+- [x] 🧭 R12. Permission request workflow (approval)
+- [x] 🧭 R13. Approval inbox admin
+- [x] 🧭 R14. Delegation akses sementara
+- [x] 🧭 R15. User impersonation (ter-audit)
+- [x] 🔧 R16. Audit log viewer filter + export lengkap
+- [x] 🔧 R17. Session management page user sendiri
+- [x] 🧭 R18. Account deletion self-service (grace period)
+- [x] 🧭 R19. Email change self-service (verifikasi)
+- [x] 🔧 R20. Password change self-service
+- [x] 🧭 R21. Two-factor auth setup page
+- [x] 🔧 R22. Recovery codes generation
+- [x] 🔧 R23. Login history page user
+- [x] 🔧 R24. Realtime admin dashboard (user online live)
+- [x] 🧭 R25. Broadcast message ke user online
+- [x] 🧭 R26. Chat/notification antar user
+- [x] 🔧 R27. Presence API publik
+- [x] 🔧 R28. API playground di docs (Scalar try-it)
+- [x] 🧭 R29. API key management page
+- [x] 🧭 R30. Webhook management page
+- [x] 🔧 R31. Audit export scheduled email
+- [x] 🔧 R32. User activity heatmap
+- [x] 🔧 R33. Role usage analytics
+- [x] 🔧 R34. Permission simulation tool
+- [x] 🧭 R35. Compliance report generator
+- [x] 🔧 R36. Data retention settings page
+- [x] 🧭 R37. Branding customization per deployment
+- [x] 🧭 R38. Custom domain per tenant
+- [x] 🧭 R39. Onboarding wizard user baru
+- [x] 🧭 R40. Guided tour dashboard
+- [x] 🔧 R41. Global search lintar resource
+- [x] 🔧 R42. Saved views/filters
+- [x] 🔧 R43. Scheduled reports
 - [ ] 🧭 R44. Slack integration notif
 - [ ] 🧭 R45. Discord bot query
-- [ ] 🔧 R46. CLI tool admin ops
-- [ ] 🧭 R47. Terraform provider platform
-- [ ] 🔧 R48. Public API docs portal
-- [ ] 🔧 R49. Rate limit dashboard per consumer
-- [ ] 🧭 R50. Billing/usage metering
-- [ ] 🧭 R51. Marketplace template role
-- [ ] 🧭 R52. ML anomaly login detection
-- [ ] 🧭 R53. Risk-based auth scoring
-- [ ] 🧭 R54. Passwordless magic link
-- [ ] 🧭 R55. Social login Google/GitHub
+- [x] 🔧 R46. CLI tool admin ops
+- [x] 🧭 R47. Terraform provider platform
+- [x] 🔧 R48. Public API docs portal
+- [x] 🔧 R49. Rate limit dashboard per consumer
+- [x] 🧭 R50. Billing/usage metering
+- [x] 🧭 R51. Marketplace template role
+- [x] 🧭 R52. ML anomaly login detection
+- [x] 🧭 R53. Risk-based auth scoring
+- [x] 🧭 R54. Passwordless magic link
+- [x] 🧭 R55. Social login Google/GitHub
 - [ ] 🧭 R56. Enterprise SSO SAML/OIDC
 
 ---

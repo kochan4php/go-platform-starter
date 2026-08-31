@@ -14,10 +14,12 @@ import (
 )
 
 type Service struct {
-	db  *gorm.DB
-	rdb *redis.Client
-	log *slog.Logger
-	pub platform.StreamPublisher
+	db               *gorm.DB
+	rdb              *redis.Client
+	log              *slog.Logger
+	pub              platform.StreamPublisher
+	productSecret    string
+	productPublicURL string
 }
 
 type ListFilters struct {
@@ -319,6 +321,36 @@ func (s *Service) Delete(ctx context.Context, sub string) error {
 	}
 	_ = s.rdb.Publish(ctx, "force-logout", sub).Err()
 	s.audit(ctx, "delete", "profile", sub)
+	return nil
+}
+
+// ScheduleDeletion disables the account and revokes access while retaining
+// profile data during the documented restoration window.
+func (s *Service) ScheduleDeletion(ctx context.Context, sub string) error {
+	var claimsVersion int64
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Exec(`UPDATE users.users SET status = 'deleted', deleted_at = now()
+			WHERE id = ? AND deleted_at IS NULL`, sub)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return platform.ErrNotFound("profile %s not found", sub)
+		}
+		if err := tx.Exec(`UPDATE auth.sessions SET revoked_at = now() WHERE user_id = ? AND revoked_at IS NULL`, sub).Error; err != nil {
+			return err
+		}
+		return tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
+			ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, sub).Scan(&claimsVersion).Error
+	})
+	if err != nil {
+		return err
+	}
+	if err := s.rdb.Set(ctx, "claims:ver:"+sub, claimsVersion, 0).Err(); err != nil {
+		s.log.Error("invalidate scheduled deletion claims failed", "err", err)
+	}
+	_ = s.rdb.Publish(ctx, "force-logout", sub).Err()
+	s.audit(ctx, "schedule_delete", "profile", sub)
 	return nil
 }
 

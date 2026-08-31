@@ -59,6 +59,10 @@ services:
     environment:
       PORT: "8081"
       APP_PUBLIC_URL: http://127.0.0.1:${LAB_WEB_PORT:-5173}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       RBAC_INTERNAL_URL: http://rbac:8083
       # Interpolated from the caller so deploy-lab / CI can pin credentials.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.local}
@@ -74,6 +78,7 @@ services:
     env_file: [./go.env]
     environment:
       PORT: "8082"
+      APP_PUBLIC_URL: http://127.0.0.1:${LAB_WEB_PORT:-5173}
     ports: ["${LAB_USERS_PORT:-8082}:8082"]
     depends_on:
       postgres: { condition: service_healthy }

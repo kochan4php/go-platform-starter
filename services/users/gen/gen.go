@@ -14,6 +14,78 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for ProductKind.
+const (
+	AccessRequest    ProductKind = "access_request"
+	AccountDeletion  ProductKind = "account_deletion"
+	ApiKey           ProductKind = "api_key"
+	BillingUsage     ProductKind = "billing_usage"
+	Branding         ProductKind = "branding"
+	Broadcast        ProductKind = "broadcast"
+	ChatMessage      ProductKind = "chat_message"
+	ComplianceReport ProductKind = "compliance_report"
+	ConsumerQuota    ProductKind = "consumer_quota"
+	Delegation       ProductKind = "delegation"
+	Domain           ProductKind = "domain"
+	EmailChange      ProductKind = "email_change"
+	Invitation       ProductKind = "invitation"
+	Notification     ProductKind = "notification"
+	Onboarding       ProductKind = "onboarding"
+	Retention        ProductKind = "retention"
+	RoleTemplate     ProductKind = "role_template"
+	SavedView        ProductKind = "saved_view"
+	ScheduledReport  ProductKind = "scheduled_report"
+	Webhook          ProductKind = "webhook"
+)
+
+// Valid indicates whether the value is a known member of the ProductKind enum.
+func (e ProductKind) Valid() bool {
+	switch e {
+	case AccessRequest:
+		return true
+	case AccountDeletion:
+		return true
+	case ApiKey:
+		return true
+	case BillingUsage:
+		return true
+	case Branding:
+		return true
+	case Broadcast:
+		return true
+	case ChatMessage:
+		return true
+	case ComplianceReport:
+		return true
+	case ConsumerQuota:
+		return true
+	case Delegation:
+		return true
+	case Domain:
+		return true
+	case EmailChange:
+		return true
+	case Invitation:
+		return true
+	case Notification:
+		return true
+	case Onboarding:
+		return true
+	case Retention:
+		return true
+	case RoleTemplate:
+		return true
+	case SavedView:
+		return true
+	case ScheduledReport:
+		return true
+	case Webhook:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ProfileStatus.
 const (
 	Active   ProfileStatus = "active"
@@ -200,6 +272,39 @@ type EnvelopeOK struct {
 	Success bool        `json:"success"`
 }
 
+// ProductKind defines model for ProductKind.
+type ProductKind string
+
+// ProductRecord defines model for ProductRecord.
+type ProductRecord struct {
+	CreatedAt time.Time              `json:"createdAt"`
+	ExpiresAt *time.Time             `json:"expiresAt,omitempty"`
+	Id        int64                  `json:"id"`
+	Kind      ProductKind            `json:"kind"`
+	Name      string                 `json:"name"`
+	OwnerId   int64                  `json:"ownerId"`
+	Payload   map[string]interface{} `json:"payload"`
+	Status    string                 `json:"status"`
+	SubjectId *int64                 `json:"subjectId,omitempty"`
+	UpdatedAt time.Time              `json:"updatedAt"`
+}
+
+// ProductRecordInput defines model for ProductRecordInput.
+type ProductRecordInput struct {
+	ExpiresAt *time.Time             `json:"expiresAt,omitempty"`
+	Kind      ProductKind            `json:"kind"`
+	Name      string                 `json:"name"`
+	Payload   map[string]interface{} `json:"payload"`
+	Status    *string                `json:"status,omitempty"`
+	SubjectId *int64                 `json:"subjectId,omitempty"`
+}
+
+// ProductRecordUpdate defines model for ProductRecordUpdate.
+type ProductRecordUpdate struct {
+	Payload map[string]interface{} `json:"payload"`
+	Status  string                 `json:"status"`
+}
+
 // Profile defines model for Profile.
 type Profile struct {
 	ActiveSessions     *int                 `json:"activeSessions,omitempty"`
@@ -243,6 +348,11 @@ type ProfileUpdateInput struct {
 type RoleSummary struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+// TokenInput defines model for TokenInput.
+type TokenInput struct {
+	Token string `json:"token"`
 }
 
 // UserStats defines model for UserStats.
@@ -317,11 +427,56 @@ type MeParams struct {
 // MeParamsInclude defines parameters for Me.
 type MeParamsInclude string
 
+// RequestEmailChangeJSONBody defines parameters for RequestEmailChange.
+type RequestEmailChangeJSONBody struct {
+	Email openapi_types.Email `json:"email"`
+}
+
+// SimulatePermissionJSONBody defines parameters for SimulatePermission.
+type SimulatePermissionJSONBody struct {
+	Permission string `json:"permission"`
+	UserId     int64  `json:"userId"`
+}
+
+// ListProductRecordsParams defines parameters for ListProductRecords.
+type ListProductRecordsParams struct {
+	Kind   *ProductKind `form:"kind,omitempty" json:"kind,omitempty"`
+	Status *string      `form:"status,omitempty" json:"status,omitempty"`
+	Q      *string      `form:"q,omitempty" json:"q,omitempty"`
+	Limit  *int         `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SearchProductParams defines parameters for SearchProduct.
+type SearchProductParams struct {
+	Q string `form:"q" json:"q"`
+}
+
 // CreateUserProfileJSONRequestBody defines body for CreateUserProfile for application/json ContentType.
 type CreateUserProfileJSONRequestBody = ProfileInput
 
 // ResizeAvatarMultipartRequestBody defines body for ResizeAvatar for multipart/form-data ContentType.
 type ResizeAvatarMultipartRequestBody ResizeAvatarMultipartBody
+
+// RestoreAccountDeletionJSONRequestBody defines body for RestoreAccountDeletion for application/json ContentType.
+type RestoreAccountDeletionJSONRequestBody = TokenInput
+
+// VerifyEmailChangeJSONRequestBody defines body for VerifyEmailChange for application/json ContentType.
+type VerifyEmailChangeJSONRequestBody = TokenInput
+
+// RequestEmailChangeJSONRequestBody defines body for RequestEmailChange for application/json ContentType.
+type RequestEmailChangeJSONRequestBody RequestEmailChangeJSONBody
+
+// VerifyInvitationJSONRequestBody defines body for VerifyInvitation for application/json ContentType.
+type VerifyInvitationJSONRequestBody = TokenInput
+
+// SimulatePermissionJSONRequestBody defines body for SimulatePermission for application/json ContentType.
+type SimulatePermissionJSONRequestBody SimulatePermissionJSONBody
+
+// CreateProductRecordJSONRequestBody defines body for CreateProductRecord for application/json ContentType.
+type CreateProductRecordJSONRequestBody = ProductRecordInput
+
+// UpdateProductRecordJSONRequestBody defines body for UpdateProductRecord for application/json ContentType.
+type UpdateProductRecordJSONRequestBody = ProductRecordUpdate
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = ProfileUpdateInput
@@ -337,15 +492,57 @@ type ServerInterface interface {
 	// ResizeAvatar validate and resize an avatar to fit within 512x512
 	// (POST /users/avatar/resize)
 	ResizeAvatar(w http.ResponseWriter, r *http.Request)
+	// RestoreAccountDeletion restore an account during its 30-day deletion grace period
+	// (POST /users/deletion/restore)
+	RestoreAccountDeletion(w http.ResponseWriter, r *http.Request)
+	// VerifyEmailChange consume an email-change token and atomically replace the identity email
+	// (POST /users/email-change/verify)
+	VerifyEmailChange(w http.ResponseWriter, r *http.Request)
 	// EraseMe irreversibly erase the caller's personal data and revoke access
 	// (DELETE /users/me)
 	EraseMe(w http.ResponseWriter, r *http.Request)
 	// Me the caller's profile, served purely from identity headers
 	// (GET /users/me)
 	Me(w http.ResponseWriter, r *http.Request, params MeParams)
+	// RequestAccountDeletion schedule account erasure after a 30-day grace period and revoke sessions
+	// (POST /users/me/deletion)
+	RequestAccountDeletion(w http.ResponseWriter, r *http.Request)
+	// RequestEmailChange send a single-use verification link before changing the caller email
+	// (POST /users/me/email-change)
+	RequestEmailChange(w http.ResponseWriter, r *http.Request)
 	// ExportMyData download all personal data held by the platform
 	// (GET /users/me/export)
 	ExportMyData(w http.ResponseWriter, r *http.Request)
+	// ProductAnalytics activity heatmap, role usage, login risk, and usage metering
+	// (GET /users/product/analytics)
+	ProductAnalytics(w http.ResponseWriter, r *http.Request)
+	// VerifyInvitation consume an invitation and return its pre-approved registration attributes
+	// (POST /users/product/invitations/verify)
+	VerifyInvitation(w http.ResponseWriter, r *http.Request)
+	// ProductOverview aggregate product dashboard counters and registration series
+	// (GET /users/product/overview)
+	ProductOverview(w http.ResponseWriter, r *http.Request)
+	// SimulatePermission explain whether roles or a live delegation grant a permission
+	// (POST /users/product/permissions/simulate)
+	SimulatePermission(w http.ResponseWriter, r *http.Request)
+	// ProductPresence privacy-safe public presence aggregate for authenticated clients
+	// (GET /users/product/presence)
+	ProductPresence(w http.ResponseWriter, r *http.Request)
+	// ListProductRecords list typed product workflows visible to the caller
+	// (GET /users/product/records)
+	ListProductRecords(w http.ResponseWriter, r *http.Request, params ListProductRecordsParams)
+	// CreateProductRecord create a notification, workflow, integration, preference, or report schedule
+	// (POST /users/product/records)
+	CreateProductRecord(w http.ResponseWriter, r *http.Request)
+	// DeleteProductRecord delete a caller-owned or administratively managed product record
+	// (DELETE /users/product/records/{id})
+	DeleteProductRecord(w http.ResponseWriter, r *http.Request, id int64)
+	// UpdateProductRecord update product workflow status and payload
+	// (PATCH /users/product/records/{id})
+	UpdateProductRecord(w http.ResponseWriter, r *http.Request, id int64)
+	// SearchProduct global search across profiles and accessible product resources
+	// (GET /users/product/search)
+	SearchProduct(w http.ResponseWriter, r *http.Request, params SearchProductParams)
 	// GetUserStats directory totals and seven-day registration series
 	// (GET /users/stats)
 	GetUserStats(w http.ResponseWriter, r *http.Request)
@@ -382,6 +579,18 @@ func (_ Unimplemented) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// RestoreAccountDeletion restore an account during its 30-day deletion grace period
+// (POST /users/deletion/restore)
+func (_ Unimplemented) RestoreAccountDeletion(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// VerifyEmailChange consume an email-change token and atomically replace the identity email
+// (POST /users/email-change/verify)
+func (_ Unimplemented) VerifyEmailChange(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // EraseMe irreversibly erase the caller's personal data and revoke access
 // (DELETE /users/me)
 func (_ Unimplemented) EraseMe(w http.ResponseWriter, r *http.Request) {
@@ -394,9 +603,81 @@ func (_ Unimplemented) Me(w http.ResponseWriter, r *http.Request, params MeParam
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// RequestAccountDeletion schedule account erasure after a 30-day grace period and revoke sessions
+// (POST /users/me/deletion)
+func (_ Unimplemented) RequestAccountDeletion(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RequestEmailChange send a single-use verification link before changing the caller email
+// (POST /users/me/email-change)
+func (_ Unimplemented) RequestEmailChange(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ExportMyData download all personal data held by the platform
 // (GET /users/me/export)
 func (_ Unimplemented) ExportMyData(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ProductAnalytics activity heatmap, role usage, login risk, and usage metering
+// (GET /users/product/analytics)
+func (_ Unimplemented) ProductAnalytics(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// VerifyInvitation consume an invitation and return its pre-approved registration attributes
+// (POST /users/product/invitations/verify)
+func (_ Unimplemented) VerifyInvitation(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ProductOverview aggregate product dashboard counters and registration series
+// (GET /users/product/overview)
+func (_ Unimplemented) ProductOverview(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SimulatePermission explain whether roles or a live delegation grant a permission
+// (POST /users/product/permissions/simulate)
+func (_ Unimplemented) SimulatePermission(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ProductPresence privacy-safe public presence aggregate for authenticated clients
+// (GET /users/product/presence)
+func (_ Unimplemented) ProductPresence(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListProductRecords list typed product workflows visible to the caller
+// (GET /users/product/records)
+func (_ Unimplemented) ListProductRecords(w http.ResponseWriter, r *http.Request, params ListProductRecordsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateProductRecord create a notification, workflow, integration, preference, or report schedule
+// (POST /users/product/records)
+func (_ Unimplemented) CreateProductRecord(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteProductRecord delete a caller-owned or administratively managed product record
+// (DELETE /users/product/records/{id})
+func (_ Unimplemented) DeleteProductRecord(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateProductRecord update product workflow status and payload
+// (PATCH /users/product/records/{id})
+func (_ Unimplemented) UpdateProductRecord(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SearchProduct global search across profiles and accessible product resources
+// (GET /users/product/search)
+func (_ Unimplemented) SearchProduct(w http.ResponseWriter, r *http.Request, params SearchProductParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -661,6 +942,34 @@ func (siw *ServerInterfaceWrapper) ResizeAvatar(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// RestoreAccountDeletion operation middleware
+func (siw *ServerInterfaceWrapper) RestoreAccountDeletion(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RestoreAccountDeletion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// VerifyEmailChange operation middleware
+func (siw *ServerInterfaceWrapper) VerifyEmailChange(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifyEmailChange(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // EraseMe operation middleware
 func (siw *ServerInterfaceWrapper) EraseMe(w http.ResponseWriter, r *http.Request) {
 
@@ -708,11 +1017,280 @@ func (siw *ServerInterfaceWrapper) Me(w http.ResponseWriter, r *http.Request) {
 	handler.ServeHTTP(w, r)
 }
 
+// RequestAccountDeletion operation middleware
+func (siw *ServerInterfaceWrapper) RequestAccountDeletion(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RequestAccountDeletion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RequestEmailChange operation middleware
+func (siw *ServerInterfaceWrapper) RequestEmailChange(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RequestEmailChange(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ExportMyData operation middleware
 func (siw *ServerInterfaceWrapper) ExportMyData(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ExportMyData(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ProductAnalytics operation middleware
+func (siw *ServerInterfaceWrapper) ProductAnalytics(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ProductAnalytics(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// VerifyInvitation operation middleware
+func (siw *ServerInterfaceWrapper) VerifyInvitation(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.VerifyInvitation(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ProductOverview operation middleware
+func (siw *ServerInterfaceWrapper) ProductOverview(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ProductOverview(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SimulatePermission operation middleware
+func (siw *ServerInterfaceWrapper) SimulatePermission(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SimulatePermission(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ProductPresence operation middleware
+func (siw *ServerInterfaceWrapper) ProductPresence(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ProductPresence(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListProductRecords operation middleware
+func (siw *ServerInterfaceWrapper) ListProductRecords(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListProductRecordsParams
+
+	// ------------- Optional query parameter "kind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kind", r.URL.Query(), &params.Kind, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kind"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", r.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "status"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListProductRecords(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateProductRecord operation middleware
+func (siw *ServerInterfaceWrapper) CreateProductRecord(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateProductRecord(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteProductRecord operation middleware
+func (siw *ServerInterfaceWrapper) DeleteProductRecord(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteProductRecord(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateProductRecord operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProductRecord(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateProductRecord(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SearchProduct operation middleware
+func (siw *ServerInterfaceWrapper) SearchProduct(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchProductParams
+
+	// ------------- Required query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchProduct(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -947,6 +1525,48 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users/stats", wrapper.GetUserStats)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/product/overview", wrapper.ProductOverview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/product/records", wrapper.ListProductRecords)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/product/records", wrapper.CreateProductRecord)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/users/product/records/{id}", wrapper.DeleteProductRecord)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/users/product/records/{id}", wrapper.UpdateProductRecord)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/product/search", wrapper.SearchProduct)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/product/analytics", wrapper.ProductAnalytics)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/product/permissions/simulate", wrapper.SimulatePermission)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users/product/presence", wrapper.ProductPresence)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/product/invitations/verify", wrapper.VerifyInvitation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/me/email-change", wrapper.RequestEmailChange)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/email-change/verify", wrapper.VerifyEmailChange)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/me/deletion", wrapper.RequestAccountDeletion)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/deletion/restore", wrapper.RestoreAccountDeletion)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/users/{id}", wrapper.DeleteUser)

@@ -11,6 +11,7 @@ type Config struct {
 	RedisUsername      string        `env:"REDIS_USERNAME" envDefault:""`
 	RedisPassword      string        `env:"REDIS_PASSWORD" envDefault:""`
 	InternalSecret     string        `env:"INTERNAL_SECRET,required"`
+	AppPublicURL       string        `env:"APP_PUBLIC_URL" envDefault:"http://127.0.0.1:5173"`
 }
 
 // Profile is the merged identity+profile row owned by this service.

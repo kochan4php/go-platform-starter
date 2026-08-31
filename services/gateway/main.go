@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-redis/redis_rate/v10"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 	internal "github.com/kochan4php/go-platform-starter/services/gateway/internal"
@@ -25,6 +26,13 @@ import (
 var specFS embed.FS
 
 type ctxKeyAuth struct{}
+
+var rateLimitDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "gateway_rate_limit_decisions_total",
+	Help: "Rate-limit decisions by authenticated consumer, route class, and result.",
+}, []string{"consumer", "class", "result"})
+
+func init() { prometheus.MustRegister(rateLimitDecisions) }
 
 func main() {
 	flag.Parse()
@@ -209,6 +217,7 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 			class := "standard"
 			bucket := class
 			consumer := clientIP(r, trusted)
+			metricConsumer := "anonymous"
 			route := matcher.Match(r.Method, r.URL.Path)
 			if route != nil {
 				class = route.RateClass
@@ -224,6 +233,7 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 				raw := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 				if claims, err := internal.ParseAccess(policies[0].secret, raw); err == nil {
 					consumer = claims.Sub
+					metricConsumer = claims.Sub
 					if route != nil && route.ConsumerQuota > 0 {
 						limit = route.ConsumerQuota
 					}
@@ -234,6 +244,7 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 			}
 			res, err := limiter.Allow(r.Context(), "rl:edge:"+bucket+":"+consumer, redis_rate.PerMinute(limit))
 			if err != nil {
+				rateLimitDecisions.WithLabelValues(metricConsumer, class, "unavailable").Inc()
 				if class == "strict" {
 					log.Error("strict edge rate limiter unavailable (fail-closed)", "err", err)
 					platform.Fail(w, http.StatusServiceUnavailable, "rate_limit_unavailable", "request protection is temporarily unavailable")
@@ -248,11 +259,13 @@ func edgeRateLimit(limiter *redis_rate.Limiter, log *slog.Logger, perMinute int,
 			resetSeconds := max(1, int((res.ResetAfter+time.Second-1)/time.Second))
 			w.Header().Set("X-RateLimit-Reset", strconv.Itoa(resetSeconds))
 			if res.Allowed == 0 {
+				rateLimitDecisions.WithLabelValues(metricConsumer, class, "denied").Inc()
 				retrySeconds := max(1, int((res.RetryAfter+time.Second-1)/time.Second))
 				w.Header().Set("Retry-After", strconv.Itoa(retrySeconds))
 				platform.Fail(w, http.StatusTooManyRequests, "rate_limited", "too many requests")
 				return
 			}
+			rateLimitDecisions.WithLabelValues(metricConsumer, class, "allowed").Inc()
 			next.ServeHTTP(w, r)
 		})
 	}

@@ -106,12 +106,19 @@ func (s *Service) VerifyMFAEnrollment(ctx context.Context, userID int64, code st
 	return nil
 }
 
-func (s *Service) verifyMFA(user *User, code string) error {
+func (s *Service) verifyMFA(ctx context.Context, user *User, code string) error {
 	if !user.MFAEnabled {
 		return nil
 	}
 	if strings.TrimSpace(code) == "" {
 		return &platform.AppError{Status: 401, Message: "mfa_required", Detail: "authenticator code required"}
+	}
+	if len(strings.TrimSpace(code)) != 6 {
+		if s.consumeRecoveryCode(ctx, user.ID, code) {
+			s.auditAuth(ctx, "mfa.recovery_code_used", strconv.FormatInt(user.ID, 10), nil)
+			return nil
+		}
+		return ErrBadCredentials()
 	}
 	sub := strconv.FormatInt(user.ID, 10)
 	secret, err := platform.DecryptForSubject(s.cryptoRing(), sub, "mfa-secret", user.MFASecretEnc)

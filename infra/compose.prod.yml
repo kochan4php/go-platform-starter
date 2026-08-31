@@ -114,7 +114,7 @@ services:
         printf '%s\n' \
           'user default off' \
           "user auth on >$$REDIS_AUTH_PASSWORD resetkeys resetchannels ~rl:* ~login:* ~auth:* ~mfa:* ~refresh:* ~reset:* ~scheduler:* ~users.events* ~mail.jobs* ~audit.events* ~webhook.jobs* &force-logout +get +set +getdel +del +incr +expire +pexpire +setnx +xadd +publish +eval +evalsha +time +ping" \
-          "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +get +set +setnx +del +pexpire +eval +evalsha +publish +ping" \
+          "user users on >$$REDIS_USERS_PASSWORD resetkeys resetchannels ~users.events* ~audit.events* ~mail.jobs* ~webhook.jobs* ~claims:* ~scheduler:* &force-logout +xreadgroup +xgroup +xack +xadd +get +set +setnx +del +pexpire +eval +evalsha +publish +ping" \
           "user rbac on >$$REDIS_RBAC_PASSWORD resetkeys resetchannels ~claims:* ~audit.events* ~users.events* &force-logout +get +set +xadd +xreadgroup +xgroup +xack +publish +ping" \
           "user worker on >$$REDIS_WORKER_PASSWORD resetkeys resetchannels ~mail.jobs* ~audit.events* ~webhook.jobs* ~*:dlq ~worker:* ~scheduler:* +xreadgroup +xgroup +xack +xautoclaim +xpending +xlen +xadd +get +set +setnx +del +pexpire +eval +evalsha +incr +expire +ping" \
           "user scheduler on >$$REDIS_SCHEDULER_PASSWORD resetkeys resetchannels ~leader:* ~scheduler:* ~*.events* ~*.jobs* +get +set +del +pexpire +eval +evalsha +xadd +ping" \
@@ -140,6 +140,10 @@ services:
       <<: *go-env
       PORT: "8080"
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:?set APP_PUBLIC_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       RBAC_INTERNAL_URL: http://rbac:8080
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
@@ -160,6 +164,7 @@ services:
     environment:
       <<: *go-env
       PORT: "8080"
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:?set APP_PUBLIC_URL}
       REDIS_USERNAME: users
       REDIS_PASSWORD: ${REDIS_USERS_PASSWORD:?set REDIS_USERS_PASSWORD}
     depends_on:

@@ -13,11 +13,7 @@ export const loginSchema = z
   .object({
     email: z.string().email().max(254),
     password: z.string().max(72),
-    otp: z
-      .string()
-      .max(6)
-      .regex(/^[0-9]{6}$/)
-      .optional(),
+    otp: z.string().min(6).max(64).optional(),
   })
   .strict();
 
@@ -27,6 +23,18 @@ export const verifyMFASchema = z
       .string()
       .max(6)
       .regex(/^[0-9]{6}$/),
+  })
+  .strict();
+
+export const requestMagicLinkSchema = z
+  .object({
+    email: z.string().email().max(254),
+  })
+  .strict();
+
+export const consumeMagicLinkSchema = z
+  .object({
+    token: z.string().max(4096),
   })
   .strict();
 
@@ -153,6 +161,76 @@ export const createUserProfileSchema = z
       .max(400)
       .regex(/^$|^https:\/\//)
       .optional(),
+  })
+  .strict();
+
+export const createProductRecordSchema = z
+  .object({
+    kind: z.enum([
+      "notification",
+      "invitation",
+      "access_request",
+      "delegation",
+      "api_key",
+      "webhook",
+      "scheduled_report",
+      "saved_view",
+      "role_template",
+      "compliance_report",
+      "branding",
+      "domain",
+      "billing_usage",
+      "broadcast",
+      "chat_message",
+      "onboarding",
+      "retention",
+      "consumer_quota",
+      "email_change",
+      "account_deletion",
+    ]),
+    subjectId: z.number().int().min(1).optional(),
+    name: z.string().min(1).max(200),
+    status: z.string().max(40).optional(),
+    payload: z.object({}).strict(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const updateProductRecordSchema = z
+  .object({
+    status: z.string().min(1).max(40),
+    payload: z.object({}).strict(),
+  })
+  .strict();
+
+export const simulatePermissionSchema = z
+  .object({
+    userId: z.number().int().min(1),
+    permission: z.string().min(1).max(120),
+  })
+  .strict();
+
+export const verifyInvitationSchema = z
+  .object({
+    token: z.string().min(20).max(512),
+  })
+  .strict();
+
+export const requestEmailChangeSchema = z
+  .object({
+    email: z.string().email().max(254),
+  })
+  .strict();
+
+export const verifyEmailChangeSchema = z
+  .object({
+    token: z.string().min(20).max(512),
+  })
+  .strict();
+
+export const restoreAccountDeletionSchema = z
+  .object({
+    token: z.string().min(20).max(512),
   })
   .strict();
 

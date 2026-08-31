@@ -25,13 +25,22 @@ func randomToken(n int) (string, error) {
 }
 
 type Claims struct {
-	Purpose string   `json:"purpose"`
-	Sub     string   `json:"sub,omitempty"`
-	Email   string   `json:"email,omitempty"`
-	JTI     string   `json:"jti,omitempty"`
-	Ver     int64    `json:"ver,omitempty"`
-	Perms   []string `json:"perms,omitempty"`
+	Purpose      string   `json:"purpose"`
+	Sub          string   `json:"sub,omitempty"`
+	Email        string   `json:"email,omitempty"`
+	JTI          string   `json:"jti,omitempty"`
+	Ver          int64    `json:"ver,omitempty"`
+	Perms        []string `json:"perms,omitempty"`
+	Impersonator string   `json:"impersonator,omitempty"`
 	jwt.RegisteredClaims
+}
+
+func MintImpersonationWithRing(rawKeys, sub, email, actor string, ver int64, perms []string, ttl time.Duration) (string, error) {
+	now := time.Now()
+	return mintWithRing(rawKeys, Claims{
+		Purpose: PurposeAccess, Sub: sub, Email: email, Ver: ver, Perms: perms, Impersonator: actor,
+		RegisteredClaims: jwt.RegisteredClaims{IssuedAt: jwt.NewNumericDate(now), ExpiresAt: jwt.NewNumericDate(now.Add(ttl))},
+	})
 }
 
 func mint(secret []byte, claims Claims) (string, error) {

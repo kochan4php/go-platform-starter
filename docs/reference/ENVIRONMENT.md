@@ -11,7 +11,7 @@ Secret examples are always masked; the real values must come from the deployment
 | `ADMIN_BOOTSTRAP_PASSWORD` | no | `<secret>` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | Random password is generated into this file by deploy.sh; printed once at first seed and changeable later through the normal reset flow. |
 | `ADMIN_EMAIL` | no | `admin@example.com / admin@example.local` | `infra/.env.production.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | --- bootstrap admin (first deploy) ---------------------------------------- |
 | `AGE_BACKUP_RECIPIENT` | no | `age1replace-with-production-recipient` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | — |
-| `APP_PUBLIC_URL` | yes | `https://example.com / http://127.0.0.1:5173` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.prod.yml` | Browser-facing auth URL. Switch to https:// after TLS is enabled. set APP_PUBLIC_URL |
+| `APP_PUBLIC_URL` | yes | `https://example.com / http://127.0.0.1:5173` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`services/users/.env.example`<br>`infra/compose.prod.yml` | Browser-facing auth URL. Switch to https:// after TLS is enabled. set APP_PUBLIC_URL |
 | `APP_VERSION` | no | `dev` | `infra/go.env`<br>`infra/compose.prod.yml` | — |
 | `BACKUP_INTERVAL_SECONDS` | no | `86400` | `infra/compose.prod.yml` | — |
 | `BACKUP_RETENTION_DAYS` | no | `14` | `infra/compose.prod.yml` | — |
@@ -34,8 +34,12 @@ Secret examples are always masked; the real values must come from the deployment
 | `EDGE_PORT` | no | `80` | `infra/.env.production.example`<br>`infra/compose.prod.yml` | Host port for the plain HTTP edge listener. |
 | `GATEWAY_MIDDLEWARES` | no | `rate-limit,body-guard,proxy` | `services/gateway/.env.example` | — |
 | `GIT_COMMIT` | no | `local / unknown` | `infra/go.env`<br>`infra/compose.prod.yml` | — |
+| `GITHUB_CLIENT_ID` | yes | `—` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | — |
+| `GITHUB_CLIENT_SECRET` | yes | `—` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | — |
 | `GOGC` | no | `100` | `infra/compose.prod.yml` | — |
 | `GOMEMLIMIT` | no | `200MiB` | `infra/compose.prod.yml` | — |
+| `GOOGLE_CLIENT_ID` | yes | `—` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | — |
+| `GOOGLE_CLIENT_SECRET` | yes | `—` | `infra/.env.production.example`<br>`services/auth/.env.example`<br>`infra/compose.base.yml`<br>`infra/compose.prod.yml` | — |
 | `GRAFANA_ADMIN_PASSWORD` | no | `<secret>` | `infra/compose.observability.yml` | — |
 | `HIBP_API_URL` | no | `https://api.pwnedpasswords.com/range` | `services/auth/.env.example` | — |
 | `HIBP_TIMEOUT` | no | `3s` | `services/auth/.env.example` | — |

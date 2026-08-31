@@ -345,25 +345,34 @@ export function BrandMark({
   collapsed = false,
   tooltip = "",
   busy = false,
+  name = "Platform Console",
+  logoUrl,
   onClick,
 }: {
   href?: string;
   collapsed?: boolean;
   tooltip?: string;
   busy?: boolean;
+  name?: string;
+  logoUrl?: string;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }) {
+  const mark = logoUrl ? (
+    <img src={logoUrl} alt="" className="size-6 rounded object-contain" />
+  ) : (
+    <span
+      className={`block size-2 rounded-full bg-[var(--color-accent)] ${busy ? "animate-brand-dot" : ""}`}
+    />
+  );
   if (collapsed) {
     return (
       <a
         href={href}
-        title={tooltip || "Platform Console"}
+        title={tooltip || name}
         onClick={onClick}
         className="flex items-center gap-2 font-bold tracking-tight"
       >
-        <span
-          className={`block size-2.5 rounded-full bg-[var(--color-accent)] shadow-[0_0_12px_var(--color-accent)]/40 ${busy ? "animate-brand-dot" : ""}`}
-        />
+        {mark}
       </a>
     );
   }
@@ -374,10 +383,8 @@ export function BrandMark({
       onClick={onClick}
       className="flex min-h-11 items-center gap-2 font-bold tracking-tight"
     >
-      <span
-        className={`block size-2 rounded-full bg-[var(--color-accent)] ${busy ? "animate-brand-dot" : ""}`}
-      />
-      Platform Console
+      {mark}
+      {name}
     </a>
   );
 }

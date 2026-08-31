@@ -65,6 +65,8 @@ func main() {
 	}
 	redisCancel()
 	svc := internal.NewService(db, rdb, log, internal.RedisPublisher{RDB: rdb, DB: db})
+	svc.UseProductSecret(cfg.InternalSecret)
+	svc.UseProductPublicURL(cfg.AppPublicURL)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -86,6 +88,12 @@ func main() {
 		func(ctx context.Context) {
 			if err := internal.RefreshReadModels(ctx, db); err != nil {
 				log.Error("read model refresh failed", "err", err)
+			}
+		}).Start(ctx)
+	productScheduleDone := platform.NewScheduler(rdb, log, time.Hour, "users-product-schedules",
+		func(ctx context.Context) {
+			if err := svc.DispatchProductSchedules(ctx); err != nil {
+				log.Error("product schedule dispatch failed", "err", err)
 			}
 		}).Start(ctx)
 
@@ -110,6 +118,7 @@ func main() {
 		cancel()
 		<-purgeDone
 		<-readModelDone
+		<-productScheduleDone
 		_ = closeDB(db)
 	}); err != nil {
 		log.Error("server exited with error", "err", err)

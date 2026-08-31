@@ -4,6 +4,7 @@
 package gen
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,6 +13,42 @@ import (
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for FinishOAuthParamsProvider.
+const (
+	FinishOAuthParamsProviderGithub FinishOAuthParamsProvider = "github"
+	FinishOAuthParamsProviderGoogle FinishOAuthParamsProvider = "google"
+)
+
+// Valid indicates whether the value is a known member of the FinishOAuthParamsProvider enum.
+func (e FinishOAuthParamsProvider) Valid() bool {
+	switch e {
+	case FinishOAuthParamsProviderGithub:
+		return true
+	case FinishOAuthParamsProviderGoogle:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StartOAuthParamsProvider.
+const (
+	StartOAuthParamsProviderGithub StartOAuthParamsProvider = "github"
+	StartOAuthParamsProviderGoogle StartOAuthParamsProvider = "google"
+)
+
+// Valid indicates whether the value is a known member of the StartOAuthParamsProvider enum.
+func (e StartOAuthParamsProvider) Valid() bool {
+	switch e {
+	case StartOAuthParamsProviderGithub:
+		return true
+	case StartOAuthParamsProviderGoogle:
+		return true
+	default:
+		return false
+	}
+}
 
 // Defines values for AdminSetUserStateJSONBodyStatus.
 const (
@@ -60,9 +97,11 @@ type ForgotInput struct {
 
 // LoginInput defines model for LoginInput.
 type LoginInput struct {
-	Email    openapi_types.Email `json:"email"`
-	Otp      *string             `json:"otp,omitempty"`
-	Password string              `json:"password"`
+	Email openapi_types.Email `json:"email"`
+
+	// Otp six-digit TOTP or a single-use recovery code
+	Otp      *string `json:"otp,omitempty"`
+	Password string  `json:"password"`
 }
 
 // RegisterInput defines model for RegisterInput.
@@ -98,10 +137,27 @@ type ConfirmPasswordJSONBody struct {
 	Password string `json:"password"`
 }
 
+// LoginHistoryParams defines parameters for LoginHistory.
+type LoginHistoryParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // VerifyMFAJSONBody defines parameters for VerifyMFA.
 type VerifyMFAJSONBody struct {
 	Code string `json:"code"`
 }
+
+// FinishOAuthParams defines parameters for FinishOAuth.
+type FinishOAuthParams struct {
+	Code  string `form:"code" json:"code"`
+	State string `form:"state" json:"state"`
+}
+
+// FinishOAuthParamsProvider defines parameters for FinishOAuth.
+type FinishOAuthParamsProvider string
+
+// StartOAuthParamsProvider defines parameters for StartOAuth.
+type StartOAuthParamsProvider string
 
 // ChangePasswordJSONBody defines parameters for ChangePassword.
 type ChangePasswordJSONBody struct {
@@ -132,6 +188,12 @@ type ForgotPasswordJSONRequestBody = ForgotInput
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginInput
 
+// RequestMagicLinkJSONRequestBody defines body for RequestMagicLink for application/json ContentType.
+type RequestMagicLinkJSONRequestBody = ForgotInput
+
+// ConsumeMagicLinkJSONRequestBody defines body for ConsumeMagicLink for application/json ContentType.
+type ConsumeMagicLinkJSONRequestBody = ResetTokenInput
+
 // VerifyMFAJSONRequestBody defines body for VerifyMFA for application/json ContentType.
 type VerifyMFAJSONRequestBody VerifyMFAJSONBody
 
@@ -161,21 +223,42 @@ type ServerInterface interface {
 	// ForgotPassword always-200 password reset request (anti-enumeration)
 	// (POST /auth/forgot)
 	ForgotPassword(w http.ResponseWriter, r *http.Request)
+	// ImpersonateUser mint a read-only 15-minute audited support token for a managed user
+	// (POST /auth/impersonate/{id})
+	ImpersonateUser(w http.ResponseWriter, r *http.Request, id int64)
 	// Login uniform-401 login with lockout; mints access token + sets refresh cookie
 	// (POST /auth/login)
 	Login(w http.ResponseWriter, r *http.Request)
+	// LoginHistory the authenticated user's privacy-bounded login history and risk scores
+	// (GET /auth/login-history)
+	LoginHistory(w http.ResponseWriter, r *http.Request, params LoginHistoryParams)
 	// Logout revoke the session carried by the refresh cookie and clear it
 	// (POST /auth/logout)
 	Logout(w http.ResponseWriter, r *http.Request)
+	// RequestMagicLink always queue a single-use passwordless login link when the account exists
+	// (POST /auth/magic-link)
+	RequestMagicLink(w http.ResponseWriter, r *http.Request)
+	// ConsumeMagicLink consume a passwordless login token and create a normal rotating session
+	// (POST /auth/magic-link/consume)
+	ConsumeMagicLink(w http.ResponseWriter, r *http.Request)
 	// BeginMFA create a time-limited TOTP enrollment and QR code
 	// (POST /auth/mfa/enroll)
 	BeginMFA(w http.ResponseWriter, r *http.Request)
 	// VerifyMFA verify TOTP and enable MFA for the authenticated user
 	// (POST /auth/mfa/verify)
 	VerifyMFA(w http.ResponseWriter, r *http.Request)
+	// FinishOAuth validate OAuth state, exchange the code, and create or link the user session
+	// (GET /auth/oauth/{provider}/callback)
+	FinishOAuth(w http.ResponseWriter, r *http.Request, provider FinishOAuthParamsProvider, params FinishOAuthParams)
+	// StartOAuth create a short-lived OAuth state and return the provider authorization URL
+	// (GET /auth/oauth/{provider}/start)
+	StartOAuth(w http.ResponseWriter, r *http.Request, provider StartOAuthParamsProvider)
 	// ChangePassword change the authenticated user's password after verifying the old password
 	// (POST /auth/password)
 	ChangePassword(w http.ResponseWriter, r *http.Request)
+	// GenerateRecoveryCodes replace and return ten single-use MFA recovery codes exactly once
+	// (POST /auth/recovery-codes)
+	GenerateRecoveryCodes(w http.ResponseWriter, r *http.Request)
 	// Refresh rotate the refresh cookie (reuse kills the family) and mint a new access token
 	// (POST /auth/refresh)
 	Refresh(w http.ResponseWriter, r *http.Request)
@@ -230,15 +313,39 @@ func (_ Unimplemented) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ImpersonateUser mint a read-only 15-minute audited support token for a managed user
+// (POST /auth/impersonate/{id})
+func (_ Unimplemented) ImpersonateUser(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Login uniform-401 login with lockout; mints access token + sets refresh cookie
 // (POST /auth/login)
 func (_ Unimplemented) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// LoginHistory the authenticated user's privacy-bounded login history and risk scores
+// (GET /auth/login-history)
+func (_ Unimplemented) LoginHistory(w http.ResponseWriter, r *http.Request, params LoginHistoryParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Logout revoke the session carried by the refresh cookie and clear it
 // (POST /auth/logout)
 func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RequestMagicLink always queue a single-use passwordless login link when the account exists
+// (POST /auth/magic-link)
+func (_ Unimplemented) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ConsumeMagicLink consume a passwordless login token and create a normal rotating session
+// (POST /auth/magic-link/consume)
+func (_ Unimplemented) ConsumeMagicLink(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -254,9 +361,27 @@ func (_ Unimplemented) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// FinishOAuth validate OAuth state, exchange the code, and create or link the user session
+// (GET /auth/oauth/{provider}/callback)
+func (_ Unimplemented) FinishOAuth(w http.ResponseWriter, r *http.Request, provider FinishOAuthParamsProvider, params FinishOAuthParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StartOAuth create a short-lived OAuth state and return the provider authorization URL
+// (GET /auth/oauth/{provider}/start)
+func (_ Unimplemented) StartOAuth(w http.ResponseWriter, r *http.Request, provider StartOAuthParamsProvider) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ChangePassword change the authenticated user's password after verifying the old password
 // (POST /auth/password)
 func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GenerateRecoveryCodes replace and return ten single-use MFA recovery codes exactly once
+// (POST /auth/recovery-codes)
+func (_ Unimplemented) GenerateRecoveryCodes(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -369,6 +494,32 @@ func (siw *ServerInterfaceWrapper) ForgotPassword(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// ImpersonateUser operation middleware
+func (siw *ServerInterfaceWrapper) ImpersonateUser(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImpersonateUser(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Login operation middleware
 func (siw *ServerInterfaceWrapper) Login(w http.ResponseWriter, r *http.Request) {
 
@@ -383,11 +534,72 @@ func (siw *ServerInterfaceWrapper) Login(w http.ResponseWriter, r *http.Request)
 	handler.ServeHTTP(w, r)
 }
 
+// LoginHistory operation middleware
+func (siw *ServerInterfaceWrapper) LoginHistory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params LoginHistoryParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LoginHistory(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Logout operation middleware
 func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.Logout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RequestMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RequestMagicLink(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ConsumeMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) ConsumeMagicLink(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConsumeMagicLink(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -425,11 +637,106 @@ func (siw *ServerInterfaceWrapper) VerifyMFA(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// FinishOAuth operation middleware
+func (siw *ServerInterfaceWrapper) FinishOAuth(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "provider" -------------
+	var provider FinishOAuthParamsProvider
+
+	err = runtime.BindStyledParameterWithOptions("simple", "provider", chi.URLParam(r, "provider"), &provider, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "provider", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params FinishOAuthParams
+
+	// ------------- Required query parameter "code" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "code", r.URL.Query(), &params.Code, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "code"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "code", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FinishOAuth(w, r, provider, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartOAuth operation middleware
+func (siw *ServerInterfaceWrapper) StartOAuth(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "provider" -------------
+	var provider StartOAuthParamsProvider
+
+	err = runtime.BindStyledParameterWithOptions("simple", "provider", chi.URLParam(r, "provider"), &provider, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "provider", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartOAuth(w, r, provider)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ChangePassword operation middleware
 func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ChangePassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GenerateRecoveryCodes operation middleware
+func (siw *ServerInterfaceWrapper) GenerateRecoveryCodes(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GenerateRecoveryCodes(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -818,6 +1125,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/mfa/verify", wrapper.VerifyMFA)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/recovery-codes", wrapper.GenerateRecoveryCodes)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/auth/login-history", wrapper.LoginHistory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/impersonate/{id}", wrapper.ImpersonateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/magic-link", wrapper.RequestMagicLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/magic-link/consume", wrapper.ConsumeMagicLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/auth/oauth/{provider}/start", wrapper.StartOAuth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/auth/oauth/{provider}/callback", wrapper.FinishOAuth)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/auth/sessions", wrapper.RevokeAllSessions)

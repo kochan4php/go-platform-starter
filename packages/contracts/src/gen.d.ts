@@ -144,6 +144,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * replace and return ten single-use MFA recovery codes exactly once
+         * @description replace and return ten single-use MFA recovery codes exactly once.
+         */
+        post: operations["generateRecoveryCodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * the authenticated user's privacy-bounded login history and risk scores
+         * @description the authenticated user's privacy-bounded login history and risk scores.
+         */
+        get: operations["loginHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/impersonate/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * mint a read-only 15-minute audited support token for a managed user
+         * @description mint a read-only 15-minute audited support token for a managed user.
+         */
+        post: operations["impersonateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/magic-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * always queue a single-use passwordless login link when the account exists
+         * @description always queue a single-use passwordless login link when the account exists.
+         */
+        post: operations["requestMagicLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/magic-link/consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * consume a passwordless login token and create a normal rotating session
+         * @description consume a passwordless login token and create a normal rotating session.
+         */
+        post: operations["consumeMagicLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/{provider}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * create a short-lived OAuth state and return the provider authorization URL
+         * @description create a short-lived OAuth state and return the provider authorization URL.
+         */
+        get: operations["startOAuth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/{provider}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * validate OAuth state, exchange the code, and create or link the user session
+         * @description validate OAuth state, exchange the code, and create or link the user session.
+         */
+        get: operations["finishOAuth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sessions": {
         parameters: {
             query?: never;
@@ -720,6 +860,254 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/product/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * aggregate product dashboard counters and registration series
+         * @description aggregate product dashboard counters and registration series.
+         */
+        get: operations["productOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * list typed product workflows visible to the caller
+         * @description list typed product workflows visible to the caller.
+         */
+        get: operations["listProductRecords"];
+        put?: never;
+        /**
+         * create a notification, workflow, integration, preference, or report schedule
+         * @description create a notification, workflow, integration, preference, or report schedule.
+         */
+        post: operations["createProductRecord"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/records/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * delete a caller-owned or administratively managed product record
+         * @description delete a caller-owned or administratively managed product record.
+         */
+        delete: operations["deleteProductRecord"];
+        options?: never;
+        head?: never;
+        /**
+         * update product workflow status and payload
+         * @description update product workflow status and payload.
+         */
+        patch: operations["updateProductRecord"];
+        trace?: never;
+    };
+    "/api/v1/users/product/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * global search across profiles and accessible product resources
+         * @description global search across profiles and accessible product resources.
+         */
+        get: operations["searchProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * activity heatmap, role usage, login risk, and usage metering
+         * @description activity heatmap, role usage, login risk, and usage metering.
+         */
+        get: operations["productAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/permissions/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * explain whether roles or a live delegation grant a permission
+         * @description explain whether roles or a live delegation grant a permission.
+         */
+        post: operations["simulatePermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * privacy-safe public presence aggregate for authenticated clients
+         * @description privacy-safe public presence aggregate for authenticated clients.
+         */
+        get: operations["productPresence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/product/invitations/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * consume an invitation and return its pre-approved registration attributes
+         * @description consume an invitation and return its pre-approved registration attributes.
+         */
+        post: operations["verifyInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * send a single-use verification link before changing the caller email
+         * @description send a single-use verification link before changing the caller email.
+         */
+        post: operations["requestEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/email-change/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * consume an email-change token and atomically replace the identity email
+         * @description consume an email-change token and atomically replace the identity email.
+         */
+        post: operations["verifyEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * schedule account erasure after a 30-day grace period and revoke sessions
+         * @description schedule account erasure after a 30-day grace period and revoke sessions.
+         */
+        post: operations["requestAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/deletion/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * restore an account during its 30-day deletion grace period
+         * @description restore an account during its 30-day deletion grace period.
+         */
+        post: operations["restoreAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{id}": {
         parameters: {
             query?: never;
@@ -1004,6 +1392,7 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            /** @description six-digit TOTP or a single-use recovery code */
             otp?: string;
         };
         ForgotInput: {
@@ -1107,6 +1496,50 @@ export interface components {
             email?: string;
             displayName?: string;
             avatarUrl?: string;
+        };
+        /** @enum {string} */
+        ProductKind: "notification" | "invitation" | "access_request" | "delegation" | "api_key" | "webhook" | "scheduled_report" | "saved_view" | "role_template" | "compliance_report" | "branding" | "domain" | "billing_usage" | "broadcast" | "chat_message" | "onboarding" | "retention" | "consumer_quota" | "email_change" | "account_deletion";
+        ProductRecord: {
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["ProductKind"];
+            /** Format: int64 */
+            ownerId: number;
+            /** Format: int64 */
+            subjectId?: number | null;
+            name: string;
+            status: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProductRecordInput: {
+            kind: components["schemas"]["ProductKind"];
+            /** Format: int64 */
+            subjectId?: number | null;
+            name: string;
+            /** @default active */
+            status: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            expiresAt?: string | null;
+        };
+        ProductRecordUpdate: {
+            status: string;
+            payload: {
+                [key: string]: unknown;
+            };
+        };
+        TokenInput: {
+            token: string;
         };
         AuditEntry: {
             /** Format: int64 */
@@ -1316,7 +1749,7 @@ export interface operations {
                  * @example {
                  *       "email": "user@example.com",
                  *       "password": "example",
-                 *       "otp": "123456"
+                 *       "otp": "example"
                  *     }
                  */
                 "application/json": components["schemas"]["LoginInput"];
@@ -1562,6 +1995,353 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    generateRecoveryCodes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description recovery codes */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    loginHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description login history */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    impersonateUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description short-lived read-only access token */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description target missing */
+            404: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    requestMagicLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "user@example.com"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ForgotInput"];
+            };
+        };
+        responses: {
+            /** @description uniform anti-enumeration response */
+            202: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    consumeMagicLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "example"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ResetTokenInput"];
+            };
+        };
+        responses: {
+            /** @description logged in */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid, expired, or consumed token */
+            400: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    startOAuth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "google" | "github";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description authorization URL */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description provider not configured */
+            503: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    finishOAuth: {
+        parameters: {
+            query: {
+                code: string;
+                state: string;
+            };
+            header?: never;
+            path: {
+                provider: "google" | "github";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description session cookie set and browser redirected to the product console */
+            303: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description invalid state or provider response */
+            400: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
                 };
             };
             default: components["responses"]["Error"];
@@ -3690,6 +4470,648 @@ export interface operations {
                     "application/json": components["schemas"]["EnvelopeOK"] & {
                         data?: components["schemas"]["UserStats"];
                     };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    productOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description product overview */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listProductRecords: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["ProductKind"];
+                status?: string;
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description visible records */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": {
+                     *         "items": [
+                     *           {
+                     *             "id": 1,
+                     *             "kind": "notification",
+                     *             "ownerId": 1,
+                     *             "subjectId": 1,
+                     *             "name": "example",
+                     *             "status": "example",
+                     *             "payload": {},
+                     *             "expiresAt": "2026-01-01T00:00:00Z",
+                     *             "createdAt": "2026-01-01T00:00:00Z",
+                     *             "updatedAt": "2026-01-01T00:00:00Z"
+                     *           }
+                     *         ],
+                     *         "meta": {
+                     *           "limit": 20,
+                     *           "offset": 0,
+                     *           "total": 1,
+                     *           "nextCursor": "example",
+                     *           "estimated": false,
+                     *           "next": "example",
+                     *           "prev": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"] & {
+                        data?: {
+                            items?: components["schemas"]["ProductRecord"][];
+                            meta?: components["schemas"]["EnvelopeMeta"];
+                        };
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createProductRecord: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "kind": "notification",
+                 *       "subjectId": 1,
+                 *       "name": "example",
+                 *       "status": "active",
+                 *       "payload": {},
+                 *       "expiresAt": "2026-01-01T00:00:00Z"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ProductRecordInput"];
+            };
+        };
+        responses: {
+            /** @description created; secret is returned once for token-bearing records */
+            201: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteProductRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deleted */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateProductRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "status": "example",
+                 *       "payload": {}
+                 *     }
+                 */
+                "application/json": components["schemas"]["ProductRecordUpdate"];
+            };
+        };
+        responses: {
+            /** @description updated */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description unknown or inaccessible record */
+            404: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    searchProduct: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ranked search results */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    productAnalytics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description analytics snapshot */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    simulatePermission: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "userId": 1,
+                 *       "permission": "example"
+                 *     }
+                 */
+                "application/json": {
+                    /** Format: int64 */
+                    userId: number;
+                    permission: string;
+                };
+            };
+        };
+        responses: {
+            /** @description decision and grant sources */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    productPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description aggregate online and total counts */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    verifyInvitation: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "examplexxxxxxxxxxxxx"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TokenInput"];
+            };
+        };
+        responses: {
+            /** @description invitation accepted */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            /** @description invalid or expired invitation */
+            400: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "message": "bad_request",
+                     *       "error": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeFail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    requestEmailChange: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "user@example.com"
+                 *     }
+                 */
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description verification queued */
+            202: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    verifyEmailChange: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "examplexxxxxxxxxxxxx"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TokenInput"];
+            };
+        };
+        responses: {
+            /** @description email changed */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    requestAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deletion scheduled and restoration link queued */
+            202: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    restoreAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique key for replay-safe POST requests; retained for 24 hours. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "examplexxxxxxxxxxxxx"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TokenInput"];
+            };
+        };
+        responses: {
+            /** @description account restored */
+            200: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": true,
+                     *       "message": "example",
+                     *       "data": "example"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EnvelopeOK"];
                 };
             };
             default: components["responses"]["Error"];

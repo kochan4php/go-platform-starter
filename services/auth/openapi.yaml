@@ -137,6 +137,91 @@ paths:
       responses:
         "200": { description: MFA enabled, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
 
+  /auth/recovery-codes:
+    post:
+      operationId: generateRecoveryCodes
+      summary: replace and return ten single-use MFA recovery codes exactly once
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      x-rate-limit-class: strict
+      responses:
+        "200": { description: recovery codes, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/login-history:
+    get:
+      operationId: loginHistory
+      summary: the authenticated user's privacy-bounded login history and risk scores
+      security: [{ bearerAuth: [] }]
+      x-auth: required
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+      responses:
+        "200": { description: login history, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/impersonate/{id}:
+    post:
+      operationId: impersonateUser
+      summary: mint a read-only 15-minute audited support token for a managed user
+      x-required-permission: "user:read:any"
+      x-rate-limit-class: strict
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }]
+      responses:
+        "200": { description: short-lived read-only access token, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "404": { description: target missing, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/magic-link:
+    post:
+      operationId: requestMagicLink
+      summary: always queue a single-use passwordless login link when the account exists
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ForgotInput" }
+      responses:
+        "202": { description: uniform anti-enumeration response, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+
+  /auth/magic-link/consume:
+    post:
+      operationId: consumeMagicLink
+      summary: consume a passwordless login token and create a normal rotating session
+      x-rate-limit-class: strict
+      x-request-body-limit: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResetTokenInput" }
+      responses:
+        "200": { description: logged in, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "400": { description: "invalid, expired, or consumed token", content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/oauth/{provider}/start:
+    get:
+      operationId: startOAuth
+      summary: create a short-lived OAuth state and return the provider authorization URL
+      x-rate-limit-class: strict
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [google, github] } }
+      responses:
+        "200": { description: authorization URL, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeOK" } } } }
+        "503": { description: provider not configured, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
+  /auth/oauth/{provider}/callback:
+    get:
+      operationId: finishOAuth
+      summary: validate OAuth state, exchange the code, and create or link the user session
+      x-rate-limit-class: strict
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [google, github] } }
+        - { name: code, in: query, required: true, schema: { type: string, minLength: 1, maxLength: 2048 } }
+        - { name: state, in: query, required: true, schema: { type: string, minLength: 20, maxLength: 512 } }
+      responses:
+        "303": { description: session cookie set and browser redirected to the product console }
+        "400": { description: invalid state or provider response, content: { application/json: { schema: { $ref: "#/components/schemas/EnvelopeFail" } } } }
+
   /auth/sessions:
     get:
       operationId: listSessions
@@ -393,7 +478,7 @@ components:
       properties:
         email: { type: string, format: email, maxLength: 254 }
         password: { type: string, maxLength: 72 }
-        otp: { type: string, pattern: "^[0-9]{6}$", maxLength: 6 }
+        otp: { type: string, minLength: 6, maxLength: 64, description: six-digit TOTP or a single-use recovery code }
 
     ForgotInput:
       type: object

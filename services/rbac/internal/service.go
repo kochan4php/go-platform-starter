@@ -631,6 +631,24 @@ func (s *Service) ResolveClaims(ctx context.Context, sub string) (*Claims, error
 			}
 		}
 	}
+	var productTable string
+	if err := s.db.WithContext(ctx).Raw(`SELECT COALESCE(to_regclass('users.product_records')::text, '')`).Scan(&productTable).Error; err != nil {
+		return nil, err
+	}
+	if productTable != "" {
+		var delegated []string
+		if err := s.db.WithContext(ctx).Table("users.product_records").
+			Where("kind = 'delegation' AND subject_id = ? AND status = 'active' AND expires_at > now()", subID).
+			Pluck("payload->>'permission'", &delegated).Error; err != nil {
+			return nil, err
+		}
+		for _, permission := range delegated {
+			if permission != "" && !seen[permission] {
+				seen[permission] = true
+				claims.Perms = append(claims.Perms, permission)
+			}
+		}
+	}
 	return &claims, nil
 }
 
