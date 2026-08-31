@@ -407,7 +407,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy vulnerability + misconfig scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scanners: vuln,config
@@ -415,7 +415,7 @@ jobs:
           exit-code: "1"
 
       - name: Trivy Kubernetes manifest scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
