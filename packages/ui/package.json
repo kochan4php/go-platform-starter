@@ -22,7 +22,7 @@
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"jsdom": "^25.0.1",
-		"vite": "^5.4.11",
+		"vite": "^6.4.3",
 		"vitest": "^2.1.8",
 		"@vitejs/plugin-react": "^4.3.4",
 		"@testing-library/react": "^16.1.0"
