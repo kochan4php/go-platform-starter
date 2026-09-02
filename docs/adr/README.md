@@ -2,6 +2,7 @@
 
 ADRs record durable decisions, not meeting notes. File names use
 `NNNN-short-kebab-title.md` and the next number is never reused.
+Start from the committed [ADR template](../templates/ADR.md).
 
 Each ADR starts with these fields:
 

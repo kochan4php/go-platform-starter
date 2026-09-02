@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
+  exit 0
+fi
+
+if command -v graphify >/dev/null 2>&1; then
+  mkdir -p tmp
+  graphify update . >>tmp/graphify-hook.log 2>&1 &
+fi

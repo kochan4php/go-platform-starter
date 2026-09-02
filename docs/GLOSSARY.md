@@ -8,7 +8,7 @@
 | consumer group | Redis Streams cursor and ownership state shared by worker instances |
 | correlation/request ID | Identifier propagated through HTTP logs and responses |
 | DLQ | Bounded dead-letter stream for messages that exceed retry policy |
-| envelope | Stable `{success,message,data|error}` API response shape |
+| envelope | Stable `{success,message,data \| error}` API response shape |
 | event outbox | PostgreSQL record retained until a domain/audit event is published |
 | gateway | Public edge service for validation, authn/authz, policy, proxying, and docs |
 | materialization | Idempotent projection update from an event, such as creating a profile |

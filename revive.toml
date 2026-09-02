@@ -1,0 +1,8 @@
+ignore-generated-header = true
+severity = "warning"
+confidence = 0.8
+error-code = 1
+warning-code = 1
+
+[rule.exported]
+arguments = ["disable-stuttering-check"]

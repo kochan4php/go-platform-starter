@@ -122,6 +122,19 @@ for (const file of envFiles.sort()) {
   }
 }
 
+const configFiles = [
+  ...walk(join(root, "internal"), (path) => path.endsWith(".go")),
+  ...walk(join(root, "services"), (path) => path.endsWith(".go") && !/[\\/]gen[\\/]/.test(path)),
+];
+for (const file of configFiles.sort()) {
+  const source = relative(root, file).replaceAll("\\", "/");
+  for (const match of readFileSync(file, "utf8").matchAll(
+    /`env:"([A-Z][A-Z0-9_]*)(,required)?"(?:\s+envDefault:"([^"]*)")?`/g,
+  )) {
+    remember(match[1], source, match[3] ?? "", Boolean(match[2]), "Go configuration struct tag.");
+  }
+}
+
 for (const file of composeFiles) {
   const source = relative(root, file).replaceAll("\\", "/");
   for (const match of readFileSync(file, "utf8").matchAll(/\$\{([A-Z][A-Z0-9_]*)(?:(:-|:\?)([^}]*))?\}/g)) {
@@ -221,6 +234,15 @@ function classifyLicense(directory) {
   return "See upstream LICENSE";
 }
 
+function markdownCell(value) {
+  return String(value)
+    .replaceAll("|", "\\|")
+    .replace(/https?:\/\/[^\s|]+/g, (url) => {
+      const trailing = url.match(/[.,;:!?]+$/)?.[0] ?? "";
+      return `<${url.slice(0, url.length - trailing.length)}>${trailing}`;
+    });
+}
+
 const directGo = new Set(
   readFileSync(join(root, "go.mod"), "utf8")
     .match(/require \(\r?\n([\s\S]*?)\r?\n\)/)?.[1]
@@ -280,7 +302,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | --- | --- | --- |
 ${[...goModules]
   .sort(([a], [b]) => a.localeCompare(b))
-  .map(([name, item]) => `| \`${name}\` | \`${item.version}\` | ${item.license} |`)
+  .map(([name, item]) => `| \`${name}\` | \`${item.version}\` | ${markdownCell(item.license)} |`)
   .join("\n")}
 
 ## JavaScript packages
@@ -289,7 +311,7 @@ ${[...goModules]
 | --- | --- | --- |
 ${[...nodePackages]
   .sort(([a], [b]) => a.localeCompare(b))
-  .map(([name, item]) => `| \`${name}\` | \`${item.version}\` | ${item.license} |`)
+  .map(([name, item]) => `| \`${name}\` | \`${item.version}\` | ${markdownCell(item.license)} |`)
   .join("\n")}`,
 );
 

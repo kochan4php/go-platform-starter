@@ -140,7 +140,7 @@ resolve_lab_ports() {
     done
     [ "$candidate" = "$preferred" ] || log "host port $preferred is busy; using $candidate"
     printf -v "$name" '%s' "$candidate"
-    export "$name"
+    export "${name?}"
     LAB_TAKEN_PORTS="$LAB_TAKEN_PORTS $candidate"
   }
 
@@ -168,6 +168,8 @@ ensure_docker() {
     apt-get update && apt-get install -y ca-certificates curl gnupg
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    # Sourced only on Docker-supported Linux hosts.
+    # shellcheck disable=SC1091
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
       > /etc/apt/sources.list.d/docker.list
     apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io \
@@ -322,6 +324,7 @@ if [ "$TARGET" = "lab" ]; then
     elif [ -n "$MISSING" ]; then
       log "building missing images:$MISSING"
       # Intentional word splitting: MISSING is assembled from fixed service names.
+      # shellcheck disable=SC2086
       build_images $MISSING
     else
       log "all images present — skipping build (use --build to force)"

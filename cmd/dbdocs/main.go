@@ -169,6 +169,9 @@ func markdown(c catalog) string {
 	for _, item := range c.Columns {
 		key := item.Schema + "." + item.Table
 		if key != current {
+			if current != "" {
+				b.WriteString("\n")
+			}
 			current = key
 			fmt.Fprintf(&b, "## `%s`\n\n| Column | Type | Null | Default / generated | Description |\n| --- | --- | --- | --- | --- |\n", key)
 		}

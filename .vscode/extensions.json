@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"biomejs.biome",
+		"davidanson.vscode-markdownlint",
+		"golang.go",
+		"ms-azuretools.vscode-docker",
+		"redhat.vscode-yaml"
+	],
+	"unwantedRecommendations": ["dbaeumer.vscode-eslint"]
+}

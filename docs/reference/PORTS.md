@@ -22,6 +22,9 @@ ports are intentionally absent. Override variables remain documented in the envi
 | `infra/compose.base.yml` | `web-auth` | `5174` | `8080` |
 | `infra/compose.base.yml` | `web-admin-users` | `5175` | `8080` |
 | `infra/compose.base.yml` | `web-admin-roles` | `5176` | `8080` |
+| `infra/compose.lab.yml` | `mailpit` | `8025` | `8025` |
+| `infra/compose.lab.yml` | `redisinsight` | `5540` | `5540` |
+| `infra/compose.lab.yml` | `pgweb` | `8087` | `8081` |
 | `infra/compose.observability.yml` | `otel-collector` | `4318` | `4318` |
 | `infra/compose.observability.yml` | `tempo` | `3200` | `3200` |
 | `infra/compose.observability.yml` | `loki` | `3100` | `3100` |

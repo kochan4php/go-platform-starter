@@ -16,7 +16,7 @@ spec-first OpenAPI contracts. Defaults sized for ~100k users. Every deployable
 ships a Dockerfile, a thin Jenkinsfile, docker-compose files and Kubernetes
 manifests with HPA.
 
-```
+```text
                         ┌──────────────── edge nginx :80/443 ────────────────┐
    browser ────────────►│  /            → web (federation host)              │
                         │  /remote/auth/…→ web-auth · /remote/admin-users/…  │
@@ -31,7 +31,7 @@ manifests with HPA.
 
 ## Feature overview
 
-**Backend (Go >= 1.27, chi v5, GORM, Redis 7)**
+### Backend (Go >= 1.27, chi v5, GORM, Redis 7)
 
 - **auth** — register/login/logout; refresh tokens with rotation and reuse
   detection (replaying an old refresh token kills the whole session family);
@@ -66,7 +66,7 @@ manifests with HPA.
   OpenTelemetry OTLP tracing, error-reporter port (noop|Sentry), mailer port,
   redis-lock scheduler.
 
-**Frontend (Vite, React 19, Tailwind v4, TanStack Query)**
+### Frontend (Vite, React 19, Tailwind v4, TanStack Query)
 
 - `apps/web` federation host: router, auth context holding the access token in
   memory only, `<RequirePermission>` guard as a UI hint.
@@ -81,7 +81,7 @@ manifests with HPA.
 - MSW mock mode for offline development; Vitest + RTL per remote; Biome lint
   and format; host bundle-budget gate; workspace import-boundary checker.
 
-**Operations**
+### Operations
 
 - Every deployable: multi-stage Dockerfile (distroless/nginx), thin Jenkinsfile
   via the shared Jenkins library, focused compose file, k8s manifests with HPA,
@@ -113,7 +113,7 @@ project names, domains, secrets and data volumes per environment.
 
 ### Repository layout
 
-```
+```text
 go-platform-starter/
 ├── go.mod                     # SINGLE module — service isolation enforced by the compiler
 ├── Makefile                   # lint fmt vet build test run dev contracts env
@@ -220,9 +220,9 @@ starts the stack with all ports published.
 
 | URL | What |
 | --- | --- |
-| http://127.0.0.1:5173 | app shell (login → admin dashboard); same-origin `/api/…` proxy included |
-| http://127.0.0.1:8010/docs | aggregate API reference (Scalar) |
-| http://127.0.0.1:8010/healthz | gateway health |
+| <http://127.0.0.1:5173> | app shell (login → admin dashboard); same-origin `/api/…` proxy included |
+| <http://127.0.0.1:8010/docs> | aggregate API reference (Scalar) |
+| <http://127.0.0.1:8010/healthz> | gateway health |
 | :8081–:8086 | auth/users/rbac/worker/realtime/scheduler published for direct debugging |
 
 Seeded admin: `admin@example.local` / `local-root-access-2026!`.
@@ -270,7 +270,7 @@ pnpm test && pnpm build && pnpm check:budget`.
 
 ---
 
-# Deployment
+## Deployment
 
 ## Environments at a glance
 

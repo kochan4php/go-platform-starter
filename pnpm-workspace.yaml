@@ -6,5 +6,6 @@ packages:
 allowBuilds:
   '@biomejs/biome': true
   '@scarf/scarf': false
+  core-js: set this to true or false
   esbuild: true
   msw: true

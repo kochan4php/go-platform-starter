@@ -14,6 +14,7 @@
 | `meta` | `jsonb` | no | '{}'::jsonb | Structured non-secret audit context. |
 | `msg_id` | `text` | no | ''::text | Idempotency key for stream redelivery. |
 | `created_at` | `timestamp with time zone` | no | now() | Database-assigned event timestamp. |
+
 ## `audit.event_outbox`
 
 | Column | Type | Null | Default / generated | Description |
@@ -26,12 +27,14 @@
 | `traceparent` | `text` | no | ''::text | W3C traceparent propagated with the event. |
 | `tracestate` | `text` | no | ''::text | W3C tracestate propagated with the event. |
 | `baggage` | `text` | no | ''::text | W3C baggage propagated with the event. |
+
 ## `audit.processed_messages`
 
 | Column | Type | Null | Default / generated | Description |
 | --- | --- | --- | --- | --- |
 | `message_id` | `text` | no | — | Globally stable stream message id. |
 | `processed_at` | `timestamp with time zone` | no | now() | Time the message completed successfully. |
+
 ## `auth.change_log`
 
 | Column | Type | Null | Default / generated | Description |
@@ -44,6 +47,7 @@
 | `new_data` | `jsonb` | yes | — | Post-change JSON with credential material removed. |
 | `changed_at` | `timestamp with time zone` | no | now() | Database timestamp of the mutation. |
 | `changed_by` | `bigint` | yes | — | Optional logical user id responsible for the mutation. |
+
 ## `auth.sessions`
 
 | Column | Type | Null | Default / generated | Description |
@@ -62,6 +66,7 @@
 | `created_by` | `bigint` | yes | — | Optional actor user id; no FK to preserve service migration independence. |
 | `updated_by` | `bigint` | yes | — | Optional actor user id; no FK to preserve service migration independence. |
 | `updated_at` | `timestamp with time zone` | no | now() | Database-maintained last modification timestamp. |
+
 ## `rbac.change_log`
 
 | Column | Type | Null | Default / generated | Description |
@@ -74,6 +79,7 @@
 | `new_data` | `jsonb` | yes | — | Post-change row JSON. |
 | `changed_at` | `timestamp with time zone` | no | now() | Database timestamp of the mutation. |
 | `changed_by` | `bigint` | yes | — | Optional logical user id responsible for the mutation. |
+
 ## `rbac.permissions`
 
 | Column | Type | Null | Default / generated | Description |
@@ -85,12 +91,14 @@
 | `created_by` | `bigint` | yes | — | Optional actor user id; intentionally no cross-service FK. |
 | `updated_by` | `bigint` | yes | — | Optional actor user id; intentionally no cross-service FK. |
 | `metadata` | `jsonb` | no | '{}'::jsonb | Non-sensitive extensible permission metadata. |
+
 ## `rbac.role_permissions`
 
 | Column | Type | Null | Default / generated | Description |
 | --- | --- | --- | --- | --- |
 | `role_id` | `bigint` | no | — | Role reference with cascading delete. |
 | `permission_id` | `bigint` | no | — | Permission reference with cascading delete. |
+
 ## `rbac.roles`
 
 | Column | Type | Null | Default / generated | Description |
@@ -106,6 +114,7 @@
 | `created_by` | `bigint` | yes | — | Optional actor user id; intentionally no cross-service FK. |
 | `updated_by` | `bigint` | yes | — | Optional actor user id; intentionally no cross-service FK. |
 | `metadata` | `jsonb` | no | '{}'::jsonb | Non-sensitive extensible role metadata. |
+
 ## `rbac.user_roles`
 
 | Column | Type | Null | Default / generated | Description |
@@ -113,12 +122,14 @@
 | `user_id` | `bigint` | no | — | Logical users.users.id; intentionally no cross-service FK. |
 | `role_id` | `bigint` | no | — | Assigned role reference with cascading delete. |
 | `ver` | `bigint` | no | 0 | Claims version at assignment time. |
+
 ## `rbac.user_versions`
 
 | Column | Type | Null | Default / generated | Description |
 | --- | --- | --- | --- | --- |
 | `user_id` | `bigint` | no | — | Logical users.users.id; intentionally no cross-service FK. |
 | `ver` | `bigint` | no | 0 | Monotonic claims version. |
+
 ## `users.change_log`
 
 | Column | Type | Null | Default / generated | Description |
@@ -131,6 +142,7 @@
 | `new_data` | `jsonb` | yes | — | Post-change JSON with credential material removed. |
 | `changed_at` | `timestamp with time zone` | no | now() | Database timestamp of the mutation. |
 | `changed_by` | `bigint` | yes | — | Optional logical user id responsible for the mutation. |
+
 ## `users.dashboard_stats`
 
 | Column | Type | Null | Default / generated | Description |
@@ -140,12 +152,14 @@
 | `active` | `bigint` | yes | — | Current active user count. |
 | `inactive` | `bigint` | yes | — | Current inactive user count. |
 | `refreshed_at` | `timestamp with time zone` | yes | — | Time the projection was rebuilt. |
+
 ## `users.registration_daily`
 
 | Column | Type | Null | Default / generated | Description |
 | --- | --- | --- | --- | --- |
 | `day` | `date` | yes | — | UTC registration calendar day. |
 | `count` | `bigint` | yes | — | Registrations observed on the day. |
+
 ## `users.users`
 
 | Column | Type | Null | Default / generated | Description |

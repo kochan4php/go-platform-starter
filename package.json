@@ -7,6 +7,11 @@
 		"node": ">=22"
 	},
 	"scripts": {
+		"prepare": "husky",
+		"devx": "node scripts/devx.mjs",
+		"test:devx": "node --test scripts/devx.test.mjs scripts/check-devx.test.mjs",
+		"test:watch": "node scripts/devx.mjs test-watch",
+		"test:web:watch": "corepack pnpm -r --parallel --if-present test:watch",
 		"specs:compose": "node scripts/compose-specs.mjs",
 		"contracts": "corepack pnpm --filter @starter/contracts gen",
 		"lint": "biome check .",
@@ -24,13 +29,25 @@
 		"docs:gen": "node scripts/generate-docs.mjs",
 		"docs:check": "node scripts/generate-docs.mjs --check && node scripts/check-docs.mjs",
 		"docs:record": "node scripts/record-quickstart.mjs",
-		"check:ci": "node scripts/check-ci-config.mjs && node scripts/check-quarantine.mjs"
+		"lint:markdown": "markdownlint-cli2",
+		"check:devx": "node scripts/check-devx.mjs",
+		"check:openapi-diff": "node scripts/openapi-diff.mjs",
+		"check:ci": "node scripts/check-ci-config.mjs && node scripts/check-quarantine.mjs && node scripts/check-devx.mjs"
+	},
+	"lint-staged": {
+		"*.go": "go run mvdan.cc/gofumpt@v0.9.2 -w",
+		"*.{js,mjs,ts,tsx,json,jsonc,css}": "biome check --write --no-errors-on-unmatched"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.10.2",
 		"@biomejs/biome": "^1.9.4",
+		"@commitlint/cli": "^21.2.2",
+		"@commitlint/config-conventional": "^21.2.2",
 		"@playwright/test": "^1.49.0",
 		"@stoplight/spectral-cli": "^6.15.0",
-		"js-yaml": "^4.1.0"
+		"husky": "^9.1.7",
+		"js-yaml": "^4.1.0",
+		"lint-staged": "^17.4.1",
+		"markdownlint-cli2": "^0.23.2"
 	}
 }

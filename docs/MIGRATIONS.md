@@ -35,7 +35,6 @@ golang-migrate's Postgres driver takes an advisory lock while running, so even a
 boot-time race cannot corrupt state — the Job model exists to keep rollouts fast and
 scale-outs free of migration latency.
 
-
 ## Integer identity + consolidated baseline (current)
 
 All primary keys are `BIGINT` identity columns (no UUIDs). The identity row

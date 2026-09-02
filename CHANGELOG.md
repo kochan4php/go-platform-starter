@@ -14,6 +14,9 @@ future version sections from Conventional Commits.
   foundations.
 - Versioned documentation portal, governance policies, operational guides, and
   generated API/environment/port/license references.
+- Reproducible developer tooling with generators, local service utilities,
+  direct API docs, HTTPS, realistic seeds, editor/devcontainer configuration,
+  and automated review gates.
 
 ### Changed
 

@@ -6,6 +6,12 @@
 /services/users/ @kochan4php
 /services/worker/ @kochan4php
 /services/realtime/ @kochan4php
+/services/scheduler/ @kochan4php
+/services/_template/ @kochan4php
+/apps/ @kochan4php
+/packages/ @kochan4php
+/scripts/ @kochan4php
+/.github/ @kochan4php
 /infra/ @kochan4php
 /docs/ @kochan4php
 /*.md @kochan4php

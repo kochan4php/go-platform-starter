@@ -51,6 +51,14 @@ export class RemoteErrorBoundary extends Component<Props, State> {
         >
           Reload page
         </button>
+        <a
+          href="https://github.com/kochan4php/go-platform-starter/blob/main/docs/TROUBLESHOOTING.md"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 block text-xs text-[var(--color-muted)] underline underline-offset-2"
+        >
+          Open troubleshooting guide
+        </a>
       </div>
     );
   }

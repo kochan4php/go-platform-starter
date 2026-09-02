@@ -39,7 +39,7 @@ GORM pools use prepared statements and the shared defaults
 
 `realtime_connections` gauge per pod feeds a custom HPA/KEDA target:
 
-```
+```text
 target_conns_per_pod ≈ 50k   (measured ceiling before memory/GC pressure)
 desired_pods         = ceil(total_connections / target_conns_per_pod)
 ```

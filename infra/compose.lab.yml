@@ -6,7 +6,7 @@
 # Differences from the plain base mesh:
 #   - LOG_LEVEL=debug on every Go service
 #   - edge rate limit raised so load experiments do not trip it
-#   - worker mailer forced to console output
+#   - worker email delivered to loopback-only Mailpit
 #   - the shell nginx proxies /api to the gateway so bundles built before the
 #     runtime-config era keep working (config.js handles newer ones)
 #
@@ -33,7 +33,11 @@ services:
   worker:
     environment:
       LOG_LEVEL: debug
-      MAILER_DRIVER: console
+      MAILER_DRIVER: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    depends_on:
+      mailpit: { condition: service_started }
 
   realtime:
     environment:
@@ -56,3 +60,30 @@ services:
       # Same-origin /api proxy so every bundle reaches the gateway without
       # rebuilds (runtime config.js takes over once images include it).
       - ./lab/web.nginx.conf:/etc/nginx/templates/default.conf.template:ro
+
+  mailpit:
+    image: axllent/mailpit:v1.31.0
+    restart: unless-stopped
+    ports: ["127.0.0.1:${LAB_MAILPIT_PORT:-8025}:8025"]
+
+  redisinsight:
+    image: redis/redisinsight:3.8.0
+    restart: unless-stopped
+    profiles: ["tools"]
+    ports: ["127.0.0.1:${LAB_REDISINSIGHT_PORT:-5540}:5540"]
+    volumes: [redisinsight-data:/data]
+    depends_on:
+      redis: { condition: service_healthy }
+
+  pgweb:
+    image: sosedoff/pgweb:0.17.0
+    restart: unless-stopped
+    profiles: ["tools"]
+    environment:
+      PGWEB_DATABASE_URL: postgres://app:app@postgres:5432/app?sslmode=disable
+    ports: ["127.0.0.1:${LAB_PGWEB_PORT:-8087}:8081"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+volumes:
+  redisinsight-data:

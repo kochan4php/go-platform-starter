@@ -2,7 +2,7 @@
 set -eu
 
 : "${DATABASE_URL:?set DATABASE_URL}"
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$ROOT/infra/postgres/data-operations.sql"
 

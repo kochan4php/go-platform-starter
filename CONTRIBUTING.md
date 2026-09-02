@@ -11,6 +11,7 @@ and compatible with the repository's spec-first and schema-ownership rules.
 3. Use `./scripts/dev-all.sh -d` for native development or
    `./scripts/deploy-lab.sh` for the complete container mesh.
 4. Read [the engineering guide](docs/ENGINEERING_GUIDE.md),
+   [developer experience guide](docs/DEVELOPER_EXPERIENCE.md),
    [architecture](docs/ARCHITECTURE.md), and [contracts](docs/CONTRACTS.md)
    before changing a service boundary.
 
@@ -30,6 +31,8 @@ and compatible with the repository's spec-first and schema-ownership rules.
   examples, package manifests, or API operations.
 
 ## Required local checks
+
+The canonical shortcut is `make dev-test`; its explicit commands are:
 
 ```sh
 go fmt ./...

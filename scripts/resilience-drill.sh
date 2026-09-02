@@ -55,7 +55,7 @@ GW_PID=$!
 
 for port in "$AUTH_PORT" "$GW_PORT"; do
   ok=0
-  for i in $(seq 1 40); do
+  for _ in $(seq 1 40); do
     if curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null; then ok=1; break; fi
     sleep 0.5
   done
@@ -81,19 +81,26 @@ DEGRADED_CODE=$(curl -s -o tmp/drill/degraded-body.json -w "%{http_code}" \
   http://127.0.0.1:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || echo "curl-failed")
 kill "$LOAD_PID" 2>/dev/null || true
 echo "degraded response code: $DEGRADED_CODE"
-grep -q '"success":false' tmp/drill/degraded-body.json \
-  && echo "PASS degraded envelope shape {success:false,...}" \
-  || { echo "NOTE degraded body:"; cat tmp/drill/degraded-body.json; }
+if grep -q '"success":false' tmp/drill/degraded-body.json; then
+  echo "PASS degraded envelope shape {success:false,...}"
+else
+  echo "NOTE degraded body:"
+  cat tmp/drill/degraded-body.json
+fi
 
 echo "== restarting auth =="
 start_auth
 ok=0
-for i in $(seq 1 60); do
+for _ in $(seq 1 60); do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" \
     http://127.0.0.1:${GW_PORT}/api/v1/auth/sessions -H "Authorization: Bearer $TOKEN" || true)
   if [ "$CODE" = "200" ]; then ok=1; break; fi
   sleep 0.5
 done
-[ "$ok" = "1" ] && echo "PASS recovered: sessions probe -> 200 after restart" \
-  || { echo "FAIL: did not recover"; exit 1; }
+if [ "$ok" = "1" ]; then
+  echo "PASS recovered: sessions probe -> 200 after restart"
+else
+  echo "FAIL: did not recover"
+  exit 1
+fi
 echo "DRILL COMPLETE"

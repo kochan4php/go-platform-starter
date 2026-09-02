@@ -1,0 +1,16 @@
+root = "."
+tmp_dir = "tmp/air/auth"
+
+[build]
+cmd = "go build -o ./tmp/air/auth/app ./services/auth"
+bin = "./tmp/air/auth/app"
+full_bin = "APP_ENV_FILE=services/auth/.env ./tmp/air/auth/app"
+include_ext = ["go", "sql", "yaml", "yml", "env"]
+exclude_dir = [".git", "graphify-out", "node_modules", "tmp"]
+delay = 300
+stop_on_error = true
+send_interrupt = true
+kill_delay = "500ms"
+
+[log]
+time = true

@@ -56,8 +56,8 @@ ci)
 
   docker rm -f e2e-pg e2e-redis >/dev/null 2>&1 || true
   docker run -d --name e2e-pg -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app \
-    -e POSTGRES_DB=app -p ${PG_PORT}:5432 postgres:17-alpine >/dev/null
-  docker run -d --name e2e-redis -p ${REDIS_PORT}:6379 redis:7-alpine >/dev/null
+    -e POSTGRES_DB=app -p "${PG_PORT}:5432" postgres:17-alpine >/dev/null
+  docker run -d --name e2e-redis -p "${REDIS_PORT}:6379" redis:7-alpine >/dev/null
   until docker exec e2e-pg pg_isready -U app >/dev/null 2>&1; do sleep 1; done
 
   mkdir -p tmp/e2e
@@ -83,7 +83,7 @@ ci)
   PIDS+=("$!")
 
   for port in "$AUTH_PORT" "$USERS_PORT" "$RBAC_PORT" "$WORKER_PORT" "$GATEWAY_PORT"; do
-    for i in $(seq 1 40); do
+    for _ in $(seq 1 40); do
       curl -sf "http://127.0.0.1:${port}/healthz" >/dev/null && break
       sleep 0.5
     done
@@ -96,22 +96,23 @@ ci)
   corepack pnpm --filter web-admin-users exec vite preview --port "$USERS_WEB_PORT" --strictPort & PIDS+=("$!")
   corepack pnpm --filter web-admin-roles exec vite preview --port "$RBAC_WEB_PORT" --strictPort & PIDS+=("$!")
   for port in "$WEB_PORT" "$AUTH_WEB_PORT" "$USERS_WEB_PORT" "$RBAC_WEB_PORT"; do
-    for i in $(seq 1 40); do
+    for _ in $(seq 1 40); do
       curl -sf "http://127.0.0.1:${port}/" >/dev/null && break
       sleep 0.5
     done
   done
 
+  read -r -a playwright_args <<<"${PLAYWRIGHT_ARGS:-}"
   E2E_ADMIN_EMAIL="${E2E_ADMIN_EMAIL:-admin@example.local}" \
     E2E_GATEWAY_URL="http://127.0.0.1:${GATEWAY_PORT}" \
     E2E_BASE_URL="http://127.0.0.1:${WEB_PORT}" \
-    corepack pnpm exec playwright test ${PLAYWRIGHT_ARGS:-}
+    corepack pnpm exec playwright test "${playwright_args[@]}"
   ;;
 up)
   docker rm -f e2e-pg e2e-redis >/dev/null 2>&1 || true
   docker run -d --name e2e-pg -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app \
-    -e POSTGRES_DB=app -p ${PG_PORT}:5432 postgres:17-alpine >/dev/null
-  docker run -d --name e2e-redis -p ${REDIS_PORT}:6379 redis:7-alpine >/dev/null
+    -e POSTGRES_DB=app -p "${PG_PORT}:5432" postgres:17-alpine >/dev/null
+  docker run -d --name e2e-redis -p "${REDIS_PORT}:6379" redis:7-alpine >/dev/null
   until docker exec e2e-pg pg_isready -U app >/dev/null 2>&1; do sleep 1; done
 
   mkdir -p tmp/e2e

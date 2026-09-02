@@ -41,7 +41,9 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | --- | --- | --- |
 | `@axe-core/playwright` | `4.13.0` | MPL-2.0 |
 | `@biomejs/biome` | `1.9.4` | MIT OR Apache-2.0 |
-| `@gsap/react` | `2.1.2` | SEE LICENSE AT https://gsap.com/standard-license |
+| `@commitlint/cli` | `21.2.2` | MIT |
+| `@commitlint/config-conventional` | `21.2.2` | MIT |
+| `@gsap/react` | `2.1.2` | SEE LICENSE AT <https://gsap.com/standard-license> |
 | `@originjs/vite-plugin-federation` | `1.4.1` | MulanPSL-2.0 |
 | `@phosphor-icons/react` | `2.1.10` | MIT |
 | `@playwright/test` | `1.62.1` | Apache-2.0 |
@@ -53,9 +55,12 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `@types/react` | `19.2.18` | MIT |
 | `@types/react-dom` | `19.2.5` | MIT |
 | `@vitejs/plugin-react` | `4.7.0` | MIT |
-| `gsap` | `3.15.0` | Standard 'no charge' license: https://gsap.com/standard-license. |
+| `gsap` | `3.15.0` | Standard 'no charge' license: <https://gsap.com/standard-license>. |
+| `husky` | `9.1.7` | MIT |
 | `js-yaml` | `4.3.1` | MIT |
 | `jsdom` | `25.0.1` | MIT |
+| `lint-staged` | `17.4.1` | MIT |
+| `markdownlint-cli2` | `0.23.2` | MIT |
 | `msw` | `2.15.0` | MIT |
 | `openapi-fetch` | `0.15.2` | MIT |
 | `openapi-typescript` | `7.13.0` | MIT |

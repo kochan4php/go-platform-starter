@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-: "${DATABASE_URL:?set DATABASE_URL to a disposable database at the migration's prior version}"
+: "${DATABASE_URL:?set DATABASE_URL to a disposable database at the version before the migration}"
 [ "$#" -gt 0 ] || { echo "usage: scripts/migration-dry-run.sh migration.sql [...]" >&2; exit 2; }
 
 for file in "$@"; do

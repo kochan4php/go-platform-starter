@@ -4,7 +4,18 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const ignored = new Set(["node_modules", ".git", "graphify-out", "site"]);
+const ignored = new Set([
+  ".agents",
+  ".cache",
+  ".codex",
+  ".git",
+  "coverage",
+  "dist",
+  "graphify-out",
+  "node_modules",
+  "site",
+  "tmp",
+]);
 function markdownFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (ignored.has(entry.name)) return [];

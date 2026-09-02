@@ -8,6 +8,8 @@
 		"build": "tsc -b && vite build",
 		"preview": "vite preview --port 5173 --strictPort",
 		"test": "vitest run",
+		"test:watch": "vitest",
+		"mock:node": "node --experimental-strip-types src/mocks/standalone.ts",
 		"check:budget": "node ../../scripts/check-budget.mjs"
 	},
 	"dependencies": {

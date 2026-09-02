@@ -3,6 +3,7 @@ import federation from "@originjs/vite-plugin-federation";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { localDevServer } from "../../scripts/vite-dev";
 
 // Runtime-configurable remote URLs: window.__REMOTE_URLS__ is served as a
 // static /config.js next to the host (nginx image ships a default). Defaults
@@ -34,7 +35,7 @@ export default defineConfig({
   experimental: {
     renderBuiltUrl: (filename) => (cdnOrigin ? `${cdnOrigin}/${filename}` : { relative: true }),
   },
-  server: { host: "127.0.0.1" },
+  server: localDevServer(),
   preview: { host: "127.0.0.1" },
   plugins: [
     react(),

@@ -21,7 +21,8 @@
 	},
 	"scripts": {
 		"gen": "node ../../scripts/compose-specs.mjs && openapi-typescript gen/openapi.json -o src/gen.d.ts && node ../../scripts/generate-contract-modules.mjs",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"openapi-fetch": "^0.15.0",

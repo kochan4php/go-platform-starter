@@ -8,11 +8,12 @@ work="$(mktemp -d)"
 cleanup() { find "$work" -type f -delete; rmdir "$work"; }
 trap cleanup EXIT HUP INT TERM
 
-for image in $IMAGES; do
+read -r -a images <<<"$IMAGES"
+for image in "${images[@]}"; do
   case "$image" in *@sha256:*) ;; *) echo "image is not digest-pinned: $image" >&2; exit 1 ;; esac
   docker pull "$image"
 done
-docker save $IMAGES -o "$work/images.tar"
+docker save "${images[@]}" -o "$work/images.tar"
 tar -cf "$work/configuration.tar" infra/compose.prod.yml infra/nginx docs/INFRA_OPS.md scripts/restore-test.sh
 sha256sum "$work/images.tar" "$work/configuration.tar" > "$work/SHA256SUMS"
 tar -C "$work" -cf "$OUTPUT" images.tar configuration.tar SHA256SUMS

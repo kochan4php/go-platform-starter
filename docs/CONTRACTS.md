@@ -3,7 +3,7 @@
 Every service owns an OpenAPI spec at `services/<name>/openapi.yaml`. The spec is the
 source of truth — server stubs are **generated** from it, never hand-routed.
 
-```
+```text
 services/<name>/openapi.yaml
         │  make contracts SVC=<name>          (pinned oapi-codegen via go.mod tool directive)
         ▼
@@ -100,4 +100,3 @@ NOTHING`), so at-least-once redelivery cannot duplicate rows.
 Belt-and-braces beside `user.deleted`: every admin delete also pushes the `sub` onto
 this durable list; the users service's scheduled sweep drains it and deletes any
 profile rows the stream path missed.
-

@@ -1,0 +1,4 @@
+# Copy this file outside the repository, replace the URL, then point
+# NPM_CONFIG_USERCONFIG at it. Never commit mirror credentials.
+registry=https://npm.internal.example/repository/npm-group/
+always-auth=true

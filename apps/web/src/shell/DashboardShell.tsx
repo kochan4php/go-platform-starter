@@ -12,6 +12,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import changelog from "../../../../CHANGELOG.md?raw";
 import { useAuth } from "../auth-context";
 import { secureRequest } from "../lib/api";
 import { ScrollToTop, useGatewayHealth, useOnline, useStored, useTheme, useToast } from "../lib/ui";
@@ -23,6 +24,13 @@ import { SessionMenu } from "./SessionMenu";
 import { ShortcutsHelp } from "./ShortcutsHelp";
 import { Topbar } from "./Topbar";
 import { APP_VERSION, ENV, NAV_GROUPS } from "./nav-config";
+
+const CHANGELOG_ITEMS =
+  changelog
+    .match(/## \[Unreleased\]([\s\S]*?)(?=\n## |$)/)?.[1]
+    ?.split(/\r?\n/)
+    .filter((line) => line.startsWith("- "))
+    .map((line) => line.slice(2).trim()) ?? [];
 
 /**
  * Dashboard shell. Owns:
@@ -647,9 +655,9 @@ function WhatsNew() {
           What changed
         </h2>
         <ul className="mt-4 space-y-2 text-sm leading-relaxed text-[var(--color-muted)]">
-          <li>Saved scroll positions and keyboard shortcuts.</li>
-          <li>Live refresh, bulk actions, imports, and exports.</li>
-          <li>Per-user timezone, density, theme, and optional sound preferences.</li>
+          {(CHANGELOG_ITEMS.length ? CHANGELOG_ITEMS : ["See CHANGELOG.md for this release."]).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
         <button
           type="button"

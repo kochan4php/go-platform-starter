@@ -28,6 +28,7 @@
 		"@testing-library/react": "^16.1.0"
 	},
 	"scripts": {
-		"test": "vitest run --passWithNoTests"
+		"test": "vitest run --passWithNoTests",
+		"test:watch": "vitest --passWithNoTests"
 	}
 }

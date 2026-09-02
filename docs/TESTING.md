@@ -18,9 +18,9 @@ available locally. GitHub runners have Docker and execute them.
 | Contract drift | `corepack pnpm test:contracts` | every literal FE API method/path exists in OpenAPI and generated types |
 | Gate regression | `corepack pnpm test:gates` | proves bundle and import-boundary gates fail bad input |
 | Real E2E | `corepack pnpm e2e` | desktop Chromium plus tagged Pixel 7 journeys |
-| Load | `K6_MODE=users|login|soak k6 run scripts/k6/performance.js` | 100 VU list, login storm, one-hour soak |
+| Load | `K6_MODE=users \| login \| soak k6 run scripts/k6/performance.js` | 100 VU list, login storm, one-hour soak |
 | Staging API fuzz | `FUZZ_CONFIRM=staging FUZZ_BASE_URL=https://... node scripts/openapi-fuzz.mjs` | malformed and schema-hostile writes must never produce 5xx |
-| Chaos | `APP_ENV=staging scripts/chaos-qa.sh redis|postgres` | fail-open Redis posture and dependency recovery |
+| Chaos | `APP_ENV=staging scripts/chaos-qa.sh redis \| postgres` | fail-open Redis posture and dependency recovery |
 
 On Windows, set `TESTCONTAINERS_RYUK_DISABLED=true` if Docker Desktop blocks
 the Ryuk sidecar. `-p 1` deliberately bounds container pressure and reuses the

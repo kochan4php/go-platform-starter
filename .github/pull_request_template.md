@@ -2,6 +2,9 @@
 
 - [ ] Tests cover the changed behavior.
 - [ ] Documentation and generated artifacts are current.
+- [ ] `make dev-test` passes, or omitted gates are explained below.
+- [ ] OpenAPI changes include the oasdiff report and regenerated contracts.
+- [ ] UI changes include keyboard, responsive, and accessible-state checks.
 
 ## Release notes draft
 
@@ -15,6 +18,7 @@ Category: `added | changed | fixed | deprecated | removed | security | none`
 - Rollout/feature flag:
 - Rollback or forward-fix:
 - API/data/security/observability impact:
+- Developer setup or environment impact:
 
 ## SQL / migration review
 

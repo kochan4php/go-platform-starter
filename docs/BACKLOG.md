@@ -775,82 +775,82 @@ by priority — baca seluruhnya lalu pilih.
 
 ## Developer Experience
 
-- [ ] 🔧 J1. Makefile target `make dev-test` (gates pra-push)
-- [ ] 🔧 J2. Makefile `make open` (shell/docs/health)
-- [ ] 🔧 J3. Pre-commit hook husky + lint-staged (biome + gofumpt)
-- [ ] 🔧 J4. commit-msg hook commitlint lokal
-- [ ] 🔧 J5. .editorconfig
-- [ ] 🔧 J6. .vscode/settings.json + extensions.json
-- [ ] 🔧 J7. .vscode/launch.json (delve debug)
-- [ ] 🔧 J8. Devcontainer (Go + Node + Docker)
-- [ ] 🔧 J9. shellcheck semua script di CI
-- [ ] 🔧 J10. actionlint untuk workflow files
-- [ ] 🔧 J11. yamllint semua yaml
-- [ ] 🔧 J12. markdownlint docs
-- [ ] 🔧 J13. Air config per-service committed
-- [ ] 🔧 J14. Evaluasi go run -watch (Go experiment)
-- [ ] 🔧 J15. Swagger UI lokal per-service (tanpa gateway)
-- [ ] 🔧 J16. Seed data realistis (20 user + roles variatif)
-- [ ] 🔧 J17. make seed-reset (wipe + seed cepat)
-- [ ] 🔧 J18. Generator `new-service <name>` dari _template
-- [ ] 🔧 J19. Generator `new-migration <svc> <name>`
-- [ ] 🔧 J20. Script db-shell per service
-- [ ] 🔧 J21. Script logs <svc> dengan filter
-- [ ] 🔧 J22. Script open-docs (buka Scalar)
-- [ ] 🧭 J23. Task runner alternatif (Task/Just) evaluasi
-- [ ] 🔧 J24. make check-env validasi keys .env.example
-- [ ] 🔧 J25. Env var reference auto-generate dari struct tag
-- [ ] 🔧 J26. Whats-new modal baca dari changelog
-- [ ] 🔧 J27. Local HTTPS dev (mkcert) untuk secure cookie
-- [ ] 🔧 J28. Delve attach debug script
-- [ ] 🔧 J29. make test-watch (watch mode)
-- [ ] 🔧 J30. FE test watch script per-app
-- [ ] 🔧 J31. Index halaman standalone dev entries (semua remote)
-- [ ] 🔧 J32. MSW node mock server standalone
-- [ ] 🔧 J33. Fake data generator CLI
-- [ ] 🔧 J34. DB diagram auto-generate dari migration
-- [ ] 🔧 J35. OpenAPI diff report di PR (oasdiff)
-- [ ] 🔧 J36. Breaking change gate (oasdiff breaking → fail)
-- [ ] 🔧 J37. PR template dengan checklist
-- [ ] 🔧 J38. Issue templates (bug/feature)
-- [ ] 🔧 J39. CODEOWNERS per directory
-- [ ] 🔧 J40. CONTRIBUTING.md
-- [ ] 🔧 J41. GOVERNANCE.md
-- [ ] 🔧 J42. Support matrix doc (OS/Node/Go)
-- [ ] 🔧 J43. Troubleshooting guide
-- [ ] 🔧 J44. FAQ doc
-- [ ] 🔧 J45. Glossary istilah domain
-- [ ] 🔧 J46. ADR template
-- [ ] 🔧 J47. ADR index table
-- [ ] 🔧 J48. Renovate tuning (schedule + grouping)
-- [ ] 🔧 J49. Renovate automerge patch devDeps
-- [ ] 🔧 J50. Renovate lockFileMaintenance schedule
-- [ ] 🔧 J51. Mailpit (local email inbox) di compose lab
-- [ ] 🔧 J52. RedisInsight di compose lab
-- [ ] 🔧 J53. pgweb optional di lab
-- [ ] 🔧 J54. make psql shortcut
-- [ ] 🔧 J55. make redis-cli shortcut
-- [ ] 🔧 J56. Dev environment banner persist dari env
-- [ ] 🔧 J57. Error message link ke troubleshooting docs
-- [ ] 🔧 J58. Handler skeleton generator dari spec
-- [ ] 🔧 J59. new-service generator + spec + e2e stub
-- [ ] 🔧 J60. revive inline doc comment lint
-- [ ] 🔧 J61. TODO/FIXME scan CI dengan issue link
-- [ ] 🔧 J62. Generated code header verification
-- [ ] 🔧 J63. Error wrapping convention lint
-- [ ] 🔧 J64. Go version manager docs (mise)
-- [ ] 🔧 J65. Node version manager docs (fnm)
-- [ ] 🔧 J66. Windows dev guide (PowerShell)
-- [ ] 🔧 J67. macOS dev guide (brew)
-- [ ] 🔧 J68. Linux dev guide (apt)
-- [ ] 🔧 J69. pprof how-to guide untuk dev
-- [ ] 🔧 J70. Delve + vscode debugging guide
-- [ ] 🔧 J71. Tracing lokal guide
-- [ ] 🔧 J72. Test data isolation guide
-- [ ] 🔧 J73. danger.js review automation
-- [ ] 🔧 J74. Release notes verify (release-please jalan)
-- [ ] 🔧 J75. Internal npm mirror config (network lambat)
-- [ ] 🔧 J76. Consistent error wrapping convention doc
+- [x] 🔧 J1. Makefile target `make dev-test` (gates pra-push)
+- [x] 🔧 J2. Makefile `make open` (shell/docs/health)
+- [x] 🔧 J3. Pre-commit hook husky + lint-staged (biome + gofumpt)
+- [x] 🔧 J4. commit-msg hook commitlint lokal
+- [x] 🔧 J5. .editorconfig
+- [x] 🔧 J6. .vscode/settings.json + extensions.json
+- [x] 🔧 J7. .vscode/launch.json (delve debug)
+- [x] 🔧 J8. Devcontainer (Go + Node + Docker)
+- [x] 🔧 J9. shellcheck semua script di CI
+- [x] 🔧 J10. actionlint untuk workflow files
+- [x] 🔧 J11. yamllint semua yaml
+- [x] 🔧 J12. markdownlint docs
+- [x] 🔧 J13. Air config per-service committed
+- [x] 🔧 J14. Evaluasi go run -watch (Go experiment)
+- [x] 🔧 J15. Swagger UI lokal per-service (tanpa gateway)
+- [x] 🔧 J16. Seed data realistis (20 user + roles variatif)
+- [x] 🔧 J17. make seed-reset (wipe + seed cepat)
+- [x] 🔧 J18. Generator `new-service <name>` dari _template
+- [x] 🔧 J19. Generator `new-migration <svc> <name>`
+- [x] 🔧 J20. Script db-shell per service
+- [x] 🔧 J21. Script logs <svc> dengan filter
+- [x] 🔧 J22. Script open-docs (buka Scalar)
+- [x] 🧭 J23. Task runner alternatif (Task/Just) evaluasi
+- [x] 🔧 J24. make check-env validasi keys .env.example
+- [x] 🔧 J25. Env var reference auto-generate dari struct tag
+- [x] 🔧 J26. Whats-new modal baca dari changelog
+- [x] 🔧 J27. Local HTTPS dev (mkcert) untuk secure cookie
+- [x] 🔧 J28. Delve attach debug script
+- [x] 🔧 J29. make test-watch (watch mode)
+- [x] 🔧 J30. FE test watch script per-app
+- [x] 🔧 J31. Index halaman standalone dev entries (semua remote)
+- [x] 🔧 J32. MSW node mock server standalone
+- [x] 🔧 J33. Fake data generator CLI
+- [x] 🔧 J34. DB diagram auto-generate dari migration
+- [x] 🔧 J35. OpenAPI diff report di PR (oasdiff)
+- [x] 🔧 J36. Breaking change gate (oasdiff breaking → fail)
+- [x] 🔧 J37. PR template dengan checklist
+- [x] 🔧 J38. Issue templates (bug/feature)
+- [x] 🔧 J39. CODEOWNERS per directory
+- [x] 🔧 J40. CONTRIBUTING.md
+- [x] 🔧 J41. GOVERNANCE.md
+- [x] 🔧 J42. Support matrix doc (OS/Node/Go)
+- [x] 🔧 J43. Troubleshooting guide
+- [x] 🔧 J44. FAQ doc
+- [x] 🔧 J45. Glossary istilah domain
+- [x] 🔧 J46. ADR template
+- [x] 🔧 J47. ADR index table
+- [x] 🔧 J48. Renovate tuning (schedule + grouping)
+- [x] 🔧 J49. Renovate automerge patch devDeps
+- [x] 🔧 J50. Renovate lockFileMaintenance schedule
+- [x] 🔧 J51. Mailpit (local email inbox) di compose lab
+- [x] 🔧 J52. RedisInsight di compose lab
+- [x] 🔧 J53. pgweb optional di lab
+- [x] 🔧 J54. make psql shortcut
+- [x] 🔧 J55. make redis-cli shortcut
+- [x] 🔧 J56. Dev environment banner persist dari env
+- [x] 🔧 J57. Error message link ke troubleshooting docs
+- [x] 🔧 J58. Handler skeleton generator dari spec
+- [x] 🔧 J59. new-service generator + spec + e2e stub
+- [x] 🔧 J60. revive inline doc comment lint
+- [x] 🔧 J61. TODO/FIXME scan CI dengan issue link
+- [x] 🔧 J62. Generated code header verification
+- [x] 🔧 J63. Error wrapping convention lint
+- [x] 🔧 J64. Go version manager docs (mise)
+- [x] 🔧 J65. Node version manager docs (fnm)
+- [x] 🔧 J66. Windows dev guide (PowerShell)
+- [x] 🔧 J67. macOS dev guide (brew)
+- [x] 🔧 J68. Linux dev guide (apt)
+- [x] 🔧 J69. pprof how-to guide untuk dev
+- [x] 🔧 J70. Delve + vscode debugging guide
+- [x] 🔧 J71. Tracing lokal guide
+- [x] 🔧 J72. Test data isolation guide
+- [x] 🔧 J73. danger.js review automation
+- [x] 🔧 J74. Release notes verify (release-please jalan)
+- [x] 🔧 J75. Internal npm mirror config (network lambat)
+- [x] 🔧 J76. Consistent error wrapping convention doc
 
 ---
 

@@ -55,8 +55,6 @@ WEB_APPS=(
   "web-admin-users|5175"
   "web-admin-roles|5176"
 )
-MANAGED_PORTS=(8000 8081 8082 8083 8084 8085 8086 5173 5174 5175 5176)
-
 WIN=0
 command -v powershell.exe > /dev/null 2>&1 && WIN=1
 
@@ -133,6 +131,12 @@ export ADMIN_BOOTSTRAP_PASSWORD="${ADMIN_BOOTSTRAP_PASSWORD:-local-root-access-2
 # Vite reads this at request time; without it the apps would fall back to
 # same-origin and miss the gateway listening on its own dev port.
 export VITE_GATEWAY_URL="${VITE_GATEWAY_URL:-http://127.0.0.1:$LAB_GATEWAY_PORT}"
+DEV_SCHEME=http
+CURL_TLS=
+if [ "${DEV_HTTPS:-0}" = "1" ]; then
+  DEV_SCHEME=https
+  CURL_TLS=-k
+fi
 
 PIDS=()
 cleanup() {
@@ -254,10 +258,15 @@ log "waiting for every endpoint to report healthy"
 for url in \
   http://127.0.0.1:8081/healthz http://127.0.0.1:8082/healthz http://127.0.0.1:8083/healthz \
   http://127.0.0.1:8084/healthz http://127.0.0.1:8085/healthz http://127.0.0.1:8086/healthz "http://127.0.0.1:${LAB_GATEWAY_PORT}/healthz" \
-  http://127.0.0.1:5173/ http://127.0.0.1:5174/; do
+  "$DEV_SCHEME://127.0.0.1:5173/" "$DEV_SCHEME://127.0.0.1:5174/" \
+  "$DEV_SCHEME://127.0.0.1:5175/" "$DEV_SCHEME://127.0.0.1:5176/"; do
   ok=0
   for _ in $(seq 1 60); do
-    curl -sf -o /dev/null "$url" && { ok=1; break; }
+    if [ -n "$CURL_TLS" ]; then
+      curl -k -sf -o /dev/null "$url" && { ok=1; break; }
+    else
+      curl -sf -o /dev/null "$url" && { ok=1; break; }
+    fi
     sleep 1
   done
   [ "$ok" = "1" ] || die "endpoint never became ready: $url (see tmp/dev/logs/)"
@@ -266,7 +275,7 @@ done
 log "everything is up"
 cat <<SUMMARY
 
-  Shell        http://127.0.0.1:5173        (hot reload)
+  Shell        $DEV_SCHEME://127.0.0.1:5173        (hot reload)
   Remotes      :5174 auth · :5175 users · :5176 roles
   Gateway      http://127.0.0.1:${LAB_GATEWAY_PORT}/docs   (aggregate API reference)
   Services     auth :8081 · users :8082 · rbac :8083 · worker :8084 · realtime :8085 · scheduler :8086

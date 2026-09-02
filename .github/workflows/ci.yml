@@ -38,6 +38,82 @@ jobs:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v6
 
+  developer-experience:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Shell scripts
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck
+          find scripts .husky -type f \( -name '*.sh' -o -path '.husky/*' \) -print0 | xargs -0 shellcheck
+      - name: Workflow semantics
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      - name: YAML style
+        run: |
+          python -m pip install yamllint==1.37.1
+          yamllint --config-file .yamllint.yml .github infra services apps mkdocs.yml
+      - name: Markdown style
+        run: pnpm lint:markdown
+      - name: Developer policy and generator tests
+        run: |
+          pnpm check:devx
+          pnpm test:devx
+      - name: Revive comments on changed Go files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          go install github.com/mgechev/revive@v1.15.0
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA" -- '*.go')
+          if ((${#files[@]})); then "$(go env GOPATH)/bin/revive" -config revive.toml -formatter friendly "${files[@]}"; fi
+      - name: OpenAPI changelog and breaking gate
+        id: oasdiff
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          go install github.com/oasdiff/oasdiff@v1.30.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          "$(go env GOPATH)/bin/oasdiff" --version
+          node scripts/openapi-diff.mjs "$BASE_SHA"
+      - name: OpenAPI diff PR comment
+        if: always() && github.event_name == 'pull_request' && hashFiles('test-results/oasdiff.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: openapi-diff
+          path: test-results/oasdiff.md
+      - name: Enforce OpenAPI breaking gate
+        if: steps.oasdiff.outcome == 'failure'
+        run: exit 1
+
+  danger:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: danger/danger-js@cc92542da9986efec7c54d08f5d66e8148b14da4 # 13.0.8
+        with:
+          args: "ci --failOnErrors --dangerfile dangerfile.mjs"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   go:
     needs: changes
     if: needs.changes.outputs.go == 'true'

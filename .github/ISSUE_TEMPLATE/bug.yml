@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible defect
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remove secrets and personal data from every log or screenshot.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options: [local, lab, uat, demo, production]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Commands, inputs, expected result, and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs
+      render: shell
