@@ -10,6 +10,7 @@ linters:
         shared-code-must-not-import-services:
           files:
             - "**/internal/**"
+            - "!**/services/**"
           deny:
             - pkg: "github.com/kochan4php/go-platform-starter/services"
               desc: shared code must never depend on a service; services depend on it

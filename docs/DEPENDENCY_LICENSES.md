@@ -55,6 +55,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `@types/react` | `19.2.18` | MIT |
 | `@types/react-dom` | `19.2.5` | MIT |
 | `@vitejs/plugin-react` | `4.7.0` | MIT |
+| `danger` | `14.0.7` | MIT |
 | `gsap` | `3.15.0` | Standard 'no charge' license: <https://gsap.com/standard-license>. |
 | `husky` | `9.1.7` | MIT |
 | `js-yaml` | `4.3.1` | MIT |

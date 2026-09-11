@@ -59,7 +59,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes shellcheck
-          find scripts .husky -type f \( -name '*.sh' -o -path '.husky/*' \) -print0 | xargs -0 shellcheck
+          find scripts .husky -type f \( -name '*.sh' -o -path '.husky/*' \) -not -path '.husky/_/*' -print0 | xargs -0 shellcheck
       - name: Workflow semantics
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
       - name: YAML style
@@ -107,10 +107,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
-      - uses: danger/danger-js@cc92542da9986efec7c54d08f5d66e8148b14da4 # 13.0.8
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
         with:
-          args: "ci --failOnErrors --dangerfile dangerfile.mjs"
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Danger
+        run: pnpm exec danger ci --failOnErrors --dangerfile dangerfile.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
