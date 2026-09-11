@@ -335,7 +335,7 @@ func (s *Service) ListRoles(ctx context.Context) ([]Role, error) {
 		userCounts[count.RoleID] = count.Count
 	}
 	for i := range roles {
-		roles[i].Permissions = permissions[roles[i].ID]
+		roles[i].Permissions = append([]string{}, permissions[roles[i].ID]...)
 		roles[i].UserCount = userCounts[roles[i].ID]
 		roles[i].System = roles[i].Name == "admin"
 	}

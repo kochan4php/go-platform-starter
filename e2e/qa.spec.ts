@@ -21,6 +21,7 @@ async function expectNoAxeViolations(page: Page) {
 test("public pages pass automated accessibility checks", async ({ page }) => {
   for (const path of ["/login", "/register", "/forgot", "/reset", "/missing"]) {
     await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
     await expectNoAxeViolations(page);
   }
 });
@@ -138,6 +139,7 @@ test("directory pagination, keyboard navigation, visual baseline, and a11y", asy
 
   for (const path of ["/admin/roles", "/admin/settings", "/admin/403"]) {
     await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
     await expectNoAxeViolations(page);
   }
 });

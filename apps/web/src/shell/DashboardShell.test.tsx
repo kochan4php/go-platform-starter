@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../auth-context";
 import { CommandPalette } from "./CommandPalette";
+import { parseChangelogItems } from "./DashboardShell";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { ShortcutsHelp } from "./ShortcutsHelp";
 
@@ -21,6 +22,17 @@ function mount(ui: React.ReactNode) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+it("joins wrapped changelog bullets for the version modal", () => {
+  expect(
+    parseChangelogItems(
+      "## [Unreleased]\n\n### Added\n\n- First line,\n  continued here.\n- Second item.\n\n## [0.1.0]",
+    ),
+  ).toEqual(["First line, continued here.", "Second item."]);
+  expect(
+    parseChangelogItems("## [Unreleased]\n\n- Last item.\n\n[Unreleased]: https://example.test"),
+  ).toEqual(["Last item."]);
 });
 
 describe("CommandPalette", () => {

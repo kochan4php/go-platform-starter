@@ -125,6 +125,15 @@ func TestPermissionAndRoleAssignmentIntegration(t *testing.T) {
 		}
 		roles[i] = role.ID
 	}
+	listed, err := svc.ListRoles(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, role := range listed {
+		if role.Permissions == nil {
+			t.Fatalf("role %q returned null permissions", role.Name)
+		}
+	}
 
 	start := make(chan struct{})
 	errs := make(chan error, 2)

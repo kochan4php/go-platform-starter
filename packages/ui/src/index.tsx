@@ -99,7 +99,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <section className="ui-card p-6">
-      {title ? <h1 className="mb-5 text-lg font-bold tracking-tight">{title}</h1> : null}
+      {title ? <h2 className="mb-5 text-lg font-bold tracking-tight">{title}</h2> : null}
       {children}
     </section>
   );
@@ -267,7 +267,7 @@ export function ModalSection({
 }
 
 export function ModalActions({ children }: { children: ReactNode }) {
-  return <footer className="ui-modal-actions">{children}</footer>;
+  return <div className="ui-modal-actions">{children}</div>;
 }
 
 /* ---- dashboard composites ---- */

@@ -201,7 +201,7 @@ function ForbiddenPage() {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
       <IconShield className="size-12 text-[var(--color-muted)]/40" />
-      <h2 className="text-xl font-bold tracking-tight">Access denied</h2>
+      <h1 className="text-xl font-bold tracking-tight">Access denied</h1>
       <p className="max-w-sm text-sm text-[var(--color-muted)]">
         {user
           ? `Your account (${user.email}) does not have permission to view this page.`
@@ -227,9 +227,9 @@ function NotFoundPage() {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
       <p className="font-mono text-5xl font-extrabold tracking-tighter text-[var(--color-line)]">404</p>
-      <h2 className="text-xl font-bold tracking-tight">
+      <h1 className="text-xl font-bold tracking-tight">
         {locale === "id" ? "Halaman tidak ditemukan" : "Page not found"}
-      </h2>
+      </h1>
       <p className="text-sm text-[var(--color-muted)]">
         {locale === "id"
           ? "Halaman yang Anda cari tidak tersedia."
@@ -483,7 +483,7 @@ function SettingsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-accent)]">System</p>
-        <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Your console preferences</h2>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Your console preferences</h1>
       </div>
       {!onboardingDone ? (
         <Card title="Welcome checklist">

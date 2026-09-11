@@ -4,11 +4,11 @@ exports[`keeps shared primitive markup stable 1`] = `
 <section
   class="ui-card p-6"
 >
-  <h1
+  <h2
     class="mb-5 text-lg font-bold tracking-tight"
   >
     Profile
-  </h1>
+  </h2>
   <input
     aria-label="Name"
     class="ui-input "

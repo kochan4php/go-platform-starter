@@ -49,7 +49,7 @@ const roles = [
 const permissions = [
   { name: "role:update:any", createdAt: "2026-08-20T00:00:00Z", roleCount: 1 },
   { name: "user:read:any", createdAt: "2026-08-20T00:00:00Z", roleCount: 2 },
-  { name: "report:export:any", createdAt: "2026-08-27T00:00:00Z", roleCount: 0 },
+  { name: "report:export:any", createdAt: new Date().toISOString(), roleCount: 0 },
 ];
 
 function setupApi() {

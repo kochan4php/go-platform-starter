@@ -310,6 +310,9 @@ func (s *Service) Delete(ctx context.Context, sub string) error {
 		if err := tx.Exec(`UPDATE auth.sessions SET revoked_at = now() WHERE user_id = ? AND revoked_at IS NULL`, sub).Error; err != nil {
 			return err
 		}
+		if err := tx.Exec(`DELETE FROM rbac.user_roles WHERE user_id = ?`, sub).Error; err != nil {
+			return err
+		}
 		return tx.Raw(`INSERT INTO rbac.user_versions (user_id, ver) VALUES (?, 1)
 			ON CONFLICT (user_id) DO UPDATE SET ver = rbac.user_versions.ver + 1 RETURNING ver`, sub).Scan(&claimsVersion).Error
 	})

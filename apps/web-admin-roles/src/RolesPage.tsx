@@ -355,9 +355,9 @@ export default function RolesPage() {
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--color-accent)]">
             Access control
           </p>
-          <h2 className="mt-2 max-w-3xl text-[clamp(1.6rem,2.4vw,2.4rem)] font-extrabold leading-tight tracking-tight">
+          <h1 className="mt-2 max-w-3xl text-[clamp(1.6rem,2.4vw,2.4rem)] font-extrabold leading-tight tracking-tight">
             Roles & permissions
-          </h2>
+          </h1>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
             {roles.data?.length ?? 0} roles · {catalog.data?.length ?? 0} permissions
           </p>
@@ -497,9 +497,9 @@ export default function RolesPage() {
                         >
                           {iconGlyphs[role.icon] ?? iconGlyphs.shield}
                         </span>
-                        <h3 className="text-2xl font-extrabold tracking-tight">
+                        <h2 className="text-2xl font-extrabold tracking-tight">
                           <Highlight text={role.name} query={search} />
-                        </h3>
+                        </h2>
                         {role.system ? <Badge tone="danger">🔒 System role</Badge> : null}
                         {role.archived ? <Badge>Archived</Badge> : null}
                         {dirtyRoleId === role.id ? <Badge tone="accent">Unsaved</Badge> : null}
@@ -595,7 +595,7 @@ export default function RolesPage() {
             <div className="mb-4 text-5xl text-[var(--color-muted)]" aria-hidden>
               ◇
             </div>
-            <h3 className="font-bold">{search ? "No matching roles" : "No roles yet"}</h3>
+            <h2 className="font-bold">{search ? "No matching roles" : "No roles yet"}</h2>
             <p className="mt-2 max-w-sm text-sm text-[var(--color-muted)]">
               {search ? "Try another name or permission." : "Create the first access boundary for your team."}
             </p>

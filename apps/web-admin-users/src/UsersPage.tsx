@@ -267,7 +267,6 @@ export default function UsersPage() {
   const importRef = useRef<HTMLInputElement>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const countRef = useRef<HTMLParagraphElement>(null);
   const deferredQuery = useDebouncedValue(filters.query.trim(), 300);
 
   const roles = useQuery({
@@ -350,25 +349,7 @@ export default function UsersPage() {
 
   const total = stats.data?.total ?? users.data?.meta.total ?? 0;
 
-  // GSAP pass one: numeral count-up once the first page resolves.
-  useGSAP(
-    () => {
-      if (import.meta.env.MODE === "test") return;
-      if (!countRef.current || total === 0) return;
-      const state = { n: 0 };
-      gsap.to(state, {
-        n: total,
-        duration: 1.1,
-        ease: "power3.out",
-        onUpdate: () => {
-          if (countRef.current) countRef.current.textContent = String(Math.round(state.n));
-        },
-      });
-    },
-    { scope: rootRef, dependencies: [total] },
-  );
-
-  // GSAP pass two: scroll-scrubbed art plate + word-by-word reveal.
+  // Scroll-scrubbed art plate + word-by-word reveal.
   useGSAP(
     () => {
       if (import.meta.env.MODE === "test") return;
@@ -589,7 +570,7 @@ export default function UsersPage() {
         if (row.displayName || row.avatarUrl) {
           const profile = await api.PATCH("/api/v1/users/{id}", {
             params: { path: { id } },
-            body: { id, displayName: row.displayName, avatarUrl: row.avatarUrl },
+            body: { displayName: row.displayName, avatarUrl: row.avatarUrl },
           });
           if (profile.error) throw new Error(`Imported ${row.email}, but profile details failed`);
         }
@@ -705,14 +686,14 @@ export default function UsersPage() {
     <div ref={rootRef} className="space-y-8">
       {/* masthead */}
       <div data-reveal className="max-w-5xl">
-        <h2 className="text-[clamp(1.6rem,2.4vw,2.4rem)] font-extrabold leading-tight tracking-tight">
+        <h1 className="text-[clamp(1.6rem,2.4vw,2.4rem)] font-extrabold leading-tight tracking-tight">
           {REVEAL_WORDS.map((token) => (
             <span key={token.id} data-word className="inline-block">
               {token.word}
               {"\u00A0"}
             </span>
           ))}
-        </h2>
+        </h1>
       </div>
 
       {/* Responsive directory summary: stacked, paired, then six-column bento. */}
@@ -731,7 +712,7 @@ export default function UsersPage() {
         >
           <Stat
             label="Profiles on record"
-            value={<span ref={countRef}>0</span>}
+            value={formatNumber(total)}
             hint={`showing ${items.length} on this page · ${pageCount} page${pageCount > 1 ? "s" : ""}`}
           />
         </button>
@@ -2109,7 +2090,7 @@ function ProfileModal({
       }
       const { error: e } = await api.PATCH("/api/v1/users/{id}", {
         params: { path: { id: profile.id } },
-        body: { id: profile.id, email, displayName, avatarUrl },
+        body: { email, displayName, avatarUrl },
       });
       if (e) throw new Error((e as { message?: string }).message ?? "update failed");
 
@@ -2346,7 +2327,7 @@ function RegisterUserModal({
       if (displayName || avatarUrl) {
         const { error: e } = await api.PATCH("/api/v1/users/{id}", {
           params: { path: { id: newId } },
-          body: { id: newId, displayName, avatarUrl },
+          body: { displayName, avatarUrl },
         });
         if (e) throw new Error("registered, but saving profile failed");
       }

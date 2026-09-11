@@ -16,7 +16,15 @@ export default defineConfig({
     headless: true,
     storageState: {
       cookies: [],
-      origins: [{ origin: baseURL, localStorage: [{ name: "whats-new:0.6.0", value: "true" }] }],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [
+            { name: "whats-new:0.6.0", value: "true" },
+            { name: "starter-theme", value: "light" },
+          ],
+        },
+      ],
     },
     trace: "retain-on-failure",
   },

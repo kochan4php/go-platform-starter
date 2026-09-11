@@ -156,8 +156,7 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	dsn := testutil.StartPostgres(t)
 	redisAddr := testutil.StartRedis(t)
 
-	authPort, usersPort, rbacPort, gwPort :=
-		freePort(t), freePort(t), freePort(t), freePort(t)
+	authPort, usersPort, rbacPort, gwPort := freePort(t), freePort(t), freePort(t), freePort(t)
 
 	internalSecret := "e2e-internal-secret"
 	jwtSecret := "e2e-jwt-secret-at-least-16ch"
@@ -282,7 +281,7 @@ func TestFullMeshThroughGateway(t *testing.T) {
 		t.Fatalf("register conflict peer: %d %+v", otherRes.StatusCode, otherEnv)
 	}
 	conflictRes, _ := call(t, http.MethodPatch, fmt.Sprintf("%s/api/v1/users/%d", baseGW, wandaID), adminToken,
-		map[string]any{"id": wandaID, "email": "other@example.local"})
+		map[string]string{"email": "other@example.local"})
 	if conflictRes.StatusCode != http.StatusConflict {
 		t.Fatalf("duplicate email patch = %d, want 409", conflictRes.StatusCode)
 	}
@@ -309,7 +308,7 @@ func TestFullMeshThroughGateway(t *testing.T) {
 	}
 	newEmail := "wanda-renamed@example.local"
 	renameRes, renameEnv := call(t, http.MethodPatch, fmt.Sprintf("%s/api/v1/users/%d", baseGW, wandaID), adminToken,
-		map[string]any{"id": wandaID, "email": newEmail})
+		map[string]string{"email": newEmail})
 	if renameRes.StatusCode != http.StatusOK {
 		t.Fatalf("rename email: %d %+v", renameRes.StatusCode, renameEnv)
 	}

@@ -100,6 +100,9 @@ func TestUsersCRUDValidationPresenceAndBoundaries(t *testing.T) {
 	if err := db.Exec(`INSERT INTO auth.sessions (user_id, expires_at) VALUES (1, now() + interval '1 hour')`).Error; err != nil {
 		t.Fatal(err)
 	}
+	if err := db.Exec(`INSERT INTO rbac.roles (id, name) VALUES (1, 'test'); INSERT INTO rbac.user_roles (user_id, role_id) VALUES (1, 1)`).Error; err != nil {
+		t.Fatal(err)
+	}
 	if err := RefreshReadModels(ctx, db); err != nil {
 		t.Fatal(err)
 	}
@@ -133,6 +136,13 @@ func TestUsersCRUDValidationPresenceAndBoundaries(t *testing.T) {
 	}
 	if active != 0 {
 		t.Fatalf("active sessions after delete = %d", active)
+	}
+	var assignments int64
+	if err := db.Table("rbac.user_roles").Where("user_id = ?", 1).Count(&assignments).Error; err != nil {
+		t.Fatal(err)
+	}
+	if assignments != 0 {
+		t.Fatalf("role assignments after delete = %d", assignments)
 	}
 	actions := map[string]bool{}
 	for _, event := range pub.events {

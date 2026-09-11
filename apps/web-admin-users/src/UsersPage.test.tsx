@@ -87,6 +87,7 @@ it("renders the paginated table and deletes a profile", async () => {
   const profilesSummary = screen.getByTestId("profiles-summary");
   expect(profilesSummary.classList.contains("grid-cols-1")).toBe(true);
   expect(profilesSummary.classList.contains("sm:grid-cols-2")).toBe(true);
+  expect(within(profilesSummary).getByText("1")).toBeTruthy();
 
   fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), {
     target: { value: "ada" },

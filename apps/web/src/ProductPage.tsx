@@ -262,7 +262,7 @@ export default function ProductPage() {
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-accent)]">
             Product operations
           </p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Platform product console</h2>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Platform product console</h1>
           <p className="mt-2 max-w-3xl text-sm text-[var(--color-muted)]">
             One audited surface for invitations, approvals, integrations, reports, analytics, access support,
             and deployment-level product settings.

@@ -1,5 +1,5 @@
 import { createApiClient } from "@starter/contracts";
-import { BrandMark, PreferencesProvider, Tooltip } from "@starter/ui";
+import { BrandMark, Button, Modal, ModalActions, PreferencesProvider, Tooltip } from "@starter/ui";
 import { useIsFetching, useIsMutating, useQueryClient } from "@tanstack/react-query";
 import {
   type ReactNode,
@@ -25,12 +25,14 @@ import { ShortcutsHelp } from "./ShortcutsHelp";
 import { Topbar } from "./Topbar";
 import { APP_VERSION, ENV, NAV_GROUPS } from "./nav-config";
 
-const CHANGELOG_ITEMS =
-  changelog
-    .match(/## \[Unreleased\]([\s\S]*?)(?=\n## |$)/)?.[1]
-    ?.split(/\r?\n/)
-    .filter((line) => line.startsWith("- "))
-    .map((line) => line.slice(2).trim()) ?? [];
+export function parseChangelogItems(source: string): string[] {
+  const section = source.match(/## \[Unreleased\]([\s\S]*?)(?=\n## |$)/)?.[1] ?? "";
+  return [...section.matchAll(/^- (.*(?:\r?\n {2,}\S.*)*)/gm)].map((match) =>
+    match[1].replace(/\s+/g, " ").trim(),
+  );
+}
+
+const CHANGELOG_ITEMS = parseChangelogItems(changelog);
 
 /**
  * Dashboard shell. Owns:
@@ -642,32 +644,18 @@ function WhatsNew() {
     setOpen(false);
   };
   return (
-    <div className="ui-modal-backdrop fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 backdrop-blur-[6px]">
-      <dialog
-        open
-        aria-labelledby="whats-new-title"
-        className="w-full max-w-md rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 shadow-2xl"
-      >
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--color-accent)]">
-          Version {APP_VERSION}
-        </p>
-        <h2 id="whats-new-title" className="mt-2 text-xl font-bold tracking-tight">
-          What changed
-        </h2>
-        <ul className="mt-4 space-y-2 text-sm leading-relaxed text-[var(--color-muted)]">
-          {(CHANGELOG_ITEMS.length ? CHANGELOG_ITEMS : ["See CHANGELOG.md for this release."]).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          onClick={close}
-          className="mt-6 rounded-xl bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-[var(--color-canvas)]"
-        >
+    <Modal title="What changed" eyebrow={`Version ${APP_VERSION}`} size="lg" onClose={close}>
+      <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed text-[var(--color-muted)]">
+        {(CHANGELOG_ITEMS.length ? CHANGELOG_ITEMS : ["See CHANGELOG.md for this release."]).map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <ModalActions>
+        <Button type="button" onClick={close}>
           Continue
-        </button>
-      </dialog>
-    </div>
+        </Button>
+      </ModalActions>
+    </Modal>
   );
 }
 

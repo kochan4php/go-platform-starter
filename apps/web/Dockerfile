@@ -9,6 +9,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
 
 COPY scripts ./scripts
 COPY packages ./packages
+COPY CHANGELOG.md ./CHANGELOG.md
 COPY apps/web ./apps/web
 # aggregate spec composes from every service's openapi.yaml
 COPY services ./services
