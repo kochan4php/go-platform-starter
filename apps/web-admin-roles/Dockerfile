@@ -26,5 +26,6 @@ FROM nginxinc/nginx-unprivileged:alpine
 ENV NGINX_GZIP_LEVEL=5
 COPY apps/web-admin-roles/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /src/apps/web-admin-roles/dist /usr/share/nginx/html
+USER 101
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=3s --retries=5 CMD wget -q -O /dev/null http://127.0.0.1:8080/

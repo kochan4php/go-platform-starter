@@ -48,6 +48,33 @@
 | `changed_at` | `timestamp with time zone` | no | now() | Database timestamp of the mutation. |
 | `changed_by` | `bigint` | yes | — | Optional logical user id responsible for the mutation. |
 
+## `auth.identity_tokens`
+
+| Column | Type | Null | Default / generated | Description |
+| --- | --- | --- | --- | --- |
+| `id` | `bigint` | no | IDENTITY | — |
+| `user_id` | `bigint` | yes | — | — |
+| `kind` | `text` | no | — | — |
+| `token_digest` | `text` | no | — | — |
+| `payload` | `jsonb` | no | '{}'::jsonb | — |
+| `expires_at` | `timestamp with time zone` | no | — | — |
+| `consumed_at` | `timestamp with time zone` | yes | — | — |
+| `created_at` | `timestamp with time zone` | no | now() | — |
+
+## `auth.login_events`
+
+| Column | Type | Null | Default / generated | Description |
+| --- | --- | --- | --- | --- |
+| `id` | `bigint` | no | IDENTITY | — |
+| `user_id` | `bigint` | yes | — | — |
+| `success` | `boolean` | no | — | — |
+| `risk_score` | `smallint` | no | 0 | — |
+| `anomalous` | `boolean` | no | false | — |
+| `ip` | `text` | no | ''::text | — |
+| `user_agent` | `text` | no | ''::text | — |
+| `reason` | `text` | no | ''::text | — |
+| `created_at` | `timestamp with time zone` | no | now() | — |
+
 ## `auth.sessions`
 
 | Column | Type | Null | Default / generated | Description |
@@ -153,6 +180,22 @@
 | `inactive` | `bigint` | yes | — | Current inactive user count. |
 | `refreshed_at` | `timestamp with time zone` | yes | — | Time the projection was rebuilt. |
 
+## `users.product_records`
+
+| Column | Type | Null | Default / generated | Description |
+| --- | --- | --- | --- | --- |
+| `id` | `bigint` | no | IDENTITY | — |
+| `kind` | `text` | no | — | — |
+| `owner_id` | `bigint` | no | 0 | — |
+| `subject_id` | `bigint` | yes | — | — |
+| `name` | `text` | no | ''::text | — |
+| `status` | `text` | no | 'active'::text | — |
+| `payload` | `jsonb` | no | '{}'::jsonb | — |
+| `secret_digest` | `text` | no | ''::text | HMAC digest only; plaintext invitation and API-key material is returned once. |
+| `expires_at` | `timestamp with time zone` | yes | — | — |
+| `created_at` | `timestamp with time zone` | no | now() | — |
+| `updated_at` | `timestamp with time zone` | no | now() | — |
+
 ## `users.registration_daily`
 
 | Column | Type | Null | Default / generated | Description |
@@ -200,6 +243,12 @@
 | `audit.processed_messages` | `processed_messages_pkey` | PRIMARY KEY | `PRIMARY KEY (message_id)` |
 | `auth.change_log` | `change_log_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
 | `auth.change_log` | `ck_auth_change_log_operation` | CHECK | `CHECK (operation = ANY (ARRAY['INSERT'::text, 'UPDATE'::text, 'DELETE'::text]))` |
+| `auth.identity_tokens` | `identity_tokens_kind_check` | CHECK | `CHECK (kind = ANY (ARRAY['recovery_code'::text, 'magic_link'::text, 'oauth_state'::text]))` |
+| `auth.identity_tokens` | `identity_tokens_payload_size` | CHECK | `CHECK (pg_column_size(payload) <= 16384)` |
+| `auth.identity_tokens` | `identity_tokens_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
+| `auth.identity_tokens` | `identity_tokens_token_digest_key` | UNIQUE | `UNIQUE (token_digest)` |
+| `auth.login_events` | `login_events_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
+| `auth.login_events` | `login_events_risk_score_check` | CHECK | `CHECK (risk_score >= 0 AND risk_score <= 100)` |
 | `auth.sessions` | `ck_sessions_expiry_after_creation` | CHECK | `CHECK (expires_at > created_at)` |
 | `auth.sessions` | `sessions_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
 | `auth.sessions` | `uq_sessions_refresh_token_hash` | UNIQUE | `UNIQUE (refresh_token_hash)` |
@@ -220,6 +269,11 @@
 | `rbac.user_versions` | `user_versions_pkey` | PRIMARY KEY | `PRIMARY KEY (user_id)` |
 | `users.change_log` | `change_log_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
 | `users.change_log` | `ck_users_change_log_operation` | CHECK | `CHECK (operation = ANY (ARRAY['INSERT'::text, 'UPDATE'::text, 'DELETE'::text]))` |
+| `users.product_records` | `product_records_kind_check` | CHECK | `CHECK (kind = ANY (ARRAY['notification'::text, 'invitation'::text, 'access_request'::text, 'delegation'::text, 'api_key'::text, 'webhook'::text, 'scheduled_report'::text, 'saved_view'::text, 'role_template'::text, 'compliance_report'::text, 'branding'::text, 'domain'::text, 'billing_usage'::text, 'broadcast'::text, 'chat_message'::text, 'onboarding'::text, 'retention'::text, 'consumer_quota'::text, 'email_change'::text, 'account_deletion'::text]))` |
+| `users.product_records` | `product_records_name_length` | CHECK | `CHECK (length(name) <= 200)` |
+| `users.product_records` | `product_records_payload_size` | CHECK | `CHECK (pg_column_size(payload) <= 65536)` |
+| `users.product_records` | `product_records_pkey` | PRIMARY KEY | `PRIMARY KEY (id)` |
+| `users.product_records` | `product_records_status_length` | CHECK | `CHECK (length(status) <= 40)` |
 | `users.users` | `ck_users_deleted_state` | CHECK | `CHECK (status = 'deleted'::users.user_status AND deleted_at IS NOT NULL OR status <> 'deleted'::users.user_status AND deleted_at IS NULL)` |
 | `users.users` | `ck_users_email_format` | CHECK | `CHECK (email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text)` |
 | `users.users` | `ck_users_failed_login_attempts` | CHECK | `CHECK (failed_login_attempts >= 0)` |
@@ -240,6 +294,12 @@
 | `audit.processed_messages` | `processed_messages_pkey` | `CREATE UNIQUE INDEX processed_messages_pkey ON audit.processed_messages USING btree (message_id)` |
 | `auth.change_log` | `change_log_pkey` | `CREATE UNIQUE INDEX change_log_pkey ON auth.change_log USING btree (id)` |
 | `auth.change_log` | `ix_auth_change_log_changed_at` | `CREATE INDEX ix_auth_change_log_changed_at ON auth.change_log USING btree (changed_at DESC)` |
+| `auth.identity_tokens` | `identity_tokens_pkey` | `CREATE UNIQUE INDEX identity_tokens_pkey ON auth.identity_tokens USING btree (id)` |
+| `auth.identity_tokens` | `identity_tokens_token_digest_key` | `CREATE UNIQUE INDEX identity_tokens_token_digest_key ON auth.identity_tokens USING btree (token_digest)` |
+| `auth.identity_tokens` | `identity_tokens_user_kind_active_idx` | `CREATE INDEX identity_tokens_user_kind_active_idx ON auth.identity_tokens USING btree (user_id, kind, expires_at) WHERE (consumed_at IS NULL)` |
+| `auth.login_events` | `login_events_anomaly_created_idx` | `CREATE INDEX login_events_anomaly_created_idx ON auth.login_events USING btree (created_at DESC) WHERE anomalous` |
+| `auth.login_events` | `login_events_pkey` | `CREATE UNIQUE INDEX login_events_pkey ON auth.login_events USING btree (id)` |
+| `auth.login_events` | `login_events_user_created_idx` | `CREATE INDEX login_events_user_created_idx ON auth.login_events USING btree (user_id, created_at DESC)` |
 | `auth.sessions` | `ix_sessions_metadata_gin` | `CREATE INDEX ix_sessions_metadata_gin ON auth.sessions USING gin (metadata)` |
 | `auth.sessions` | `sessions_active_family_idx` | `CREATE INDEX sessions_active_family_idx ON auth.sessions USING btree (family_id, expires_at DESC) INCLUDE (id, user_id, refresh_token_hash, device_id) WHERE (revoked_at IS NULL)` |
 | `auth.sessions` | `sessions_active_user_cover_idx` | `CREATE INDEX sessions_active_user_cover_idx ON auth.sessions USING btree (user_id, expires_at DESC, created_at DESC) INCLUDE (id, family_id, refresh_token_hash, device_id, ip, user_agent) WHERE (revoked_at IS NULL)` |
@@ -263,6 +323,11 @@
 | `users.change_log` | `change_log_pkey` | `CREATE UNIQUE INDEX change_log_pkey ON users.change_log USING btree (id)` |
 | `users.change_log` | `ix_users_change_log_changed_at` | `CREATE INDEX ix_users_change_log_changed_at ON users.change_log USING btree (changed_at DESC)` |
 | `users.dashboard_stats` | `dashboard_stats_id_unique` | `CREATE UNIQUE INDEX dashboard_stats_id_unique ON users.dashboard_stats USING btree (id)` |
+| `users.product_records` | `product_records_deployment_singleton_idx` | `CREATE UNIQUE INDEX product_records_deployment_singleton_idx ON users.product_records USING btree (kind) WHERE (kind = ANY (ARRAY['branding'::text, 'domain'::text, 'retention'::text]))` |
+| `users.product_records` | `product_records_kind_status_created_idx` | `CREATE INDEX product_records_kind_status_created_idx ON users.product_records USING btree (kind, status, created_at DESC)` |
+| `users.product_records` | `product_records_owner_kind_created_idx` | `CREATE INDEX product_records_owner_kind_created_idx ON users.product_records USING btree (owner_id, kind, created_at DESC)` |
+| `users.product_records` | `product_records_pkey` | `CREATE UNIQUE INDEX product_records_pkey ON users.product_records USING btree (id)` |
+| `users.product_records` | `product_records_subject_active_idx` | `CREATE INDEX product_records_subject_active_idx ON users.product_records USING btree (subject_id, kind, expires_at) WHERE (status = 'active'::text)` |
 | `users.registration_daily` | `registration_daily_day_unique` | `CREATE UNIQUE INDEX registration_daily_day_unique ON users.registration_daily USING btree (day)` |
 | `users.users` | `ix_users_display_name_trgm` | `CREATE INDEX ix_users_display_name_trgm ON users.users USING gin (display_name gin_trgm_ops)` |
 | `users.users` | `ix_users_email_trgm` | `CREATE INDEX ix_users_email_trgm ON users.users USING gin (email gin_trgm_ops)` |

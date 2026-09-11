@@ -38,6 +38,29 @@ Table auth_change_log {
   changed_by bigint
 }
 
+Table auth_identity_tokens {
+  id bigint [not null, increment]
+  user_id bigint
+  kind text [not null]
+  token_digest text [not null]
+  payload jsonb [not null]
+  expires_at timestamptz [not null]
+  consumed_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table auth_login_events {
+  id bigint [not null, increment]
+  user_id bigint
+  success boolean [not null]
+  risk_score smallint [not null]
+  anomalous boolean [not null]
+  ip text [not null]
+  user_agent text [not null]
+  reason text [not null]
+  created_at timestamptz [not null]
+}
+
 Table auth_sessions {
   id bigint [not null, increment]
   user_id bigint [not null]
@@ -123,6 +146,20 @@ Table users_dashboard_stats {
   active bigint
   inactive bigint
   refreshed_at timestamptz
+}
+
+Table users_product_records {
+  id bigint [not null, increment]
+  kind text [not null]
+  owner_id bigint [not null]
+  subject_id bigint
+  name text [not null]
+  status text [not null]
+  payload jsonb [not null]
+  secret_digest text [not null]
+  expires_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 }
 
 Table users_registration_daily {

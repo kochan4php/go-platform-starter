@@ -9,7 +9,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | --- | --- | --- |
 | `github.com/caarlos0/env/v11` | `v11.4.1` | MIT |
 | `github.com/coder/websocket` | `v1.8.15` | See upstream LICENSE |
-| `github.com/getkin/kin-openapi` | `v0.142.0` | MIT |
+| `github.com/getkin/kin-openapi` | `v0.144.0` | MIT |
 | `github.com/getsentry/sentry-go` | `v0.48.0` | MIT |
 | `github.com/go-chi/chi/v5` | `v5.3.2` | MIT |
 | `github.com/go-chi/cors` | `v1.2.2` | MIT |
@@ -18,6 +18,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `github.com/golang-jwt/jwt/v5` | `v5.3.1` | MIT |
 | `github.com/golang-migrate/migrate/v4` | `v4.19.1` | MIT |
 | `github.com/google/uuid` | `v1.6.0` | BSD-3-Clause |
+| `github.com/jackc/pgx/v5` | `v5.10.0` | MIT |
 | `github.com/lib/pq` | `v1.10.9` | MIT |
 | `github.com/moby/moby/client` | `v0.5.0` | Apache-2.0 |
 | `github.com/oapi-codegen/runtime` | `v1.7.0` | Apache-2.0 |
