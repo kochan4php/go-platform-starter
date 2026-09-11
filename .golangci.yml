@@ -27,10 +27,10 @@ linters:
       # idiomatically unchecked in Go; errcheck flags ~36 of them repo-wide.
       - linters:
           - errcheck
-        text: "Error return value of .[^`]*\.Close. is not checked"
+        text: 'Error return value of .[^`]*\.Close. is not checked'
       - linters:
           - errcheck
-        text: "Error return value of .fmt\.Fprint"
+        text: 'Error return value of .fmt\.Fprint'
 
 formatters:
   enable:

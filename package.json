@@ -2,9 +2,6 @@
 	"name": "go-platform-starter-web",
 	"private": true,
 	"type": "module",
-	"pnpm": {
-		"ignoredBuiltDependencies": ["core-js"]
-	},
 	"packageManager": "pnpm@11.22.0",
 	"engines": {
 		"node": ">=22"
