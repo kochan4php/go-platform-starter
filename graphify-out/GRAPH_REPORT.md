@@ -1,7 +1,7 @@
 # Graph Report - go-platform-starter  (2026-09-11)
 
 ## Corpus Check
-- 542 files · ~287,356 words
+- 542 files · ~287,357 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7a157277`
+- Built from commit: `b5dc69fc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -121,7 +121,7 @@
 - gateway/main.go
 - graphify reference: GitHub clone and cross-repo merge
 - Developer experience
-- Postmortem
+- Observability
 - typescript
 - time.Duration
 - vitest
@@ -155,7 +155,7 @@
 - Data and migration operations
 - AUTH_UX.md
 - CONTRIBUTING.md
-- NewScheduler
+- main
 - dangerfile.mjs
 - users/gen/gen.go
 - LoginPage.tsx
@@ -202,7 +202,7 @@
 - Q: Implement all Engineering items in the Data & Migrations backlog
 - RunBackfill
 - Frequently asked questions
-- @originjs/vite-plugin-federation
+- msw
 - pull_request_template.md
 - InitTracer
 - check-quarantine.mjs
@@ -232,7 +232,7 @@
 - check-deploy-config.sh
 - API_SCHEMA_AUDIT.md
 - Q: ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found
-- main
+- OpenDatabase
 - check-docs.mjs
 - WebVitals
 - [Unreleased]
@@ -240,7 +240,7 @@
 - Q: Implement all Engineering items in Docs & Governance plus decisions N8, N29, and N49
 - record-quickstart.mjs
 - deploy-notify.mjs
-- Observability
+- Postmortem
 - ARCHIVE_POLICY.md
 - Direct dependency licenses
 - Capacity and cost planning
@@ -494,7 +494,7 @@ Nodes (17): dependencies, gsap, @gsap/react, @phosphor-icons/react, react, react
 
 ### Community 39 - "devDependencies"
 Cohesion: 0.12
-Nodes (17): devDependencies, jsdom, msw, tailwindcss, @tailwindcss/vite, @testing-library/react, @testing-library/user-event, @types/react (+9 more)
+Nodes (17): devDependencies, jsdom, @originjs/vite-plugin-federation, tailwindcss, @tailwindcss/vite, @testing-library/react, @testing-library/user-event, @types/react (+9 more)
 
 ### Community 40 - "devDependencies"
 Cohesion: 0.11
@@ -613,7 +613,7 @@ Cohesion: 0.23
 Nodes (14): TestRunOverview(), TestRunRequiresToken(), envelope, proc, os/exec.Cmd, buildBinaries(), call(), flattenEnv() (+6 more)
 
 ### Community 69 - "Troubleshooting"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (11): Bundle audit, Performance engineering evidence, Published ports, Authentication loops or refresh fails, Database or Redis is slow, Gateway rejects a route or refuses to boot, Generated files are stale, Hard refresh returns 404 or loses the session (+3 more)
 
 ### Community 70 - "rbac Deployment"
@@ -740,9 +740,9 @@ Nodes (17): consumerQuotaPolicy, ctxKeyAuth, net/netip.Prefix, redis_rate.Limite
 Cohesion: 0.18
 Nodes (11): API review and CI linting, Daily commands, Debugging and profiling, Decisions, Delivery map, Developer experience, Generators, Local HTTPS (+3 more)
 
-### Community 106 - "Postmortem"
-Cohesion: 0.20
-Nodes (10): Actions, Contributing factors, Detection, Postmortem, Resolution and recovery, Root cause, SLO and error-budget impact, Summary and customer impact (+2 more)
+### Community 106 - "Observability"
+Cohesion: 0.22
+Nodes (9): Deploy annotations, Observability, Postgres and Redis, Profiling, Run the stack, Sampling and focused debug, SLO and error budget policy, Synthetic and external uptime (+1 more)
 
 ### Community 108 - "time.Duration"
 Cohesion: 0.14
@@ -757,8 +757,8 @@ Cohesion: 0.07
 Nodes (25): API contract standards, Platform and event surface, Requests and collections, Responses, caching, and compatibility, ARCHITECTURE overview, Gateway Topology, JWT Verified Once At Edge, Observability Flow (+17 more)
 
 ### Community 114 - "main"
-Cohesion: 0.17
-Nodes (15): redis.Client, NewRedisClient(), WaitForRedis(), GracefulRun(), shutdownTimeout(), config, bearerGuard(), envFile() (+7 more)
+Cohesion: 0.16
+Nodes (15): StartPprof(), redis.Client, NewRedisClient(), WaitForRedis(), GracefulRun(), shutdownTimeout(), config, config (+7 more)
 
 ### Community 115 - "package.json"
 Cohesion: 0.20
@@ -801,7 +801,7 @@ Cohesion: 0.28
 Nodes (7): container/list.Element, container/list.List, sync.Mutex, cachedClaims, claimEntry, ClaimsClient, NewClaimsClient()
 
 ### Community 155 - "time.Time"
-Cohesion: 0.11
+Cohesion: 0.10
 Nodes (23): Permission, Role, Session, time.Time, MFAEnrollment, permissionRow, DecryptForSubject(), DeriveKey() (+15 more)
 
 ### Community 156 - "StartPostgres"
@@ -824,9 +824,9 @@ Nodes (10): Backfills and seeds, Backup, PITR, masking, and recovery, Data and m
 Cohesion: 0.08
 Nodes (19): Contributor Covenant Code of Conduct, Expected behavior, Our pledge, Scope and enforcement, Change workflow, Contributing, Pull requests, Required local checks (+11 more)
 
-### Community 164 - "NewScheduler"
-Cohesion: 0.36
-Nodes (4): redis.Client, NewScheduler(), RecordHousekeeping(), Scheduler
+### Community 164 - "main"
+Cohesion: 0.22
+Nodes (9): redis.Client, NewScheduler(), RecordHousekeeping(), Scheduler, closeDB(), envFile(), main(), pingDB() (+1 more)
 
 ### Community 166 - "users/gen/gen.go"
 Cohesion: 0.07
@@ -1008,9 +1008,9 @@ Nodes (4): Answer, Outcome, Q: Implement all Engineering items in the API & Cont
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: ada error ini di supply-chain,yml coy Unable to resolve action aquasecurity/trivy-action@0.28.0, repository or version not found, Source Nodes
 
-### Community 247 - "main"
-Cohesion: 0.25
-Nodes (11): databaseTimeouts(), envBool(), envDuration(), envInt(), OpenDatabase(), TestDatabaseEnvironmentDefaultsAndOverrides(), StartPprof(), config (+3 more)
+### Community 247 - "OpenDatabase"
+Cohesion: 0.62
+Nodes (6): databaseTimeouts(), envBool(), envDuration(), envInt(), OpenDatabase(), TestDatabaseEnvironmentDefaultsAndOverrides()
 
 ### Community 248 - "check-docs.mjs"
 Cohesion: 0.29
@@ -1028,9 +1028,9 @@ Nodes (4): Answer, Outcome, Q: Implement all Engineering items in Docs & Governa
 Cohesion: 0.40
 Nodes (4): destination, directory, root, video
 
-### Community 255 - "Observability"
+### Community 255 - "Postmortem"
 Cohesion: 0.07
-Nodes (24): Afterward, Incident response playbook, Response, Roles, Severity, Deploy annotations, Observability, Postgres and Redis (+16 more)
+Nodes (25): Afterward, Incident response playbook, Response, Roles, Severity, Common operations, Escalation and handoff, Operational runbook (+17 more)
 
 ### Community 257 - "Direct dependency licenses"
 Cohesion: 0.50
@@ -1134,13 +1134,13 @@ Nodes (8): net/http.Handler, chi.Router, ChiServerOptions, ServerInterface, Hand
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Security Posture` connect `Security Posture` to `index.md`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Why does `SecurityHeaders()` connect `Security Posture` to `net/http.Handler`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
   _1185 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Service` be split into smaller, more focused modules?**
-  _Cohesion score 0.10595065312046444 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1085972850678733 - nodes in this community are weakly interconnected._
 - **Should `net/http.Request` be split into smaller, more focused modules?**
   _Cohesion score 0.04419047619047619 - nodes in this community are weakly interconnected._
 - **Should `**/gen/**` be split into smaller, more focused modules?**
