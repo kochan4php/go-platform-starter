@@ -14,6 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -46,6 +47,16 @@ func (p RedisPublisher) Publish(ctx context.Context, stream, event string, paylo
 
 func ErrBadCredentials() *platform.AppError {
 	return &platform.AppError{Status: http.StatusUnauthorized, Message: "invalid_credentials", Detail: ""}
+}
+
+// isUniqueViolation reports whether err is PostgreSQL's unique_violation
+// (SQLSTATE 23505), however the driver happens to wrap it.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }
 
 func ErrConflictEmail(email string) *platform.AppError {
@@ -293,6 +304,12 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 			`INSERT INTO users.users (email, password_hash, display_name) VALUES (?, ?, ?) RETURNING *`,
 			u.Email, u.PasswordHash, u.DisplayName,
 		).Scan(u).Error; err != nil {
+			// The lookup above is advisory: concurrent registrations both pass
+			// it and uq_users_email_active picks the winner. The loser is a
+			// duplicate email, not a server fault.
+			if isUniqueViolation(err) {
+				return nil, ErrConflictEmail(email)
+			}
 			return nil, err
 		}
 	}

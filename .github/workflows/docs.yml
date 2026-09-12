@@ -66,6 +66,9 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+          # The docs requirements live in requirements-docs.txt; without this
+          # setup-python looks for requirements.txt and fails the job.
+          cache-dependency-path: requirements-docs.txt
       - run: pnpm install --frozen-lockfile
       - run: go mod download
       - run: python -m pip install -r requirements-docs.txt

@@ -94,7 +94,9 @@ func newFixture(t *testing.T) *fixture {
 			last_login_user_agent TEXT        NOT NULL DEFAULT '',
 			created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
 			updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
-		);`
+		);
+		CREATE UNIQUE INDEX IF NOT EXISTS uq_users_email_active
+			ON users.users (lower(email)) WHERE deleted_at IS NULL;`
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: platform.NewGormLogger(log, time.Minute),
 	})

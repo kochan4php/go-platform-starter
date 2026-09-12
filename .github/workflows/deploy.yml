@@ -40,7 +40,22 @@ jobs:
       REVISION: ${{ github.event_name == 'workflow_dispatch' && inputs.revision || github.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check deployment credentials are configured
+        id: creds
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          # Without a target host this workflow cannot do anything; say so once
+          # instead of failing every push with an opaque ssh exit 255.
+          if [ -z "$SSH_KEY" ] || [ -z "$HOST" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DEPLOY_SSH_KEY/DEPLOY_HOST are not set; skipping promotion."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Configure pinned SSH host identity
+        if: steps.creds.outputs.configured == 'true'
         env:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
@@ -50,6 +65,7 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
       - name: Promote with backup, smoke, audit, and rollback
+        if: steps.creds.outputs.configured == 'true'
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
