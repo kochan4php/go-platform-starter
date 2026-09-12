@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"time"
 )
 
 // StartPprof exposes Go's profiler on explicit loopback by default. A private
@@ -28,9 +29,14 @@ func StartPprof(addr string, log *slog.Logger) {
 	for _, name := range []string{"allocs", "block", "goroutine", "heap", "mutex", "threadcreate"} {
 		mux.Handle("/debug/pprof/"+name, pprof.Handler(name))
 	}
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 	go func() {
 		log.Info("pprof listening", "addr", addr)
-		if err := http.ListenAndServe(addr, mux); err != nil {
+		if err := server.ListenAndServe(); err != nil {
 			log.Error("pprof listener stopped", "err", err)
 		}
 	}()

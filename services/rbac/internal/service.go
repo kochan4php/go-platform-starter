@@ -128,7 +128,8 @@ var (
 )
 
 func validPermissionName(name string) bool { return permNameRe.MatchString(strings.TrimSpace(name)) }
-func validRoleName(name string) bool       { return roleNameRe.MatchString(strings.TrimSpace(name)) }
+
+func validRoleName(name string) bool { return roleNameRe.MatchString(strings.TrimSpace(name)) }
 
 func (s *Service) CreatePermission(ctx context.Context, name string) error {
 	if !validPermissionName(name) {

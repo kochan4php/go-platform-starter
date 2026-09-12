@@ -1,4 +1,6 @@
-import { danger, fail, markdown, warn } from "danger";
+// danger ships CommonJS; Node ESM cannot destructure its named exports.
+import pkg from "danger";
+const { danger, fail, markdown, warn } = pkg;
 
 const files = [...danger.git.created_files, ...danger.git.modified_files, ...danger.git.deleted_files];
 const changed = (pattern) => files.some((file) => pattern.test(file));

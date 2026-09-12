@@ -169,9 +169,10 @@ func (s *Service) List(ctx context.Context, limit, offset int, sort, order strin
 		needle := "%" + strings.ToLower(query) + "%"
 		db = db.Where("LOWER(email) LIKE ? OR LOWER(display_name) LIKE ?", needle, needle)
 	}
-	if filters.Presence == "online" {
+	switch filters.Presence {
+	case "online":
 		db = db.Where("EXISTS (SELECT 1 FROM auth.sessions s WHERE s.user_id = users.users.id AND s.revoked_at IS NULL AND s.expires_at > now())")
-	} else if filters.Presence == "offline" {
+	case "offline":
 		db = db.Where("NOT EXISTS (SELECT 1 FROM auth.sessions s WHERE s.user_id = users.users.id AND s.revoked_at IS NULL AND s.expires_at > now())")
 	}
 	if filters.RoleID > 0 {

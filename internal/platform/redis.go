@@ -18,7 +18,7 @@ func WaitForRedis(ctx context.Context, client *redis.Client) error {
 		if err := client.Ping(ctx).Err(); err == nil {
 			return nil
 		}
-		delay := min(time.Second<<min(attempt, 3), 5*time.Second) + time.Duration(rand.IntN(200))*time.Millisecond
+		delay := min(time.Second<<min(attempt, 3), 5*time.Second) + time.Duration(rand.IntN(200))*time.Millisecond // #nosec G404 -- retry jitter, not a secret
 		select {
 		case <-time.After(delay):
 		case <-ctx.Done():

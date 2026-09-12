@@ -296,7 +296,8 @@ func (h *Handlers) GetUserStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(maxAvatarBytes); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAvatarBytes)
+	if err := r.ParseMultipartForm(maxAvatarBytes); err != nil { // #nosec G120 -- body capped by MaxBytesReader above
 		platform.WriteError(w, h.log, platform.ErrBadRequest("invalid avatar upload"))
 		return
 	}

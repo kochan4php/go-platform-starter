@@ -70,7 +70,7 @@ func slowQuerySampled() bool {
 	if err != nil {
 		ratio = 1
 	}
-	return ratio >= 1 || (ratio > 0 && rand.Float64() < ratio)
+	return ratio >= 1 || (ratio > 0 && rand.Float64() < ratio) // #nosec G404 -- log sampling, not a secret
 }
 
 // queryOperation intentionally keeps cardinality bounded. SQL text, table
@@ -85,9 +85,12 @@ func queryOperation(sql string) string {
 	switch operation {
 	case "select", "insert", "update", "delete":
 		for _, table := range []struct{ match, name string }{
-			{"users.users", "users"}, {"auth.sessions", "sessions"},
-			{"rbac.roles", "roles"}, {"rbac.permissions", "permissions"},
-			{"rbac.user_roles", "user_roles"}, {"rbac.role_permissions", "role_permissions"},
+			{"users.users", "users"},
+			{"auth.sessions", "sessions"},
+			{"rbac.roles", "roles"},
+			{"rbac.permissions", "permissions"},
+			{"rbac.user_roles", "user_roles"},
+			{"rbac.role_permissions", "role_permissions"},
 			{"audit.audit_logs", "audit_logs"},
 		} {
 			if strings.Contains(lower, table.match) {

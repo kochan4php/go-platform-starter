@@ -65,10 +65,11 @@ func ResizeAvatar(reader io.Reader, maxDimension int) ([]byte, error) {
 
 func blendWhite(input color.Color) color.Color {
 	r, g, b, a := input.RGBA()
+	// RGBA() is alpha-premultiplied, so each channel + (0xffff - a) stays within 16 bits.
 	return color.RGBA{
-		R: uint8((r + 0xffff - a) >> 8),
-		G: uint8((g + 0xffff - a) >> 8),
-		B: uint8((b + 0xffff - a) >> 8),
+		R: uint8((r + 0xffff - a) >> 8), // #nosec G115
+		G: uint8((g + 0xffff - a) >> 8), // #nosec G115
+		B: uint8((b + 0xffff - a) >> 8), // #nosec G115
 		A: 0xff,
 	}
 }

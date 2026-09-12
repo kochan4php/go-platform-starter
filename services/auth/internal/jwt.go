@@ -43,11 +43,6 @@ func MintImpersonationWithRing(rawKeys, sub, email, actor string, ver int64, per
 	})
 }
 
-func mint(secret []byte, claims Claims) (string, error) {
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return t.SignedString(secret)
-}
-
 func mintWithRing(rawKeys string, claims Claims) (string, error) {
 	ring, err := platform.ParseSigningKeys(rawKeys)
 	if err != nil {

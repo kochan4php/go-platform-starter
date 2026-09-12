@@ -602,7 +602,7 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string, device ...st
 	if err != nil {
 		return nil, err
 	}
-	if raw, marshalErr := json.Marshal(res); marshalErr == nil {
+	if raw, marshalErr := json.Marshal(res); marshalErr == nil { // #nosec G117 -- the session response carries the access token by design
 		grace := s.cfg.RefreshGrace
 		if grace <= 0 {
 			grace = 10 * time.Second

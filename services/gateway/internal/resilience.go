@@ -22,11 +22,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type routePolicyKey struct{}
-type routePolicy struct {
-	hedge, stale bool
-	cacheTTL     time.Duration
-}
+type (
+	routePolicyKey struct{}
+	routePolicy    struct {
+		hedge, stale bool
+		cacheTTL     time.Duration
+	}
+)
 
 type endpointState struct {
 	url       *url.URL
@@ -92,7 +94,7 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 			return cachedHTTPResponse(req, cached, false), nil
 		}
 	}
-	start := int(t.next.Add(1) - 1)
+	start := int(t.next.Add(1) - 1) // #nosec G115 -- round-robin counter, indexed modulo the endpoint count
 	if req.Method == http.MethodGet && policy.hedge && len(t.endpoints) > 1 {
 		if res, err := t.hedge(req, start); err == nil {
 			return t.remember(req, res, policy)
@@ -121,7 +123,7 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 			if attempt == attempts-1 {
 				return res, nil
 			}
-			res.Body.Close()
+			_ = res.Body.Close()
 		} else {
 			lastErr = err
 		}
@@ -129,7 +131,7 @@ func (t *resilientTransport) RoundTrip(req *http.Request) (*http.Response, error
 			t.failure(index)
 		}
 		if attempt+1 < attempts {
-			delay := time.Duration(50*(1<<attempt)+rand.IntN(50)) * time.Millisecond
+			delay := time.Duration(50*(1<<attempt)+rand.IntN(50)) * time.Millisecond // #nosec G404 -- retry jitter, not a secret
 			select {
 			case <-time.After(delay):
 			case <-req.Context().Done():
@@ -188,7 +190,7 @@ func (t *resilientTransport) hedge(req *http.Request, start int) (*http.Response
 			cancels[got.slot]()
 			t.failure(got.index)
 			if got.response != nil {
-				got.response.Body.Close()
+				_ = got.response.Body.Close()
 			}
 		case <-timer.C:
 			if started == 1 {
@@ -277,7 +279,7 @@ func (t *resilientTransport) remember(req *http.Request, res *http.Response, pol
 	if err != nil || len(body) > 1<<20 {
 		return res, err
 	}
-	res.Body.Close()
+	_ = res.Body.Close()
 	res.Body = io.NopCloser(bytes.NewReader(body))
 	res.ContentLength = int64(len(body))
 	t.mu.Lock()

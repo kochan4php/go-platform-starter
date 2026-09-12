@@ -45,6 +45,7 @@ func run(args []string, output io.Writer) error {
 	case "records":
 		path = "/users/product/records"
 		if len(args) == 2 {
+			// #nosec G602 -- guarded by len(args) == 2 on the line above
 			path += "?kind=" + url.QueryEscape(args[1])
 		} else if len(args) > 2 {
 			return errors.New("usage: platformctl records [kind]")
@@ -71,7 +72,8 @@ func run(args []string, output io.Writer) error {
 		return fmt.Errorf("unknown command %q", args[0])
 	}
 
-	request, err := http.NewRequest(method, base+path, bytes.NewReader(body))
+	// PLATFORM_URL is the operator's own endpoint; this is their CLI, not a server.
+	request, err := http.NewRequest(method, base+path, bytes.NewReader(body)) // #nosec G704
 	if err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func run(args []string, output io.Writer) error {
 	if len(body) > 0 {
 		request.Header.Set("Content-Type", "application/json")
 	}
-	response, err := client.Do(request)
+	response, err := client.Do(request) // #nosec G704 -- same operator-supplied endpoint
 	if err != nil {
 		return err
 	}

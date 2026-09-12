@@ -66,7 +66,7 @@ func main() {
 				}
 				if res != nil {
 					_, _ = io.Copy(io.Discard, res.Body)
-					res.Body.Close()
+					_ = res.Body.Close()
 				}
 			}
 		}()

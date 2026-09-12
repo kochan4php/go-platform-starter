@@ -15,8 +15,6 @@ import (
 	"github.com/kochan4php/go-platform-starter/internal/platform"
 )
 
-const wsProtocolVersion = "v1"
-
 type Handlers struct {
 	Hub        *Hub
 	SecretRing string
@@ -131,15 +129,6 @@ func (h *Handlers) serve(reqCtx context.Context, c *Client) {
 			return
 		}
 	}
-}
-
-func contains(list []*Client, c *Client) bool {
-	for _, x := range list {
-		if x == c {
-			return true
-		}
-	}
-	return false
 }
 
 func (h *Handlers) Join(ctx context.Context, c *Client, room string) error {

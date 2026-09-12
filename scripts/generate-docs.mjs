@@ -9,20 +9,41 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const check = process.argv.includes("--check");
 const generated = [];
 
+// Sorted on the POSIX spelling: a raw sort puts "\\" and "/" in different
+// places, so Windows and Linux produced different generated output.
+function bySlashPath(a, b) {
+  const x = a.replaceAll("\\", "/");
+  const y = b.replaceAll("\\", "/");
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
 function walk(directory, predicate) {
   if (!existsSync(directory)) return [];
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory() && entry.name !== "node_modules" && entry.name !== "graphify-out")
-      return walk(path, predicate);
-    return entry.isFile() && predicate(path) ? [path] : [];
-  });
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory() && entry.name !== "node_modules" && entry.name !== "graphify-out")
+        return walk(path, predicate);
+      return entry.isFile() && predicate(path) ? [path] : [];
+    })
+    .sort(bySlashPath);
 }
 
 function output(path, content) {
   const normalized = `${content.trimEnd()}\n`;
   if (check) {
-    if (!existsSync(path) || readFileSync(path, "utf8") !== normalized) generated.push(relative(root, path));
+    const committed = existsSync(path) ? readFileSync(path, "utf8") : "";
+    if (committed !== normalized) {
+      generated.push(relative(root, path));
+      // Name the first differing line: "stale" alone says nothing about why,
+      // which is useless when the generator disagrees between machines.
+      const want = normalized.split("\n");
+      const have = committed.split("\n");
+      const at = want.findIndex((line, index) => line !== have[index]);
+      console.error(
+        `  ${relative(root, path)} line ${at + 1}\n    committed: ${JSON.stringify(have[at] ?? null)}\n    generated: ${JSON.stringify(want[at] ?? null)}`,
+      );
+    }
     return;
   }
   mkdirSync(dirname(path), { recursive: true });
@@ -33,7 +54,7 @@ const composeFiles = [
   ...walk(join(root, "infra"), (path) => /compose[^\\/]*\.ya?ml$/.test(path)),
   ...walk(join(root, "services"), (path) => path.endsWith("docker-compose.yml")),
   ...walk(join(root, "apps"), (path) => path.endsWith("docker-compose.yml")),
-].sort();
+].sort(bySlashPath);
 
 function publishedPort(value) {
   if (typeof value === "object") {
@@ -102,7 +123,7 @@ const envFiles = [
   join(root, "infra", "go.env"),
 ].filter(existsSync);
 
-for (const file of envFiles.sort()) {
+for (const file of envFiles.sort(bySlashPath)) {
   let comments = [];
   for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
     if (line.trim().startsWith("#")) {
@@ -126,7 +147,7 @@ const configFiles = [
   ...walk(join(root, "internal"), (path) => path.endsWith(".go")),
   ...walk(join(root, "services"), (path) => path.endsWith(".go") && !/[\\/]gen[\\/]/.test(path)),
 ];
-for (const file of configFiles.sort()) {
+for (const file of configFiles.sort(bySlashPath)) {
   const source = relative(root, file).replaceAll("\\", "/");
   for (const match of readFileSync(file, "utf8").matchAll(
     /`env:"([A-Z][A-Z0-9_]*)(,required)?"(?:\s+envDefault:"([^"]*)")?`/g,
@@ -272,7 +293,7 @@ const packageFiles = [
   join(root, "package.json"),
   ...walk(join(root, "apps"), (path) => path.endsWith("package.json")),
   ...walk(join(root, "packages"), (path) => path.endsWith("package.json")),
-];
+].sort(bySlashPath);
 const nodePackages = new Map();
 for (const manifest of packageFiles) {
   const data = JSON.parse(readFileSync(manifest, "utf8"));

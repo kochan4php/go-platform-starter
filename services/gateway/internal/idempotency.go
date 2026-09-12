@@ -33,6 +33,7 @@ func (w *bufferedWriter) WriteHeader(status int) {
 		w.status = status
 	}
 }
+
 func (w *bufferedWriter) Write(body []byte) (int, error) {
 	if w.status == 0 {
 		w.status = http.StatusOK

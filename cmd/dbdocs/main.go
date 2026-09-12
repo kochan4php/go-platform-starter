@@ -22,13 +22,15 @@ type column struct {
 	Nullable, Identity, Generated               bool
 }
 
-type constraint struct{ Schema, Table, Name, Kind, Definition string }
-type index struct{ Schema, Table, Name, Definition string }
-type catalog struct {
-	Columns     []column
-	Constraints []constraint
-	Indexes     []index
-}
+type (
+	constraint struct{ Schema, Table, Name, Kind, Definition string }
+	index      struct{ Schema, Table, Name, Definition string }
+	catalog    struct {
+		Columns     []column
+		Constraints []constraint
+		Indexes     []index
+	}
+)
 
 func main() {
 	databaseURL := flag.String("database-url", os.Getenv("DATABASE_URL"), "PostgreSQL URL")
@@ -63,16 +65,16 @@ func main() {
 	for name, content := range files {
 		path := filepath.Join(*out, name)
 		if *check {
-			existing, err := os.ReadFile(path)
+			existing, err := os.ReadFile(path) // #nosec G304 -- path is the -out flag joined with a fixed file name
 			if err != nil || string(existing) != string(content) {
 				fatal(path + " is stale; run go run ./cmd/dbdocs")
 			}
 			continue
 		}
-		if err := os.MkdirAll(*out, 0o755); err != nil {
+		if err := os.MkdirAll(*out, 0o750); err != nil {
 			fatal(err.Error())
 		}
-		if err := os.WriteFile(path, content, 0o644); err != nil {
+		if err := os.WriteFile(path, content, 0o600); err != nil {
 			fatal(err.Error())
 		}
 	}
@@ -105,7 +107,7 @@ func inspect(ctx context.Context, url string) (catalog, error) {
 	for rows.Next() {
 		var item column
 		if err := rows.Scan(&item.Schema, &item.Table, &item.Name, &item.Type, &item.Nullable, &item.Default, &item.Identity, &item.Generated, &item.Comment); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return c, err
 		}
 		c.Columns = append(c.Columns, item)
@@ -124,7 +126,7 @@ func inspect(ctx context.Context, url string) (catalog, error) {
 	for rows.Next() {
 		var item constraint
 		if err := rows.Scan(&item.Schema, &item.Table, &item.Name, &item.Kind, &item.Definition); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return c, err
 		}
 		c.Constraints = append(c.Constraints, item)
@@ -289,6 +291,7 @@ func section(b *strings.Builder, title string, items []string) {
 func constraintKind(kind string) string {
 	return map[string]string{"c": "CHECK", "f": "FOREIGN KEY", "p": "PRIMARY KEY", "u": "UNIQUE"}[kind]
 }
+
 func dbmlType(value string) string {
 	if strings.HasPrefix(value, "character") || value == "text" || strings.HasSuffix(value, "user_status") || value == "tsvector" {
 		return "text"
@@ -301,18 +304,21 @@ func dbmlType(value string) string {
 	}
 	return strings.ReplaceAll(value, " ", "_")
 }
+
 func yesNo(value bool) string {
 	if value {
 		return "yes"
 	}
 	return "no"
 }
+
 func cell(value string) string {
 	if value == "" {
 		return "—"
 	}
 	return strings.ReplaceAll(value, "|", "\\|")
 }
+
 func fatal(message string) {
 	fmt.Fprintln(os.Stderr, "dbdocs:", message)
 	os.Exit(1)

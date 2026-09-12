@@ -20,7 +20,7 @@ import (
 )
 
 func dockerAvailable(ctx context.Context) bool {
-	cli, err := mobyclient.NewClientWithOpts(mobyclient.FromEnv)
+	cli, err := mobyclient.New(mobyclient.FromEnv)
 	if err != nil {
 		return false
 	}

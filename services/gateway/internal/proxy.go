@@ -42,7 +42,7 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 				lastErr = err
 			} else if res.StatusCode != http.StatusOK {
 				lastErr = fmt.Errorf("%s returned %d", name, res.StatusCode)
-				res.Body.Close()
+				_ = res.Body.Close()
 			} else {
 				buf := make([]byte, 0, 32<<10)
 				tmp := make([]byte, 4096)
@@ -53,11 +53,11 @@ func LoadSpecs(ctx context.Context, upstreams Upstreams, log *slog.Logger) ([]Ro
 						break
 					}
 				}
-				res.Body.Close()
+				_ = res.Body.Close()
 				raw = buf
 				break
 			}
-			delay := min(250*time.Millisecond*time.Duration(1<<min(attempt-1, 4)), 4*time.Second) + time.Duration(rand.IntN(200))*time.Millisecond
+			delay := min(250*time.Millisecond*time.Duration(1<<min(attempt-1, 4)), 4*time.Second) + time.Duration(rand.IntN(200))*time.Millisecond // #nosec G404 -- retry jitter, not a secret
 			select {
 			case <-time.After(delay):
 			case <-ctx.Done():

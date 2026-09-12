@@ -186,10 +186,3 @@ func (m *Matcher) Match(method, actualPath string) *Route {
 	}
 	return nil
 }
-
-func normalizePath(p string) string {
-	if len(p) > 1 && strings.HasSuffix(p, "/") {
-		return p[:len(p)-1]
-	}
-	return p
-}

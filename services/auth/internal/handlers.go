@@ -62,6 +62,7 @@ func (h *Handlers) decode(r *http.Request, dst any) error {
 const cookieName = "refresh_token"
 
 func (h *Handlers) setRefreshCookie(w http.ResponseWriter, plain string) {
+	// #nosec G124 -- HttpOnly and SameSite are set; Secure follows COOKIE_SECURE so plain-HTTP dev still works
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieName,
 		Value:    plain,
@@ -74,6 +75,7 @@ func (h *Handlers) setRefreshCookie(w http.ResponseWriter, plain string) {
 }
 
 func (h *Handlers) clearRefreshCookie(w http.ResponseWriter) {
+	// #nosec G124 -- same policy as setRefreshCookie; this only expires the cookie
 	http.SetCookie(w, &http.Cookie{
 		Name: cookieName, Value: "", Path: "/api/v1/auth", HttpOnly: true,
 		SameSite: http.SameSiteLaxMode, Secure: h.cfg.CookieSecure, MaxAge: -1,

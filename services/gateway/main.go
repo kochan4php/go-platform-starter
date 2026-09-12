@@ -25,8 +25,6 @@ import (
 //go:embed openapi.yaml
 var specFS embed.FS
 
-type ctxKeyAuth struct{}
-
 var rateLimitDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name: "gateway_rate_limit_decisions_total",
 	Help: "Rate-limit decisions by authenticated consumer, route class, and result.",
@@ -171,10 +169,7 @@ func envFile() string {
 }
 
 func corsHandler(trustedCSV string) func(http.Handler) http.Handler {
-	origins := []string{}
-	for _, d := range splitCSV(trustedCSV) {
-		origins = append(origins, d)
-	}
+	origins := splitCSV(trustedCSV)
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

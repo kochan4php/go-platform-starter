@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
-	"crypto/sha1" // HIBP's k-anonymity API is defined in terms of SHA-1 prefixes.
+	"crypto/sha1" // #nosec G505 -- HIBP's k-anonymity API is defined in terms of SHA-1 prefixes
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
@@ -91,7 +91,7 @@ func checkHIBP(ctx context.Context, endpoint, password string) error {
 }
 
 func sha1Hex(value string) string {
-	sum := sha1.Sum([]byte(value))
+	sum := sha1.Sum([]byte(value)) // #nosec G401 -- HIBP range lookup, never a password hash
 	return strings.ToUpper(hex.EncodeToString(sum[:]))
 }
 
@@ -146,7 +146,8 @@ func verifyPassword(encoded, password string) bool {
 	if err1 != nil || err2 != nil || len(salt) < 8 || len(salt) > 64 || len(want) == 0 || len(want) > 64 {
 		return false
 	}
-	got := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, uint32(len(want)))
+	size := uint32(len(want)) // #nosec G115 -- len(want) is validated to be 1..64 above
+	got := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, size)
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
 
