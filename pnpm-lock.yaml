@@ -28,7 +28,7 @@ importers:
         version: 6.16.3
       danger:
         specifier: ^14.0.7
-        version: 14.0.7(supports-color@10.2.2)
+        version: 14.0.7(supports-color@10.2.2)(undici@7.29.1)
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -41,6 +41,9 @@ importers:
       markdownlint-cli2:
         specifier: ^0.23.2
         version: 0.23.2(supports-color@10.2.2)
+      undici:
+        specifier: ^7.29.1
+        version: 7.29.1
 
   apps/web:
     dependencies:
@@ -3210,6 +3213,10 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
+  undici@7.29.1:
+    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
+    engines: {node: '>=20.18.1'}
+
   unicorn-magic@0.4.0:
     resolution: {integrity: sha512-wH590V9VNgYH9g3lH9wWjTrUoKsjLF6sGLjhR4sH1LWpLmCOH0Zf7PukhDA8BiS7KHe4oPNkcTHqYkj7SOGUOw==}
     engines: {node: '>=20'}
@@ -4848,7 +4855,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  danger@14.0.7(supports-color@10.2.2):
+  danger@14.0.7(supports-color@10.2.2)(undici@7.29.1):
     dependencies:
       '@gitbeaker/rest': 38.12.1
       '@octokit/rest': 20.1.2
@@ -4879,6 +4886,8 @@ snapshots:
       regenerator-runtime: 0.13.11
       require-from-string: 2.0.2
       supports-hyperlinks: 4.5.0
+    optionalDependencies:
+      undici: 7.29.1
     transitivePeerDependencies:
       - supports-color
 
@@ -6550,6 +6559,8 @@ snapshots:
       which-boxed-primitive: 1.1.1
 
   undici-types@8.3.0: {}
+
+  undici@7.29.1: {}
 
   unicorn-magic@0.4.0: {}
 

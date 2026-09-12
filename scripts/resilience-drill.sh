@@ -12,10 +12,10 @@ AUTH_PORT=$((BASE_PORT + 1))
 export E2E_ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-root-access-2026!}"
 PG_UP=0
 cleanup() {
-  [ "$PG_UP" = "1" ] && docker rm -f drill-pg drill-redis >/dev/null 2>&1 || true
-  [ -n "${AUTH_PID:-}" ] && kill "$AUTH_PID" 2>/dev/null || true
-  [ -n "${GW_PID:-}" ] && kill "$GW_PID" 2>/dev/null || true
-  [ -n "${LOAD_PID:-}" ] && kill "$LOAD_PID" 2>/dev/null || true
+  if [ "$PG_UP" = "1" ]; then docker rm -f drill-pg drill-redis >/dev/null 2>&1 || true; fi
+  if [ -n "${AUTH_PID:-}" ]; then kill "$AUTH_PID" 2>/dev/null || true; fi
+  if [ -n "${GW_PID:-}" ]; then kill "$GW_PID" 2>/dev/null || true; fi
+  if [ -n "${LOAD_PID:-}" ]; then kill "$LOAD_PID" 2>/dev/null || true; fi
 }
 trap cleanup EXIT
 

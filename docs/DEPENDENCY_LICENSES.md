@@ -31,7 +31,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `v1.45.0` | Apache-2.0 |
 | `go.opentelemetry.io/otel/sdk` | `v1.45.0` | Apache-2.0 |
 | `go.opentelemetry.io/otel/trace` | `v1.45.0` | Apache-2.0 |
-| `golang.org/x/crypto` | `v0.54.0` | BSD-3-Clause |
+| `golang.org/x/crypto` | `v0.55.0` | BSD-3-Clause |
 | `gopkg.in/yaml.v3` | `v3.0.1` | Apache-2.0 |
 | `gorm.io/driver/postgres` | `v1.6.2` | MIT |
 | `gorm.io/gorm` | `v1.31.2` | MIT |
@@ -72,6 +72,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `tailwindcss` | `4.3.3` | MIT |
 | `terser` | `5.43.1` | BSD-2-Clause |
 | `typescript` | `5.9.3` | Apache-2.0 |
+| `undici` | `7.29.1` | MIT |
 | `vite` | `5.4.21` | MIT |
 | `vitest` | `2.1.9` | MIT |
 | `zod` | `3.25.76` | MIT |

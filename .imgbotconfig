@@ -1,6 +1,3 @@
 {
-  "ignoredFiles": [
-    "e2e/**",
-    "docs/testing/badges/*.svg"
-  ]
+	"ignoredFiles": ["e2e/**", "docs/testing/badges/*.svg"]
 }
