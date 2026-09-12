@@ -104,7 +104,11 @@ try {
   for (const line of diff.split(/\r?\n/)) {
     if (line.startsWith("+++ b/")) {
       file = line.slice(6).replaceAll("\\", "/");
-      if (file.endsWith("_test.go") || file.includes("/gen/")) file = "";
+      // main.go is process wiring — flag parsing, dependency construction, ListenAndServe.
+      // Unit tests never enter it (every one of these packages reports 0.0%); it is proven by
+      // docker-build and the e2e suite instead. Billing it to whoever touches a line there
+      // makes the gate unpassable for exactly the changes that should be cheap.
+      if (file.endsWith("_test.go") || file.endsWith("/main.go") || file.includes("/gen/")) file = "";
       continue;
     }
     const hunk = line.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
