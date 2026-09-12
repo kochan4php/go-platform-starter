@@ -1,6 +1,7 @@
-// danger ships CommonJS; Node ESM cannot destructure its named exports.
-import pkg from "danger";
-const { danger, fail, markdown, warn } = pkg;
+// Danger strips the import and injects danger/fail/warn/markdown as globals
+// before evaluating this file, so importing them is both unnecessary and an
+// error: https://github.com/danger/danger-js/discussions/1153
+/* global danger, fail, markdown, warn */
 
 const files = [...danger.git.created_files, ...danger.git.modified_files, ...danger.git.deleted_files];
 const changed = (pattern) => files.some((file) => pattern.test(file));

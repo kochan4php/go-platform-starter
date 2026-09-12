@@ -87,9 +87,11 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           go install github.com/oasdiff/oasdiff@v1.30.0
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          export PATH="$(go env GOPATH)/bin:$PATH"
-          "$(go env GOPATH)/bin/oasdiff" --version
+          gobin="$(go env GOPATH)/bin"
+          echo "$gobin" >> "$GITHUB_PATH"
+          PATH="$gobin:$PATH"
+          export PATH
+          "$gobin/oasdiff" --version
           node scripts/openapi-diff.mjs "$BASE_SHA"
       - name: OpenAPI diff PR comment
         if: always() && github.event_name == 'pull_request' && hashFiles('test-results/oasdiff.md') != ''
@@ -164,7 +166,9 @@ jobs:
 
       - name: Validate YAML manifests
         if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-        run: go run ./cmd/yamlcheck $(find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \))
+        run: |
+          find .github infra services apps -type f \( -name '*.yml' -o -name '*.yaml' \) -print0 |
+            xargs -0 go run ./cmd/yamlcheck
 
       - name: Validate GitHub Actions semantics
         if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
@@ -488,6 +492,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gitleaks scans the pushed range, so it needs the parent commits
+          fetch-depth: 0
 
       - name: Validate every deployment target
         run: ./scripts/check-deploy-config.sh
