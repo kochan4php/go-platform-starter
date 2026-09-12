@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand/v2"
+	"math/rand/v2" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- jitter and sampling only, never key material
 	"net/http"
 	"net/url"
 	"os"

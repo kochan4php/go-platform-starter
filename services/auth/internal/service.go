@@ -27,7 +27,8 @@ const (
 	StreamMail    = "mail.jobs"
 	EventSend     = "email.send"
 	channelLogout = "force-logout"
-	dummyHash     = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
+	// nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash -- fixed timing-defence placeholder for the unknown-user path, not anybody's password
+	dummyHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
 )
 
 type Publisher interface {

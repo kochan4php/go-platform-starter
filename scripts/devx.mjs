@@ -121,6 +121,7 @@ function operationName(value) {
 }
 
 export function handlerSignature(source, operationID) {
+  // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp -- built from the committed OpenAPI document and handler names, never from a request
   const match = source.match(new RegExp(`^[\\t ]*${operationID}\\(([^\\r\\n]*)\\)\\r?$`, "m"));
   if (!match) fail(`generated ServerInterface method ${operationID} is absent`);
   return match[1].replace(/(?<![.\w])([A-Z][a-zA-Z0-9_]*)/g, "gen.$1");
@@ -138,6 +139,7 @@ export function newHandler(service, operationID) {
   const implemented = walk(join(root, "services", service, "internal")).some(
     (path) =>
       path.endsWith(".go") &&
+      // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp -- built from the committed OpenAPI document and handler names, never from a request
       new RegExp(`func\\s*\\([^)]*\\*Handlers\\)\\s*${method}\\s*\\(`).test(readFileSync(path, "utf8")),
   );
   if (implemented) fail(`${method} is already implemented by Handlers`);
@@ -283,6 +285,7 @@ function localHTTPS() {
   const cert = join(directory, "localhost.pem");
   const key = join(directory, "localhost-key.pem");
   mkdirSync(directory, { recursive: true });
+  // nosemgrep: javascript.lang.security.audit.spawn-shell-true.spawn-shell-true -- fixed argv; the shell is only needed so Windows resolves mkcert.exe from PATH
   const probe = spawnSync("mkcert", ["-version"], { stdio: "ignore", shell: process.platform === "win32" });
   if (probe.status !== 0) fail("mkcert is required; see docs/DEVELOPER_EXPERIENCE.md#local-https");
   run("mkcert", ["-install"]);

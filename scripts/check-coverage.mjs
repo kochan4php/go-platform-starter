@@ -84,7 +84,10 @@ for (const [name, entries] of [...byPackage].sort(([a], [b]) => a.localeCompare(
   const value = percent.toFixed(1);
   const color = percent >= minimum ? "2f855a" : percent >= 50 ? "b7791f" : "c53030";
   const safe = name.replaceAll("/", "-");
-  const label = name.replaceAll("&", "&amp;");
+  const label = name.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c],
+  );
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="20" role="img" aria-label="${label} coverage ${value}%"><rect width="220" height="20" fill="#374151"/><rect x="220" width="80" height="20" fill="#${color}"/><g fill="#fff" font-family="Verdana,sans-serif" font-size="11"><text x="8" y="14">${label}</text><text x="232" y="14">${value}%</text></g></svg>\n`;
   writeFileSync(join(badgeDir, `${safe}.svg`), svg);
 }

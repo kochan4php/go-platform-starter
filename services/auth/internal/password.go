@@ -91,6 +91,7 @@ func checkHIBP(ctx context.Context, endpoint, password string) error {
 }
 
 func sha1Hex(value string) string {
+	// nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- HIBP defines the range API over SHA-1
 	sum := sha1.Sum([]byte(value)) // #nosec G401 -- HIBP range lookup, never a password hash
 	return strings.ToUpper(hex.EncodeToString(sum[:]))
 }

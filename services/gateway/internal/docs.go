@@ -74,6 +74,7 @@ const scalarPage = `<!doctype html>
 func ScalarHandlers(getAggregate func() []byte) (jsonHandler, pageHandler http.HandlerFunc) {
 	jsonHandler = func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- serves the aggregate OpenAPI JSON under an explicit application/json Content-Type
 		_, _ = w.Write(getAggregate())
 	}
 	pageHandler = func(w http.ResponseWriter, _ *http.Request) {

@@ -39,7 +39,7 @@ jobs:
       TARGET: ${{ github.event_name == 'push' && 'uat' || github.event_name == 'schedule' && 'demo' || inputs.environment }}
       REVISION: ${{ github.event_name == 'workflow_dispatch' && inputs.revision || github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Configure pinned SSH host identity
         env:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -74,7 +74,7 @@ jobs:
           - environment: prod
             url_variable: PROD_URL
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Compare deployed revision with main
         env:
           DEPLOYED_URL: ${{ vars[matrix.url_variable] }}

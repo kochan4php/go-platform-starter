@@ -207,6 +207,7 @@ if [[ "$TARGET" != "lab" ]]; then
       die "first production run: set AGE_BACKUP_RECIPIENT to the offline age public key"
     fi
     REDIS_OBSERVER_GENERATED="$(rand_hex)"
+    # nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket -- the first deploy is plain HTTP by design; enabling TLS switches this to wss://
     PUBLIC_WS_URL_VALUE="${PUBLIC_WS_URL:-ws://${DOMAIN}/ws}"
     case "$PUBLIC_WS_URL_VALUE" in wss://*) PUBLIC_SCHEME=https ;; *) PUBLIC_SCHEME=http ;; esac
     APP_PUBLIC_URL_VALUE="${APP_PUBLIC_URL:-${PUBLIC_SCHEME}://${DOMAIN}}"

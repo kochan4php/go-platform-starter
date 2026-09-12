@@ -3,7 +3,7 @@ package platform
 import (
 	"context"
 	"fmt"
-	"math/rand/v2"
+	"math/rand/v2" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- jitter and sampling only, never key material
 	"time"
 
 	"github.com/redis/go-redis/v9"

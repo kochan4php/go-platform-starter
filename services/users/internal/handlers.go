@@ -315,6 +315,7 @@ func (h *Handlers) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Cache-Control", "private, max-age=86400")
 	w.WriteHeader(http.StatusOK)
+	// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- writes a re-encoded JPEG under an explicit image/jpeg Content-Type
 	_, _ = w.Write(output)
 }
 
