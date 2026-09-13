@@ -4,6 +4,12 @@ import { type Page, expect, test } from "@playwright/test";
 const auditDir = "tmp/audit-users-roles";
 
 async function expectAccessibleDialog(page: Page) {
+  // Dialogs fade and scale in, so axe can sample colours mid-transition and
+  // report contrast failures that settle a frame later. See the note on
+  // expectNoAxeViolations in qa.spec.ts.
+  await page.addStyleTag({
+    content: "*, *::before, *::after { transition: none !important; animation: none !important; }",
+  });
   expect((await new AxeBuilder({ page }).include("dialog[open]").analyze()).violations).toEqual([]);
 }
 
