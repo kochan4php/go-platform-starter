@@ -1,4 +1,4 @@
-# go-platform-starter
+# Go Platform Starter
 
 [![CI](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/kochan4php/go-platform-starter/actions/workflows/ci.yml)
 [![Coverage](docs/testing/badges/coverage.svg)](docs/TESTING.md)

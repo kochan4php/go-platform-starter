@@ -6,6 +6,9 @@ nav_order: 1
 
 # Engineering guide
 
+What a change has to carry before it counts as finished. Find your kind of work
+in the first table; everything below it is the detail behind those entries.
+
 ## Definition of done by work type
 
 | Work | Required evidence |

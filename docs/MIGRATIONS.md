@@ -6,6 +6,9 @@ nav_order: 6
 
 # Migration conventions
 
+The rules for changing the database. The short version: migrations are numbered
+SQL pairs, an applied migration is never edited, and `AutoMigrate` is banned.
+
 ## Files
 
 - Location: `services/<name>/migrations/`

@@ -4,7 +4,7 @@ parent: Architecture
 nav_order: 4
 ---
 
-# SCALING
+# Scaling operations
 
 Reliability defaults, DR targets, backup/restore, DLQ replay, chaos experiments,
 and multi-region gates are documented in [RELIABILITY.md](RELIABILITY.md).

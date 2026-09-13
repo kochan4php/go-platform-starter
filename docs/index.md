@@ -3,7 +3,7 @@ title: Home
 nav_order: 1
 ---
 
-# go-platform-starter
+# Go Platform Starter
 
 Production-shaped Go microservices, a React micro-frontend shell, spec-first
 OpenAPI contracts, PostgreSQL schema ownership, and Redis Streams — in one

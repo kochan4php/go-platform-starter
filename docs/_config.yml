@@ -6,7 +6,7 @@
 # longer publishes anything. Keep mkdocs.yml's nav and the nav_order/parent
 # front matter in these pages in step, or the two will describe different
 # structures.
-title: go-platform-starter
+title: Go Platform Starter
 description: >-
   Production-shaped Go microservices, a React micro-frontend shell, spec-first
   OpenAPI contracts, PostgreSQL schema ownership, and Redis Streams in one
