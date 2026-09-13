@@ -25,8 +25,6 @@ import (
 //go:embed openapi.yaml
 var specFS embed.FS
 
-type ctxKeyAuth struct{}
-
 var rateLimitDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name: "gateway_rate_limit_decisions_total",
 	Help: "Rate-limit decisions by authenticated consumer, route class, and result.",
@@ -112,6 +110,7 @@ func main() {
 	router.Get("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
 		raw, _ := specFS.ReadFile("openapi.yaml")
 		w.Header().Set("Content-Type", "application/yaml")
+		// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- serves the embedded OpenAPI document with an explicit non-HTML Content-Type
 		_, _ = w.Write(raw)
 	})
 	quotaPolicy := consumerQuotaPolicy{secret: cfg.AccessTokenSecret, overrides: consumerQuotas}
@@ -171,10 +170,7 @@ func envFile() string {
 }
 
 func corsHandler(trustedCSV string) func(http.Handler) http.Handler {
-	origins := []string{}
-	for _, d := range splitCSV(trustedCSV) {
-		origins = append(origins, d)
-	}
+	origins := splitCSV(trustedCSV)
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

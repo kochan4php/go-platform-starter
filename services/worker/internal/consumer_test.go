@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -19,8 +21,17 @@ import (
 )
 
 type recordingMailer struct {
+	mu   sync.Mutex
 	sent []platform.Mail
 	fail func() bool
+}
+
+// The consumer sends from its own goroutine while the test polls, so every
+// access to sent goes through the mutex.
+func (m *recordingMailer) delivered() []platform.Mail {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]platform.Mail(nil), m.sent...)
 }
 
 type recordingWebhook struct{ delivery WebhookDelivery }
@@ -34,6 +45,8 @@ func (m *recordingMailer) Send(_ context.Context, mail platform.Mail) error {
 	if m.fail != nil && m.fail() {
 		return fmt.Errorf("transient smtp failure")
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.sent = append(m.sent, mail)
 	return nil
 }
@@ -174,10 +187,10 @@ func TestEmailJobDeliveredAndAuditFlushed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	waitFor(t, 15*time.Second, func() bool { return len(f.mailer.sent) == 1 },
+	waitFor(t, 15*time.Second, func() bool { return len(f.mailer.delivered()) == 1 },
 		"email not delivered")
-	if f.mailer.sent[0].To != "a@b.c" {
-		t.Fatalf("wrong recipient: %+v", f.mailer.sent)
+	if f.mailer.delivered()[0].To != "a@b.c" {
+		t.Fatalf("wrong recipient: %+v", f.mailer.delivered())
 	}
 
 	var count int64
@@ -212,14 +225,14 @@ func TestCrashMidBatchRedeliversExactlyOnce(t *testing.T) {
 	// Worker B boots and reclaims the orphaned delivery.
 	f.start(t)
 
-	waitFor(t, 15*time.Second, func() bool { return len(f.mailer.sent) >= 1 },
+	waitFor(t, 15*time.Second, func() bool { return len(f.mailer.delivered()) >= 1 },
 		"orphaned delivery never redelivered")
 
 	// Let reclaim run many more cycles: the dedup marker must suppress
 	// duplicate sends (exactly-once effect on an at-least-once channel).
 	time.Sleep(10 * f.c.reclaimEvery)
-	if len(f.mailer.sent) != 1 {
-		t.Fatalf("duplicate sends after redelivery: %d", len(f.mailer.sent))
+	if len(f.mailer.delivered()) != 1 {
+		t.Fatalf("duplicate sends after redelivery: %d", len(f.mailer.delivered()))
 	}
 	pending, _ := f.rdb.XPending(ctx, "mail.jobs", group).Result()
 	if pending.Count != 0 {
@@ -228,10 +241,10 @@ func TestCrashMidBatchRedeliversExactlyOnce(t *testing.T) {
 }
 
 func TestFailingJobRedeliversThenGoesToDLQOnlyAfterMaxAttempts(t *testing.T) {
-	attempts := 0
+	// fail() runs on the consumer's goroutine while the test reads the count.
+	var attempts atomic.Int64
 	mailer := &recordingMailer{fail: func() bool {
-		attempts++
-		return attempts <= dlqMax-1 // fail three times, succeed on the last allowed attempt
+		return attempts.Add(1) <= dlqMax-1 // fail three times, succeed on the last allowed attempt
 	}}
 	f := startFixture(t, mailer)
 	f.start(t)
@@ -241,8 +254,8 @@ func TestFailingJobRedeliversThenGoesToDLQOnlyAfterMaxAttempts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	waitFor(t, 30*time.Second, func() bool { return len(mailer.sent) == 1 },
-		fmt.Sprintf("redelivery did not succeed; sent=%d attempts=%d", len(mailer.sent), attempts))
+	waitFor(t, 30*time.Second, func() bool { return len(mailer.delivered()) == 1 },
+		fmt.Sprintf("redelivery did not succeed; sent=%d attempts=%d", len(mailer.delivered()), attempts.Load()))
 	dlqLen, _ := f.rdb.XLen(context.Background(), "mail.jobs:dlq").Result()
 	if dlqLen != 0 {
 		t.Fatalf("eventual success must not land in DLQ, dlq=%d", dlqLen)

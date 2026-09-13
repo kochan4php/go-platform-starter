@@ -44,7 +44,7 @@ func main() {
 			continue
 		}
 		specPath := filepath.Join(servicesDir, entry.Name(), "openapi.yaml")
-		raw, err := os.ReadFile(specPath)
+		raw, err := os.ReadFile(specPath) // #nosec G304 -- specPath comes from a directory listing of services/, not user input
 		if err != nil {
 			continue // services without a spec yet are skipped silently
 		}
@@ -73,10 +73,10 @@ func main() {
 	if err != nil {
 		die("marshal: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Dir(*out), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(*out), 0o750); err != nil {
 		die("mkdir: %v", err)
 	}
-	if err := os.WriteFile(*out, append(outBytes, '\n'), 0o644); err != nil {
+	if err := os.WriteFile(*out, append(outBytes, '\n'), 0o600); err != nil {
 		die("write: %v", err)
 	}
 	fmt.Println("wrote", *out, "")

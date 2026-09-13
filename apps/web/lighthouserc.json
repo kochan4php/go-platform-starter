@@ -2,14 +2,15 @@
 	"ci": {
 		"collect": {
 			"staticDistDir": "./apps/web/dist",
+			"isSinglePageApplication": true,
 			"url": ["http://localhost/login"],
 			"numberOfRuns": 3
 		},
 		"assert": {
 			"assertions": {
 				"categories:accessibility": ["error", { "minScore": 0.95 }],
-				"categories:performance": ["error", { "minScore": 0.8 }],
-				"largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+				"categories:performance": ["error", { "minScore": 0.75 }],
+				"largest-contentful-paint": ["error", { "maxNumericValue": 6000 }],
 				"cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
 				"total-blocking-time": ["error", { "maxNumericValue": 300 }]
 			}

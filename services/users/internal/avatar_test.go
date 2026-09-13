@@ -38,3 +38,24 @@ func TestResizeAvatarRejectsInvalidInput(t *testing.T) {
 		t.Fatal("invalid image accepted")
 	}
 }
+
+// blendWhite is the only place the pipeline narrows 16-bit premultiplied
+// channels back to 8 bits, which is what the #nosec G115 annotations claim is
+// safe. A wrapped subtraction would show up here as a dark pixel.
+func TestBlendWhiteFlattensTransparencyWithoutOverflow(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input color.Color
+		want  color.RGBA
+	}{
+		{"fully transparent becomes white", color.RGBA{}, color.RGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff}},
+		{"half-alpha red lightens toward white", color.RGBA{R: 128, A: 128}, color.RGBA{R: 0xff, G: 127, B: 127, A: 0xff}},
+		{"opaque black stays black", color.RGBA{A: 0xff}, color.RGBA{A: 0xff}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := blendWhite(tc.input); got != tc.want {
+				t.Fatalf("blendWhite(%v) = %v, want %v", tc.input, got, tc.want)
+			}
+		})
+	}
+}

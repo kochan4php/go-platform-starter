@@ -13,6 +13,33 @@ async function login(page: Page, email = adminEmail, password = adminPassword) {
   await page.waitForURL(/\/admin\//, { timeout: 15_000 });
 }
 
+// Everything on these screens that changes between two identical runs. Without
+// masking, a visual baseline can only ever pass once: the topbar prints a wall
+// clock, "latest arrival" shows whichever account an earlier spec registered
+// under a Date.now() address, presence and gateway health are polled, and the
+// login toast may or may not have faded by the time the shot is taken.
+function volatileRegions(page: Page) {
+  return [
+    page.getByText(/^session (\d|pending)/i),
+    page.locator("output").filter({ hasText: /^sync/i }),
+    page.getByText("Latest arrival").locator(".."),
+    // Reads stats.data.total, falling back to the list's own meta.total while
+    // that second query is still in flight — so it has three possible values.
+    page
+      .getByText("Profiles on record")
+      .locator(".."),
+    page.getByRole("button", { name: /online now/ }),
+    page.getByText(/^Gateway (healthy|down)|^Checking/i),
+  ];
+}
+
+// The login toast is the one thing masking would make worse: a mask only covers
+// an element that is actually on screen, so a baseline captured while it was up
+// would not match a run where its 4.5s timer had already fired. Wait it out.
+async function settleToasts(page: Page) {
+  await expect(page.locator('[aria-live="polite"].fixed > *')).toHaveCount(0, { timeout: 10_000 });
+}
+
 async function expectNoAxeViolations(page: Page) {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
@@ -127,7 +154,8 @@ test("directory pagination, keyboard navigation, visual baseline, and a11y", asy
   await expect(page.getByRole("heading", { name: /Users \(\d+\)/ })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toBeVisible();
-  await expect(page).toHaveScreenshot("users-directory.png", { fullPage: true });
+  await settleToasts(page);
+  await expect(page).toHaveScreenshot("users-directory.png", { fullPage: true, mask: volatileRegions(page) });
 
   await expectNoAxeViolations(page);
 
@@ -156,13 +184,23 @@ test("mobile register and roles accordion remain operable @mobile", async ({ pag
   test.skip(!adminPassword, "E2E_ADMIN_PASSWORD not set");
   await login(page);
   await page.getByRole("button", { name: "Open menu" }).click();
-  await expect(page).toHaveScreenshot("mobile-drawer-open.png", { fullPage: true });
+  await settleToasts(page);
+  await expect(page).toHaveScreenshot("mobile-drawer-open.png", {
+    fullPage: true,
+    mask: volatileRegions(page),
+  });
   await page.getByRole("button", { name: "Close navigation" }).last().click();
-  await expect(page).toHaveScreenshot("mobile-drawer-closed.png", { fullPage: true });
+  await expect(page).toHaveScreenshot("mobile-drawer-closed.png", {
+    fullPage: true,
+    mask: volatileRegions(page),
+  });
   await page.getByRole("button", { name: "Open menu" }).click();
   await page.getByRole("link", { name: /Roles & Permissions/ }).click();
   const accordion = page.locator("button[aria-expanded]").first();
   await accordion.tap();
   await expect(accordion).toBeVisible();
-  await expect(page).toHaveScreenshot("roles-mobile-drawer.png", { fullPage: true });
+  await expect(page).toHaveScreenshot("roles-mobile-drawer.png", {
+    fullPage: true,
+    mask: volatileRegions(page),
+  });
 });

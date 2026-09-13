@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math/rand/v2"
+	"math/rand/v2" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- jitter and sampling only, never key material
 	"net/url"
 	"os"
 	"strconv"
@@ -46,7 +46,7 @@ func OpenDatabase(dsn string, log *slog.Logger, slowThreshold time.Duration) (*g
 		if time.Now().After(deadline) {
 			return nil, fmt.Errorf("database unavailable after boot retry: %w", err)
 		}
-		delay := min(time.Second<<min(attempt, 4), 5*time.Second) + time.Duration(rand.IntN(250))*time.Millisecond
+		delay := min(time.Second<<min(attempt, 4), 5*time.Second) + time.Duration(rand.IntN(250))*time.Millisecond // #nosec G404 -- retry jitter, not a secret
 		log.Warn("database connect failed; retrying", "attempt", attempt+1, "delay", delay, "err", err)
 		time.Sleep(delay)
 	}

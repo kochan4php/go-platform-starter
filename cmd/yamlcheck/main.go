@@ -10,7 +10,7 @@ import (
 
 func main() {
 	for _, name := range os.Args[1:] {
-		file, err := os.Open(name)
+		file, err := os.Open(name) // #nosec G304,G703 -- this is a CLI linter; the caller names the files to check
 		if err != nil {
 			fail(name, err)
 		}
@@ -22,11 +22,11 @@ func main() {
 				break
 			}
 			if err != nil {
-				file.Close()
+				_ = file.Close()
 				fail(name, err)
 			}
 		}
-		file.Close()
+		_ = file.Close()
 	}
 }
 

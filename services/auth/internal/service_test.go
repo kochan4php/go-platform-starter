@@ -21,6 +21,7 @@ import (
 // --- test scaffolding -------------------------------------------------------
 
 type capturedPublisher struct {
+	mu     sync.Mutex
 	events []capturedEvent
 }
 
@@ -34,11 +35,15 @@ func (p *capturedPublisher) Publish(_ context.Context, stream, event string, pay
 	raw, _ := json.Marshal(payload)
 	m := map[string]string{}
 	_ = json.Unmarshal(raw, &m)
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.events = append(p.events, capturedEvent{Stream: stream, Event: event, Payload: m})
 	return nil
 }
 
 func (p *capturedPublisher) lastPayload(stream, event string) map[string]string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	for i := len(p.events) - 1; i >= 0; i-- {
 		if p.events[i].Stream == stream && p.events[i].Event == event {
 			return p.events[i].Payload
@@ -89,7 +94,9 @@ func newFixture(t *testing.T) *fixture {
 			last_login_user_agent TEXT        NOT NULL DEFAULT '',
 			created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
 			updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
-		);`
+		);
+		CREATE UNIQUE INDEX IF NOT EXISTS uq_users_email_active
+			ON users.users (lower(email)) WHERE deleted_at IS NULL;`
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: platform.NewGormLogger(log, time.Minute),
 	})

@@ -33,7 +33,7 @@ func StatusPage(upstreams Upstreams) http.HandlerFunc {
 				response, err := client.Do(req)
 				ok := err == nil && response.StatusCode == http.StatusOK
 				if response != nil {
-					response.Body.Close()
+					_ = response.Body.Close()
 				}
 				results <- serviceStatus{Name: name, OK: ok}
 			}(name, raw)

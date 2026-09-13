@@ -197,16 +197,20 @@ func (s *Service) oauthProvider(provider string) (oauthConfig, error) {
 		if s.cfg.GoogleClientID == "" || s.cfg.GoogleClientSecret == "" {
 			return oauthConfig{}, unavailable("google login is not configured")
 		}
-		return oauthConfig{s.cfg.GoogleClientID, s.cfg.GoogleClientSecret,
+		return oauthConfig{
+			s.cfg.GoogleClientID, s.cfg.GoogleClientSecret,
 			"https://accounts.google.com/o/oauth2/v2/auth", "https://oauth2.googleapis.com/token",
-			"https://openidconnect.googleapis.com/v1/userinfo", "openid email profile"}, nil
+			"https://openidconnect.googleapis.com/v1/userinfo", "openid email profile",
+		}, nil
 	case "github":
 		if s.cfg.GitHubClientID == "" || s.cfg.GitHubClientSecret == "" {
 			return oauthConfig{}, unavailable("github login is not configured")
 		}
-		return oauthConfig{s.cfg.GitHubClientID, s.cfg.GitHubClientSecret,
+		return oauthConfig{
+			s.cfg.GitHubClientID, s.cfg.GitHubClientSecret,
 			"https://github.com/login/oauth/authorize", "https://github.com/login/oauth/access_token",
-			"https://api.github.com/user", "read:user user:email"}, nil
+			"https://api.github.com/user", "read:user user:email",
+		}, nil
 	default:
 		return oauthConfig{}, platform.ErrBadRequest("unsupported OAuth provider")
 	}

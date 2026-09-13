@@ -32,8 +32,10 @@ test("login regenerates the session and IDOR writes are denied", async ({ reques
   await loginB.json();
   expect(loginA.headers()["set-cookie"]).not.toBe(loginB.headers()["set-cookie"]);
 
+  // ProfileUpdateInput is additionalProperties:false, so an `id` in the body is
+  // rejected as a 400 before authorization runs and the IDOR check proves nothing.
   const idor = await request.patch(`${gateway}/api/v1/users/${secondID}`, {
-    data: { id: secondID, displayName: "must not change" },
+    data: { displayName: "must not change" },
     headers: { Authorization: `Bearer ${tokenA}` },
   });
   expect(idor.status()).toBe(403);

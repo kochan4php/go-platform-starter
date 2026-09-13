@@ -74,8 +74,10 @@ func NewHub(log *slog.Logger, allowedRooms []string, maxPerRoom int, connections
 	}
 }
 
-var ErrRoomDenied = errString("room not allowed")
-var ErrRoomFull = errString("room is full")
+var (
+	ErrRoomDenied = errString("room not allowed")
+	ErrRoomFull   = errString("room is full")
+)
 
 func (h *Hub) Join(ctx context.Context, c *Client, room string) error {
 	if !h.allowed[room] {

@@ -62,7 +62,7 @@ func (h *Handlers) decode(r *http.Request, dst any) error {
 const cookieName = "refresh_token"
 
 func (h *Handlers) setRefreshCookie(w http.ResponseWriter, plain string) {
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ // #nosec G124 -- HttpOnly and SameSite are set; Secure follows COOKIE_SECURE so plain-HTTP dev still works -- nosemgrep: go.lang.security.audit.net.cookie-missing-secure.cookie-missing-secure
 		Name:     cookieName,
 		Value:    plain,
 		Path:     "/api/v1/auth",
@@ -74,7 +74,7 @@ func (h *Handlers) setRefreshCookie(w http.ResponseWriter, plain string) {
 }
 
 func (h *Handlers) clearRefreshCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ // #nosec G124 -- same COOKIE_SECURE policy as setRefreshCookie; this only expires the cookie -- nosemgrep: go.lang.security.audit.net.cookie-missing-secure.cookie-missing-secure
 		Name: cookieName, Value: "", Path: "/api/v1/auth", HttpOnly: true,
 		SameSite: http.SameSiteLaxMode, Secure: h.cfg.CookieSecure, MaxAge: -1,
 	})

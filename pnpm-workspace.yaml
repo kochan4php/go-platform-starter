@@ -1,8 +1,18 @@
 # pnpm workspace for the web side only (microfrontend host + remotes + shared packages).
 # Go services are covered by the single root go.mod — no turborepo/nx on purpose.
+# nosemgrep: package_managers.pnpm.pnpm-trust-policy.pnpm-trust-policy -- see the note below
 packages:
   - "apps/*"
   - "packages/*"
+# Supply-chain guards: wait a week before resolving a newly published version
+# and block sub-dependencies resolved from outside the registry.
+# trustPolicy: no-downgrade is NOT enabled yet — it rejects four existing
+# lockfile entries (@octokit/endpoint@9.0.6, rollup@2.80.0, semver@6.3.1,
+# vite@5.4.21) as possible package takeovers, which needs investigating
+# rather than silencing. See docs/SECURITY.md.
+# nosemgrep: package_managers.pnpm.pnpm-trust-policy.pnpm-trust-policy -- see the note above: no-downgrade currently rejects four existing lockfile entries
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
 allowBuilds:
   '@biomejs/biome': true
   '@scarf/scarf': false

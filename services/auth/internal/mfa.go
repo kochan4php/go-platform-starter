@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 -- RFC 6238 defines TOTP over HMAC-SHA1
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/binary"
@@ -30,7 +30,7 @@ func totpCode(secret string, at time.Time) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	counter := uint64(at.Unix() / 30)
+	counter := uint64(at.Unix() / 30) // #nosec G115 -- TOTP counters are post-epoch and positive
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, counter)
 	mac := hmac.New(sha1.New, key)

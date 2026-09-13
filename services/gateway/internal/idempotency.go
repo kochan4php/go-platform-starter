@@ -33,6 +33,7 @@ func (w *bufferedWriter) WriteHeader(status int) {
 		w.status = status
 	}
 }
+
 func (w *bufferedWriter) Write(body []byte) (int, error) {
 	if w.status == 0 {
 		w.status = http.StatusOK
@@ -74,6 +75,7 @@ func serveIdempotent(w http.ResponseWriter, r *http.Request, rdb *redis.Client, 
 			copyHeader(w.Header(), record.Header)
 			w.Header().Set("Idempotency-Replayed", "true")
 			w.WriteHeader(record.Status)
+			// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- replays a stored upstream response verbatim, with its recorded status and body
 			_, _ = w.Write(record.Body)
 			return
 		}
@@ -94,6 +96,7 @@ func serveIdempotent(w http.ResponseWriter, r *http.Request, rdb *redis.Client, 
 	}
 	copyHeader(w.Header(), buffer.header)
 	w.WriteHeader(buffer.status)
+	// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- replays the buffered upstream body with its own headers
 	_, _ = w.Write(buffer.body)
 }
 

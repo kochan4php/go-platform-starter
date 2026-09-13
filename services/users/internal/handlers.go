@@ -296,7 +296,8 @@ func (h *Handlers) GetUserStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(maxAvatarBytes); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAvatarBytes)
+	if err := r.ParseMultipartForm(maxAvatarBytes); err != nil { // #nosec G120 -- body capped by MaxBytesReader above
 		platform.WriteError(w, h.log, platform.ErrBadRequest("invalid avatar upload"))
 		return
 	}
@@ -314,6 +315,7 @@ func (h *Handlers) ResizeAvatar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Cache-Control", "private, max-age=86400")
 	w.WriteHeader(http.StatusOK)
+	// nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- writes a re-encoded JPEG under an explicit image/jpeg Content-Type
 	_, _ = w.Write(output)
 }
 

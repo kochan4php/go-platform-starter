@@ -20,6 +20,10 @@ linters:
           deny:
             - pkg: "github.com/kochan4php/go-platform-starter/services"
               desc: the harness must never depend on a specific service
+    govet:
+      disable:
+        # Suggests inlining calls into their deprecated wrappers; advice, not a defect.
+        - inline
 
   exclusions:
     rules:
@@ -31,6 +35,11 @@ linters:
       - linters:
           - errcheck
         text: 'Error return value of .fmt\.Fprint'
+      # Test files launch fixed subprocesses, write fixtures and carry fake
+      # credentials on purpose; gosec has no useful judgement to add there.
+      - linters:
+          - gosec
+        path: '_test\.go$'
 
 formatters:
   enable:

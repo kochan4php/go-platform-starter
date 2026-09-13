@@ -10,7 +10,7 @@ import (
 )
 
 func LoadDotEnv(path string) error {
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- the env file path is operator configuration, not request input
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -70,7 +70,7 @@ func loadSecretFiles() error {
 		if _, exists := os.LookupEnv(name); exists {
 			continue
 		}
-		value, err := os.ReadFile(path)
+		value, err := os.ReadFile(path) // #nosec G304 -- secret file paths come from operator configuration
 		if err != nil {
 			return fmt.Errorf("read %s: %w", key, err)
 		}

@@ -1,0 +1,15 @@
+# Semgrep's own defaults still apply; these are this repository's additions.
+
+# Test code carries fake credentials, fixed JWT fixtures and plain-HTTP
+# localhost URLs deliberately — the same reasoning as the gosec exclusion
+# for _test.go in .golangci.yml.
+*_test.go
+*.test.ts
+*.test.tsx
+*.test.mjs
+e2e/
+tests/
+apps/*/src/mocks/
+
+# Generated documentation quotes env-var values verbatim as examples.
+docs/reference/

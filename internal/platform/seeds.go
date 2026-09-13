@@ -17,6 +17,9 @@ func RunSeedVersion(ctx context.Context, db *gorm.DB, schema, version string, se
 		return fmt.Errorf("invalid seed schema or version")
 	}
 	table := schema + ".seed_history"
+	// A schema name cannot be a bind parameter; it is validated against
+	// sqlIdentifier above before it ever reaches the statement.
+	// nosemgrep: go.lang.security.audit.database.string-formatted-query.string-formatted-query, go-unsafe-sql-format
 	if err := db.WithContext(ctx).Exec(fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 		version TEXT PRIMARY KEY,
 		applied_at TIMESTAMPTZ NOT NULL DEFAULT now()

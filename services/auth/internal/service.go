@@ -14,6 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -27,7 +28,8 @@ const (
 	StreamMail    = "mail.jobs"
 	EventSend     = "email.send"
 	channelLogout = "force-logout"
-	dummyHash     = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
+	// nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash -- fixed timing-defence placeholder for the unknown-user path, not anybody's password
+	dummyHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
 )
 
 type Publisher interface {
@@ -45,6 +47,16 @@ func (p RedisPublisher) Publish(ctx context.Context, stream, event string, paylo
 
 func ErrBadCredentials() *platform.AppError {
 	return &platform.AppError{Status: http.StatusUnauthorized, Message: "invalid_credentials", Detail: ""}
+}
+
+// isUniqueViolation reports whether err is PostgreSQL's unique_violation
+// (SQLSTATE 23505), however the driver happens to wrap it.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }
 
 func ErrConflictEmail(email string) *platform.AppError {
@@ -292,6 +304,12 @@ func (s *Service) RegisterWithSub(ctx context.Context, sub, email, password stri
 			`INSERT INTO users.users (email, password_hash, display_name) VALUES (?, ?, ?) RETURNING *`,
 			u.Email, u.PasswordHash, u.DisplayName,
 		).Scan(u).Error; err != nil {
+			// The lookup above is advisory: concurrent registrations both pass
+			// it and uq_users_email_active picks the winner. The loser is a
+			// duplicate email, not a server fault.
+			if isUniqueViolation(err) {
+				return nil, ErrConflictEmail(email)
+			}
 			return nil, err
 		}
 	}
@@ -602,7 +620,7 @@ func (s *Service) Refresh(ctx context.Context, refreshPlain string, device ...st
 	if err != nil {
 		return nil, err
 	}
-	if raw, marshalErr := json.Marshal(res); marshalErr == nil {
+	if raw, marshalErr := json.Marshal(res); marshalErr == nil { // #nosec G117 -- the session response carries the access token by design
 		grace := s.cfg.RefreshGrace
 		if grace <= 0 {
 			grace = 10 * time.Second
