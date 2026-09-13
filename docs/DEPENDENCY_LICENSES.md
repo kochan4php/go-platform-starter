@@ -59,7 +59,7 @@ This is an engineering inventory, not legal advice; release artifacts still requ
 | `danger` | `14.0.7` | MIT |
 | `gsap` | `3.15.0` | Standard 'no charge' license: <https://gsap.com/standard-license>. |
 | `husky` | `9.1.7` | MIT |
-| `js-yaml` | `4.3.1` | MIT |
+| `js-yaml` | `4.3.2` | MIT |
 | `jsdom` | `25.0.1` | MIT |
 | `lint-staged` | `17.4.1` | MIT |
 | `markdownlint-cli2` | `0.23.2` | MIT |

@@ -47,7 +47,7 @@
 		"@stoplight/spectral-cli": "^6.15.0",
 		"danger": "^14.0.7",
 		"husky": "^9.1.7",
-		"js-yaml": "^4.1.0",
+		"js-yaml": "^4.3.2",
 		"lint-staged": "^17.4.1",
 		"markdownlint-cli2": "^0.23.2",
 		"undici": "^7.29.1"
