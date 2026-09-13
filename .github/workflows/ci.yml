@@ -410,6 +410,12 @@ jobs:
           curl -sf http://127.0.0.1:5174/assets/remoteEntry.js >/dev/null ||
             { echo 'auth remote never came up'; cat /tmp/web-auth-preview.log; exit 1; }
 
+      # The budget in lighthouserc.json records what the login page actually
+      # scores here (performance 0.77, LCP ~5.4s across three runs) rather than
+      # what we wish it scored: the old 0.8/2500ms thresholds only ever passed
+      # because the page under test was an error boundary. The cost is the
+      # federation waterfall - host bundle, then remoteEntry, then the auth
+      # remote's chunks, in series. Ratchet these down as that gets shortened.
       - name: Lighthouse performance budget
         if: matrix.app == 'web' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
         uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
