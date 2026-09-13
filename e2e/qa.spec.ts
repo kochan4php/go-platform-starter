@@ -41,6 +41,16 @@ async function settleToasts(page: Page) {
 }
 
 async function expectNoAxeViolations(page: Page) {
+  // color-contrast is computed from live styles, and the shell animates its
+  // colours (transition-colors on the nav, header and session card). axe can
+  // therefore sample a token part-way between two themes and report dozens of
+  // contrast failures that no user ever sees: one run on main produced 93 of
+  // them against #78766f/#f9f6ee, and a rerun of the same commit produced none.
+  // Setting transition: none snaps every in-flight transition to its end value,
+  // which is the same reasoning as animations: "disabled" on the screenshots.
+  await page.addStyleTag({
+    content: "*, *::before, *::after { transition: none !important; animation: none !important; }",
+  });
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 }
