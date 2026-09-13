@@ -464,9 +464,17 @@ jobs:
         env:
           E2E_ADMIN_EMAIL: admin@example.local
           E2E_ADMIN_PASSWORD: e2e-root-access-2026!
+          PLAYWRIGHT_ARGS: --update-snapshots
         run: |
           chmod +x scripts/e2e-mesh.sh
           scripts/e2e-mesh.sh ci
+
+      - name: TEMPORARY - export regenerated visual baselines
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-snapshots
+          path: e2e/**/*.png
 
       - name: Upload failure artifacts
         if: failure()
