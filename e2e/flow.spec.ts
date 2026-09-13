@@ -18,8 +18,7 @@ test("login → dashboard → roles accordion → users via SPA nav", async ({ p
   await page.getByRole("link", { name: /Roles & Permissions/ }).click();
   await page.waitForURL(/admin\/roles/);
   await expect(page.getByRole("heading", { name: "Roles & permissions" })).toBeVisible();
-  const roleHeading = page.locator("h3").filter({ hasText: /\S/ }).first();
-  await expect(roleHeading).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("heading", { name: "admin" })).toBeVisible({ timeout: 10000 });
   await expect(page.getByText(/assigned/).first()).toBeVisible();
 });
 
