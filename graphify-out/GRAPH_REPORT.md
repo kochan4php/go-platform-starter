@@ -1,7 +1,7 @@
 # Graph Report - go-platform-starter  (2026-09-13)
 
 ## Corpus Check
-- 545 files · ~291,971 words
+- 545 files · ~292,075 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3b9872f5`
+- Built from commit: `24abd65b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -88,7 +88,7 @@
 - rbac Deployment
 - users Deployment
 - scripts
-- RUNBOOK.md
+- Operational runbook
 - normalizeEmail
 - gen.d.ts
 - check-deps.mjs
@@ -197,7 +197,7 @@
 - check-template-drift.mjs
 - Q: Implement all Engineering items in Architecture & Scalability from docs/BACKLOG.md
 - check-architecture.mjs
-- Troubleshooting
+- go-platform-starter documentation
 - @vitejs/plugin-react
 - Q: Implement all Engineering items in the Data & Migrations backlog
 - RunBackfill
@@ -280,7 +280,7 @@
 - Q: bagian Product / Roadmap di docs/BACKLOG.md itu untuk apa?
 - post-commit
 - .husky/pre-commit
-- @biomejs/biome
+- danger
 - WriteError
 - run-with-retry.mjs
 - RegisterPage.tsx
@@ -502,7 +502,7 @@ Nodes (17): devDependencies, jsdom, msw, tailwindcss, @tailwindcss/vite, @testin
 
 ### Community 40 - "devDependencies"
 Cohesion: 0.10
-Nodes (21): @axe-core/playwright, @commitlint/cli, @commitlint/config-conventional, danger, husky, lint-staged, markdownlint-cli2, devDependencies (+13 more)
+Nodes (21): @axe-core/playwright, @biomejs/biome, @commitlint/cli, @commitlint/config-conventional, husky, lint-staged, markdownlint-cli2, devDependencies (+13 more)
 
 ### Community 41 - "go-platform-starter README Overview"
 Cohesion: 0.21
@@ -522,11 +522,11 @@ Nodes (13): encoding/json.RawMessage, ErrBadRequest(), ValidatePublicHTTPSURL(),
 
 ### Community 45 - "resilience-drill.sh"
 Cohesion: 0.08
-Nodes (24): Ops Files Per Component, Web Micro-frontend Federation, Spec-to-Typed-Client Pipeline, v6 Definition of Done, DoD Evidence Checklist, DoD Wave Gates (0-7), Definition of done by work type, Engineering guide (+16 more)
+Nodes (22): Ops Files Per Component, v6 Definition of Done, DoD Evidence Checklist, DoD Wave Gates (0-7), Definition of done by work type, Engineering guide, Git workflow, Go standards (+14 more)
 
 ### Community 46 - "BACKLOG (1.202 improvement items)"
-Cohesion: 0.07
-Nodes (36): ADR-0001: Fresh-build Pivot, GORM Replaces sqlc/pgx-direct, Schema-per-Service Decision, Gateway Topology, Observability Flow, Redis Streams Event Backbone, Schema-per-Service Data Ownership, BACKLOG (1.202 improvement items) (+28 more)
+Cohesion: 0.06
+Nodes (39): ADR-0001: Fresh-build Pivot, GORM Replaces sqlc/pgx-direct, Schema-per-Service Decision, Gateway Topology, Observability Flow, Redis Streams Event Backbone, Schema-per-Service Data Ownership, BACKLOG (1.202 improvement items) (+31 more)
 
 ### Community 47 - "compilerOptions"
 Cohesion: 0.14
@@ -609,8 +609,8 @@ Cohesion: 0.07
 Nodes (27): adminListUserSessions, adminRevokeUserSession, adminRevokeUserSessions, adminSetUserPassword, adminSetUserState, auth, beginMFA, changePassword (+19 more)
 
 ### Community 67 - "On-call alert runbook"
-Cohesion: 0.11
-Nodes (19): AuthLoginFailureRate, AuthSessionErrors, CertificateExpiresSoon, DNSResolutionFailed, FrontendErrorBurst, HostCPUHigh, HostDiskUsageHigh / HostDiskSpaceCritical, HostMemoryPressure (+11 more)
+Cohesion: 0.07
+Nodes (27): AuthLoginFailureRate, AuthSessionErrors, CertificateExpiresSoon, DNSResolutionFailed, FrontendErrorBurst, HostCPUHigh, HostDiskUsageHigh / HostDiskSpaceCritical, HostMemoryPressure (+19 more)
 
 ### Community 68 - "e2e_test.go"
 Cohesion: 0.23
@@ -632,9 +632,9 @@ Nodes (7): users Deployment, users HorizontalPodAutoscaler, users migrate Job, u
 Cohesion: 0.25
 Nodes (8): scripts, build, check:budget, dev, mock:node, preview, test, test:watch
 
-### Community 73 - "RUNBOOK.md"
-Cohesion: 0.10
-Nodes (15): Afterward, Incident response playbook, Response, Roles, Severity, Common operations, Escalation and handoff, Operational runbook (+7 more)
+### Community 73 - "Operational runbook"
+Cohesion: 0.33
+Nodes (6): Common operations, Escalation and handoff, Operational runbook, Rollback, Service inventory, Triage
 
 ### Community 74 - "normalizeEmail"
 Cohesion: 0.27
@@ -761,8 +761,8 @@ Cohesion: 0.08
 Nodes (23): Backup, Backup and restore, Disaster recovery, Policy, Restore rehearsal, API review and CI linting, Daily commands, Debugging and profiling (+15 more)
 
 ### Community 113 - "index.md"
-Cohesion: 0.09
-Nodes (16): API contract standards, Platform and event surface, Requests and collections, Responses, caching, and compatibility, ARCHITECTURE overview, JWT Verified Once At Edge, Build and operate, go-platform-starter documentation (+8 more)
+Cohesion: 0.07
+Nodes (21): API contract standards, Platform and event surface, Requests and collections, Responses, caching, and compatibility, ARCHITECTURE overview, JWT Verified Once At Edge, Afterward, Incident response playbook (+13 more)
 
 ### Community 114 - "main"
 Cohesion: 0.12
@@ -817,8 +817,8 @@ Cohesion: 0.18
 Nodes (12): MFAEnrollment, DecryptForSubject(), DeriveKey(), EncryptForSubject(), KeyedDigest(), VerifyDigest(), TestSecurityPrimitives(), TestStreamMessageSigningAndEncryption() (+4 more)
 
 ### Community 156 - "Security Posture"
-Cohesion: 0.27
-Nodes (10): Backlog: Security, Identity-Header Contract, Hardening Extras Found During Execution, Security Posture, CSRF Mitigation by Construction, Security Scanning (gosec/Trivy/semgrep), Secrets Management, Token Storage Policy (+2 more)
+Cohesion: 0.19
+Nodes (12): Backlog: Security, Identity-Header Contract, Hardening Extras Found During Execution, Security Posture, CSRF Mitigation by Construction, Security Headers Policy, Security Scanning (gosec/Trivy/semgrep), Secrets Management (+4 more)
 
 ### Community 157 - "ErrNotFound"
 Cohesion: 0.10
@@ -861,8 +861,8 @@ Cohesion: 0.17
 Nodes (10): added, after, before, changed, current, methods, previous, removed (+2 more)
 
 ### Community 176 - "Contracts Pipeline (spec-first)"
-Cohesion: 0.08
-Nodes (25): Spec-First Without a Behavioral Contract, API Versioning Policy, Deliberately Avoided Versioning Practices, Deprecation Mechanics (RFC-9745), /api/v1 Frozen Contract, Adding v2 API Strategy, Fail-Closed Route Registry, Backlog: API & Contracts (+17 more)
+Cohesion: 0.10
+Nodes (22): Spec-First Without a Behavioral Contract, API Versioning Policy, Deliberately Avoided Versioning Practices, Deprecation Mechanics (RFC-9745), /api/v1 Frozen Contract, Adding v2 API Strategy, Fail-Closed Route Registry, Web Micro-frontend Federation (+14 more)
 
 ### Community 177 - "auth-ui.tsx"
 Cohesion: 0.25
@@ -948,9 +948,9 @@ Nodes (4): Answer, Outcome, Q: Implement all Engineering items in Architecture &
 Cohesion: 0.40
 Nodes (3): root, servicesRoot, violations
 
-### Community 212 - "Troubleshooting"
-Cohesion: 0.25
-Nodes (8): Authentication loops or refresh fails, Database or Redis is slow, Gateway rejects a route or refuses to boot, Generated files are stale, Hard refresh returns 404 or loses the session, Local mesh does not start, Tests fail before running containers, Troubleshooting
+### Community 212 - "go-platform-starter documentation"
+Cohesion: 0.50
+Nodes (4): Build and operate, go-platform-starter documentation, Govern, Start
 
 ### Community 214 - "Q: Implement all Engineering items in the Data & Migrations backlog"
 Cohesion: 0.40
@@ -1149,10 +1149,10 @@ Nodes (3): FeatureEnabled(), TestDatabaseTimeoutsPreserveDSN(), TestFeatureEnabl
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Deprecation()` connect `Contracts Pipeline (spec-first)` to `net/http.Request`, `Fail`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `Security Posture` connect `Security Posture` to `Contracts Pipeline (spec-first)`, `index.md`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Why does `Deprecation()` connect `Contracts Pipeline (spec-first)` to `net/http.Request`, `Fail`, `Security Posture`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Why does `Security Posture` connect `Security Posture` to `index.md`?**
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
   _1190 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Service` be split into smaller, more focused modules?**
