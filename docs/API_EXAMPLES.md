@@ -1,3 +1,9 @@
+---
+title: Curl examples
+parent: API and data
+nav_order: 2
+---
+
 # API curl examples
 
 Generated from the aggregate OpenAPI document. Replace placeholders before use; the lab gateway defaults to `127.0.0.1:8010`.

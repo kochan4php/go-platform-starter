@@ -1,3 +1,9 @@
+---
+title: Troubleshooting
+parent: Start
+nav_order: 4
+---
+
 # Troubleshooting
 
 Start with the smallest failing boundary. Preserve timestamps, request IDs, and

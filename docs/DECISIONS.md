@@ -1,3 +1,9 @@
+---
+title: Decisions
+parent: Governance
+nav_order: 1
+---
+
 # Decision log
 
 This index summarizes accepted product and engineering decisions. ADRs remain

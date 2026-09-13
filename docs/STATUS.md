@@ -1,3 +1,9 @@
+---
+title: Public status
+parent: Operations
+nav_order: 2
+---
+
 # Public status
 
 Last checked: not yet published

@@ -1,3 +1,9 @@
+---
+title: Query keys
+parent: Architecture
+nav_order: 5
+---
+
 # Query-key conventions
 
 TanStack Query keys are hierarchical and serializable. The shape is

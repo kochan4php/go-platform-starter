@@ -8,6 +8,8 @@ backups/
 # Node
 node_modules/
 dist/
+# mkdocs build output; the Documentation workflow builds it as a check only.
+site/
 
 # Env & secrets
 .env

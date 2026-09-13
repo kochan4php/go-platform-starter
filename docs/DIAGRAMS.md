@@ -1,3 +1,9 @@
+---
+title: Detailed diagrams
+parent: Architecture
+nav_order: 2
+---
+
 # System diagrams
 
 These diagrams complement [the architecture overview](ARCHITECTURE.md). Names

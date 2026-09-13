@@ -1,3 +1,9 @@
+---
+title: Scalability
+parent: Architecture
+nav_order: 3
+---
+
 # Architecture & scalability engineering
 
 This document is the operational handoff for the implemented engineering

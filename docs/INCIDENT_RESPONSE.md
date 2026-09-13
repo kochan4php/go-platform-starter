@@ -1,3 +1,9 @@
+---
+title: Incident response
+parent: Operations
+nav_order: 5
+---
+
 # Incident response playbook
 
 ## Severity

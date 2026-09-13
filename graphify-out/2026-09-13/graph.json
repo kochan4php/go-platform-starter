@@ -2576,7 +2576,7 @@
       "label": "expectNoAxeViolations()",
       "file_type": "code",
       "source_file": "e2e/qa.spec.ts",
-      "source_location": "L38",
+      "source_location": "L43",
       "_callable": true,
       "_origin": "ast",
       "id": "e2e_qa_spec_expectnoaxeviolations",
@@ -2600,7 +2600,7 @@
       "label": "settleToasts()",
       "file_type": "code",
       "source_file": "e2e/qa.spec.ts",
-      "source_location": "L34",
+      "source_location": "L39",
       "_callable": true,
       "_origin": "ast",
       "id": "e2e_qa_spec_settletoasts",
@@ -8840,6 +8840,17 @@
       "norm_label": "responses, caching, and compatibility"
     },
     {
+      "label": "DEVELOPER_EXPERIENCE.md",
+      "file_type": "document",
+      "source_file": "docs/DEVELOPER_EXPERIENCE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_developer_experience",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "developer_experience.md"
+    },
+    {
       "label": "DIAGRAMS.md",
       "file_type": "document",
       "source_file": "docs/DIAGRAMS.md",
@@ -8849,6 +8860,72 @@
       "community": 113,
       "community_name": "index.md",
       "norm_label": "diagrams.md"
+    },
+    {
+      "label": "INCIDENT_RESPONSE.md",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_incident_response",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "incident_response.md"
+    },
+    {
+      "label": "Afterward",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "docs_incident_response_afterward",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "afterward"
+    },
+    {
+      "label": "Incident response playbook",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_incident_response_incident_response_playbook",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "incident response playbook"
+    },
+    {
+      "label": "Response",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "docs_incident_response_response",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "response"
+    },
+    {
+      "label": "Roles",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "docs_incident_response_roles",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "roles"
+    },
+    {
+      "label": "Severity",
+      "file_type": "document",
+      "source_file": "docs/INCIDENT_RESPONSE.md",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "docs_incident_response_severity",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "severity"
     },
     {
       "label": "index.md",
@@ -8862,48 +8939,15 @@
       "norm_label": "index.md"
     },
     {
-      "label": "Build and operate",
+      "label": "OBSERVABILITY.md",
       "file_type": "document",
-      "source_file": "docs/index.md",
-      "source_location": "L16",
-      "_origin": "ast",
-      "id": "docs_index_build_and_operate",
-      "community": 113,
-      "community_name": "index.md",
-      "norm_label": "build and operate"
-    },
-    {
-      "label": "go-platform-starter documentation",
-      "file_type": "document",
-      "source_file": "docs/index.md",
+      "source_file": "docs/OBSERVABILITY.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_index_go_platform_starter_documentation",
+      "id": "docs_observability",
       "community": 113,
       "community_name": "index.md",
-      "norm_label": "go-platform-starter documentation"
-    },
-    {
-      "label": "Govern",
-      "file_type": "document",
-      "source_file": "docs/index.md",
-      "source_location": "L26",
-      "_origin": "ast",
-      "id": "docs_index_govern",
-      "community": 113,
-      "community_name": "index.md",
-      "norm_label": "govern"
-    },
-    {
-      "label": "Start",
-      "file_type": "document",
-      "source_file": "docs/index.md",
-      "source_location": "L7",
-      "_origin": "ast",
-      "id": "docs_index_start",
-      "community": 113,
-      "community_name": "index.md",
-      "norm_label": "start"
+      "norm_label": "observability.md"
     },
     {
       "label": "ONCALL.md",
@@ -9003,6 +9047,83 @@
       "community": 113,
       "community_name": "index.md",
       "norm_label": "published ports"
+    },
+    {
+      "label": "RUNBOOK.md",
+      "file_type": "document",
+      "source_file": "docs/RUNBOOK.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_runbook",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "runbook.md"
+    },
+    {
+      "label": "INCIDENT_TIMELINE.md",
+      "file_type": "document",
+      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_templates_incident_timeline",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "incident_timeline.md"
+    },
+    {
+      "label": "Current hypothesis",
+      "file_type": "document",
+      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "docs_templates_incident_timeline_current_hypothesis",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "current hypothesis"
+    },
+    {
+      "label": "Incident timeline",
+      "file_type": "document",
+      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_templates_incident_timeline_incident_timeline",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "incident timeline"
+    },
+    {
+      "label": "Mitigation and rollback point",
+      "file_type": "document",
+      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "docs_templates_incident_timeline_mitigation_and_rollback_point",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "mitigation and rollback point"
+    },
+    {
+      "label": "Next update deadline",
+      "file_type": "document",
+      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "docs_templates_incident_timeline_next_update_deadline",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "next update deadline"
+    },
+    {
+      "label": "POSTMORTEM.md",
+      "file_type": "document",
+      "source_file": "docs/templates/POSTMORTEM.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_templates_postmortem",
+      "community": 113,
+      "community_name": "index.md",
+      "norm_label": "postmortem.md"
     },
     {
       "label": "THREAT_MODEL.md",
@@ -12620,6 +12741,28 @@
       "norm_label": "errbadcredentials()"
     },
     {
+      "label": "security.go",
+      "file_type": "code",
+      "source_file": "internal/platform/security.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_platform_security",
+      "community": 156,
+      "community_name": "Security Posture",
+      "norm_label": "security.go"
+    },
+    {
+      "label": "SecurityHeaders()",
+      "file_type": "code",
+      "source_file": "internal/platform/security.go",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "internal_platform_security_securityheaders",
+      "community": 156,
+      "community_name": "Security Posture",
+      "norm_label": "securityheaders()"
+    },
+    {
       "label": "testing.F",
       "file_type": "code",
       "source_file": "",
@@ -14814,17 +14957,6 @@
       "norm_label": "saferoot"
     },
     {
-      "label": "security.go",
-      "file_type": "code",
-      "source_file": "internal/platform/security.go",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "internal_platform_security",
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "norm_label": "security.go"
-    },
-    {
       "label": "Deprecation()",
       "file_type": "code",
       "source_file": "internal/platform/security.go",
@@ -14834,17 +14966,6 @@
       "community": 176,
       "community_name": "Contracts Pipeline (spec-first)",
       "norm_label": "deprecation()"
-    },
-    {
-      "label": "SecurityHeaders()",
-      "file_type": "code",
-      "source_file": "internal/platform/security.go",
-      "source_location": "L15",
-      "_origin": "ast",
-      "id": "internal_platform_security_securityheaders",
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "norm_label": "securityheaders()"
     },
     {
       "label": "RELEASE.md",
@@ -19916,92 +20037,48 @@
       "norm_label": "violations"
     },
     {
-      "label": "Authentication loops or refresh fails",
+      "label": "Build and operate",
       "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L31",
+      "source_file": "docs/index.md",
+      "source_location": "L16",
       "_origin": "ast",
-      "id": "docs_troubleshooting_authentication_loops_or_refresh_fails",
+      "id": "docs_index_build_and_operate",
       "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "authentication loops or refresh fails"
+      "community_name": "go-platform-starter documentation",
+      "norm_label": "build and operate"
     },
     {
-      "label": "Database or Redis is slow",
+      "label": "go-platform-starter documentation",
       "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L57",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_database_or_redis_is_slow",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "database or redis is slow"
-    },
-    {
-      "label": "Gateway rejects a route or refuses to boot",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L24",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_gateway_rejects_a_route_or_refuses_to_boot",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "gateway rejects a route or refuses to boot"
-    },
-    {
-      "label": "Generated files are stale",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L46",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_generated_files_are_stale",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "generated files are stale"
-    },
-    {
-      "label": "Hard refresh returns 404 or loses the session",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L17",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_hard_refresh_returns_404_or_loses_the_session",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "hard refresh returns 404 or loses the session"
-    },
-    {
-      "label": "Local mesh does not start",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_local_mesh_does_not_start",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "local mesh does not start"
-    },
-    {
-      "label": "Tests fail before running containers",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
-      "source_location": "L39",
-      "_origin": "ast",
-      "id": "docs_troubleshooting_tests_fail_before_running_containers",
-      "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "tests fail before running containers"
-    },
-    {
-      "label": "Troubleshooting",
-      "file_type": "document",
-      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_file": "docs/index.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_troubleshooting_troubleshooting",
+      "id": "docs_index_go_platform_starter_documentation",
       "community": 212,
-      "community_name": "Troubleshooting",
-      "norm_label": "troubleshooting"
+      "community_name": "go-platform-starter documentation",
+      "norm_label": "go-platform-starter documentation"
+    },
+    {
+      "label": "Govern",
+      "file_type": "document",
+      "source_file": "docs/index.md",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "docs_index_govern",
+      "community": 212,
+      "community_name": "go-platform-starter documentation",
+      "norm_label": "govern"
+    },
+    {
+      "label": "Start",
+      "file_type": "document",
+      "source_file": "docs/index.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "docs_index_start",
+      "community": 212,
+      "community_name": "go-platform-starter documentation",
+      "norm_label": "start"
     },
     {
       "label": "@vitejs/plugin-react",
@@ -27390,26 +27467,26 @@
       "norm_label": "pre-commit script"
     },
     {
-      "label": "@biomejs/biome",
+      "label": "danger",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L43",
+      "source_location": "L48",
       "_origin": "ast",
-      "id": "package_devdependencies_biomejs_biome",
+      "id": "package_devdependencies_danger",
       "community": 296,
-      "community_name": "@biomejs/biome",
-      "norm_label": "@biomejs/biome"
+      "community_name": "danger",
+      "norm_label": "danger"
     },
     {
-      "label": "@biomejs/biome",
+      "label": "danger",
       "file_type": "concept",
       "source_file": "package.json",
-      "source_location": "L43",
+      "source_location": "L48",
       "_origin": "ast",
-      "id": "biomejs_biome",
+      "id": "danger",
       "community": 296,
-      "community_name": "@biomejs/biome",
-      "norm_label": "@biomejs/biome"
+      "community_name": "danger",
+      "norm_label": "danger"
     },
     {
       "label": "ctxKeyEmail",
@@ -31233,6 +31310,17 @@
       "norm_label": "@axe-core/playwright"
     },
     {
+      "label": "@biomejs/biome",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "package_devdependencies_biomejs_biome",
+      "community": 40,
+      "community_name": "devDependencies",
+      "norm_label": "@biomejs/biome"
+    },
+    {
       "label": "@commitlint/cli",
       "file_type": "code",
       "source_file": "package.json",
@@ -31253,17 +31341,6 @@
       "community": 40,
       "community_name": "devDependencies",
       "norm_label": "@commitlint/config-conventional"
-    },
-    {
-      "label": "danger",
-      "file_type": "code",
-      "source_file": "package.json",
-      "source_location": "L48",
-      "_origin": "ast",
-      "id": "package_devdependencies_danger",
-      "community": 40,
-      "community_name": "devDependencies",
-      "norm_label": "danger"
     },
     {
       "label": "husky",
@@ -31343,6 +31420,17 @@
       "norm_label": "@axe-core/playwright"
     },
     {
+      "label": "@biomejs/biome",
+      "file_type": "concept",
+      "source_file": "package.json",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "biomejs_biome",
+      "community": 40,
+      "community_name": "devDependencies",
+      "norm_label": "@biomejs/biome"
+    },
+    {
       "label": "@commitlint/cli",
       "file_type": "concept",
       "source_file": "package.json",
@@ -31363,17 +31451,6 @@
       "community": 40,
       "community_name": "devDependencies",
       "norm_label": "@commitlint/config-conventional"
-    },
-    {
-      "label": "danger",
-      "file_type": "concept",
-      "source_file": "package.json",
-      "source_location": "L48",
-      "_origin": "ast",
-      "id": "danger",
-      "community": 40,
-      "community_name": "devDependencies",
-      "norm_label": "danger"
     },
     {
       "label": "husky",
@@ -36340,6 +36417,94 @@
       "norm_label": "workerdlqnotempty"
     },
     {
+      "label": "Authentication loops or refresh fails",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_authentication_loops_or_refresh_fails",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "authentication loops or refresh fails"
+    },
+    {
+      "label": "Database or Redis is slow",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_database_or_redis_is_slow",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "database or redis is slow"
+    },
+    {
+      "label": "Gateway rejects a route or refuses to boot",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_gateway_rejects_a_route_or_refuses_to_boot",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "gateway rejects a route or refuses to boot"
+    },
+    {
+      "label": "Generated files are stale",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_generated_files_are_stale",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "generated files are stale"
+    },
+    {
+      "label": "Hard refresh returns 404 or loses the session",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_hard_refresh_returns_404_or_loses_the_session",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "hard refresh returns 404 or loses the session"
+    },
+    {
+      "label": "Local mesh does not start",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_local_mesh_does_not_start",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "local mesh does not start"
+    },
+    {
+      "label": "Tests fail before running containers",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_tests_fail_before_running_containers",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "tests fail before running containers"
+    },
+    {
+      "label": "Troubleshooting",
+      "file_type": "document",
+      "source_file": "docs/TROUBLESHOOTING.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_troubleshooting_troubleshooting",
+      "community": 67,
+      "community_name": "On-call alert runbook",
+      "norm_label": "troubleshooting"
+    },
+    {
       "label": "platformctl/main_test.go",
       "file_type": "code",
       "source_file": "cmd/platformctl/main_test.go",
@@ -36813,105 +36978,6 @@
       "norm_label": "test:watch"
     },
     {
-      "label": "DEVELOPER_EXPERIENCE.md",
-      "file_type": "document",
-      "source_file": "docs/DEVELOPER_EXPERIENCE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_developer_experience",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "developer_experience.md"
-    },
-    {
-      "label": "INCIDENT_RESPONSE.md",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_incident_response",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "incident_response.md"
-    },
-    {
-      "label": "Afterward",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L40",
-      "_origin": "ast",
-      "id": "docs_incident_response_afterward",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "afterward"
-    },
-    {
-      "label": "Incident response playbook",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_incident_response_incident_response_playbook",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "incident response playbook"
-    },
-    {
-      "label": "Response",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L22",
-      "_origin": "ast",
-      "id": "docs_incident_response_response",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "response"
-    },
-    {
-      "label": "Roles",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L13",
-      "_origin": "ast",
-      "id": "docs_incident_response_roles",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "roles"
-    },
-    {
-      "label": "Severity",
-      "file_type": "document",
-      "source_file": "docs/INCIDENT_RESPONSE.md",
-      "source_location": "L3",
-      "_origin": "ast",
-      "id": "docs_incident_response_severity",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "severity"
-    },
-    {
-      "label": "OBSERVABILITY.md",
-      "file_type": "document",
-      "source_file": "docs/OBSERVABILITY.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_observability",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "observability.md"
-    },
-    {
-      "label": "RUNBOOK.md",
-      "file_type": "document",
-      "source_file": "docs/RUNBOOK.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_runbook",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "runbook.md"
-    },
-    {
       "label": "Common operations",
       "file_type": "document",
       "source_file": "docs/RUNBOOK.md",
@@ -36919,7 +36985,7 @@
       "_origin": "ast",
       "id": "docs_runbook_common_operations",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "common operations"
     },
     {
@@ -36930,7 +36996,7 @@
       "_origin": "ast",
       "id": "docs_runbook_escalation_and_handoff",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "escalation and handoff"
     },
     {
@@ -36941,7 +37007,7 @@
       "_origin": "ast",
       "id": "docs_runbook_operational_runbook",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "operational runbook"
     },
     {
@@ -36952,7 +37018,7 @@
       "_origin": "ast",
       "id": "docs_runbook_rollback",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "rollback"
     },
     {
@@ -36963,7 +37029,7 @@
       "_origin": "ast",
       "id": "docs_runbook_service_inventory",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "service inventory"
     },
     {
@@ -36974,74 +37040,8 @@
       "_origin": "ast",
       "id": "docs_runbook_triage",
       "community": 73,
-      "community_name": "RUNBOOK.md",
+      "community_name": "Operational runbook",
       "norm_label": "triage"
-    },
-    {
-      "label": "INCIDENT_TIMELINE.md",
-      "file_type": "document",
-      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_templates_incident_timeline",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "incident_timeline.md"
-    },
-    {
-      "label": "Current hypothesis",
-      "file_type": "document",
-      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
-      "source_location": "L15",
-      "_origin": "ast",
-      "id": "docs_templates_incident_timeline_current_hypothesis",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "current hypothesis"
-    },
-    {
-      "label": "Incident timeline",
-      "file_type": "document",
-      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_templates_incident_timeline_incident_timeline",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "incident timeline"
-    },
-    {
-      "label": "Mitigation and rollback point",
-      "file_type": "document",
-      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
-      "source_location": "L17",
-      "_origin": "ast",
-      "id": "docs_templates_incident_timeline_mitigation_and_rollback_point",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "mitigation and rollback point"
-    },
-    {
-      "label": "Next update deadline",
-      "file_type": "document",
-      "source_file": "docs/templates/INCIDENT_TIMELINE.md",
-      "source_location": "L19",
-      "_origin": "ast",
-      "id": "docs_templates_incident_timeline_next_update_deadline",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "next update deadline"
-    },
-    {
-      "label": "POSTMORTEM.md",
-      "file_type": "document",
-      "source_file": "docs/templates/POSTMORTEM.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_templates_postmortem",
-      "community": 73,
-      "community_name": "RUNBOOK.md",
-      "norm_label": "postmortem.md"
     },
     {
       "label": "AuthPages.test.tsx",
@@ -40025,6 +40025,21 @@
       "id": "docs_contracts_identity_header_contract"
     },
     {
+      "label": "Security Headers Policy",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 156,
+      "community_name": "Security Posture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "security headers policy",
+      "source_file": "docs/SECURITY.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_security_headers_policy"
+    },
+    {
       "label": "Security Scanning (gosec/Trivy/semgrep)",
       "_origin": "semantic",
       "author": null,
@@ -40598,21 +40613,6 @@
       "id": "services_gateway_openapi_scalardocs"
     },
     {
-      "label": "platform.Publish",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "platform.publish",
-      "source_file": "docs/CONTRACTS.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "internal_platform_publish"
-    },
-    {
       "label": "services/_template/openapi.yaml",
       "_origin": "semantic",
       "author": null,
@@ -40673,6 +40673,21 @@
       "id": "docs_architecture_fail_closed_registry"
     },
     {
+      "label": "Web Micro-frontend Federation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 176,
+      "community_name": "Contracts Pipeline (spec-first)",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "web micro-frontend federation",
+      "source_file": "docs/ARCHITECTURE.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_architecture_web_federation"
+    },
+    {
       "label": "Backlog: API & Contracts",
       "_origin": "semantic",
       "author": null,
@@ -40688,7 +40703,7 @@
       "id": "docs_backlog_api_contracts"
     },
     {
-      "label": "Backlog: UI/UX Manage Users",
+      "label": "Backlog: Developer Experience",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -40696,26 +40711,11 @@
       "community_name": "Contracts Pipeline (spec-first)",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "backlog: ui/ux manage users",
+      "norm_label": "backlog: developer experience",
       "source_file": "docs/BACKLOG.md",
       "source_location": null,
       "source_url": null,
-      "id": "docs_backlog_uiux_manage_users"
-    },
-    {
-      "label": "Auth/Users Data-Split Contract",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "auth/users data-split contract",
-      "source_file": "docs/CONTRACTS.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_contracts_data_split_contract"
+      "id": "docs_backlog_developer_experience"
     },
     {
       "label": "OpenAPI Spec as Source of Truth",
@@ -40733,7 +40733,7 @@
       "id": "docs_contracts_openapi_spec_source_of_truth"
     },
     {
-      "label": "Stream Payload Contracts",
+      "label": "Spec-to-Typed-Client Pipeline",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -40741,11 +40741,11 @@
       "community_name": "Contracts Pipeline (spec-first)",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "stream payload contracts",
+      "norm_label": "spec-to-typed-client pipeline",
       "source_file": "docs/CONTRACTS.md",
       "source_location": null,
       "source_url": null,
-      "id": "docs_contracts_stream_payload_contracts"
+      "id": "docs_contracts_typed_client_pipeline"
     },
     {
       "label": "Local Gate Pipeline (mirrors CI)",
@@ -40761,36 +40761,6 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_onboarding_gate_pipeline"
-    },
-    {
-      "label": "Hierarchical Resource-Root Query Keys",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "hierarchical resource-root query keys",
-      "source_file": "docs/QUERY_KEYS.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_query_keys_hierarchical_convention"
-    },
-    {
-      "label": "Security Headers Policy",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 176,
-      "community_name": "Contracts Pipeline (spec-first)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "security headers policy",
-      "source_file": "docs/SECURITY.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_security_headers_policy"
     },
     {
       "label": "API Versioning Policy",
@@ -40823,7 +40793,7 @@
       "id": "docs_contracts"
     },
     {
-      "label": "Query-Key Conventions",
+      "label": "Onboarding Guide",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -40831,11 +40801,11 @@
       "community_name": "Contracts Pipeline (spec-first)",
       "contributor": null,
       "file_type": "document",
-      "norm_label": "query-key conventions",
-      "source_file": "docs/QUERY_KEYS.md",
+      "norm_label": "onboarding guide",
+      "source_file": "docs/ONBOARDING.md",
       "source_location": null,
       "source_url": null,
-      "id": "docs_query_keys"
+      "id": "docs_onboarding"
     },
     {
       "label": "Spec-First Without a Behavioral Contract",
@@ -40884,6 +40854,22 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_api_versioning_v1_frozen_contract"
+    },
+    {
+      "label": "PR Checklist",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 176,
+      "community_name": "Contracts Pipeline (spec-first)",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "pr checklist",
+      "rationale": "Enforcing conventional commits, migration-pair-per-column, spec-first API changes, and typed-client-only fetch keeps commit history, schema history, and the API contract from drifting out of sync.",
+      "source_file": "docs/ONBOARDING.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_onboarding_pr_checklist"
     },
     {
       "label": "docs/BACKLOG.md Improvement Backlog",
@@ -41486,36 +41472,6 @@
       "id": "docs_adr_0001_ops_files_per_component"
     },
     {
-      "label": "Web Micro-frontend Federation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 45,
-      "community_name": "resilience-drill.sh",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "web micro-frontend federation",
-      "source_file": "docs/ARCHITECTURE.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_architecture_web_federation"
-    },
-    {
-      "label": "Spec-to-Typed-Client Pipeline",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 45,
-      "community_name": "resilience-drill.sh",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "spec-to-typed-client pipeline",
-      "source_file": "docs/CONTRACTS.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_contracts_typed_client_pipeline"
-    },
-    {
       "label": "DoD Evidence Checklist",
       "_origin": "semantic",
       "author": null,
@@ -41574,6 +41530,21 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_dod"
+    },
+    {
+      "label": "platform.Publish",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 46,
+      "community_name": "BACKLOG (1.202 improvement items)",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "platform.publish",
+      "source_file": "docs/CONTRACTS.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "internal_platform_publish"
     },
     {
       "label": "Gateway Topology",
@@ -41679,21 +41650,6 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_backlog_data_migrations"
-    },
-    {
-      "label": "Backlog: Developer Experience",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 46,
-      "community_name": "BACKLOG (1.202 improvement items)",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "backlog: developer experience",
-      "source_file": "docs/BACKLOG.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_backlog_developer_experience"
     },
     {
       "label": "Backlog: Docs & Governance",
@@ -41846,6 +41802,21 @@
       "id": "docs_backlog_uiux_dashboard_shell"
     },
     {
+      "label": "Backlog: UI/UX Manage Users",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 46,
+      "community_name": "BACKLOG (1.202 improvement items)",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "backlog: ui/ux manage users",
+      "source_file": "docs/BACKLOG.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_backlog_uiux_manage_users"
+    },
+    {
       "label": "Backlog: UI/UX Roles & Permissions",
       "_origin": "semantic",
       "author": null,
@@ -41859,6 +41830,36 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_backlog_uiux_roles_permissions"
+    },
+    {
+      "label": "Auth/Users Data-Split Contract",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 46,
+      "community_name": "BACKLOG (1.202 improvement items)",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "auth/users data-split contract",
+      "source_file": "docs/CONTRACTS.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_contracts_data_split_contract"
+    },
+    {
+      "label": "Stream Payload Contracts",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 46,
+      "community_name": "BACKLOG (1.202 improvement items)",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "stream payload contracts",
+      "source_file": "docs/CONTRACTS.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_contracts_stream_payload_contracts"
     },
     {
       "label": "Migration Execution Model (k8s Job vs boot-time)",
@@ -41889,6 +41890,21 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_migrations_integer_identity_baseline"
+    },
+    {
+      "label": "Hierarchical Resource-Root Query Keys",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 46,
+      "community_name": "BACKLOG (1.202 improvement items)",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "hierarchical resource-root query keys",
+      "source_file": "docs/QUERY_KEYS.md",
+      "source_location": null,
+      "source_url": null,
+      "id": "docs_query_keys_hierarchical_convention"
     },
     {
       "label": "Perf Smoke Baseline Through Gateway",
@@ -42012,7 +42028,7 @@
       "id": "docs_migrations"
     },
     {
-      "label": "Onboarding Guide",
+      "label": "Query-Key Conventions",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -42020,11 +42036,11 @@
       "community_name": "BACKLOG (1.202 improvement items)",
       "contributor": null,
       "file_type": "document",
-      "norm_label": "onboarding guide",
-      "source_file": "docs/ONBOARDING.md",
+      "norm_label": "query-key conventions",
+      "source_file": "docs/QUERY_KEYS.md",
       "source_location": null,
       "source_url": null,
-      "id": "docs_onboarding"
+      "id": "docs_query_keys"
     },
     {
       "label": "Scaling Guide",
@@ -42088,22 +42104,6 @@
       "source_location": null,
       "source_url": null,
       "id": "docs_migrations_expand_contract_pattern"
-    },
-    {
-      "label": "PR Checklist",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 46,
-      "community_name": "BACKLOG (1.202 improvement items)",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "pr checklist",
-      "rationale": "Enforcing conventional commits, migration-pair-per-column, spec-first API changes, and typed-client-only fetch keeps commit history, schema history, and the API contract from drifting out of sync.",
-      "source_file": "docs/ONBOARDING.md",
-      "source_location": null,
-      "source_url": null,
-      "id": "docs_onboarding_pr_checklist"
     },
     {
       "label": "rbac codegen config",
@@ -93974,7 +93974,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "e2e/qa.spec.ts",
-      "source_location": "L34",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
       "source": "e2e_qa_spec",
@@ -93985,7 +93985,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "e2e/qa.spec.ts",
-      "source_location": "L38",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast",
       "source": "e2e_qa_spec",
@@ -122185,5 +122185,5 @@
       "source_file": "services/_template/deploy/k8s/deployment.yaml"
     }
   ],
-  "built_at_commit": "3b9872f59615e4d373b382e2eef42e833e65d272"
+  "built_at_commit": "24abd65be4375a0b6d3250ba4b93fa503f40483c"
 }

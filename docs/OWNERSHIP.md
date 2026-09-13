@@ -1,3 +1,9 @@
+---
+title: Ownership
+parent: Governance
+nav_order: 2
+---
+
 # Service ownership
 
 `@kochan4php` is the default repository maintainer. Organizations adopting the

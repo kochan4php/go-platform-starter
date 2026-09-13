@@ -20,24 +20,28 @@ exclude_docs: |
 nav:
   - Home: index.md
   - Start:
+      - Overview: sections/start.md
       - Onboarding: ONBOARDING.md
       - Authentication UX: AUTH_UX.md
       - FAQ: FAQ.md
       - Troubleshooting: TROUBLESHOOTING.md
       - Glossary: GLOSSARY.md
   - Architecture:
+      - Section overview: sections/architecture.md
       - Overview: ARCHITECTURE.md
       - Detailed diagrams: DIAGRAMS.md
       - Scalability: ARCHITECTURE_SCALABILITY.md
       - Scaling operations: SCALING.md
       - Query keys: QUERY_KEYS.md
       - ADR index: adr/README.md
+      - ADR template: templates/ADR.md
       - Fresh-build pivot: adr/0001-fresh-build-pivot.md
       - Integer identities: adr/0002-integer-identities.md
       - Users ownership: adr/0003-users-table-ownership.md
       - Migration baseline: adr/0004-consolidated-migration-baseline.md
       - Monorepo delivery: adr/0005-monorepo-delivery.md
   - API and data:
+      - Overview: sections/api-and-data.md
       - API standards: API_CONTRACTS.md
       - Curl examples: API_EXAMPLES.md
       - Contracts: CONTRACTS.md
@@ -50,6 +54,7 @@ nav:
       - Data schema: data/SCHEMA.md
       - Upgrade guide: UPGRADING.md
   - Engineering:
+      - Overview: sections/engineering.md
       - Engineering guide: ENGINEERING_GUIDE.md
       - Developer experience: DEVELOPER_EXPERIENCE.md
       - Product roadmap: PRODUCT_ROADMAP.md
@@ -63,6 +68,7 @@ nav:
       - Definition of done: DOD.md
       - Learning: LEARNING.md
   - Operations:
+      - Overview: sections/operations.md
       - Infra and VPS operations: INFRA_OPS.md
       - Public status: STATUS.md
       - Runbook: RUNBOOK.md
@@ -77,6 +83,7 @@ nav:
       - Published ports: reference/PORTS.md
       - Environment variables: reference/ENVIRONMENT.md
   - Security:
+      - Overview: sections/security.md
       - Security posture: SECURITY.md
       - Threat model: THREAT_MODEL.md
       - Secrets: SECRETS.md
@@ -84,6 +91,7 @@ nav:
       - Pentest checklist: PENTEST_CHECKLIST.md
       - Break glass: BREAK_GLASS.md
   - Governance:
+      - Overview: sections/governance.md
       - Contributing: https://github.com/kochan4php/go-platform-starter/blob/main/CONTRIBUTING.md
       - Repository governance: https://github.com/kochan4php/go-platform-starter/blob/main/GOVERNANCE.md
       - Support: https://github.com/kochan4php/go-platform-starter/blob/main/SUPPORT.md

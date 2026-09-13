@@ -1,3 +1,9 @@
+---
+title: Incident timeline template
+parent: Operations
+nav_order: 6
+---
+
 # Incident timeline
 
 - Incident ID:

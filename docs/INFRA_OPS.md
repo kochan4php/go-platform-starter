@@ -1,3 +1,9 @@
+---
+title: Infra and VPS operations
+parent: Operations
+nav_order: 1
+---
+
 # Infra and operations
 
 This is the production contract for a small VPS deployment. OpenTofu creates

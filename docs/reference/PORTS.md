@@ -1,3 +1,9 @@
+---
+title: Published ports
+parent: Operations
+nav_order: 12
+---
+
 # Published ports
 
 Generated from Compose manifests by `node scripts/generate-docs.mjs`. Internal-only
