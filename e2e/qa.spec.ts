@@ -25,8 +25,14 @@ function volatileRegions(page: Page) {
     page.getByText("Latest arrival").locator(".."),
     page.getByRole("button", { name: /online now/ }),
     page.getByText(/^Gateway (healthy|down)|^Checking/i),
-    page.locator('[aria-live="polite"].fixed'),
   ];
+}
+
+// The login toast is the one thing masking would make worse: a mask only covers
+// an element that is actually on screen, so a baseline captured while it was up
+// would not match a run where its 4.5s timer had already fired. Wait it out.
+async function settleToasts(page: Page) {
+  await expect(page.locator('[aria-live="polite"].fixed > *')).toHaveCount(0, { timeout: 10_000 });
 }
 
 async function expectNoAxeViolations(page: Page) {
@@ -143,6 +149,7 @@ test("directory pagination, keyboard navigation, visual baseline, and a11y", asy
   await expect(page.getByRole("heading", { name: /Users \(\d+\)/ })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toBeVisible();
+  await settleToasts(page);
   await expect(page).toHaveScreenshot("users-directory.png", { fullPage: true, mask: volatileRegions(page) });
 
   await expectNoAxeViolations(page);
@@ -172,6 +179,7 @@ test("mobile register and roles accordion remain operable @mobile", async ({ pag
   test.skip(!adminPassword, "E2E_ADMIN_PASSWORD not set");
   await login(page);
   await page.getByRole("button", { name: "Open menu" }).click();
+  await settleToasts(page);
   await expect(page).toHaveScreenshot("mobile-drawer-open.png", {
     fullPage: true,
     mask: volatileRegions(page),
