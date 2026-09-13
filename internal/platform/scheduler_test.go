@@ -139,3 +139,29 @@ func TestLeaderElectionAllowsOneActiveLeader(t *testing.T) {
 		t.Fatalf("simultaneous leaders = %d", maximum.Load())
 	}
 }
+
+// Start calls tryRun once before the ticker, so an unreachable Redis exercises
+// the lock-check failure path on every run rather than only when a shutdown
+// happens to cancel a request mid-flight — which used to make this package's
+// coverage, and therefore its committed badge, differ between identical runs.
+// The behaviour is worth pinning anyway: without a lock the scheduler cannot
+// know whether another replica is already running the job, so it must skip.
+func TestSchedulerSkipsTickWhenTheLockCheckFails(t *testing.T) {
+	// Port 1 is never listening; SetNX fails to dial instead of timing out.
+	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:1"})
+	defer rdb.Close()
+
+	var runs atomic.Int64
+	s := NewScheduler(rdb, slog.New(slog.NewTextHandler(io.Discard, nil)), 20*time.Millisecond, "unreachable",
+		func(context.Context) { runs.Add(1) })
+
+	ctx, stop := context.WithCancel(context.Background())
+	done := s.Start(ctx)
+	time.Sleep(100 * time.Millisecond)
+	stop()
+	<-done
+
+	if n := runs.Load(); n != 0 {
+		t.Fatalf("job ran %d times without a verified lock", n)
+	}
+}
