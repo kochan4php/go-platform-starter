@@ -1,3 +1,9 @@
+---
+title: Frontend engineering
+parent: Engineering
+nav_order: 6
+---
+
 # Frontend engineering standard
 
 This document records the implementation and decisions for backlog Q1-Q64. The

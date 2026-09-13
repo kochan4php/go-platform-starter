@@ -1,3 +1,9 @@
+---
+title: Secrets
+parent: Security
+nav_order: 3
+---
+
 # Secrets and key rotation
 
 Services accept either `NAME` or `NAME_FILE`. The file convention works with

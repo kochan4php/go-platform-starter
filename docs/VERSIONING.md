@@ -1,3 +1,9 @@
+---
+title: Documentation versioning
+parent: Governance
+nav_order: 5
+---
+
 # Documentation versioning
 
 The documentation portal tracks the code on `main`. Each tagged release freezes

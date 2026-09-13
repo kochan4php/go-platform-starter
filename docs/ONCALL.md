@@ -1,3 +1,9 @@
+---
+title: On-call
+parent: Operations
+nav_order: 4
+---
+
 # On-call alert runbook
 
 Start every alert by opening the Platform service dashboard, SLO dashboard,

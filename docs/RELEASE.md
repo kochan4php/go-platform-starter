@@ -1,3 +1,9 @@
+---
+title: Release
+parent: Governance
+nav_order: 4
+---
+
 # Release process
 
 Release Please turns Conventional Commits on `main` into a release PR and

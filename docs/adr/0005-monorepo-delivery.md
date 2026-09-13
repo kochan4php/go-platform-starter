@@ -1,3 +1,9 @@
+---
+title: ADR 0005 — Monorepo delivery
+parent: Architecture
+nav_order: 12
+---
+
 # ADR-0005: Monorepo delivery
 
 Status: accepted

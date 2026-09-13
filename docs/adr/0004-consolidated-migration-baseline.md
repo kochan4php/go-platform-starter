@@ -1,3 +1,9 @@
+---
+title: ADR 0004 — Migration baseline
+parent: Architecture
+nav_order: 11
+---
+
 # ADR-0004: Consolidated migration baseline
 
 Status: accepted

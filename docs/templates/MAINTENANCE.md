@@ -1,3 +1,9 @@
+---
+title: Maintenance template
+parent: Operations
+nav_order: 8
+---
+
 # Maintenance announcement: <short title>
 
 - **Environment:** <uat/demo/prod>

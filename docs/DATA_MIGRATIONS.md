@@ -1,3 +1,9 @@
+---
+title: Data engineering
+parent: API and data
+nav_order: 7
+---
+
 # Data and migration operations
 
 This is the operational contract for the `auth`, `users`, `rbac`, and `audit`

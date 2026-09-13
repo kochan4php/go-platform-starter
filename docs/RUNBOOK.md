@@ -1,3 +1,9 @@
+---
+title: Runbook
+parent: Operations
+nav_order: 3
+---
+
 # Operational runbook
 
 This is the default operator path. Alert-specific commands and dashboards are

@@ -1,3 +1,9 @@
+---
+title: Environment variables
+parent: Operations
+nav_order: 13
+---
+
 # Environment variable reference
 
 Generated from committed `.env.example`, `infra/go.env`, and Compose interpolation.

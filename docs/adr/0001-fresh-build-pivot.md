@@ -1,3 +1,9 @@
+---
+title: ADR 0001 — Fresh-build pivot
+parent: Architecture
+nav_order: 8
+---
+
 # ADR-0001: Fresh-build pivot — Go microservices + microfrontend monorepo
 
 Status: accepted

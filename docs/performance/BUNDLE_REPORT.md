@@ -1,3 +1,9 @@
+---
+title: Bundle report
+parent: Engineering
+nav_order: 8
+---
+
 # Bundle audit
 
 Production build measured on 2026-08-28 with Vite 5.4.21 and ES2022.

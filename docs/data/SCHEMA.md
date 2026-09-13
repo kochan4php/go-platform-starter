@@ -1,3 +1,9 @@
+---
+title: Data schema
+parent: API and data
+nav_order: 10
+---
+
 # Schema registry and data dictionary
 
 > Generated from PostgreSQL `information_schema`/`pg_catalog` by `go run ./cmd/dbdocs`. Do not edit manually.

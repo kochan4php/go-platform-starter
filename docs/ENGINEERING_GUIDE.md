@@ -1,3 +1,9 @@
+---
+title: Engineering guide
+parent: Engineering
+nav_order: 1
+---
+
 # Engineering guide
 
 ## Definition of done by work type

@@ -1,3 +1,9 @@
+---
+title: Archive
+nav_exclude: true
+search_exclude: true
+---
+
 # Archived documentation
 
 Archived pages are historical context, not supported operating instructions.

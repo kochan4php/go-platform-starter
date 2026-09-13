@@ -1,3 +1,9 @@
+---
+title: ADR 0003 — Users table ownership
+parent: Architecture
+nav_order: 10
+---
+
 # ADR-0003: Move profile data to the users schema
 
 Status: accepted

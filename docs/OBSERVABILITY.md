@@ -1,3 +1,9 @@
+---
+title: Observability
+parent: Operations
+nav_order: 11
+---
+
 # Observability
 
 The platform uses one correlated telemetry path: browser request ID -> gateway

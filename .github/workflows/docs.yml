@@ -38,10 +38,13 @@ on:
     - cron: "*/15 * * * *"
   workflow_dispatch:
 
+# Publishing is not this workflow's job. Pages is configured as "Deploy from a
+# branch" -> main -> /docs, so GitHub's own "pages build and deployment" run
+# renders docs/ with Jekyll. This workflow validates instead: generated
+# references are fresh, every local link resolves, and the MkDocs nav still
+# describes the tree.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.ref }}
@@ -82,19 +85,3 @@ jobs:
           node scripts/generate-docs.mjs --check
           node scripts/check-docs.mjs
       - run: mkdocs build --strict
-      - if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
-        with:
-          path: site
-
-  deploy:
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

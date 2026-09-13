@@ -1,3 +1,9 @@
+---
+title: Authentication UX
+parent: Start
+nav_order: 2
+---
+
 # Authentication UX principles
 
 - Password managers, browser autofill, and password paste are supported. Paste is never blocked: allowing strong generated credentials is safer than forcing users to type them.

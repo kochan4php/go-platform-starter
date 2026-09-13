@@ -1,3 +1,9 @@
+---
+title: Postmortem template
+parent: Operations
+nav_order: 7
+---
+
 # Postmortem
 
 ## Summary and customer impact
