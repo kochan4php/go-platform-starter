@@ -6,6 +6,9 @@ nav_order: 5
 
 # Domain glossary
 
+Terms that appear in this documentation and in the code, with the meaning this
+repository gives them.
+
 | Term | Meaning |
 | --- | --- |
 | access token | Short-lived JWT held in browser memory and verified at the gateway |

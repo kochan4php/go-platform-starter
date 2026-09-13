@@ -4,10 +4,12 @@ parent: Architecture
 nav_order: 1
 ---
 
-# ARCHITECTURE
+# Architecture overview
 
-Fresh-build v6 architecture: Go microservices behind a Go gateway, React
-micro-frontend shell, Redis Streams as the event backbone.
+How the system fits together: Go microservices behind a Go gateway, a React
+micro-frontend shell, and Redis Streams as the event backbone. Read this before
+changing anything that crosses a service boundary; the drawings are in
+[system diagrams](DIAGRAMS.md).
 
 ## Gateway topology
 

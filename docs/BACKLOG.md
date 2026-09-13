@@ -4,7 +4,7 @@ nav_exclude: true
 search_exclude: true
 ---
 
-# BACKLOG — go-platform-starter
+# BACKLOG — Go Platform Starter
 
 > **1.202 improvement** dalam 18 kategori. Semua item diperiksa ulang terhadap
 > kondisi terkini repo (post integer-ID migration).

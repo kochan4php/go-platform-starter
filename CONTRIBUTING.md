@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for improving go-platform-starter. Keep changes focused, reproducible,
+Thank you for improving Go Platform Starter. Keep changes focused, reproducible,
 and compatible with the repository's spec-first and schema-ownership rules.
 
 ## Start here

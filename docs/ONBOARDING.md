@@ -4,15 +4,18 @@ parent: Start
 nav_order: 1
 ---
 
-# ONBOARDING
+# Onboarding
 
-Goal: clone to first merged PR in about 30 minutes. Two toolchains are
-required: **Go >= 1.27** and **Node >= 22 with pnpm 11** (`corepack enable`).
+Clone to first merged pull request in about thirty minutes.
+
+You need two toolchains: **Go 1.27+** and **Node 24** with pnpm 11 (run
+`corepack enable` once and pnpm comes with it). If a step below fails, the
+symptom is probably listed in [troubleshooting](TROUBLESHOOTING.md).
 
 ## 0. Install (5 min)
 
 - Go 1.27+ (`go version`)
-- Node 24 + `corepack enable` (ships pnpm)
+- Node 24 (`.node-version`) + `corepack enable` (ships pnpm 11)
 - Docker Desktop (integration tests + lab/uat/demo stacks)
 - make (bundled with git-bash on Windows, or run the underlying commands directly)
 
