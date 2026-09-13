@@ -1,9 +1,3 @@
----
-title: Onboarding
-parent: Start
-nav_order: 1
----
-
 # ONBOARDING
 
 Goal: clone to first merged PR in about 30 minutes. Two toolchains are

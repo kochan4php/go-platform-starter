@@ -1,9 +1,3 @@
----
-title: Documentation versioning
-parent: Governance
-nav_order: 5
----
-
 # Documentation versioning
 
 The documentation portal tracks the code on `main`. Each tagged release freezes
@@ -16,15 +10,26 @@ major, configuration changes, and upgrade links. They do not copy every page:
 Git tags are the immutable full snapshot, while the minor page is the durable
 entry point. Never rewrite a snapshot for behavior changes; add a new minor.
 
-The portal uses MkDocs core with its maintained built-in theme because the
-repository is Markdown-first and does not need a JavaScript documentation
-application. Material was not selected because it is approaching end of life;
-Docusaurus was not selected because this portal needs no client application or
-large JavaScript dependency tree. Re-evaluate the theme before MkDocs 2.x.
-Build it with:
+## How the portal is built
+
+Docusaurus renders `docs/` in place from `website/`. The Markdown files stay
+where the generators and `scripts/check-docs.mjs` expect them; only the
+rendering lives in `website/`.
 
 ```sh
-python -m pip install -r requirements-docs.txt
-mkdocs build --strict
-mkdocs serve
+pnpm --filter website start   # local preview with hot reload
+pnpm --filter website build   # what CI publishes
 ```
+
+The structure is described once, in `website/sidebars.js`. Pages carry no
+navigation front matter, so adding a document means adding one line there.
+
+`onBrokenLinks` and `onBrokenMarkdownLinks` are both `throw`: a link that does
+not resolve fails the build rather than shipping a dead page.
+
+This replaced MkDocs in 2026-09. The earlier choice avoided a JavaScript
+documentation application on a Markdown-first repository, and that reasoning was
+sound — the cost here is roughly a thousand transitive packages. It was reversed
+for the reading experience: grouped sidebar, working local search over sixty-odd
+pages, and dark mode. Publishing requires the repository's Pages source to be
+**GitHub Actions**; on "Deploy from a branch" the deploy step fails with a 404.

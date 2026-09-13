@@ -1,9 +1,3 @@
----
-title: Definition of done
-parent: Engineering
-nav_order: 11
----
-
 # v6 Definition of Done — executed & signed off
 
 Status: **done** · Executed 2026-08-25 (Waves 0–7 complete)

@@ -1,0 +1,32 @@
+/* Minimal overrides: the classic theme is already close. Only the accent and
+   the table density are changed, because these docs are mostly tables. */
+:root {
+	--ifm-color-primary: #3f6212;
+	--ifm-color-primary-dark: #395816;
+	--ifm-color-primary-darker: #35520f;
+	--ifm-color-primary-darkest: #2b430c;
+	--ifm-color-primary-light: #4a7316;
+	--ifm-color-primary-lighter: #4e7a17;
+	--ifm-color-primary-lightest: #5c8f1b;
+	--ifm-code-font-size: 92%;
+}
+
+[data-theme="dark"] {
+	--ifm-color-primary: #a3e635;
+	--ifm-color-primary-dark: #96dd1f;
+	--ifm-color-primary-darker: #8dd11c;
+	--ifm-color-primary-darkest: #74ac17;
+	--ifm-color-primary-light: #b0e94f;
+	--ifm-color-primary-lighter: #b7eb5d;
+	--ifm-color-primary-lightest: #c9f085;
+}
+
+.markdown table {
+	display: table;
+	width: 100%;
+}
+
+.markdown table td,
+.markdown table th {
+	padding: 0.45rem 0.7rem;
+}

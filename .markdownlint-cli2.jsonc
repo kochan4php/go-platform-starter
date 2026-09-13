@@ -2,12 +2,6 @@
 	"config": {
 		"MD013": false,
 		"MD024": false,
-		// Pages under docs/ carry Jekyll front matter for the just-the-docs
-		// sidebar. MD025 counts a front matter "title:" as a top-level heading,
-		// which would make every page's own H1 a duplicate - but just-the-docs
-		// does not render the front matter title into the page body, and the H1
-		// is what GitHub shows when the file is read in the repository.
-		"MD025": { "front_matter_title": "" },
 		"MD032": false,
 		"MD033": false,
 		"MD034": false,

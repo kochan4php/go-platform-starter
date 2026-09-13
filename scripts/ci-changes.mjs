@@ -37,7 +37,7 @@ const result = {
       /^go\.(?:mod|sum)$/,
       /^pnpm-lock\.yaml$/,
     ]),
-  docs: matches([/\.md$/, /^docs\//, /^mkdocs\.yml$/]),
+  docs: matches([/\.md$/, /^docs\//, /^website\//]),
 };
 if (!files.length) {
   for (const key of Object.keys(result)) result[key] = true;

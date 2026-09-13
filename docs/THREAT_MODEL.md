@@ -1,9 +1,3 @@
----
-title: Threat model
-parent: Security
-nav_order: 2
----
-
 # Threat model (STRIDE)
 
 The browser crosses nginx into the gateway. The gateway verifies JWTs and

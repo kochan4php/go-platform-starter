@@ -1,9 +1,3 @@
----
-title: Learning
-parent: Engineering
-nav_order: 12
----
-
 # Learning resources
 
 Prefer primary documentation and the repository's executable examples.

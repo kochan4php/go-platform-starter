@@ -1,9 +1,3 @@
----
-title: Glossary
-parent: Start
-nav_order: 5
----
-
 # Domain glossary
 
 | Term | Meaning |

@@ -1,9 +1,3 @@
----
-title: Infra and VPS operations
-parent: Operations
-nav_order: 1
----
-
 # Infra and operations
 
 This is the production contract for a small VPS deployment. OpenTofu creates
@@ -196,5 +190,5 @@ only through an approved review path.
 
 CI publishes both `linux/amd64` and `linux/arm64` images. ARM VPS acceptance
 requires the same Compose config, native node-exporter, database restore test,
-synthetic login, and load target; do not use emulation in production. The MkDocs
+synthetic login, and load target; do not use emulation in production. The documentation
 site is the centralized operations portal and this page is its VPS entry point.

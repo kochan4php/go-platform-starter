@@ -1,9 +1,3 @@
----
-title: Capacity and cost
-parent: Operations
-nav_order: 10
----
-
 # Capacity and cost planning
 
 Measure before changing defaults. The starter's baseline targets roughly 100k

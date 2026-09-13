@@ -1,9 +1,3 @@
----
-title: Overview
-parent: Architecture
-nav_order: 1
----
-
 # ARCHITECTURE
 
 Fresh-build v6 architecture: Go microservices behind a Go gateway, React

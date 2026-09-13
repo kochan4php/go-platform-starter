@@ -49,8 +49,9 @@ node scripts/check-docs.mjs
 ```
 
 Container-backed tests require Docker. A documentation-only change may omit
-unrelated runtime tests, but must pass both documentation checks and a strict
-MkDocs build.
+unrelated runtime tests, but must pass both documentation checks and the
+documentation site build (`pnpm --filter website build`), which treats a broken
+link as an error.
 
 ## Pull requests
 

@@ -1,9 +1,3 @@
----
-title: Reliability
-parent: Engineering
-nav_order: 10
----
-
 # Reliability & Resilience
 
 This document is the engineering evidence and operating contract for backlog

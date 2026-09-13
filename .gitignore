@@ -8,8 +8,9 @@ backups/
 # Node
 node_modules/
 dist/
-# mkdocs build output; the Documentation workflow builds it as a check only.
-site/
+# Docusaurus build output and cache.
+website/build/
+website/.docusaurus/
 
 # Env & secrets
 .env

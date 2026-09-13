@@ -1,9 +1,3 @@
----
-title: Migrations
-parent: API and data
-nav_order: 6
----
-
 # Migration conventions
 
 ## Files

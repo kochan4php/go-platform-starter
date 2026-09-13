@@ -1,9 +1,3 @@
----
-title: Collaboration
-parent: Governance
-nav_order: 3
----
-
 # Collaboration and knowledge sharing
 
 ## Pair and mob programming

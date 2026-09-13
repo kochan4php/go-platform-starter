@@ -1,9 +1,3 @@
----
-title: API versioning
-parent: API and data
-nav_order: 4
----
-
 # API versioning policy
 
 ## The contract

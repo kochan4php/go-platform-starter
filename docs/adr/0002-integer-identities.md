@@ -1,9 +1,3 @@
----
-title: ADR 0002 — Integer identities
-parent: Architecture
-nav_order: 9
----
-
 # ADR-0002: Integer identities
 
 Status: accepted

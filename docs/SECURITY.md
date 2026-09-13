@@ -1,9 +1,3 @@
----
-title: Security posture
-parent: Security
-nav_order: 1
----
-
 # Security posture
 
 ## Cookies & CSRF

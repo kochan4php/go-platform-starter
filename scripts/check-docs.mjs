@@ -14,6 +14,8 @@ const ignored = new Set([
   "graphify-out",
   "node_modules",
   "site",
+  "build",
+  ".docusaurus",
   "tmp",
 ]);
 function markdownFiles(directory) {
@@ -33,7 +35,6 @@ const required = [
   "GOVERNANCE.md",
   "SUPPORT.md",
   "CHANGELOG.md",
-  "mkdocs.yml",
   "docs/index.md",
   "docs/RUNBOOK.md",
   "docs/INCIDENT_RESPONSE.md",

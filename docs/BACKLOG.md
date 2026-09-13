@@ -1,9 +1,3 @@
----
-title: Backlog
-nav_exclude: true
-search_exclude: true
----
-
 # BACKLOG — go-platform-starter
 
 > **1.202 improvement** dalam 18 kategori. Semua item diperiksa ulang terhadap

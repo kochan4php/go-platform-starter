@@ -1,9 +1,3 @@
----
-title: Developer experience
-parent: Engineering
-nav_order: 2
----
-
 # Developer experience
 
 This repository treats developer tooling as a reproducible product surface. The

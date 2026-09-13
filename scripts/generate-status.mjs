@@ -26,5 +26,5 @@ const body = rows.length
   : "| No public endpoints configured | Unknown | - |";
 await writeFile(
   "docs/STATUS.md",
-  `---\ntitle: Public status\nparent: Operations\nnav_order: 2\n---\n\n# Public status\n\nLast checked: ${checkedAt}\n\n| Service | Status | Latency (ms) |\n| --- | --- | ---: |\n${body}\n\nThis page is generated outside the production VPS by the documentation workflow. Incident communication remains authoritative.\n`,
+  `# Public status\n\nLast checked: ${checkedAt}\n\n| Service | Status | Latency (ms) |\n| --- | --- | ---: |\n${body}\n\nThis page is generated outside the production VPS by the documentation workflow. Incident communication remains authoritative.\n`,
 );

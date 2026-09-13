@@ -1,9 +1,3 @@
----
-title: Token policy
-parent: Security
-nav_order: 4
----
-
 # Token storage policy
 
 Status: normative for every `apps/*` component (PLAN item 69).

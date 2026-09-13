@@ -1,9 +1,3 @@
----
-title: CI/CD and release controls
-parent: Engineering
-nav_order: 4
----
-
 # CI/CD and release controls
 
 ## Pipeline lanes and change impact

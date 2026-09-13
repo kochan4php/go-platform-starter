@@ -1,9 +1,3 @@
----
-title: Dependency licenses
-parent: Governance
-nav_order: 7
----
-
 # Direct dependency licenses
 
 Generated from `go.mod`, workspace manifests, installed package metadata, and upstream license files.

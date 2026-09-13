@@ -1,9 +1,3 @@
----
-title: Testing
-parent: Engineering
-nav_order: 5
----
-
 # Testing & QA
 
 The repository uses the smallest test layer that can prove each boundary:

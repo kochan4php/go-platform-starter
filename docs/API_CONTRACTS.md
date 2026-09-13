@@ -1,9 +1,3 @@
----
-title: API standards
-parent: API and data
-nav_order: 1
----
-
 # API contract standards
 
 The service-owned OpenAPI files define behavior. `scripts/compose-specs.mjs`

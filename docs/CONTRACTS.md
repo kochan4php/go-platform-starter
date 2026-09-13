@@ -1,9 +1,3 @@
----
-title: Contracts
-parent: API and data
-nav_order: 3
----
-
 # Contracts pipeline (spec-first)
 
 Every service owns an OpenAPI spec at `services/<name>/openapi.yaml`. The spec is the

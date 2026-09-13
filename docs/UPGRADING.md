@@ -1,9 +1,3 @@
----
-title: Upgrade guide
-parent: API and data
-nav_order: 11
----
-
 # Upgrading
 
 ## Between minor releases

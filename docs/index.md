@@ -1,8 +1,3 @@
----
-title: Home
-nav_order: 1
----
-
 # go-platform-starter
 
 Production-shaped Go microservices, a React micro-frontend shell, spec-first

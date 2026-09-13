@@ -1,9 +1,3 @@
----
-title: Archive policy
-parent: Governance
-nav_order: 8
----
-
 # Documentation archive policy
 
 Documentation is archived when it describes unsupported behavior, is replaced

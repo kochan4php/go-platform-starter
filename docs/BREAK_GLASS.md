@@ -1,9 +1,3 @@
----
-title: Break glass
-parent: Security
-nav_order: 6
----
-
 # Break-glass administration
 
 Use this only when normal RBAC administration is unavailable and an outage or

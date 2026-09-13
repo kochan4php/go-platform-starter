@@ -65,7 +65,7 @@ jobs:
       - name: YAML style
         run: |
           python -m pip install yamllint==1.37.1
-          yamllint --config-file .yamllint.yml .github infra services apps mkdocs.yml
+          yamllint --config-file .yamllint.yml .github infra services apps
       - name: Markdown style
         run: pnpm lint:markdown
       - name: Developer policy and generator tests

@@ -1,9 +1,3 @@
----
-title: Scaling operations
-parent: Architecture
-nav_order: 4
----
-
 # SCALING
 
 Reliability defaults, DR targets, backup/restore, DLQ replay, chaos experiments,

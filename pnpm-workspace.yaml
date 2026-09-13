@@ -4,6 +4,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "website"
 # Supply-chain guards: wait a week before resolving a newly published version
 # and block sub-dependencies resolved from outside the registry.
 # trustPolicy: no-downgrade is NOT enabled yet — it rejects four existing
@@ -17,5 +18,7 @@ allowBuilds:
   '@biomejs/biome': true
   '@scarf/scarf': false
   core-js: false
+  # Docusaurus pulls this; its postinstall only prints a funding banner.
+  core-js-pure: false
   esbuild: true
   msw: true

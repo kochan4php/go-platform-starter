@@ -1,9 +1,3 @@
----
-title: ADR index
-parent: Architecture
-nav_order: 6
----
-
 # Architecture Decision Records
 
 ADRs record durable decisions, not meeting notes. File names use

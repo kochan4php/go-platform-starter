@@ -1,9 +1,3 @@
----
-title: Data reference
-parent: API and data
-nav_order: 8
----
-
 # Data schema registry
 
 PostgreSQL migrations under `services/*/migrations` are the only writable schema

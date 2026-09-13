@@ -1,9 +1,3 @@
----
-title: FAQ
-parent: Start
-nav_order: 3
----
-
 # Frequently asked questions
 
 ## Why one Go module for microservices?

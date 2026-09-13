@@ -1,9 +1,3 @@
----
-title: Performance
-parent: Engineering
-nav_order: 7
----
-
 # Performance engineering evidence
 
 This closes the Engineering items in the Performance backlog by one of three

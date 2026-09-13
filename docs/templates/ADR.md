@@ -1,9 +1,3 @@
----
-title: ADR template
-parent: Architecture
-nav_order: 7
----
-
 # ADR-NNNN: Short decision title
 
 Status: proposed
