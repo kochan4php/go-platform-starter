@@ -393,6 +393,23 @@ jobs:
         with:
           header: bundle-size
           path: apps/web/dist/bundle-summary.md
+      # apps/web is a module-federation host: /login renders the web-auth remote.
+      # Serving only apps/web/dist makes that import fail, so Lighthouse used to
+      # score an error boundary instead of the login page. The remote URL baked
+      # into the build is a fixed 127.0.0.1:5174.
+      - name: Serve the auth remote so /login can actually render
+        if: matrix.app == 'web' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+        run: |
+          pnpm --filter web-auth build
+          nohup pnpm --filter web-auth exec vite preview --host 127.0.0.1 --port 5174 --strictPort \
+            > /tmp/web-auth-preview.log 2>&1 &
+          for _ in $(seq 1 40); do
+            curl -sf http://127.0.0.1:5174/assets/remoteEntry.js >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:5174/assets/remoteEntry.js >/dev/null ||
+            { echo 'auth remote never came up'; cat /tmp/web-auth-preview.log; exit 1; }
+
       - name: Lighthouse performance budget
         if: matrix.app == 'web' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
         uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
