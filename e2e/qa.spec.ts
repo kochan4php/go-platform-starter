@@ -23,6 +23,11 @@ function volatileRegions(page: Page) {
     page.getByText(/^session (\d|pending)/i),
     page.locator("output").filter({ hasText: /^sync/i }),
     page.getByText("Latest arrival").locator(".."),
+    // Reads stats.data.total, falling back to the list's own meta.total while
+    // that second query is still in flight — so it has three possible values.
+    page
+      .getByText("Profiles on record")
+      .locator(".."),
     page.getByRole("button", { name: /online now/ }),
     page.getByText(/^Gateway (healthy|down)|^Checking/i),
   ];
