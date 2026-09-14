@@ -20,6 +20,10 @@ jobs:
       - uses: renovatebot/github-action@a889a8abcb11ef7feaafaf5e483ea01d4bf7774e # v43.0.5
         with:
           configurationFile: renovate.json
-          token: ${{ secrets.RENOVATE_TOKEN }}
+          # Without RENOVATE_TOKEN the action aborts before it reads anything.
+          # github.token works for this repository; its only cost is that pull
+          # requests it opens do not trigger workflows, so a PAT is still the
+          # better secret to add.
+          token: ${{ secrets.RENOVATE_TOKEN || github.token }}
         env:
           RENOVATE_REPOSITORIES: ${{ github.repository }}

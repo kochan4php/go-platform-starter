@@ -12,7 +12,9 @@ nav_order: 4
 Go tests and web builds are sharded with `fail-fast: false`; superseded runs on
 the same branch are cancelled. `scripts/ci-changes.mjs` keeps required jobs
 visible while skipping lanes unaffected by a documentation-only or scoped
-change. Draft pull requests run commit, lint, contract, and build feedback but
+change — on pull requests only. A push to `main` runs every lane regardless of
+what changed, because nothing gates it afterwards. Draft pull requests run
+commit, lint, contract, and build feedback but
 defer container, browser, and security-heavy lanes until ready for review.
 
 `setup-go` reports its cache hit in the job summary. The pnpm store uses an
