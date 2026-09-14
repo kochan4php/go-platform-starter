@@ -39,7 +39,10 @@ const result = {
     ]),
   docs: matches([/\.md$/, /^docs\//, /^mkdocs\.yml$/]),
 };
-if (!files.length) {
+// Lane filtering is a pull-request optimisation. A push to main is the last gate
+// before release, and a lane that is skipped there is a lane nothing ever ran:
+// the docs-only merge that shipped a broken index.html passed exactly this way.
+if (!files.length || process.env.GITHUB_EVENT_NAME === "push") {
   for (const key of Object.keys(result)) result[key] = true;
 }
 

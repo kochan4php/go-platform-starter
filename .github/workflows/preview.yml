@@ -77,14 +77,15 @@ jobs:
 
   preview:
     needs: build
+    # The label gates teardown too. Without it every closed pull request ran
+    # kubectl against a cluster that was never provisioned for it, and failed.
     if: >-
       always() &&
       (needs.build.result == 'success' || github.event.action == 'closed' ||
        (github.event_name == 'workflow_dispatch' && inputs.action == 'down')) &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.pull_request.head.repo.full_name == github.repository &&
-        (github.event.action == 'closed' ||
-         contains(github.event.pull_request.labels.*.name, 'preview'))))
+        contains(github.event.pull_request.labels.*.name, 'preview')))
     runs-on: ubuntu-latest
     environment:
       name: preview

@@ -11,15 +11,27 @@ test("documentation gate accepts generated references and local links", () => {
   assert.match(output, /docs OK/);
 });
 
-test("change-impact gate skips runtime lanes for documentation-only changes", () => {
-  const output = execFileSync(process.execPath, ["scripts/ci-changes.mjs"], {
-    env: { ...process.env, CHANGED_FILES: "docs/FAQ.md\nREADME.md" },
-    encoding: "utf8",
-  });
-  const result = JSON.parse(output);
+const changeImpact = (event) =>
+  JSON.parse(
+    execFileSync(process.execPath, ["scripts/ci-changes.mjs"], {
+      env: { ...process.env, CHANGED_FILES: "docs/FAQ.md\nREADME.md", GITHUB_EVENT_NAME: event },
+      encoding: "utf8",
+    }),
+  );
+
+test("change-impact gate skips runtime lanes for documentation-only pull requests", () => {
+  const result = changeImpact("pull_request");
   assert.deepEqual(
     { go: result.go, web: result.web, e2e: result.e2e, security: result.security, docs: result.docs },
     { go: false, web: false, e2e: false, security: false, docs: true },
+  );
+});
+
+test("change-impact gate runs every lane on a push, whatever changed", () => {
+  const result = changeImpact("push");
+  assert.deepEqual(
+    { go: result.go, web: result.web, e2e: result.e2e, security: result.security, docs: result.docs },
+    { go: true, web: true, e2e: true, security: true, docs: true },
   );
 });
 

@@ -50,7 +50,10 @@ services:
   gateway:
     environment:
       LOG_LEVEL: debug
-      RATE_GLOBAL_PER_MINUTE: 1200
+      # 1200/min is generous for a developer poking at the lab and two orders of
+      # magnitude under what the nightly load test offers, so that step raises it.
+      # Without the override every k6 latency percentile measures a 429.
+      RATE_GLOBAL_PER_MINUTE: ${RATE_GLOBAL_PER_MINUTE:-1200}
 
   web:
     environment:

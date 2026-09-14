@@ -41,6 +41,10 @@ jobs:
           E2E_ADMIN_PASSWORD: e2e-root-access-2026!
         run: scripts/e2e-mesh.sh ci
       - name: Start disposable lab for load and chaos
+        env:
+          # k6 offers ~500 rps; the edge limiter is measured by the login-storm
+          # scenario, not by this one.
+          RATE_GLOBAL_PER_MINUTE: "120000"
         run: scripts/deploy-lab.sh
       - name: Load test
         run: docker run --rm --network host -v "$PWD/scripts/k6:/scripts:ro" grafana/k6:latest run /scripts/performance.js
